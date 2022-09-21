@@ -25,7 +25,7 @@ export function checkType(
         return `Expected ${key} to be of type ${type}`;
     }
     if (typeof value == "string") {
-        if (value.trim().length <= 0) {
+        if (value.trim().length == 0) {
             return `${key} cannot be empty`;
         }
     }

@@ -7,7 +7,7 @@ export const NeedsAdmin = () => SetMetadata("needsAdmin", true);
 export class CheckSyncSecretGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const expectedToken = process.env.GROPIUS_LOGIN_SYNC_API_SECRET?.trim();
-        if (!expectedToken || expectedToken.length <= 0) {
+        if (!expectedToken || expectedToken.length == 0) {
             return true;
         }
 

@@ -42,14 +42,14 @@ export class BaseUserInput {
      * @throws {@link HttpException} BAD_REQUEST if invalid
      */
     static check(input: BaseUserInput): BaseUserInput {
-        if (!input.username || input.username.trim().length <= 0) {
+        if (!input.username || input.username.trim().length == 0) {
             throw new HttpException("Username must be given and can't be empty", HttpStatus.BAD_REQUEST);
         }
-        if (!input.displayName || input.displayName.trim().length <= 0) {
+        if (!input.displayName || input.displayName.trim().length == 0) {
             throw new HttpException("Display name must be given and can't be empty", HttpStatus.BAD_REQUEST);
         }
         if (input.email != undefined) {
-            if (input.email.trim().length <= 0) {
+            if (input.email.trim().length == 0) {
                 throw new HttpException("If email is given it can't be empty", HttpStatus.BAD_REQUEST);
             }
         }

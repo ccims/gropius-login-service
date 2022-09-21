@@ -17,7 +17,7 @@ export class UserLoginDataService extends Repository<UserLoginData> {
             .where(`"strategyInstanceId" = :instanceId`, {
                 instanceId: strategyInstance.id,
             })
-            .andWhere(`("expires" is null or "expires" >= :dateNow)`, {
+            .andWhere(`(("expires" is null) or ("expires" >= :dateNow))`, {
                 dateNow: new Date(),
             })
             .andWhere(`"data" @> :data`, { data })

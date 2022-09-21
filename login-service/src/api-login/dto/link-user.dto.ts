@@ -23,7 +23,7 @@ export class RegistrationTokenInput {
      * @throws {@link HttpException} BAD_REQUEST if invalid
      */
     static check(input: RegistrationTokenInput): RegistrationTokenInput {
-        if (typeof input.register_token != "string" || input.register_token.trim().length <= 0) {
+        if (typeof input.register_token != "string" || input.register_token.trim().length == 0) {
             throw new HttpException("The register_token must be given and can't be empty", HttpStatus.BAD_REQUEST);
         }
         return input;
@@ -51,7 +51,7 @@ export class AdminLinkUserInput extends RegistrationTokenInput {
      */
     static check(input: AdminLinkUserInput): AdminLinkUserInput {
         RegistrationTokenInput.check(input);
-        if (!input.userIdToLink || input.userIdToLink.trim().length <= 0) {
+        if (!input.userIdToLink || input.userIdToLink.trim().length == 0) {
             throw new HttpException(
                 "User id for user to link the new login to must be given and can't be empty.",
                 HttpStatus.BAD_REQUEST,

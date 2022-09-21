@@ -34,6 +34,14 @@ export class AuthClient {
     id: string;
 
     /**
+     * The (human readable) name of the auth client to be able to keep track ofit.
+     *
+     * Doesn't need to be unique, can be null
+     */
+    @Column({ nullable: true })
+    name: string | null;
+
+    /**
      * The list of valid enpoints to redirect the user back to after authentication has finished.
      *
      * The actual url to use is given in the authorize request and must be included in this list.

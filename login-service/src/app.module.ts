@@ -10,6 +10,7 @@ import { BackendServicesModule } from "./backend-services/backend-services.modul
 import { validationSchema } from "./configuration-validator";
 import { OauthServerModule } from "./oauth-server/oauth-server.module";
 import { DefaultReturn } from "./default-return.dto";
+import { InitializationModule } from "./initialization/initialization.module";
 
 @Module({
     imports: [
@@ -57,6 +58,7 @@ import { DefaultReturn } from "./default-return.dto";
             { path: "strategy", module: OauthServerModule },
         ]),
         BackendServicesModule,
+        InitializationModule,
     ],
     controllers: [],
     providers: [],

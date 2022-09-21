@@ -72,7 +72,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
                     .andWhereInIds(loginDataCandidates.map((candidate) => candidate.id))
                     .getMany();
 
-                if (loginDataForCorrectUser.length <= 0) {
+                if (loginDataForCorrectUser.length == 0) {
                     return done(
                         null,
                         {
