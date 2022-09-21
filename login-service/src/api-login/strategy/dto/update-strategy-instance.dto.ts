@@ -32,7 +32,7 @@ export class UpdateStrategyInstanceInput {
     isLoginActive?: boolean;
 
     /**
-     * Set wehter, user self registration should be active on the new strategy
+     * Set whether, user self registration should be active on the new strategy
      * Can only be true, if {@link Strategy.canLoginRegister} (default value)
      *
      * @example true
@@ -40,7 +40,7 @@ export class UpdateStrategyInstanceInput {
     isSelfRegisterActive?: boolean;
 
     /**
-     * Set wehter, providing sync tokens should be active on the new strategy
+     * Set whether, providing sync tokens should be active on the new strategy
      * Can only be true, if {@link Strategy.canSync} (default value)
      *
      * @example false
@@ -48,7 +48,7 @@ export class UpdateStrategyInstanceInput {
     isSyncActive?: boolean;
 
     /**
-     * Set wehter, the instance will implicitly register on a unknown login.
+     * Set whether, the instance will implicitly register on a unknown login.
      * Can only be true, if {@link Strategy.allowsImplicitSignup} (default value)
      *
      * @example false

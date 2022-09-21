@@ -163,7 +163,7 @@ export class ImsUserFindingService {
     async findLoginDataForImsUser(imsUserId: string): Promise<UserLoginData> {
         const imsUserWithDetail = (await this.graphqlService.sdk.getImsUserDetails({ imsUserId })).node;
         if (imsUserWithDetail.__typename != "IMSUser") {
-            throw new Error("Id is not a ims user id");
+            throw new Error("id is not a ims user id");
         }
 
         const ims = imsUserWithDetail.ims;

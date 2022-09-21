@@ -228,7 +228,7 @@ export class StrategyInstancesController {
             type,
         });
         if (!instance) {
-            throw new HttpException("Id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
+            throw new HttpException("id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
         }
         const stragety = this.strategiesService.getStrategyByName(instance.type);
         if (!stragety) {
@@ -271,7 +271,7 @@ export class StrategyInstancesController {
             type,
         });
         if (!instance) {
-            throw new HttpException("Id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
+            throw new HttpException("id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
         }
         await this.strategyInstanceService.remove(instance);
         return new DefaultReturn("delete-strategyInstance");

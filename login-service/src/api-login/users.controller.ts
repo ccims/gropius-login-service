@@ -220,7 +220,7 @@ export class UsersController {
         @Res({ passthrough: true }) res: Response,
     ): Promise<UserLoginData[]> {
         if (!id) {
-            throw new HttpException("Id must be given", HttpStatus.BAD_REQUEST);
+            throw new HttpException("id must be given", HttpStatus.BAD_REQUEST);
         }
         const loggedInUser = (res.locals.state as ApiStateData).loggedInUser;
         if (id == "self") {
