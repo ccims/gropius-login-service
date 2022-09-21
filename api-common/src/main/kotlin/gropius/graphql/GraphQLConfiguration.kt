@@ -9,12 +9,16 @@ import com.expediagroup.graphql.server.spring.execution.SpringGraphQLServer
 import com.expediagroup.graphql.server.types.GraphQLResponse
 import com.expediagroup.graphql.server.types.GraphQLServerError
 import com.expediagroup.graphql.server.types.GraphQLServerResponse
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.scalars.regex.RegexScalar
-import graphql.schema.DataFetcherFactory
-import graphql.schema.GraphQLScalarType
+import graphql.schema.*
+import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
+import gropius.model.template.TemplatedNode
 import gropius.model.user.GropiusUser
 import gropius.model.user.IMSUser
+import gropius.model.user.USERNAME_FILTER_BEAN
+import gropius.util.JsonNodeMapper
 import io.github.graphglue.connection.filter.TypeFilterDefinitionEntry
 import io.github.graphglue.connection.filter.definition.scalars.StringFilterDefinition
 import org.neo4j.driver.Driver
@@ -127,8 +131,17 @@ class GraphQLConfiguration {
      *
      * @return the generated filter definition
      */
-    @Bean("usernameFilter")
+    @Bean(USERNAME_FILTER_BEAN)
     fun usernameFilter() = StringFilterDefinition("username", "username", true)
+
+    /**
+     * Filter for templatedFields on [TemplatedNode]
+     *
+     * @param jsonNodeMapper used to serialize [JsonNode]s
+     * @return the generated filter definition
+     */
+    @Bean(TEMPLATED_FIELDS_FILTER_BEAN)
+    fun templatedFieldsFilter(jsonNodeMapper: JsonNodeMapper) = TemplatedFieldsFilterEntryDefinition(jsonNodeMapper)
 
     /**
      * Provides the [KotlinDataFetcherFactoryProvider] which generates a FunctionDataFetcher which handles
@@ -166,8 +179,7 @@ class GraphQLConfiguration {
                 GraphQLResponse<Any?>(
                     errors = listOf(
                         GraphQLServerError(
-                            e.reason ?: "No error message provided",
-                            extensions = mapOf("status" to e.status.value())
+                            e.reason ?: "No error message provided", extensions = mapOf("status" to e.status.value())
                         )
                     )
                 )

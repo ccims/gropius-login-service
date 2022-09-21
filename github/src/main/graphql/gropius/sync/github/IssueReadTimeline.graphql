@@ -9,6 +9,19 @@ fragment ReferencedSubject on ReferencedSubject {
         ...IssueData
     }
 }
+fragment IssueCommentData on IssueComment {
+    id
+    createdAt
+    author {
+        ...UserData
+    }
+    body
+    lastEditedAt
+    updatedAt
+    editor {
+        ...UserData
+    }
+}
 fragment TimelineItemData on IssueTimelineItems {
     ...on Node {
         id
@@ -64,17 +77,7 @@ fragment TimelineItemData on IssueTimelineItems {
         createdAt
     }
     ...on IssueComment {
-        id
-        createdAt
-        author {
-            ...UserData
-        }
-        body
-        lastEditedAt
-        updatedAt
-        editor {
-            ...UserData
-        }
+        ...IssueCommentData
     }
     ...on LabeledEvent {
         id

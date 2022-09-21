@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component
  * @param issueRepository Reference for the spring instance of IssueRepository
  * @param imsUserRepository Reference for the spring instance of IMSUserRepository
  * @param incoming Reference for the spring instance of Incoming
+ * @param timelineItemHandler Reference for the spring instance of TimelineItemHandler
  */
 @Component
 class Outgoing(
@@ -45,7 +46,8 @@ class Outgoing(
     private val imsUserRepository: IMSUserRepository,
     private val incoming: Incoming,
     private val nodeSourcerer: NodeSourcerer,
-    private val labelInfoRepository: LabelInfoRepository
+    private val labelInfoRepository: LabelInfoRepository,
+    private val timelineItemHandler: TimelineItemHandler
 ) {
     /**
      * Logger used to print notifications
@@ -70,7 +72,7 @@ class Outgoing(
     }
 
     /**
-     * Find token for an IMSUser or an IMSUser on the same IMS with same username
+     * Find token for an IMSUser
      * @param user user to search token for
      * @param imsProjectConfig active config
      * @return string if token found, null otherwise
@@ -81,23 +83,27 @@ class Outgoing(
             if (token != null) {
                 return token
             }
-            if (user.username?.isEmpty() != false) {
-                return null
-            }
-            val node = Cypher.node(IMSUser::class.simpleName).named("iMSUser")
-            val imsNode = Cypher.node(IMS::class.simpleName)
-                .withProperties(mapOf("id" to Cypher.anonParameter(imsProjectConfig.imsConfig.ims.rawId!!)))
-            val imsCondition = node.relationshipFrom(imsNode, IMS.USER).asCondition()
-            val usernameCondition = node.property("username").eq(Cypher.anonParameter(user.username))
-            for (imsUser in imsUserRepository.findAll(imsCondition.and(usernameCondition)).collectList()
-                .awaitSingle()) {
-                val imsUserToken = tokenManager.getGithubUserToken(imsUser)
-                if (imsUserToken != null) {
-                    return imsUserToken
-                }
-            }
         }
         return null
+    }
+
+    /**
+     * Find all IMSUsers intersecting the configured IMS and the given user
+     * @param user user to search token for
+     * @param imsProjectConfig active config
+     * @return list of all IMSUsers
+     */
+    private suspend fun findAllIMSUsers(imsProjectConfig: IMSProjectConfig, user: User): List<IMSUser> {
+        val node = Cypher.node(IMSUser::class.simpleName).named("iMSUser")
+        val imsNode = Cypher.node(IMS::class.simpleName)
+            .withProperties(mapOf("id" to Cypher.anonParameter(imsProjectConfig.imsConfig.ims.rawId!!)))
+        val imsCondition = node.relationshipFrom(imsNode, IMS.USER).asCondition()
+        val userNode = Cypher.node(GropiusUser::class.simpleName)
+            .withProperties(mapOf("userId" to Cypher.anonParameter(user.rawId!!)))
+        val userCondition = node.relationshipTo(userNode, IMSUser.GROPIUS_USER).asCondition()
+        return imsUserRepository.findAll(
+            imsCondition.and(userCondition)
+        ).collectList().awaitSingle()
     }
 
     /**
@@ -107,22 +113,21 @@ class Outgoing(
      * @return string if token found, null otherwise
      */
     private suspend fun extractUserToken(imsProjectConfig: IMSProjectConfig, user: User): String? {
-        var activeGropiusUser: GropiusUser
-        if (user is IMSUser) {
+        val activeGropiusUser: GropiusUser = if (user is IMSUser) {
             val token = extractIMSUserToken(imsProjectConfig, user)
             if (token != null) {
                 return token
             }
-            val gropiusUser = user.gropiusUser().value
-            if (gropiusUser == null) {
-                return null
-            } else {
-                activeGropiusUser = gropiusUser
-            }
-        } else if (user is GropiusUser) {
-            activeGropiusUser = user
+            user.gropiusUser().value ?: return null
+        } else {
+            user as GropiusUser
         }
-        //TODO("Search gropius user")
+        for (imsUser in findAllIMSUsers(imsProjectConfig, activeGropiusUser)) {
+            val imsUserToken = extractIMSUserToken(imsProjectConfig, imsUser)
+            if (imsUserToken != null) {
+                return imsUserToken
+            }
+        }
         return null
     }
 
@@ -290,6 +295,28 @@ class Outgoing(
     }
 
     /**
+     * Mutate an IssueComment upto GitHub
+     * @param imsProjectConfig active config
+     * @param issueInfo info of the issue containing the timeline item
+     * @param user user that has contributed to the event
+     * @param comment the comment to post
+     * @return List of functions that contain the actual mutation executors
+     */
+    private suspend fun githubPostComment(
+        imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, comment: IssueComment, user: User
+    ): List<suspend () -> Unit> {
+        logger.info("Scheduling comment ${comment.body} on ${issueInfo.neo4jId}")
+        return listOf {
+            val client = createClient(imsProjectConfig, listOf(user))
+            val response = client.mutation(MutateCreateCommentMutation(issueInfo.githubId, comment.body)).execute()
+            val item = response.data?.addComment?.commentEdge?.node
+            if (item != null) {
+                timelineItemHandler.handleIssueComment(imsProjectConfig, issueInfo, item, null)
+            }
+        }
+    }
+
+    /**
      * Mutate the open/close state of an issue upto GitHub
      * @param imsProjectConfig active config
      * @param issueInfo info of the issue containing the timeline item
@@ -299,7 +326,8 @@ class Outgoing(
     private suspend fun pushReopenClose(
         imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, timeline: List<TimelineItem>
     ): List<suspend () -> Unit> {
-        val relevantTimeline = timeline.filter { (it is ReopenedEvent) || (it is ClosedEvent) }
+        val relevantTimeline =
+            timeline.filter { (it is ReopenedEvent) || (it is ClosedEvent) }//TODO: block similar to label?
         if (relevantTimeline.isEmpty()) {
             return listOf()
         }
@@ -310,6 +338,24 @@ class Outgoing(
             }
         }
         return handleFinalReopenCloseBlock(finalBlock, relevantTimeline, imsProjectConfig, issueInfo)
+    }
+
+    /**
+     * Mutate the comments of an issue upto GitHub
+     * @param imsProjectConfig active config
+     * @param issueInfo info of the issue containing the timeline item
+     * @param timeline TimelineItems for this issue
+     * @return List of functions that contain the actual mutation executors
+     */
+    private suspend fun pushComments(
+        imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, timeline: List<TimelineItem>
+    ): List<suspend () -> Unit> {
+        return timeline.mapNotNull { it as? IssueComment }
+            .filter { timelineEventInfoRepository.findByNeo4jId(it.rawId!!) == null }.flatMap {
+                githubPostComment(
+                    imsProjectConfig, issueInfo, it as IssueComment, it.lastModifiedBy().value
+                )
+            }
     }
 
     /**
@@ -458,6 +504,7 @@ class Outgoing(
         val timeline = issue.timelineItems().toList().sortedBy { it.lastModifiedAt }
         collectedMutations += pushReopenClose(imsProjectConfig, issueInfo, timeline)
         collectedMutations += pushLabels(imsProjectConfig, issueInfo, timeline)
+        collectedMutations += pushComments(imsProjectConfig, issueInfo, timeline)
         return collectedMutations
     }
 

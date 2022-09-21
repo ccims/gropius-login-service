@@ -3,11 +3,15 @@ package gropius.model.user
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.architecture.IMS
+import gropius.model.template.BaseTemplate
+import gropius.model.template.IMSUserTemplate
+import gropius.model.template.TemplatedNode
 import io.github.graphglue.model.Direction
 import io.github.graphglue.model.DomainNode
 import io.github.graphglue.model.FilterProperty
 import io.github.graphglue.model.NodeRelationship
 import org.springframework.data.annotation.Transient
+import org.springframework.data.neo4j.core.schema.CompositeProperty
 
 @DomainNode
 @GraphQLDescription(
@@ -22,8 +26,11 @@ class IMSUser(
     displayName: String,
     email: String?,
     @property:GraphQLIgnore
-    var username: String?
-) : User(displayName, email) {
+    var username: String?,
+    @property:GraphQLIgnore
+    @CompositeProperty
+    override val templatedFields: MutableMap<String, String>
+) : User(displayName, email), TemplatedNode {
 
     companion object {
         const val GROPIUS_USER = "GROPIUS_USER"
@@ -31,6 +38,12 @@ class IMSUser(
 
     @GraphQLDescription("The username of the IMSUser. Synced from the IMS this user is part of. Might not be unique.")
     override fun username(): String? = username
+
+    @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
+    @GraphQLDescription("The Template of this IMSUser")
+    @FilterProperty
+    @delegate:Transient
+    override val template by NodeProperty<IMSUserTemplate>()
 
     @NodeRelationship(GROPIUS_USER, Direction.OUTGOING)
     @GraphQLDescription("The GropiusUser this IMSUser is linked to. An IMSUser might be linked to no GropiusUser.")

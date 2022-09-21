@@ -19,6 +19,9 @@ fragment PageInfoData on PageInfo {
 }
 fragment UserData on Actor {
     login
+    ...on Node {
+        id
+    }
 }
 fragment LabelData on Label {
     id

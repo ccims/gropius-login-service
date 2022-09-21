@@ -27,7 +27,7 @@ class GropiusUser(
     email: String?,
     @property:GraphQLIgnore
     val username: String,
-    @property:GraphQLIgnore
+    @GraphQLDescription("True if the user is an admin")
     var isAdmin: Boolean
 ) : User(displayName, email) {
 

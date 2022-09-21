@@ -9,6 +9,7 @@ import gropius.repository.architecture.IMSRepository
 import gropius.repository.findById
 import gropius.repository.user.IMSUserRepository
 import gropius.service.common.AbstractExtensibleNodeService
+import gropius.service.template.TemplatedNodeService
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 
@@ -17,11 +18,13 @@ import org.springframework.stereotype.Service
  *
  * @param repository the associated repository used for CRUD functionality
  * @param imsRepository used to get [IMS]s by id
+ * @param templatedNodeService used to update templatedFields
  */
 @Service
 class IMSUserService(
     repository: IMSUserRepository,
-    private val imsRepository: IMSRepository
+    private val imsRepository: IMSRepository,
+    private val templatedNodeService: TemplatedNodeService
 ) : AbstractExtensibleNodeService<IMSUser, IMSUserRepository>(repository) {
 
     /**
@@ -34,8 +37,12 @@ class IMSUserService(
      */
     suspend fun createIMSUser(input: CreateIMSUserInput): IMSUser {
         input.validate()
-        val imsUser = IMSUser(input.displayName, input.email, input.username)
-        imsUser.ims().value = imsRepository.findById(input.ims)
+        val ims = imsRepository.findById(input.ims)
+        val template = ims.template().value.imsUserTemplate().value
+        val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
+        val imsUser = IMSUser(input.displayName, input.email, input.username, templatedFields)
+        imsUser.template().value = template
+        imsUser.ims().value = ims
         if (input.gropiusUser != null) {
             imsUser.gropiusUser().value = gropiusUserRepository.findById(input.gropiusUser)
         }
@@ -70,6 +77,7 @@ class IMSUserService(
                 imsUser.gropiusUser().value = gropiusUserRepository.findById(it)
             }
         }
+        templatedNodeService.updateTemplatedFields(imsUser, input, false)
         updateExtensibleNode(imsUser, input)
         return repository.save(imsUser).awaitSingle()
     }

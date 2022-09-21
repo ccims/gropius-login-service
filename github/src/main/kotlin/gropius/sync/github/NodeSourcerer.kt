@@ -8,6 +8,7 @@ import gropius.model.template.IssueType
 import gropius.model.user.IMSUser
 import gropius.model.user.User
 import gropius.sync.github.generated.fragment.*
+import gropius.sync.github.generated.fragment.UserData.Companion.asNode
 import gropius.sync.github.model.IssueInfo
 import gropius.sync.github.model.LabelInfo
 import gropius.sync.github.model.UserInfo
@@ -25,26 +26,22 @@ import java.time.OffsetDateTime
 
 /**
  * Save GitHub nodes as gropius nodes into the database
+ * @param helper Reference for the spring instance of JsonHelper
+ * @param neoOperations Reference for the spring instance of ReactiveNeo4jOperations
+ * @param issueInfoRepository Reference for the spring instance of IssueInfoRepository
+ * @param userInfoRepository Reference for the spring instance of UserInfoRepository
+ * @param labelInfoRepository Reference for the spring instance of LabelInfoRepository
+ * @param tokenManager Reference for the spring instance of TokenManager
  */
 @Component
 class NodeSourcerer(
-    /**
-     * Reference for the spring instance of ReactiveNeo4jOperations
-     */
     @Qualifier("graphglueNeo4jOperations")
     private val neoOperations: ReactiveNeo4jOperations,
-    /**
-     * Reference for the spring instance of IssueInfoRepository
-     */
     private val issueInfoRepository: IssueInfoRepository,
-    /**
-     * Reference for the spring instance of UserInfoRepository
-     */
     private val userInfoRepository: UserInfoRepository,
-    /**
-     * Reference for the spring instance of LabelInfoRepository
-     */
-    private val labelInfoRepository: LabelInfoRepository
+    private val helper: JsonHelper,
+    private val labelInfoRepository: LabelInfoRepository,
+    private val tokenManager: TokenManager
 ) {
     /**
      * Ensure the default GitHub issue type with the default template is in the database
@@ -185,7 +182,7 @@ class NodeSourcerer(
      * @return a gropius user
      */
     suspend fun ensureUser(imsProjectConfig: IMSProjectConfig, info: UserData) =
-        ensureUser(imsProjectConfig, info.login)
+        ensureUser(imsProjectConfig, info.login, info.asNode()?.id)
 
     /**
      * Ensure a user with the given username is in the database
@@ -193,13 +190,19 @@ class NodeSourcerer(
      * @param imsProjectConfig Config of the active project
      * @return a gropius user
      */
-    suspend fun ensureUser(imsProjectConfig: IMSProjectConfig, username: String): User {
+    suspend fun ensureUser(imsProjectConfig: IMSProjectConfig, username: String, githubId: String? = null): User {
         val userInfo = userInfoRepository.findByUrlAndLogin(imsProjectConfig.url, username)
         return if (userInfo == null) {
-            var user = IMSUser(username, null, username)
+            var user = IMSUser(
+                username,
+                null,
+                username,
+                mutableMapOf("github_id" to (helper.objectMapper.writeValueAsString(githubId) ?: "null"))
+            )
             user.ims().value = imsProjectConfig.imsConfig.ims
             user = neoOperations.save(user).awaitSingle()
             userInfoRepository.save(UserInfo(username, user.rawId!!, imsProjectConfig.url)).awaitSingle()
+            tokenManager.advertiseIMSUser(user)
             user
         } else {
             neoOperations.findById(userInfo.neo4jId)!!

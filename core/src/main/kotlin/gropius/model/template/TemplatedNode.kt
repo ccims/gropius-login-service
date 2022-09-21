@@ -5,11 +5,18 @@ import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import com.expediagroup.graphql.generator.annotations.GraphQLType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.graphglue.model.AdditionalFilter
 import io.github.graphglue.model.property.LazyLoadingDelegate
 import io.github.graphglue.model.property.NodePropertyDelegate
 import org.springframework.beans.factory.annotation.Autowired
 
+/**
+ * Name of the bean defining the templatedFields filter
+ */
+const val TEMPLATED_FIELDS_FILTER_BEAN = "templatedFieldsFilter"
+
 @GraphQLDescription("Interface for all types which support templates.")
+@AdditionalFilter(TEMPLATED_FIELDS_FILTER_BEAN)
 interface TemplatedNode {
 
     /**
@@ -37,16 +44,33 @@ interface TemplatedNode {
             ?: throw IllegalArgumentException("No field found for name $name")
     }
 
-    @GraphQLDescription("All templated fields, if a `namePrefix` is provided, only those matching it")
+    @GraphQLDescription(
+        """All templatedFields
+        If `names` is provided, only those matching the name. If `prefixMatching` is true, matching is done by
+        prefix, otherwise by full name.
+        """
+    )
     fun templatedFields(
-        @GraphQLDescription("Name of the templated field.")
-        namePrefix: String? = null,
+        @GraphQLDescription("Names of the templated fields. If not provided, all templatedFields.")
+        names: List<String>?,
+        @GraphQLDescription(
+            """If true, name matching is performed as prefix matching, otherwise as absolute match.
+            Defaults to absolute matching
+            """
+        )
+        prefixMatching: Boolean?,
         @Autowired
         @GraphQLIgnore
         objectMapper: ObjectMapper
     ): List<JSONField> {
-        val fields = if (namePrefix != null) {
-            templatedFields.filter { it.key.startsWith(namePrefix) }
+        val fields = if (names != null) {
+            templatedFields.filterKeys { key ->
+                if (prefixMatching == true) {
+                    names.any { key.startsWith(it) }
+                } else {
+                    key in names
+                }
+            }
         } else {
             templatedFields
         }

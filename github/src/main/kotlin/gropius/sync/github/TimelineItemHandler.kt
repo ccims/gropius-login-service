@@ -32,10 +32,11 @@ class TimelineItemHandler(
      * @param issue Affected issue
      * @param event raw GitHub timeline item
      * @param imsProjectConfig Config of the active project
+     * @param neo4jID ID of the comment if only modified
      * @return the neo4j-id for the created item (if created) and the last DateTime concerning this item
      */
     suspend fun handleIssueComment(
-        imsProjectConfig: IMSProjectConfig, issue: IssueInfo, event: IssueCommentTimelineItemData, neo4jID: String?
+        imsProjectConfig: IMSProjectConfig, issue: IssueInfo, event: IssueCommentData, neo4jID: String?
     ): Pair<String?, OffsetDateTime?> {
         var commentEvent: IssueComment
         if (neo4jID == null) {

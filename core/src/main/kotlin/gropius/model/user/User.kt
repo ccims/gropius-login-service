@@ -9,6 +9,11 @@ import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 import org.springframework.data.annotation.Transient
 
+/**
+ * Name of the bean defining the username filter
+ */
+const val USERNAME_FILTER_BEAN = "usernameFilter"
+
 @DomainNode
 @GraphQLDescription(
     """A user known to the Gropius System.
@@ -17,7 +22,7 @@ import org.springframework.data.annotation.Transient
     READ is always granted.
     """
 )
-@AdditionalFilter("usernameFilter")
+@AdditionalFilter(USERNAME_FILTER_BEAN)
 @Authorization(NodePermission.READ, allowAll = true)
 abstract class User(
     @property:GraphQLDescription("The name which should be displayed for the user.")

@@ -27,4 +27,9 @@ class IMSTemplate(
     @delegate:Transient
     val imsIssueTemplate by NodeProperty<IMSIssueTemplate>()
 
+    @NodeRelationship(SubTemplate.PART_OF, Direction.INCOMING)
+    @GraphQLDescription("SubTemplate applied to all IMSUsers with this Template")
+    @delegate:Transient
+    val imsUserTemplate by NodeProperty<IMSUserTemplate>()
+
 }

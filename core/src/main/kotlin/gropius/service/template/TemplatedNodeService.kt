@@ -13,15 +13,17 @@ import gropius.dto.input.template.CreateTemplatedNodeInput
 import gropius.dto.input.template.UpdateTemplatedNodeInput
 import gropius.model.template.BaseTemplate
 import gropius.model.template.TemplatedNode
+import gropius.util.JsonNodeMapper
 import org.springframework.stereotype.Service
 
 /**
  * Service for [TemplatedNode]s. Provides functions to create, update and delete
  *
  * @param objectMapper injected [ObjectMapper], used to parse [JSONFieldInput]
+ * @param jsonNodeMapper used to map [JsonNode] to [String]
  */
 @Service
-class TemplatedNodeService(val objectMapper: ObjectMapper) {
+class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: JsonNodeMapper) {
 
     /**
      * Updates the [TemplatedNode.templatedFields] of a [TemplatedNode] based on the [input]
@@ -65,7 +67,7 @@ class TemplatedNodeService(val objectMapper: ObjectMapper) {
             ensureTemplatedFieldsExist(template, fields.map { it.name })
             for (field in fields) {
                 validateField(field.value as JsonNode, template.templateFieldSpecifications[field.name]!!, field.name)
-                node.templatedFields[field.name] = objectMapper.writeValueAsString(field.value)
+                node.templatedFields[field.name] = jsonNodeMapper.jsonNodeToDeterministicString(field.value)
             }
         }
         if (templateWasUpdated) {
@@ -117,7 +119,7 @@ class TemplatedNodeService(val objectMapper: ObjectMapper) {
         return template.templateFieldSpecifications.mapValues {
             val value: JsonNode = fieldLookup[it.key]?.value as JsonNode? ?: JsonNodeFactory.instance.nullNode()
             validateField(value, it.value, it.key)
-            objectMapper.writeValueAsString(value)
+            jsonNodeMapper.jsonNodeToDeterministicString(value)
         }.toMutableMap()
     }
 

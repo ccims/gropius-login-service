@@ -58,3 +58,12 @@ mutation MutateCreateLabel($repositoryId: ID!, $name:String!, $description:Strin
         }
     }
 }
+mutation MutateCreateComment($id: ID!, $body: String!) {
+    addComment(input: {body: $body, subjectId: $id}) {
+        commentEdge {
+            node {
+                ...IssueCommentData
+            }
+        }
+    }
+}

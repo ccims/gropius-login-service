@@ -7,7 +7,9 @@ import org.neo4j.driver.Driver
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
+import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.boot.runApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
@@ -15,6 +17,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import org.springframework.data.neo4j.core.ReactiveDatabaseSelectionProvider
 import org.springframework.data.neo4j.core.transaction.ReactiveNeo4jTransactionManager
+import java.net.URI
 import kotlin.system.exitProcess
 
 /**
@@ -39,6 +42,16 @@ class SyncConfiguration(
         return ReactiveNeo4jTransactionManager(driver, databaseNameProvider)
     }
 }
+
+/**
+ * Configuration properties for the GitHub API
+ *
+ * @param loginServiceBase Base url for login service
+ * @param apiSecret API Secret for login service
+ */
+@ConstructorBinding
+@ConfigurationProperties("gropius.sync.github")
+data class GropiusGithubConfigurationProperties(val loginServiceBase: URI, val apiSecret: String)
 
 /**
  * Main Application

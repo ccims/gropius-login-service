@@ -33,7 +33,7 @@ class JSONCoercing(private val objectMapper: ObjectMapper) : Coercing<JsonNode, 
         return parseLiteral(input, emptyMap())
     }
 
-    override fun parseLiteral(input: Any, variables: Map<String, Any>?): JsonNode {
+    override fun parseLiteral(input: Any, variables: Map<String, Any>): JsonNode {
         return when (input) {
             is NullValue -> JsonNodeFactory.instance.nullNode()
             is FloatValue -> JsonNodeFactory.instance.numberNode(input.value)
@@ -41,7 +41,7 @@ class JSONCoercing(private val objectMapper: ObjectMapper) : Coercing<JsonNode, 
             is IntValue -> JsonNodeFactory.instance.numberNode(input.value)
             is BooleanValue -> JsonNodeFactory.instance.booleanNode(input.isValue)
             is EnumValue -> JsonNodeFactory.instance.textNode(input.name)
-            is VariableReference -> JsonNodeFactory.instance.textNode(input.name)
+            is VariableReference -> parseValue(variables[input.name] ?: input.name)
             is ArrayValue -> JsonNodeFactory.instance.arrayNode().also { arrayNode ->
                 arrayNode.addAll(input.values.map { parseLiteral(it, variables) })
             }

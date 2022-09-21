@@ -1,5 +1,6 @@
 package gropius.service.template
 
+import com.fasterxml.jackson.databind.JsonNode
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.orElse
 import gropius.dto.input.template.CreateBaseTemplateInput
@@ -10,6 +11,8 @@ import gropius.model.user.permission.GlobalPermission
 import gropius.service.common.NamedNodeService
 import io.github.graphglue.authorization.Permission
 import gropius.repository.GropiusRepository
+import gropius.util.JsonNodeMapper
+import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * Base class for services for subclasses of [BaseTemplate]
@@ -23,6 +26,12 @@ abstract class BaseTemplateService<T : BaseTemplate<*, *>, R : GropiusRepository
 ) : NamedNodeService<T, R>(repository) {
 
     /**
+     * Injected [JsonNodeMapper]
+     */
+    @Autowired
+    private lateinit var jsonNodeMapper: JsonNodeMapper
+
+    /**
      * Updates [template] based on [input]
      * Sets templateFieldSpecifications based on [input], and the templateFieldSpecification
      * of [extendedTemplates]
@@ -34,7 +43,7 @@ abstract class BaseTemplateService<T : BaseTemplate<*, *>, R : GropiusRepository
      */
     fun createdBaseTemplate(template: T, input: CreateBaseTemplateInput, extendedTemplates: Collection<T>) {
         val additionalFields = input.templateFieldSpecifications.orElse(emptyList()).map {
-            Pair(it.name, objectMapper.writeValueAsString(it.value))
+            Pair(it.name, jsonNodeMapper.jsonNodeToDeterministicString(it.value as JsonNode))
         }
         val derivedFields =
             extendedTemplates.flatMap { it.templateFieldSpecifications.entries }.map { it.toPair() }.toSet()

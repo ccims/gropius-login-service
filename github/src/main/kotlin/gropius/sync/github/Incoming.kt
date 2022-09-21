@@ -1,7 +1,6 @@
 package gropius.sync.github
 
 import com.apollographql.apollo3.ApolloClient
-import gropius.model.architecture.IMS
 import gropius.model.architecture.IMSIssue
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Issue
@@ -14,17 +13,16 @@ import gropius.sync.github.generated.fragment.TimelineItemData.Companion.asIssue
 import gropius.sync.github.generated.fragment.TimelineItemData.Companion.asNode
 import gropius.sync.github.model.IssueInfo
 import gropius.sync.github.model.TimelineEventInfo
-import gropius.sync.github.repository.*
+import gropius.sync.github.repository.IssueInfoRepository
+import gropius.sync.github.repository.RepositoryInfoRepository
+import gropius.sync.github.repository.TimelineEventInfoRepository
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.collect
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import org.neo4j.cypherdsl.core.Condition
 import org.neo4j.cypherdsl.core.Cypher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
-import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Criteria.where
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
@@ -32,8 +30,6 @@ import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.deleteAllById
 import org.springframework.data.neo4j.core.findById
 import org.springframework.stereotype.Component
-import reactor.core.publisher.toFlux
-import java.lang.Exception
 import java.time.OffsetDateTime
 
 /**
@@ -223,6 +219,7 @@ class Incoming(
      * @param apolloClient the client to use4 for grpahql queries
      */
     suspend fun syncIssues(imsProjectConfig: IMSProjectConfig, apolloClient: ApolloClient) {
+
         syncProject(imsProjectConfig, apolloClient)
         for (issueInfo in issueInfoRepository.findByUrlAndDirtyIsTrue(imsProjectConfig.url).toList()) {
             val issue = neoOperations.findById<Issue>(issueInfo.neo4jId)!!

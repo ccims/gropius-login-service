@@ -2,10 +2,7 @@ package gropius.sync.github
 
 import com.lectra.koson.arr
 import com.lectra.koson.obj
-import gropius.model.template.BaseTemplate
-import gropius.model.template.IMSIssueTemplate
-import gropius.model.template.IMSProjectTemplate
-import gropius.model.template.IMSTemplate
+import gropius.model.template.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactor.awaitSingle
@@ -132,6 +129,20 @@ class IMSConfigManager(
             "type" to "number"
         }.toString()
         )
+
+        /**
+         * Name of the ensured IMSIssueTemplate
+         */
+        private const val IMS_USER_TEMPLATE_NAME = "Github Issue"
+
+        /**
+         * Fields of the required IMSIssueTemplate
+         */
+        private val IMS_USER_TEMPLATE_FIELDS = mapOf("github_id" to obj {
+            "\$schema" to SCHEMA
+            "type" to arr["null", "string"]
+        }.toString()
+        )
     }
 
     /**
@@ -160,6 +171,8 @@ class IMSConfigManager(
                 it.imsProjectTemplate().value, IMS_PROJECT_TEMPLATE_NAME, IMS_PROJECT_TEMPLATE_FIELDS
             ) && isContentCompatible(
                 it.imsIssueTemplate().value, IMS_ISSUE_TEMPLATE_NAME, IMS_ISSUE_TEMPLATE_FIELDS
+            ) && isContentCompatible(
+                it.imsUserTemplate().value, IMS_USER_TEMPLATE_NAME, IMS_USER_TEMPLATE_FIELDS
             )
         }.toSet()
         if (acceptableTemplates.isEmpty()) {
@@ -169,6 +182,9 @@ class IMSConfigManager(
             )
             imsTemplate.imsIssueTemplate().value = IMSIssueTemplate(
                 IMS_ISSUE_TEMPLATE_NAME, "", IMS_ISSUE_TEMPLATE_FIELDS.toMutableMap()
+            )
+            imsTemplate.imsUserTemplate().value = IMSUserTemplate(
+                IMS_USER_TEMPLATE_NAME, "", IMS_USER_TEMPLATE_FIELDS.toMutableMap()
             )
             acceptableTemplates.plus(neoOperations.save(imsTemplate).awaitSingle())
         }
