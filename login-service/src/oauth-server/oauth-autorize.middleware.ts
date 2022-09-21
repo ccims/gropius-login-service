@@ -34,7 +34,7 @@ export class OauthAutorizeMiddleware implements NestMiddleware {
             (res.locals.state as AuthStateData).authErrorType = "unsupported_response_type";
         }
         if (!!params.redirect_uri && !client.redirectUrls.includes(params.redirect_uri)) {
-            throw new HttpException("Given redirect URI not valid for this client.", HttpStatus.BAD_REQUEST);
+            throw new HttpException("Given redirect URI not valid for this client", HttpStatus.BAD_REQUEST);
         }
         const redirect = params.redirect_uri || client.redirectUrls[0];
         const state = params.state;

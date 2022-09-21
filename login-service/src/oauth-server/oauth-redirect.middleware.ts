@@ -63,13 +63,13 @@ export class OauthRedirectMiddleware implements NestMiddleware {
             });
         }
         if (!state.activeLogin.isValid) {
-            throw new Error("Active login invalid.");
+            throw new Error("Active login invalid");
         }
         if (state.activeLogin.nextExpectedRefreshTokenNumber != ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED) {
             throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (state.activeLogin.expires != null && state.activeLogin.expires <= new Date()) {
-            throw new Error("Active login expired.");
+            throw new Error("Active login expired");
         }
         state.activeLogin.createdByClient = Promise.resolve(state.client);
         state.activeLogin.expires = new Date(Date.now() + expiresIn);

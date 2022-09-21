@@ -1,4 +1,5 @@
 import { All, Body, Controller, Get, HttpException, HttpStatus, Param, Post, Res } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
@@ -6,6 +7,7 @@ import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
+import { OpenApiTag } from "src/openapi-tag";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { ensureState } from "src/strategies/utils";
 import { OauthServerStateData } from "./oauth-autorize.middleware";
@@ -20,6 +22,7 @@ export interface OauthTokenEdnpointResponseDto {
 }
 
 @Controller("oauth")
+@ApiTags(OpenApiTag.CREDENTIALS)
 export class OauthTokenController {
     constructor(
         private readonly authClientService: AuthClientService,
@@ -42,21 +45,21 @@ export class OauthTokenController {
         switch (loginData.state) {
             case LoginState.VALID:
                 if (!(await loginData.user)) {
-                    throw new OauthHttpException("invalid_state", "No user for valid login. Internal server error.");
+                    throw new OauthHttpException("invalid_state", "No user for valid login");
                 }
                 break;
             case LoginState.WAITING_FOR_REGISTER:
                 if (await loginData.user) {
                     throw new OauthHttpException(
                         "invalid_state",
-                        "Login still in register state but user already existing. Internal server error.",
+                        "Login still in register state but user already existing",
                     );
                 }
                 break;
             default:
                 throw new OauthHttpException(
                     "invalid_grant",
-                    "Login for given grant is not valid any more. Please re-login",
+                    "Login for given grant is not valid any more; Please re-login",
                 );
         }
         if (!activeLogin) {
@@ -72,7 +75,7 @@ export class OauthTokenController {
         }
         if (!activeLogin.isValid) {
             console.error("Active login is set invalid", activeLogin.id);
-            throw new OauthHttpException("invalid_grant", "Login is set invalid/disabled.");
+            throw new OauthHttpException("invalid_grant", "Login is set invalid/disabled");
         }
     }
 

@@ -45,7 +45,7 @@ export class BackendUserService {
                 },
             });
             if (!backendUser.createGropiusUser.gropiusUser.id) {
-                throw new Error("No Id returned on mutation. Assuming error");
+                throw new Error("No Id returned on mutation; Assuming error");
             }
             loginUser.neo4jId = backendUser.createGropiusUser.gropiusUser.id;
             loginUser = await this.loginUserService.save(loginUser);
