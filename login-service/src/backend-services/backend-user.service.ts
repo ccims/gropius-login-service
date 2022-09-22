@@ -15,19 +15,27 @@ export interface CreateUserInput {
 export class BackendUserService {
     constructor(private readonly graphqlService: GraphqlService, private readonly loginUserService: LoginUserService) {}
 
+    /**
+     * Checks if the user may access admin actions.
+     *
+     * Calls the backend API to retrieve the information.
+     *
+     * Potential optimation if performance is a problem: Cache admin state for one login session (activeLogin)
+     *
+     * @param user The user for which to check admin permissions
+     * @returns `true` if the user is allowed to access admin actions, `false` if not
+     */
     async checkIsUserAdmin(user: LoginUser): Promise<boolean> {
-        // todo: adapt once actual query is available
         if (!user.neo4jId) {
             throw new Error("User without neo4jId: " + user.id);
         }
-        return (
-            true ||
-            (
-                await this.graphqlService.sdk.checkUserIsAdmin({
-                    id: user.neo4jId,
-                })
-            ).node.id == ""
-        );
+        const loadedUser = await this.graphqlService.sdk.checkUserIsAdmin({ id: user.id });
+        if (loadedUser.node.__typename == "GropiusUser") {
+            if (loadedUser.node.isAdmin) {
+                return true;
+            }
+        }
+        return false;
     }
 
     async createNewUser(input: CreateUserInput, isAdmin: boolean): Promise<LoginUser> {

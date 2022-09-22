@@ -11,8 +11,11 @@ query getUserByName($username: String!) {
 }
 
 query checkUserIsAdmin($id: ID!) {
-    node(id: $id) {
-        ...OnlyId
+    node(id: "") {
+        ... on GropiusUser {
+            id
+            isAdmin
+        }
     }
 }
 

@@ -44,8 +44,8 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         };
     }
 
-    protected override checkInstanceConfig(instanceConfig: object): boolean {
-        return Object.keys(instanceConfig).length === 0;
+    protected override checkAndExtendInstanceConfig(instanceConfig: object): object {
+        return {};
     }
 
     private async generateLoginDataData(password: string): Promise<{ password: string }> {

@@ -37,7 +37,11 @@ export class StrategiesMiddleware implements NestMiddleware {
                 );
                 if (imsUserSearchOnModes.includes(state.function)) {
                     const loginData = await state.activeLogin.loginInstanceFor;
-                    await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
+                    try {
+                        await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
+                    } catch (err) {
+                        console.warn("Error while linking/creating IMSUsers in the backend:", err);
+                    }
                 }
             }
         }

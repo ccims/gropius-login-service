@@ -30,7 +30,8 @@ export abstract class Strategy {
     }
 
     /**
-     * Checks the given config for a instance of this strategy for validity
+     * Checks the given config for a instance and extends it (e.g. with default values)
+     * of this strategy for validity
      *
      * For strategies that can sync, this checks the existance and format of
      * `imsTemplatedFieldsFilter` in the instance config.
@@ -38,25 +39,26 @@ export abstract class Strategy {
      * for an IMS to be considered an ims fot this strategy instance.
      *
      * @param instanceConfig The config object to check for validity
-     * @return `true` iff the config is valid, `false` or an error mesage if the config has errors
+     * @return The instance config in the way as it should be insterted in the instance
+     * @throws Any error/exception if the instance config was invalid and no instance may be crated
      */
-    protected checkInstanceConfig(instanceConfig: object): boolean | string {
+    protected checkAndExtendInstanceConfig(instanceConfig: object): object {
         if (this.canSync) {
             const imsTemplatedFieldsFilter = instanceConfig["imsTemplatedFieldsFilter"];
             if (!imsTemplatedFieldsFilter) {
-                return (
+                throw new Error(
                     "Instances of strategies that can sync must configure the `imsTemplatedFieldsFilter` " +
-                    "that sets the expected templated values on the ims"
+                        "on the instance config that sets the expected templated values on the ims",
                 );
             }
             if (typeof imsTemplatedFieldsFilter !== "object") {
-                return (
+                throw new Error(
                     "`imsTemplatedFieldsFilter`must be a object/json on the fields " +
-                    "and values that are expected on the ims"
+                        "and values that are expected on the ims",
                 );
             }
         }
-        return true;
+        return instanceConfig;
     }
 
     private updateCapabilityFlags(patrentValue: boolean, useDefault: boolean, inputValue?: boolean | null): boolean {
@@ -84,11 +86,9 @@ export abstract class Strategy {
                 throw new Error("Called createNewInstance on wrong strategy type");
             }
         }
-        if (input.instanceConfig) {
-            const verifyResult = this.checkInstanceConfig(input.instanceConfig);
-            if (verifyResult !== true) {
-                throw new Error("Instance config format invalid: " + verifyResult);
-            }
+        let resultingInstanceConfig: object;
+        if (createNew || input.instanceConfig) {
+            resultingInstanceConfig = this.checkAndExtendInstanceConfig(input.instanceConfig || {});
         }
         const instance = createNew ? new StrategyInstance(this.typeName) : instanceToUpdate;
         instance.doesImplicitRegister = this.updateCapabilityFlags(
@@ -107,7 +107,7 @@ export abstract class Strategy {
             instance.name = input.name?.replace(/[^a-zA-Z0-9+/\-_= ]/g, "") ?? null;
         }
         if (createNew || input.instanceConfig) {
-            instance.instanceConfig = input.instanceConfig ?? {};
+            instance.instanceConfig = resultingInstanceConfig ?? {};
         }
 
         return await this.strategyInstanceService.save(instance);
