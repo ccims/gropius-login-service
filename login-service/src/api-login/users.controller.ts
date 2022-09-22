@@ -199,7 +199,7 @@ export class UsersController {
      *
      * @param id The uuid string of the existing user to get the loginData for or 'self'
      * @param res The response object containing the request state
-     * @returns If user exixts, login data for the user with the specified id
+     * @returns If user exits, login data for the user with the specified id
      */
     @Get(":id/loginData")
     @ApiOperation({ summary: "List all loginData of one user" })
