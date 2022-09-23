@@ -9,6 +9,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { Strategy } from "src/strategies/Strategy";
 import { jsonFieldArrayToObject, objectToJsonFieldArray } from "./JSONField";
 import { BackendUserService } from "./backend-user.service";
+import { deepEqual } from "fast-equals";
 
 @Injectable()
 export class ImsUserFindingService {
@@ -46,7 +47,7 @@ export class ImsUserFindingService {
                 if (requiredTemplatedValues[key] != node[key]) {
                     return false;
                 }
-                if (JSON.stringify(node[key]) != JSON.stringify(requiredTemplatedValues[key])) {
+                if (deepEqual(requiredTemplatedValues[key], node[key])) {
                     return false;
                 }
                 delete requiredTemplatedValues[key];
