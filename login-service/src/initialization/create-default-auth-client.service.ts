@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { UserLoginData, LoginState } from "src/model/postgres/UserLoginData.entity";
@@ -10,6 +10,7 @@ import { UserLoginDataService } from "src/model/services/user-login-data.service
 
 @Injectable()
 export class CreateDefaultAuthClientService {
+    private readonly logger = new Logger(CreateDefaultAuthClientService.name);
     constructor(
         private readonly strategiesService: StrategiesService,
         private readonly strategyInstanceService: StrategyInstanceService,
@@ -31,7 +32,7 @@ export class CreateDefaultAuthClientService {
             isValid: true,
         });
         if (authClient) {
-            console.log(
+            this.logger.log(
                 `Valid auth client with name ${clientName} without secret already exists. Skipping creation. Id:`,
                 authClient.id,
             );
@@ -46,6 +47,6 @@ export class CreateDefaultAuthClientService {
         authClient.redirectUrls = [];
         authClient = await this.authClientService.save(authClient);
 
-        console.log(`Created auth client with name ${clientName} without secret. Id:`, authClient.id);
+        this.logger.log(`Created auth client with name ${clientName} without secret. Id:`, authClient.id);
     }
 }

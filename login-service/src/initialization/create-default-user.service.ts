@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
@@ -14,6 +14,7 @@ import { Strategy } from "src/strategies/Strategy";
  */
 @Injectable()
 export class CreateDefaultUserService {
+    private readonly logger = new Logger(CreateDefaultUserService.name);
     constructor(
         private readonly strategiesService: StrategiesService,
         private readonly strategyInstanceService: StrategyInstanceService,
@@ -78,7 +79,7 @@ export class CreateDefaultUserService {
         let loginData: UserLoginData | undefined = result.result.loginData;
 
         if (loginData) {
-            console.log(`Login data matching the provided data already exists. Skipping creation`);
+            this.logger.log(`Login data matching the provided data already exists. Skipping creation`);
         } else {
             if (!result.result.mayRegister) {
                 throw new Error(`Auth result disallowed registering`);
@@ -117,7 +118,7 @@ export class CreateDefaultUserService {
             if (!userFromLoginData) {
                 loginData.user = Promise.resolve(user);
             } else if (userFromLoginData.id == user.id) {
-                console.log(`Found matching pair of login data and user. Nothing to do`);
+                this.logger.log(`Found matching pair of login data and user. Nothing to do`);
             } else {
                 throw new Error("No user for username found but login data has already different user assigned");
             }
@@ -162,7 +163,7 @@ export class CreateDefaultUserService {
             if (!(await this.backendUserService.checkIsUserAdmin(user))) {
                 throw new Error(`Found user with username ${username} but withoud admin permissions.`);
             }
-            console.log(`User with username ${username} already exists. Skipping creation`);
+            this.logger.log(`User with username ${username} already exists. Skipping creation`);
         }
 
         const loginData = await this.getLoginDataThroughAuth(strategyInstanceName, {

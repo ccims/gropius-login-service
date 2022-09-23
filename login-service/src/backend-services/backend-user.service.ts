@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { GraphqlService } from "src/model/graphql/graphql.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
@@ -13,6 +13,7 @@ export interface CreateUserInput {
 
 @Injectable()
 export class BackendUserService {
+    private readonly logger = new Logger(BackendUserService.name);
     constructor(private readonly graphqlService: GraphqlService, private readonly loginUserService: LoginUserService) {}
 
     /**
@@ -102,6 +103,6 @@ export class BackendUserService {
                     (result.status == "fulfilled" && !result.value.updateIMSUser.imsuser.id),
             )
             .map((result) => (result.status == "fulfilled" ? result.value : result.reason));
-        console.warn("Failures during linking ims user and Gropius user:", failedLinks);
+        this.logger.warn("Failures during linking ims user and Gropius user:", failedLinks);
     }
 }

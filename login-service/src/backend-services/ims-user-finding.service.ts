@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { GraphqlService } from "src/model/graphql/graphql.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
@@ -12,6 +12,7 @@ import { BackendUserService } from "./backend-user.service";
 
 @Injectable()
 export class ImsUserFindingService {
+    private readonly logger = new Logger(ImsUserFindingService.name);
     constructor(
         private readonly graphqlService: GraphqlService,
         private readonly strategiesService: StrategiesService,
@@ -62,7 +63,7 @@ export class ImsUserFindingService {
     ): Promise<boolean> {
         const requiredTemplatedValues = await strategy.getImsTemplatedValuesForStrategyInstance(instance);
         if (requiredTemplatedValues == null) {
-            console.warn(`Syncing strategy instance ${instance.id} did not provide required templated values`);
+            this.logger.error(`Syncing strategy instance ${instance.id} did not provide required templated values`);
             return false;
         }
         if (!this.checkFieldsDirectly(ims, requiredTemplatedValues, ["id", "name", "description"])) {
@@ -246,7 +247,7 @@ export class ImsUserFindingService {
             },
         });
 
-        console.log("Retrieved matching imss and ims users:", matchingImsUsers);
+        this.logger.debug("Retrieved matching imss and ims users:", matchingImsUsers);
         return {
             imsUserIds: matchingImsUsers.imss.nodes.flatMap((ims) => ims.users.nodes.map((user) => user.id)),
             imsIdsWithoutImsUsers: matchingImsUsers.imss.nodes

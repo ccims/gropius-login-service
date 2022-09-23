@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import * as passportGithub from "passport-github2";
@@ -14,6 +14,7 @@ import { checkType } from "../utils";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
+    private readonly loggerGithub = new Logger(GithubStrategyService.name);
     constructor(
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
@@ -152,7 +153,6 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 profile: any,
                 done: (err, user: AuthResult | false, info) => void,
             ) => {
-                console.log("Github profile", profile);
                 const username = profile.username;
                 const dataActiveLogin = {
                     accessToken,
@@ -167,7 +167,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                     username,
                 });
                 if (loginDataCandidates.length != 1) {
-                    console.error("Oauth login didn's find unique login data", loginDataCandidates);
+                    this.loggerGithub.debug("Oauth login didn's find unique login data", loginDataCandidates);
                     done(
                         null,
                         {

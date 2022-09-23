@@ -100,7 +100,6 @@ export class UserpassStrategyService extends StrategyUsingPassport {
                     );
                 }
 
-                console.log(`Auth for ${username} with ${password}`);
                 return done(
                     null,
                     {

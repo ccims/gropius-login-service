@@ -5,8 +5,10 @@ import { AuthStateData, AuthResult } from "./AuthResult";
 import { JwtService } from "@nestjs/jwt";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
+import { Logger } from "@nestjs/common";
 
 export abstract class StrategyUsingPassport extends Strategy {
+    private readonly logger = new Logger(StrategyUsingPassport.name);
     constructor(
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
@@ -44,7 +46,7 @@ export abstract class StrategyUsingPassport extends Strategy {
             return this.passportInstances.get(strategyInstance.id);
         } else {
             const newInstance = this.createPassportStrategyInstance(strategyInstance);
-            console.log(
+            this.logger.debug(
                 `Created new passport strategy for strategy ${this.typeName}, instance: ${strategyInstance.id}`,
             );
             this.passportInstances.set(strategyInstance.id, newInstance);
@@ -73,7 +75,6 @@ export abstract class StrategyUsingPassport extends Strategy {
                     ...this.getAdditionalPassportOptions(strategyInstance, authStateData),
                 },
                 (err, user: AuthResult | false, info) => {
-                    console.log("passport callback", err, user, info);
                     if (err) {
                         reject(err);
                     } else {
@@ -89,12 +90,8 @@ export abstract class StrategyUsingPassport extends Strategy {
                     }
                 },
             )(req, res, (a) => {
-                console.log("next called by passport", a);
-                return resolve({
-                    result: null,
-                    returnedState: null,
-                    info: null,
-                });
+                this.logger.error("next called by passport", a);
+                return reject("Next called by passport");
             });
         });
     }

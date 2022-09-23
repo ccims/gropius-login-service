@@ -1,4 +1,4 @@
-import { All, Body, Controller, Get, HttpException, HttpStatus, Param, Post, Res } from "@nestjs/common";
+import { All, Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post, Res } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
@@ -24,6 +24,7 @@ export interface OauthTokenEdnpointResponseDto {
 @Controller("oauth")
 @ApiTags(OpenApiTag.CREDENTIALS)
 export class OauthTokenController {
+    private readonly logger = new Logger(OauthTokenController.name);
     constructor(
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
@@ -32,11 +33,11 @@ export class OauthTokenController {
 
     private async checkLoginDataIsVaild(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
         if (!loginData) {
-            console.error("Login data not found");
+            this.logger.warn("Login data not found");
             throw new OauthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
         if (loginData.expires != null && loginData.expires <= new Date()) {
-            console.error("Login data has expired", loginData);
+            this.logger.warn("Login data has expired", loginData);
             throw new OauthHttpException(
                 "invalid_grant",
                 "Login has expired. Try restarting login/register/link process.",
@@ -63,18 +64,18 @@ export class OauthTokenController {
                 );
         }
         if (!activeLogin) {
-            console.error("Active login not found");
+            this.logger.warn("Active login not found");
             throw new OauthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
-            console.error("Active login has expired", activeLogin.id);
+            this.logger.warn("Active login has expired", activeLogin.id);
             throw new OauthHttpException(
                 "invalid_grant",
                 "Login has expired. Try restarting login/register/link process.",
             );
         }
         if (!activeLogin.isValid) {
-            console.error("Active login is set invalid", activeLogin.id);
+            this.logger.warn("Active login is set invalid", activeLogin.id);
             throw new OauthHttpException("invalid_grant", "Login is set invalid/disabled");
         }
     }
@@ -85,7 +86,7 @@ export class OauthTokenController {
         currentClient: AuthClient,
     ): Promise<ActiveLogin> {
         const loginExpiresIn = parseInt(process.env.GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS, 10);
-        console.log("Updating active login", isRegisterLogin, loginExpiresIn, activeLogin.supportsSync);
+        this.logger.debug("Updating active login", isRegisterLogin, loginExpiresIn, activeLogin.supportsSync);
         if (!isRegisterLogin) {
             activeLogin = await this.activeLoginService.setActiveLoginExpiration(activeLogin);
         }

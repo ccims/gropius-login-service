@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { UserLoginData, LoginState } from "src/model/postgres/UserLoginData.entity";
 import { LoginUserService } from "src/model/services/login-user.service";
@@ -13,6 +13,7 @@ import { UserLoginDataService } from "src/model/services/user-login-data.service
  */
 @Injectable()
 export class CreateDefaultStrategyInstanceService {
+    private readonly logger = new Logger(CreateDefaultStrategyInstanceService.name);
     constructor(
         private readonly strategiesService: StrategiesService,
         private readonly strategyInstanceService: StrategyInstanceService,
@@ -32,7 +33,7 @@ export class CreateDefaultStrategyInstanceService {
                 isLoginActive: true,
             });
             if (existingInstance) {
-                console.log(
+                this.logger.log(
                     `Strategy named ${instanceName} with enabled login already exists. Skipping creation; Id:`,
                     existingInstance.id,
                 );
@@ -44,7 +45,7 @@ export class CreateDefaultStrategyInstanceService {
                 isLoginActive: true,
             });
             if (existingClient) {
-                console.log(
+                this.logger.log(
                     `No name for default strategy instance given and instance of type ` +
                         `${strategyName} with enabled login already existed. Skiping creation; Id:`,
                     existingClient.id,
@@ -67,5 +68,6 @@ export class CreateDefaultStrategyInstanceService {
             name: instanceName,
             instanceConfig,
         });
+        this.logger.log(`Created new default strategy instance of type ${instance.type}. Id:`, instance.id);
     }
 }

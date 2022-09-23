@@ -6,6 +6,7 @@ import {
     Get,
     HttpException,
     HttpStatus,
+    Logger,
     Param,
     Post,
     Put,
@@ -39,6 +40,7 @@ import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-deta
 @Controller()
 @ApiTags(OpenApiTag.LOGIN_API)
 export class StrategyInstancesController {
+    private readonly logger = new Logger(StrategyInstancesController.name);
     constructor(
         private readonly strategiesService: StrategiesService,
         private readonly strategyInstanceService: StrategyInstanceService,
@@ -177,7 +179,7 @@ export class StrategyInstancesController {
         try {
             return strategy.createOrUpdateNewInstance(input);
         } catch (err) {
-            console.error(err);
+            this.logger.warn("Error on strategy instance creation", err);
             throw new HttpException(err.message ?? err, HttpStatus.BAD_REQUEST);
         }
     }
