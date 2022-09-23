@@ -3,7 +3,6 @@ import { JwtModule, JwtService } from "@nestjs/jwt";
 import { ModelModule } from "src/model/model.module";
 import { ErrorHandlerMiddleware } from "./error-handler.middleware";
 import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
-import { OauthStrategyService } from "./github/oauth.service";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesMiddleware } from "./strategies.middleware";
 import { UserpassStrategyService } from "./userpass/userpass.service";
@@ -32,7 +31,6 @@ import { GithubStrategyService } from "./github/github.service";
     providers: [
         PerformAuthFunctionService,
         UserpassStrategyService,
-        OauthStrategyService,
         GithubStrategyService,
         { provide: "PassportStateJwt", useExisting: JwtService },
         ModeExtractorMiddleware,
