@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger, Type } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import * as passportGithub from "passport-github2";
@@ -133,8 +133,43 @@ export class GithubStrategyService extends StrategyUsingPassport {
         }
     }
 
+    /**
+     * Finds the login data for the given strategy instance and the valued returned by GitHub.
+     * To be executed as passport user callback.
+     *
+     * @param strategyInstance The instance of the GitHub strategy for which to find the user
+     * @param accessToken The access token returned by GitHub
+     * @param refreshToken The refreshToken returned by GitHub
+     * @param profile The profile data for the logged in user returned by GitHub
+     * @param done The done function to be called with the found login data or the error
+     */
+    protected async passportUserCallback(
+        strategyInstance: StrategyInstance,
+        accessToken: string,
+        refreshToken: string,
+        profile: any,
+        done: (err, user: AuthResult | false, info) => void,
+    ) {
+        const username = profile.username;
+        const dataActiveLogin = { accessToken, refreshToken };
+        const dataUserLoginData = {
+            username,
+            github_id: profile.id,
+            email: profile.emails[0].value,
+        };
+        const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {
+            github_id: profile.id,
+        });
+        if (loginDataCandidates.length != 1) {
+            this.loggerGithub.debug("Oauth login didn's find unique login data", loginDataCandidates);
+            done(null, { dataActiveLogin, dataUserLoginData, mayRegister: true }, { message: "No unique user found" });
+        } else {
+            const loginData = loginDataCandidates[0];
+            done(null, { loginData, dataActiveLogin, dataUserLoginData, mayRegister: true }, {});
+        }
+    }
+
     public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
-        const loginDataService = this.loginDataService;
         return new passportGithub.Strategy(
             {
                 authorizationURL: strategyInstance.instanceConfig["authorizationUrl"],
@@ -147,51 +182,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                     verify: (req, providedState, callback) => callback(null, true, providedState),
                 } as any,
             },
-            async (
-                accessToken: string,
-                refreshToken: string,
-                profile: any,
-                done: (err, user: AuthResult | false, info) => void,
-            ) => {
-                const username = profile.username;
-                const dataActiveLogin = {
-                    accessToken,
-                    refreshToken,
-                };
-                const dataUserLoginData = {
-                    username,
-                    github_id: profile.id,
-                    email: profile.emails[0].value,
-                };
-                const loginDataCandidates = await loginDataService.findForStrategyWithDataContaining(strategyInstance, {
-                    username,
-                });
-                if (loginDataCandidates.length != 1) {
-                    this.loggerGithub.debug("Oauth login didn's find unique login data", loginDataCandidates);
-                    done(
-                        null,
-                        {
-                            dataActiveLogin,
-                            dataUserLoginData,
-                            mayRegister: true,
-                        },
-                        {
-                            message: "No unique user found",
-                        },
-                    );
-                } else {
-                    done(
-                        null,
-                        {
-                            loginData: loginDataCandidates[0],
-                            dataActiveLogin,
-                            dataUserLoginData,
-                            mayRegister: true,
-                        },
-                        {},
-                    );
-                }
-            },
+            this.passportUserCallback.bind(this, strategyInstance),
         );
     }
 }
