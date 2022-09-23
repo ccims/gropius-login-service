@@ -18,14 +18,10 @@
 
 package gropius.graphql
 
+import com.expediagroup.graphql.generator.annotations.GraphQLType
 import com.expediagroup.graphql.generator.exceptions.MultipleConstructorsFound
 import com.expediagroup.graphql.generator.exceptions.PrimaryConstructorNotFound
-import com.expediagroup.graphql.generator.annotations.GraphQLType
 import com.expediagroup.graphql.generator.execution.OptionalInput
-import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
-import kotlin.reflect.full.primaryConstructor
 import io.github.graphglue.graphql.extensions.getGraphQLName
 import kotlin.reflect.*
 import kotlin.reflect.full.*
@@ -127,7 +123,7 @@ private fun convertValue(
     return argumentValue
 }
 
-/*
+/**
  * At this point all custom scalars have been converted by graphql-java so the only thing left to parse is object maps into the nested Kotlin classes
  *
  * Also handles `lateinit` property initialization
@@ -144,13 +140,14 @@ private fun <T : Any> mapToKotlinObject(input: Map<String, *>, targetClass: KCla
         }
     }
 
-    val constructorParameters = targetConstructor.parameters
     // filter parameters that are actually in the input in order to rely on parameters default values
     // in target constructor
-    val constructorParametersInInput = constructorParameters.filter { parameter ->
-        input.containsKey(parameter.getGraphQLName() ?: parameter.name) || parameter.type.isOptionalInputType
+    val constructorParameters = targetConstructor.parameters.filter { parameter ->
+        input.containsKey(parameter.getGraphQLName() ?: parameter.name) ||
+                parameter.type.isOptionalInputType ||
+                parameter.let { it.type.isMarkedNullable &&  !it.isOptional }
     }
-    val constructorArguments = constructorParametersInInput.associateWith { parameter ->
+    val constructorArguments = constructorParameters.associateWith { parameter ->
         convertArgumentValueFromParam(parameter, input)
     }
     val parsedObject = targetConstructor.callBy(constructorArguments)
