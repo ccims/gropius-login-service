@@ -42,7 +42,7 @@ export class StrategyInstanceDetailResponse {
 }
 
 /**
- * A respnse type containing url information for a strategy instance
+ * A response type containing url information for a strategy instance
  *
  * For every instance the redirect url is given, for instances allowing post credentials it also contains the post urls
  */

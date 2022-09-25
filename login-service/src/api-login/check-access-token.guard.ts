@@ -1,13 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, SetMetadata, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable, Logger, SetMetadata, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Request, Response } from "express";
-import { Observable } from "rxjs";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { TokenService } from "src/backend-services/token.service";
-import { GraphqlService } from "src/model/graphql/graphql.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { ensureState } from "src/strategies/utils";
 import { ApiStateData } from "./ApiStateData";
 
@@ -27,6 +23,7 @@ export const NeedsAdmin = () => SetMetadata("needsAdmin", true);
  */
 @Injectable()
 export class CheckAccessTokenGuard implements CanActivate {
+    private readonly logger = new Logger(CheckAccessTokenGuard.name);
     constructor(
         private readonly tokenService: TokenService,
         private readonly reflector: Reflector,
@@ -47,17 +44,17 @@ export class CheckAccessTokenGuard implements CanActivate {
         try {
             user = (await this.tokenService.verifyAccessToken(token)).user;
         } catch (err) {
-            console.log("Invalid access token:", err);
+            this.logger.warn("Invalid access token:", err);
             throw new UnauthorizedException(undefined, "Invalid access token: " + (err.message ?? err));
         }
         if (!user) {
-            console.error("No user based on token");
+            this.logger.warn("No user based on token");
             return false;
         }
 
         const needsAdmin = this.reflector.get<boolean>("needsAdmin", context.getHandler()) ?? false;
-        console.log("Request needs admin:", needsAdmin);
         if (needsAdmin) {
+            this.logger.debug("Current request needs admin, quering backend");
             if (!this.backendUserService.checkIsUserAdmin(user)) {
                 return false;
             }

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { GraphqlService } from "src/model/graphql/graphql.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
@@ -9,9 +9,22 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { Strategy } from "src/strategies/Strategy";
 import { jsonFieldArrayToObject, objectToJsonFieldArray } from "./JSONField";
 import { BackendUserService } from "./backend-user.service";
+import { deepEqual } from "fast-equals";
+
+/**
+ * Fields that are not compared on the templated fields of the ims bust instead on the fields of the ims directly
+ */
+const imsTemplatedDirectFields = ["id", "name", "description"];
+
+/**
+ * Fields that are not compared on the templated fields of the IMSUser,
+ * but instead on the fields of the IMSUser directly
+ */
+const userTemplatedDirectFields = ["id", "username", "displayName", "email"];
 
 @Injectable()
 export class ImsUserFindingService {
+    private readonly logger = new Logger(ImsUserFindingService.name);
     constructor(
         private readonly graphqlService: GraphqlService,
         private readonly strategiesService: StrategiesService,
@@ -19,6 +32,33 @@ export class ImsUserFindingService {
         private readonly imsUserService: UserLoginDataImsUserService,
         private readonly backendUserService: BackendUserService,
     ) {}
+
+    /**
+     * Throws an error with the following message:
+     * Text for when an ims user entity is found in the database,
+     * which has a different login data than the login data for which the ims user was found
+     * using matching of templated values on ims and ims users
+     *
+     * @param imsUserNeo4jId The neo4j id of the ims user that was found to have a conflice
+     * @param loginDataExpectedId The database id of the login data that is currently being processed
+     * and for which the given ims user was found
+     * @param loginDataActualId The database id of the login data that is already associated with the given ims user
+     */
+    private generateImsUserWithDifferentLoginDataError(
+        imsUserNeo4jId: string,
+        loginDataExpectedId: string,
+        loginDataActualId: string,
+    ): string {
+        throw new Error(
+            `The filtered resulting ims users included at least one ims user ` +
+                `that is already assigned to another login data.\n ` +
+                `This very likely means the filters of strategy instances overlap ` +
+                `or the filters for users are not properly defined.\n ` +
+                `IMSUser id with conflict: ${imsUserNeo4jId}` +
+                `, current login data: ${loginDataExpectedId}` +
+                `, conflicting loginData: ${loginDataActualId}`,
+        );
+    }
 
     /**
      * Checks if the values of the specified fields on the templatedValues match the values of those fields on the node
@@ -45,7 +85,7 @@ export class ImsUserFindingService {
                 if (requiredTemplatedValues[key] != node[key]) {
                     return false;
                 }
-                if (JSON.stringify(node[key]) != JSON.stringify(requiredTemplatedValues[key])) {
+                if (deepEqual(requiredTemplatedValues[key], node[key])) {
                     return false;
                 }
                 delete requiredTemplatedValues[key];
@@ -62,7 +102,7 @@ export class ImsUserFindingService {
     ): Promise<boolean> {
         const requiredTemplatedValues = await strategy.getImsTemplatedValuesForStrategyInstance(instance);
         if (requiredTemplatedValues == null) {
-            console.warn(`Syncing strategy instance ${instance.id} did not provide required templated values`);
+            this.logger.error(`Syncing strategy instance ${instance.id} did not provide required templated values`);
             return false;
         }
         if (!this.checkFieldsDirectly(ims, requiredTemplatedValues, ["id", "name", "description"])) {
@@ -202,6 +242,18 @@ export class ImsUserFindingService {
         return newImsUser;
     }
 
+    /**
+     * Searches for IMSUsers that match the given login data as well as imss that don't have a single matching user
+     *
+     * Works by searching for IMSs of which the templated fields (and direct values) match the object given by
+     * the strategy instance.
+     * Then on these IMSs searches for IMSUsers of which the templated fields (and direct values) match the object
+     * given by the login data.
+     *
+     * @param loginData The login data instance to search imsUsers and imss for
+     * @returns The ims users that match the given logn data
+     * and all imss that have no ims user matching the given login data
+     */
     async findImsUserIdsForLoginData(
         loginData: UserLoginData,
     ): Promise<{ imsUserIds: string[]; imsIdsWithoutImsUsers: string[] }> {
@@ -210,43 +262,28 @@ export class ImsUserFindingService {
 
         const requiredImsTemplatedValues = await strategy.getImsTemplatedValuesForStrategyInstance(strategyInstance);
         if (!requiredImsTemplatedValues) {
-            throw new Error(
-                "Strategy instance did not provide required ims template values. Make sure the strategy can sync",
-            );
+            throw new Error("Strategy instance didn't provide ims templated values. Check can sync");
         }
-        const directRequiredIms = this.extractFieldsFromObject(requiredImsTemplatedValues, [
-            "id",
-            "name",
-            "description",
-        ]);
-        const requiredImsTemplatedValuesAsArray = objectToJsonFieldArray(requiredImsTemplatedValues);
+        const directRequiredIms = this.extractFieldsFromObject(requiredImsTemplatedValues, imsTemplatedDirectFields);
 
         const requiredUserTemplatedFields = strategy.getImsUserTemplatedValuesForLoginData(loginData);
         if (!requiredUserTemplatedFields) {
-            throw new Error(
-                "Strategy did not provide required IMSUser templated field values. Make sure the strategy can sync",
-            );
+            throw new Error("Strategy didn't provide required IMSUser templated values. Check can sync");
         }
-        const directRequiredUser = this.extractFieldsFromObject(requiredUserTemplatedFields, [
-            "id",
-            "username",
-            "displayName",
-            "email",
-        ]);
-        const requiredUserTemplatedFieldsAsArray = objectToJsonFieldArray(requiredUserTemplatedFields);
+        const directRequiredUser = this.extractFieldsFromObject(requiredUserTemplatedFields, userTemplatedDirectFields);
 
         const matchingImsUsers = await this.graphqlService.sdk.getImsUsersByTemplatedFieldValues({
             imsFilterInput: {
                 ...directRequiredIms,
-                templatedFields: requiredImsTemplatedValuesAsArray,
+                templatedFields: objectToJsonFieldArray(requiredImsTemplatedValues),
             },
             userFilterInput: {
                 ...directRequiredUser,
-                templatedFields: requiredUserTemplatedFieldsAsArray,
+                templatedFields: objectToJsonFieldArray(requiredUserTemplatedFields),
             },
         });
 
-        console.log("Retrieved matching imss and ims users:", matchingImsUsers);
+        this.logger.debug("Retrieved matching imss and ims users:", matchingImsUsers);
         return {
             imsUserIds: matchingImsUsers.imss.nodes.flatMap((ims) => ims.users.nodes.map((user) => user.id)),
             imsIdsWithoutImsUsers: matchingImsUsers.imss.nodes
@@ -259,12 +296,7 @@ export class ImsUserFindingService {
         const strategyInstance = await loginData.strategyInstance;
         const strategy = this.strategiesService.getStrategyByName(strategyInstance.type);
         const templatedFieldValuesForImsUser = strategy.getImsUserTemplatedValuesForLoginData(loginData);
-        const directValues = this.extractFieldsFromObject(templatedFieldValuesForImsUser, [
-            "id",
-            "username",
-            "displayName",
-            "email",
-        ]);
+        const directValues = this.extractFieldsFromObject(templatedFieldValuesForImsUser, userTemplatedDirectFields);
         const templatedValuesAsArray = objectToJsonFieldArray(templatedFieldValuesForImsUser);
         let findPossibleDisplayName = directValues["displayName"] ?? directValues["username"] ?? directValues["email"];
         if (!findPossibleDisplayName) {
@@ -290,10 +322,20 @@ export class ImsUserFindingService {
         return result.createIMSUser.imsuser.id;
     }
 
-    async createAndLinkImsUsersForLoginData(loginData: UserLoginData): Promise<UserLoginDataImsUser[]> {
-        const { imsUserIds, imsIdsWithoutImsUsers } = await this.findImsUserIdsForLoginData(loginData);
-
-        const listOfKnownImsUsers = await Promise.all(
+    /**
+     * Loads the ims user entities from the database for a given set of backend ids of ims users.
+     * Additionally fetches the id of the login data to which the entity belongs.
+     *
+     * For every given id returns the given id, the ims user entity (if existing)
+     * and the login data id (if ims user entity exists).
+     * If ims user doesn't exist, just returns the given neo4jid
+     * @param imsUserIds The ist of neo4j/backend ids for which to fetch the ims user
+     * @returns The list of the ims user entities loaded for the given neo4j id and the id of the login data
+     */
+    private async getKnownImsUsersForIds(
+        imsUserIds: string[],
+    ): Promise<{ id: string; imsUser: UserLoginDataImsUser; loginDataId: string }[]> {
+        return Promise.all(
             imsUserIds.map(async (id) => {
                 const imsUser = await this.imsUserService.findOneBy({
                     neo4jId: id,
@@ -302,42 +344,69 @@ export class ImsUserFindingService {
                 return { id, imsUser, loginDataId };
             }),
         );
+    }
 
+    /**
+     * Creates and saves ims user entities for the given neo4jids
+     * and links them to the given login data object.
+     *
+     * Caller must make sure, that no ims user entity for the given neo4j ids exist yet.
+     *
+     * @param neo4jImsUserIds The list of neo4j ids for which to create a ims user in the database
+     * @param loginData The login data to link with the newly created ims user
+     * @returns The list of all the ims user entites crated
+     */
+    private async createImsUserEntitiesForNeo4jIds(
+        neo4jImsUserIds: string[],
+        loginData: UserLoginData,
+    ): Promise<UserLoginDataImsUser[]> {
+        return Promise.all(
+            neo4jImsUserIds.map((id) => {
+                const user = new UserLoginDataImsUser();
+                user.neo4jId = id;
+                user.loginData = Promise.resolve(loginData);
+                return this.imsUserService.save(user);
+            }),
+        );
+    }
+
+    /**
+     * Performs IMSUser search creation and linkage
+     *
+     * Steps:
+     * - Searches all IMSUser instances in the backend that match the given login data.
+     * - For IMSs which don't have a single matching IMSUser, creates new IMSUsers in the backend.
+     * - For all found and created IMSUsers, finds existing ims user entities in the database
+     * - If there is an ims user entity with a **different** login data, fails. Filters are to unprecise
+     * - Creates new ims user entities for all found and created IMSUsers that don't have an entity yet
+     * - If the login data has a user linked:
+     *     For all created ims user entities links the corresponding IMSUser and GropiusUser
+     *
+     * @param loginData The login data for which to perform ims user search and linking
+     * @returns A list of all ims user entitites created as result of the search (not including existing entities)
+     */
+    async createAndLinkImsUsersForLoginData(loginData: UserLoginData): Promise<UserLoginDataImsUser[]> {
+        const { imsUserIds, imsIdsWithoutImsUsers } = await this.findImsUserIdsForLoginData(loginData);
+
+        const listOfKnownImsUsers = await this.getKnownImsUsersForIds(imsUserIds);
         const imsUserWithDifferentLoginData = listOfKnownImsUsers.find(
             (result) => (result.loginDataId != null || result.imsUser != null) && result.loginDataId != loginData.id,
         );
         if (!!imsUserWithDifferentLoginData) {
-            throw new Error(
-                `The filtered resulting ims users included at least one ims user ` +
-                    `that is already assigned to another login data.\n ` +
-                    `This very likely means the filters of strategy instances overlap ` +
-                    `or the filters for users are not properly defined.\n ` +
-                    `IMSUser id with conflict: ${imsUserWithDifferentLoginData.imsUser.neo4jId}` +
-                    `, current login data: ${loginData.id}` +
-                    `, conflicting loginData: ${imsUserWithDifferentLoginData.loginDataId}`,
+            this.generateImsUserWithDifferentLoginDataError(
+                imsUserWithDifferentLoginData.imsUser.neo4jId,
+                loginData.id,
+                imsUserWithDifferentLoginData.loginDataId,
             );
         }
 
-        const backendCreatedImsUsers = await Promise.all(
-            imsIdsWithoutImsUsers
-                .map((ims) => this.createNewImsUserInBackendForLoginDataAndIms(loginData, ims))
-                .map(async (idPromise) => {
-                    const id = await idPromise;
-                    return { id, imsUser: null, loginDataId: null };
-                }),
+        const imsUserIdsWithoutEntity = listOfKnownImsUsers.filter((user) => !user.imsUser).map((user) => user.id);
+        const backendCreatedImsUserIds = await Promise.all(
+            imsIdsWithoutImsUsers.map((ims) => this.createNewImsUserInBackendForLoginDataAndIms(loginData, ims)),
         );
-
-        const newImsUsers = await Promise.all(
-            listOfKnownImsUsers
-                .concat(backendCreatedImsUsers)
-                .filter((result) => !result.imsUser)
-                .map((result) => {
-                    const user = new UserLoginDataImsUser();
-                    user.neo4jId = result.id;
-                    user.loginData = Promise.resolve(loginData);
-                    return user;
-                })
-                .map(async (user) => this.imsUserService.save(user)),
+        const newImsUsers = await this.createImsUserEntitiesForNeo4jIds(
+            imsUserIdsWithoutEntity.concat(backendCreatedImsUserIds),
+            loginData,
         );
 
         const loginUser = await loginData.user;

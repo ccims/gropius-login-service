@@ -7,6 +7,13 @@ import { ApiProperty } from "@nestjs/swagger";
  */
 export class CreateOrUpdateAuthClientInput {
     /**
+     * The name to set for the auth client.
+     *
+     * If given, must be non empty and match /^[a-zA-Z0-9+/\-_= ]+$/g
+     */
+    name?: string | null;
+
+    /**
      * A list of url strings containing at least one url.
      * These are the URLs the oauth autorize endpoint will redirect back to
      *
@@ -35,6 +42,7 @@ export class CreateOrUpdateAuthClientInput {
      * Checks a given `CreateOrUpdateAuthClientInput` for validity.
      *
      * Valid, if:
+     * - `name` is not given or a non empty string matching /^[a-zA-Z0-9+/\-_= ]+$/g
      * - `redirectUrls` is not given or an array of at least one url
      * - `isValid` is not given or a boolean
      * - `requiresSecret` is not given or a boolean
@@ -42,8 +50,16 @@ export class CreateOrUpdateAuthClientInput {
      * @returns The given instance unchanged
      */
     static check(input: CreateOrUpdateAuthClientInput): CreateOrUpdateAuthClientInput {
+        if (input.name != undefined) {
+            if (typeof input.name != "string" || input.name.trim().length == 0) {
+                throw new HttpException("If given, name must be a non empty string", HttpStatus.BAD_REQUEST);
+            }
+            if (input.name.match(/[^a-zA-Z0-9+/\-_= ]/g)) {
+                throw new HttpException("If given, name must match /^[a-zA-Z0-9+/\\-_= ]+$/g", HttpStatus.BAD_REQUEST);
+            }
+        }
         if (input.redirectUrls != undefined) {
-            if (!(input.redirectUrls instanceof Array) || input.redirectUrls.length <= 0) {
+            if (!(input.redirectUrls instanceof Array) || input.redirectUrls.length == 0) {
                 throw new HttpException(
                     "If redirect URLs are given, they must be an array of valid url strings " +
                         "containing at least one entry",

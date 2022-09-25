@@ -1,4 +1,4 @@
-package gropius.sync.github
+package gropius.sync.github.utils
 
 import gropius.sync.github.generated.fragment.MetaData
 import gropius.sync.github.generated.fragment.PageInfoData

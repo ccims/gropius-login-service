@@ -115,7 +115,7 @@ export class RegisterController {
         RegistrationTokenInput.check(input);
         //todo: potentially move to POST user/:id/loginData
         if (!(res.locals.state as ApiStateData).loggedInUser) {
-            throw new HttpException("Not logged in.", HttpStatus.UNAUTHORIZED);
+            throw new HttpException("Not logged in", HttpStatus.UNAUTHORIZED);
         }
         const { loginData, activeLogin } = await this.checkRegistrationTokenService.getActiveLoginAndLoginDataForToken(
             input.register_token,

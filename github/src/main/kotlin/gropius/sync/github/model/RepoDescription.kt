@@ -1,4 +1,4 @@
-package gropius.sync.github
+package gropius.sync.github.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

@@ -2,7 +2,6 @@ package gropius.sync.github.model
 
 import gropius.model.issue.Issue
 import gropius.sync.github.generated.fragment.IssueData
-import gropius.sync.github.generated.fragment.IssueDataExtensive
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
@@ -29,8 +28,10 @@ data class IssueInfo(
     val url: URI,
     @Indexed
     var neo4jId: String,
-    @Indexed
-    val dirty: Boolean, var lastAccess: OffsetDateTime?, val issueData: IssueData, var lastOutgoingSync: OffsetDateTime?
+    val dirty: Boolean,
+    var lastAccess: OffsetDateTime?,
+    val issueData: IssueData,
+    var lastOutgoingSync: OffsetDateTime?
 ) {
     /**
      * MongoDB ID

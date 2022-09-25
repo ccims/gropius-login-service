@@ -44,8 +44,8 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         };
     }
 
-    protected override checkInstanceConfig(instanceConfig: object): boolean {
-        return Object.keys(instanceConfig).length === 0;
+    protected override checkAndExtendInstanceConfig(instanceConfig: object): object {
+        return {};
     }
 
     private async generateLoginDataData(password: string): Promise<{ password: string }> {
@@ -54,64 +54,54 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         };
     }
 
-    public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
-        const loginDataService = this.loginDataService;
-        const loginUserService = this.loginUserService;
-        return new passportLocal.Strategy(
-            {},
-            async (username, password, done: (err: any, user: AuthResult | false, info: any) => any) => {
-                const dataActiveLogin = {};
-                const loginDataCandidates = await loginDataService.findForStrategyWithDataContaining(
-                    strategyInstance,
-                    {},
-                );
-                const loginDataForCorrectUser = await loginDataService
-                    .createQueryBuilder("loginData")
-                    .leftJoinAndSelect(`loginData.user`, "user")
-                    .where(`user.username = :username`, { username })
-                    .andWhereInIds(loginDataCandidates.map((candidate) => candidate.id))
-                    .getMany();
-
-                if (loginDataForCorrectUser.length <= 0) {
-                    return done(
-                        null,
-                        {
-                            dataActiveLogin,
-                            dataUserLoginData: await this.generateLoginDataData(password),
-                            mayRegister: true,
-                        },
-                        { message: "Username or password incorrect" },
-                    );
-                } else if (loginDataForCorrectUser.length > 1) {
-                    return done("More than one user with same username", false, undefined);
-                }
-
-                const hasCorrectPassword = bcrypt.compare(password, loginDataForCorrectUser[0].data["password"]);
-
-                if (!hasCorrectPassword) {
-                    return done(
-                        null,
-                        {
-                            dataActiveLogin,
-                            dataUserLoginData: {},
-                            mayRegister: false,
-                        },
-                        { message: "Username or password incorrect" },
-                    );
-                }
-
-                console.log(`Auth for ${username} with ${password}`);
-                return done(
-                    null,
-                    {
-                        loginData: loginDataForCorrectUser[0],
-                        dataActiveLogin,
-                        dataUserLoginData: {},
-                        mayRegister: false,
-                    },
-                    {},
-                );
-            },
+    /**
+     * Finds the login data instance corresponding the username and password given by passport-local.
+     * To be executed as passport user callback
+     *
+     * @param strategyInstance The instance of the userpass strategy for which to find the user
+     * @param username The username retrieved by passport-local
+     * @param password The (plain text) password retrieved by passport-local
+     * @param done The passport done funciton to be called with the loaded login data etc. or errors
+     */
+    protected async passportUserCallback(
+        strategyInstance: StrategyInstance,
+        username: string,
+        password: string,
+        done: (err: any, user: AuthResult | false, info: any) => any,
+    ) {
+        const dataActiveLogin = {};
+        const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {});
+        const loginDataForCorrectUser = await this.loginDataService.findForUsernameOutOfSet(
+            username,
+            loginDataCandidates.map((candidate) => candidate.id),
         );
+
+        if (loginDataForCorrectUser.length == 0) {
+            const dataUserLoginData = await this.generateLoginDataData(password);
+            return done(
+                null,
+                { dataActiveLogin, dataUserLoginData, mayRegister: true },
+                { message: "Username or password incorrect" },
+            );
+        } else if (loginDataForCorrectUser.length > 1) {
+            return done("More than one user with same username", false, undefined);
+        }
+
+        const loginData = loginDataForCorrectUser[0];
+        const hasCorrectPassword = bcrypt.compare(password, loginData.data["password"]);
+
+        if (!hasCorrectPassword) {
+            return done(
+                null,
+                { dataActiveLogin, dataUserLoginData: {}, mayRegister: false },
+                { message: "Username or password incorrect" },
+            );
+        }
+
+        return done(null, { loginData, dataActiveLogin, dataUserLoginData: {}, mayRegister: false }, {});
+    }
+
+    public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
+        return new passportLocal.Strategy({}, this.passportUserCallback.bind(this, strategyInstance));
     }
 }

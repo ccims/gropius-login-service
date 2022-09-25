@@ -68,7 +68,7 @@ export class UpdateStrategyInstanceInput {
      */
     static check(input: UpdateStrategyInstanceInput): UpdateStrategyInstanceInput {
         if (input.name != undefined) {
-            if (typeof input.name != "string" || input.name.trim().length <= 0) {
+            if (typeof input.name != "string" || input.name.trim().length == 0) {
                 throw new HttpException("If name is given it must be a non empty string", HttpStatus.BAD_REQUEST);
             }
         }

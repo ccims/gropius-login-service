@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
 import { TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
@@ -10,6 +10,7 @@ import { OauthServerStateData } from "./oauth-autorize.middleware";
 
 @Injectable()
 export class OauthRedirectMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(OauthRedirectMiddleware.name);
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
@@ -63,13 +64,13 @@ export class OauthRedirectMiddleware implements NestMiddleware {
             });
         }
         if (!state.activeLogin.isValid) {
-            throw new Error("Active login invalid.");
+            throw new Error("Active login invalid");
         }
         if (state.activeLogin.nextExpectedRefreshTokenNumber != ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED) {
             throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (state.activeLogin.expires != null && state.activeLogin.expires <= new Date()) {
-            throw new Error("Active login expired.");
+            throw new Error("Active login expired");
         }
         state.activeLogin.createdByClient = Promise.resolve(state.client);
         state.activeLogin.expires = new Date(Date.now() + expiresIn);
@@ -95,19 +96,18 @@ export class OauthRedirectMiddleware implements NestMiddleware {
                 expiresIn,
             );
             url.searchParams.append("code", token);
-            console.log("Created token", url.searchParams);
+            this.logger.debug("Created token", url.searchParams);
             if (state.state) {
                 url.searchParams.append("state", state.state);
             }
         } catch (err) {
-            console.error(err);
+            this.logger.warn(err);
             url.searchParams.append("error", "server_error");
             url.searchParams.append("error_description", encodeURIComponent("Could not generate code for response"));
         }
     }
 
     async use(req: Request, res: Response, next: () => void) {
-        console.log("oauth-callback middleware");
         const state: OauthServerStateData = res.locals.state || {};
         if (!state.redirect) {
             throw new HttpException("No redirect address in state for request", HttpStatus.BAD_REQUEST);

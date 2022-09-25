@@ -72,8 +72,6 @@ export class OauthTokenMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: () => void) {
         ensureState(res);
-        console.log("Oauth token middleware");
-        console.log(req.params);
 
         const client = await this.getCallingClient(req);
         if (!client) {
@@ -87,7 +85,6 @@ export class OauthTokenMiddleware implements NestMiddleware {
             //Fallthrough as resfrehsh token works the same as the initial code (both used to obtain new access token)
             case "authorization_code": //Request for token based on obtained code
                 await this.tokenResponseCodeMiddleware.use(req, res, () => {
-                    console.log("authorization_code called next");
                     next();
                 });
                 break;
@@ -95,7 +92,6 @@ export class OauthTokenMiddleware implements NestMiddleware {
             //Fallthrough to custom grant where all credentials are acceptd
             case "post_credentials": //Extension/Non standard: Request for token immediately containing credentials
                 await this.postCredentialsMiddleware.use(req, res, () => {
-                    console.log("password/post_credentials called next");
                     next();
                 });
                 break;

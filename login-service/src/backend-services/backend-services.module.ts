@@ -11,7 +11,7 @@ import { StrategiesModule } from "src/strategies/strategies.module";
         JwtModule.registerAsync({
             useFactory(...args) {
                 return {
-                    secret: process.env.GROPIUS_INTERNAL_BACKEND_JWT_SECRET,
+                    secret: Buffer.from(process.env.GROPIUS_INTERNAL_BACKEND_JWT_SECRET, "base64"),
                     signOptions: {
                         issuer: process.env.GROPIUS_JWT_ISSUER,
                         audience: ["backend", "login"],

@@ -1,16 +1,12 @@
-package gropius.sync.github
+package gropius.sync
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import gropius.model.architecture.IMS
-import gropius.model.architecture.IMSIssue
-import gropius.model.architecture.IMSProject
 import gropius.model.common.ExtensibleNode
 import gropius.model.template.MutableTemplatedNode
 import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
-import org.springframework.data.neo4j.core.findById
 import org.springframework.stereotype.Component
 
 /**
@@ -60,38 +56,11 @@ class SyncNotificator(
      * @param node Node of which the users should receive the notification from
      * @param dummy MotificationDummy containing the content
      */
-    private suspend fun sendNotification(node: ExtensibleNode, dummy: NotificationDummy) {
+    suspend fun sendNotification(node: ExtensibleNode, dummy: NotificationDummy) {
         logger.info("Send Notification: $dummy")
         if (node is MutableTemplatedNode) {
             node.templatedFields["last-notification"] = helper.objectMapper.writeValueAsString(dummy)
             neoOperations.save(node).awaitSingle()
         }
-    }
-
-    /**
-     * Send notification
-     * @param ims Node of which the users should receive the notification from
-     * @param dummy MotificationDummy containing the content
-     */
-    suspend fun sendNotification(ims: IMS, dummy: NotificationDummy) {
-        sendNotification(ims as ExtensibleNode, dummy)
-    }
-
-    /**
-     * Send notification
-     * @param imsProject Node of which the users should receive the notification from
-     * @param dummy MotificationDummy containing the content
-     */
-    suspend fun sendNotification(imsProject: IMSProject, dummy: NotificationDummy) {
-        sendNotification(imsProject as ExtensibleNode, dummy)
-    }
-
-    /**
-     * Send notification
-     * @param imsIssue Node of which the users should receive the notification from
-     * @param dummy MotificationDummy containing the content
-     */
-    suspend fun sendNotification(imsIssue: IMSIssue, dummy: NotificationDummy) {
-        sendNotification(imsIssue as ExtensibleNode, dummy)
     }
 }

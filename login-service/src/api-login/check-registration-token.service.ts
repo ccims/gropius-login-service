@@ -44,17 +44,17 @@ export class CheckRegistrationTokenService {
     ) {
         if (!activeLogin) {
             console.error(`No active login with id from token; id:`, activeLoginId);
-            throw new UnauthorizedException(undefined, "Register token is (no longer) valid.");
+            throw new UnauthorizedException(undefined, "Register token is (no longer) valid");
         }
         if (!loginData) {
             console.error(`No login data for active login; id:`, activeLoginId);
-            throw new UnauthorizedException(undefined, "Register token is (no longer) valid.");
+            throw new UnauthorizedException(undefined, "Register token is (no longer) valid");
         }
         if (loginData.expires != null && loginData.expires <= new Date()) {
-            throw new UnauthorizedException(undefined, "Login has expired. Registration did not happen in time");
+            throw new UnauthorizedException(undefined, "Login has expired; Registration did not happen in time");
         }
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
-            throw new UnauthorizedException(undefined, "Login has expired. Registration did not happen in time");
+            throw new UnauthorizedException(undefined, "Login has expired; Registration did not happen in time");
         }
         if (!activeLogin.isValid) {
             throw new UnauthorizedException(undefined, "Login has been set invalid");

@@ -35,7 +35,7 @@ export class SyncImsUserController {
 
     @Get("getIMSToken")
     async getIMSToken(@Query("imsUser") imsUserId: string): Promise<GetImsTokenResult> {
-        if (!imsUserId || imsUserId.trim().length <= 0) {
+        if (!imsUserId || imsUserId.trim().length == 0) {
             throw new HttpException("Missing query parameter imsUser", HttpStatus.BAD_REQUEST);
         }
         let imsUser: UserLoginDataImsUser;
@@ -45,7 +45,7 @@ export class SyncImsUserController {
             });
         } catch (err) {
             console.error("Error loading imsuser by neo4jId", err);
-            throw new HttpException("Could not load ims user by id. Check the id syntax", HttpStatus.BAD_REQUEST);
+            throw new HttpException("Could not load ims user by id; Check the id syntax", HttpStatus.BAD_REQUEST);
         }
         if (!imsUser) {
             return {
@@ -67,7 +67,7 @@ export class SyncImsUserController {
     //todo: make endpoint accept list of ims users to be linked all at once in order to optimize finding
     @Put("linkIMSUser")
     async linkIMSUser(@Query("imsUser") imsUserId: string): Promise<DefaultReturn> {
-        if (!imsUserId || imsUserId.trim().length <= 0) {
+        if (!imsUserId || imsUserId.trim().length == 0) {
             throw new HttpException("Missing query parameter imsUser", HttpStatus.BAD_REQUEST);
         }
         await this.imsUserFindingService.createAndLinkSingleImsUser(imsUserId);

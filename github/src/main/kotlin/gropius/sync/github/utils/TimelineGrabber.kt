@@ -1,6 +1,7 @@
-package gropius.sync.github
+package gropius.sync.github.utils
 
 import com.apollographql.apollo3.ApolloClient
+import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.TimelineReadQuery
 import gropius.sync.github.generated.TimelineReadQuery.Data.Companion.metaData
 import gropius.sync.github.generated.TimelineReadQuery.Data.Node.Companion.asIssue
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import org.bson.types.ObjectId
-import org.slf4j.LoggerFactory
 import org.springframework.data.mongodb.core.*
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query

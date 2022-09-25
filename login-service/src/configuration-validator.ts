@@ -31,4 +31,13 @@ export const validationSchema = Joi.object({
     GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
 
     GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string(),
+
+    GROPIUS_DEFAULT_STRATEGY_INSTANCE_TYPE: Joi.string().optional(),
+    GROPIUS_DEFAULT_STRATEGY_INSTANCE_CONFIG: Joi.string().optional(),
+    GROPIUS_DEFAULT_STRATEGY_INSTANCE_NAME: Joi.string().optional(),
+    GROPIUS_DEFAULT_USER_USERNAME: Joi.string().optional(),
+    GROPIUS_DEFAULT_USER_DISPLAYNAME: Joi.string().optional(),
+    GROPIUS_DEFAULT_USER_PASSWORD: Joi.string().optional(),
+    GROPIUS_DEFAULT_USER_STRATEGY_INSTANCE_NAME: Joi.string(),
+    GROPIUS_DEFAULT_AUTH_CLIENT_NAME: Joi.string().optional(),
 });

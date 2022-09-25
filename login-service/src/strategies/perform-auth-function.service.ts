@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
@@ -11,11 +11,14 @@ import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 
 /**
- * Contains the logic how the system is supposed to create and link login data ans active logins when users authenticate.
- * Defines how the sign up and sign in prcess work from the point when passport has processed the request and returned information about the credentials
+ * Contains the logic how the system is supposed to create and link
+ * login data ans active logins when users authenticate.
+ * Defines how the sign up and sign in prcess work from the point
+ * when passport has processed the request and returned information about the credentials
  */
 @Injectable()
 export class PerformAuthFunctionService {
+    private readonly logger = new Logger(PerformAuthFunctionService.name);
     constructor(
         private readonly loginUserService: LoginUserService,
         private readonly activeLoginService: ActiveLoginService,
@@ -62,7 +65,7 @@ export class PerformAuthFunctionService {
     }
 
     private async loginExistingUser(authResult: AuthResult, instance: StrategyInstance): Promise<AuthStateData> {
-        console.log("Logging in");
+        this.logger.debug("Logging in user");
         return {
             activeLogin: await this.createActiveLogin(
                 instance,
@@ -100,7 +103,7 @@ export class PerformAuthFunctionService {
         instance: StrategyInstance,
         supportsSync: boolean,
     ): Promise<AuthStateData> {
-        console.log("Registering new user with login data", authResult.dataUserLoginData);
+        this.logger.debug("Registering new user with login data", authResult.dataUserLoginData);
         let loginData = new UserLoginData();
         loginData.data = authResult.dataUserLoginData;
         loginData.expires = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
@@ -163,7 +166,7 @@ export class PerformAuthFunctionService {
                 wantsToDoImplicitRegister
             ) {
                 if (!authResult.mayRegister) {
-                    console.error("Strategy did not provide existing loginData but it did not allow registering");
+                    this.logger.warn("Strategy did not provide existing loginData but it did not allow registering");
                     return { authErrorMessage: "Invalid user credentials." };
                 }
 

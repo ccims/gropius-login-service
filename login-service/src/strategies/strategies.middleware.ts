@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
@@ -11,6 +11,7 @@ import { ensureState } from "./utils";
 
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(StrategiesMiddleware.name);
     constructor(
         private readonly strategiesService: StrategiesService,
         private readonly strategyInstanceService: StrategyInstanceService,
@@ -37,7 +38,14 @@ export class StrategiesMiddleware implements NestMiddleware {
                 );
                 if (imsUserSearchOnModes.includes(state.function)) {
                     const loginData = await state.activeLogin.loginInstanceFor;
-                    await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
+                    try {
+                        await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
+                    } catch (err) {
+                        this.logger.error(
+                            "Error while linking/creating IMSUsers in the backend (Not canceling request):",
+                            err,
+                        );
+                    }
                 }
             }
         }
@@ -49,10 +57,8 @@ export class StrategiesMiddleware implements NestMiddleware {
             next();
         }
         const id = req.params.id;
-        console.log("id", id);
         const instance = await this.idToStrategyInstance(id);
         const strategy = await this.strategiesService.getStrategyByName(instance.type);
-        console.log("strategies middleware; state", res.locals.state);
 
         const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(
             res.locals.state,
@@ -65,7 +71,6 @@ export class StrategiesMiddleware implements NestMiddleware {
         }
 
         const result = await strategy.performAuth(instance, res.locals.state || {}, req, res);
-        console.log("Strategy result", result);
         res.locals.state = { ...res.locals.state, ...result.returnedState };
 
         const authResult = result.result;

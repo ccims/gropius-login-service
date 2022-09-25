@@ -42,7 +42,9 @@ export class OauthServerModule {
                 this.oauthAutorize,
                 this.strategies,
                 this.oauthRedirect,
-                this.errorHandler, // This middleware should never be reached as the oauth middleware should already care about it, its just to make absolutely sure, no unauthorized request gets through
+                // This middleware should never be reached as the oauth middleware should already care about it,
+                // its just to make absolutely sure, no unauthorized request gets through
+                this.errorHandler,
             ],
             path: "strategy/oauth/:id/authorize/:mode?",
         });

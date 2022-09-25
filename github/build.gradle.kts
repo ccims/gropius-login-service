@@ -2,7 +2,6 @@ val graphglueVersion: String by project
 val springBootVersion: String by project
 val apolloVersion: String by project
 val kosonVersion: String by project
-val ktorVersion: String by project
 
 plugins {
     id("org.springframework.boot")
@@ -16,8 +15,6 @@ dependencies {
     implementation("com.apollographql.apollo3", "apollo-adapters", apolloVersion)
     implementation("org.springframework.boot", "spring-boot-starter-data-mongodb-reactive", springBootVersion)
     implementation("com.lectra", "koson", kosonVersion)
-    implementation("io.ktor", "ktor-client-core", ktorVersion)
-    implementation("io.ktor", "ktor-client-okhttp", ktorVersion)
 }
 
 

@@ -7,6 +7,8 @@ import gropius.model.template.IssueTemplate
 import gropius.model.template.IssueType
 import gropius.model.user.IMSUser
 import gropius.model.user.User
+import gropius.sync.JsonHelper
+import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.fragment.*
 import gropius.sync.github.generated.fragment.UserData.Companion.asNode
 import gropius.sync.github.model.IssueInfo
@@ -25,7 +27,7 @@ import org.springframework.stereotype.Component
 import java.time.OffsetDateTime
 
 /**
- * Save GitHub nodes as gropius nodes into the database
+ * Save GitHub nodes as Gropius nodes into the database
  * @param helper Reference for the spring instance of JsonHelper
  * @param neoOperations Reference for the spring instance of ReactiveNeo4jOperations
  * @param issueInfoRepository Reference for the spring instance of IssueInfoRepository
@@ -155,7 +157,7 @@ class NodeSourcerer(
      * Ensure a given issue is in the database
      * @param info The issue to be created this body for
      * @param imsProjectConfig Config of the active project
-     * @return The gropius issue and the mongodb issue mapping
+     * @return The Gropius issue and the mongodb issue mapping
      */
     suspend fun ensureIssue(imsProjectConfig: IMSProjectConfig, info: IssueData): Pair<Issue, IssueInfo> {
         var issueInfo = issueInfoRepository.findByUrlAndGithubId(imsProjectConfig.url, info.id)
@@ -179,7 +181,7 @@ class NodeSourcerer(
      * Ensure the user with the given UserData is inserted in the database
      * @param info The GraphQL user data
      * @param imsProjectConfig Config of the active project
-     * @return a gropius user
+     * @return a Gropius user
      */
     suspend fun ensureUser(imsProjectConfig: IMSProjectConfig, info: UserData) =
         ensureUser(imsProjectConfig, info.login, info.asNode()?.id)
@@ -188,7 +190,7 @@ class NodeSourcerer(
      * Ensure a user with the given username is in the database
      * @param username The GitHub username string
      * @param imsProjectConfig Config of the active project
-     * @return a gropius user
+     * @return a Gropius user
      */
     suspend fun ensureUser(imsProjectConfig: IMSProjectConfig, username: String, githubId: String? = null): User {
         val userInfo = userInfoRepository.findByUrlAndLogin(imsProjectConfig.url, username)
@@ -213,7 +215,7 @@ class NodeSourcerer(
      * Ensure a given label is in the database
      * @param info The GraphQL data for this label
      * @param imsProjectConfig Config of the active project
-     * @return a gropius label
+     * @return a Gropius label
      */
     suspend fun ensureLabel(
         imsProjectConfig: IMSProjectConfig, info: LabelData

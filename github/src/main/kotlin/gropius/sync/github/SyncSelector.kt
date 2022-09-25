@@ -3,15 +3,20 @@ package gropius.sync.github
 import com.apollographql.apollo3.ApolloClient
 import gropius.repository.architecture.IMSIssueRepository
 import gropius.sync.IssueCleaner
+import gropius.sync.JsonHelper
+import gropius.sync.SyncNotificator
+import gropius.sync.github.config.IMSConfig
+import gropius.sync.github.config.IMSConfigManager
+import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.repository.IssueInfoRepository
 import gropius.sync.github.repository.RepositoryInfoRepository
 import gropius.sync.github.repository.TimelineEventInfoRepository
+import gropius.sync.github.utils.TimelineItemHandler
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.stereotype.Component
-import java.lang.Exception
 
 /**
  * Stateless component for the management part of the sync
@@ -56,7 +61,7 @@ class SyncSelector(
     private val logger = LoggerFactory.getLogger(SyncSelector::class.java)
 
     /**
-     * Sync GitHub to gropius
+     * Sync GitHub to Gropius
      */
     suspend fun sync() {
         logger.info("Sync started")
@@ -83,7 +88,7 @@ class SyncSelector(
      * @param imsConfig the config of the IMS
      */
     private suspend fun syncIMS(imsConfig: IMSConfig) {
-        val token = tokenManager.getTokenForIMSUser(imsConfig, null)
+        val token = tokenManager.getTokenForIMSUser(imsConfig.ims, imsConfig.readUser, null)
         val apolloClient = ApolloClient.Builder().serverUrl(imsConfig.graphQLUrl.toString())
             .addHttpHeader("Authorization", "bearer $token").build()
         for (project in imsConfig.ims.projects()) {

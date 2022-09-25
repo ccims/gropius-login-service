@@ -1,4 +1,4 @@
-package gropius.sync.github
+package gropius.sync
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component

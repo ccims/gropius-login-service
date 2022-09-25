@@ -1,6 +1,7 @@
 package gropius.sync.github
 
 import com.apollographql.apollo3.ApolloClient
+import gropius.GithubConfigurationProperties
 import gropius.model.architecture.IMS
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
@@ -10,6 +11,9 @@ import gropius.model.user.IMSUser
 import gropius.model.user.User
 import gropius.repository.issue.IssueRepository
 import gropius.repository.user.IMSUserRepository
+import gropius.sync.JsonHelper
+import gropius.sync.SyncNotificator
+import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.*
 import gropius.sync.github.generated.MutateAddLabelMutation.Data.AddLabelsToLabelable.Labelable.Companion.asIssue
 import gropius.sync.github.generated.MutateCreateLabelMutation.Data.CreateLabel.Label.Companion.labelData
@@ -19,6 +23,7 @@ import gropius.sync.github.model.LabelInfo
 import gropius.sync.github.repository.IssueInfoRepository
 import gropius.sync.github.repository.LabelInfoRepository
 import gropius.sync.github.repository.TimelineEventInfoRepository
+import gropius.sync.github.utils.TimelineItemHandler
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactor.awaitSingle
 import org.neo4j.cypherdsl.core.Cypher
@@ -35,6 +40,7 @@ import org.springframework.stereotype.Component
  * @param imsUserRepository Reference for the spring instance of IMSUserRepository
  * @param incoming Reference for the spring instance of Incoming
  * @param timelineItemHandler Reference for the spring instance of TimelineItemHandler
+ * @param githubConfigurationProperties Reference for the spring instance of GithubConfigurationProperties
  */
 @Component
 class Outgoing(
@@ -47,7 +53,8 @@ class Outgoing(
     private val incoming: Incoming,
     private val nodeSourcerer: NodeSourcerer,
     private val labelInfoRepository: LabelInfoRepository,
-    private val timelineItemHandler: TimelineItemHandler
+    private val timelineItemHandler: TimelineItemHandler,
+    private val githubConfigurationProperties: GithubConfigurationProperties
 ) {
     /**
      * Logger used to print notifications
@@ -143,7 +150,9 @@ class Outgoing(
             token = extractUserToken(imsProjectConfig, user)
         }
         if (token == null) {
-            token = tokenManager.getTokenForIMSUser(imsProjectConfig.imsConfig, null)
+            token = tokenManager.getTokenForIMSUser(
+                imsProjectConfig.imsConfig.ims, imsProjectConfig.imsConfig.readUser, null
+            )
         }
         return ApolloClient.Builder().serverUrl(imsProjectConfig.imsConfig.graphQLUrl.toString())
             .addHttpHeader("Authorization", "bearer $token")
@@ -230,7 +239,7 @@ class Outgoing(
                     issueInfo.githubId, label.name, label.description, label.color
                 )
             ).execute()
-            val newLabel = createLabelResponse?.data?.createLabel?.label?.labelData()
+            val newLabel = createLabelResponse.data?.createLabel?.label?.labelData()
             if (newLabel != null) {
                 nodeSourcerer.ensureLabel(imsProjectConfig, newLabel)
                 val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, newLabel.id)).execute()
@@ -327,7 +336,7 @@ class Outgoing(
         imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, timeline: List<TimelineItem>
     ): List<suspend () -> Unit> {
         val relevantTimeline =
-            timeline.filter { (it is ReopenedEvent) || (it is ClosedEvent) }//TODO: block similar to label?
+            timeline.filter { (it is ReopenedEvent) || (it is ClosedEvent) }
         if (relevantTimeline.isEmpty()) {
             return listOf()
         }
@@ -353,7 +362,7 @@ class Outgoing(
         return timeline.mapNotNull { it as? IssueComment }
             .filter { timelineEventInfoRepository.findByNeo4jId(it.rawId!!) == null }.flatMap {
                 githubPostComment(
-                    imsProjectConfig, issueInfo, it as IssueComment, it.lastModifiedBy().value
+                    imsProjectConfig, issueInfo, it, it.lastModifiedBy().value
                 )
             }
     }
@@ -377,7 +386,8 @@ class Outgoing(
                 finalBlock, relevantTimeline, true
             )
         ) {
-            collectedMutations += githubReopenIssue(imsProjectConfig,
+            collectedMutations += githubReopenIssue(
+                imsProjectConfig,
                 issueInfo,
                 finalBlock.map { it.lastModifiedBy().value })
         }
@@ -385,7 +395,8 @@ class Outgoing(
                 finalBlock, relevantTimeline, false
             )
         ) {
-            collectedMutations += githubCloseIssue(imsProjectConfig,
+            collectedMutations += githubCloseIssue(
+                imsProjectConfig,
                 issueInfo,
                 finalBlock.map { it.lastModifiedBy().value })
         }
@@ -474,7 +485,8 @@ class Outgoing(
                 finalBlock, relevantTimeline, false
             )
         ) {
-            collectedMutations += githubAddLabel(imsProjectConfig,
+            collectedMutations += githubAddLabel(
+                imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
@@ -483,7 +495,8 @@ class Outgoing(
                 finalBlock, relevantTimeline, true
             )
         ) {
-            collectedMutations += githubRemoveLabel(imsProjectConfig,
+            collectedMutations += githubRemoveLabel(
+                imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
@@ -522,7 +535,7 @@ class Outgoing(
                 issueInfoRepository.save(issueInfo).awaitSingle()
             }
         }
-        if (collectedMutations.size > 100) {//TODO: Config
+        if (collectedMutations.size > githubConfigurationProperties.maxMutationCount) {
             throw SyncNotificator.NotificatedError("SYNC_GITHUB_TOO_MANY_MUTATIONS")
         }
         logger.info("Pushing ${collectedMutations.size} mutations")

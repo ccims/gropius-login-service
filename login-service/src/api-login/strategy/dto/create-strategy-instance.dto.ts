@@ -29,7 +29,7 @@ export class CreateStrategyInstanceInput extends UpdateStrategyInstanceInput {
      */
     static check(input: CreateStrategyInstanceInput): CreateStrategyInstanceInput {
         UpdateStrategyInstanceInput.check(input);
-        if (input.type != undefined && input.type.trim().length <= 0) {
+        if (input.type != undefined && input.type.trim().length == 0) {
             throw new HttpException(
                 "Type of stragety must be specified on creation and can't be empty",
                 HttpStatus.BAD_REQUEST,

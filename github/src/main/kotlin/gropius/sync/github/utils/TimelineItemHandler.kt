@@ -1,6 +1,8 @@
-package gropius.sync.github
+package gropius.sync.github.utils
 
 import gropius.model.issue.timeline.*
+import gropius.sync.github.NodeSourcerer
+import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.fragment.*
 import gropius.sync.github.model.IssueInfo
 import kotlinx.coroutines.reactor.awaitSingle
@@ -12,7 +14,7 @@ import org.springframework.stereotype.Component
 import java.time.OffsetDateTime
 
 /**
- * Save a GitHub timeline item into a gropius timeline item
+ * Save a GitHub timeline item into a Gropius timeline item
  * @param neoOperations Reference for the spring instance of ReactiveNeo4jOperations
  * @param nodeSourcerer Reference for the spring instance of NodeSourcerer
  */
@@ -202,7 +204,7 @@ class TimelineItemHandler(
             is SubscribedEventTimelineItemData -> Pair(null, event.createdAt)
             is UnsubscribedEventTimelineItemData -> Pair(null, event.createdAt)
             else -> {
-                TODO("Throw nice exception for unhandled event: " + event.__typename)
+                throw IllegalArgumentException("Invalid GraphQL query response in timeline")
             }
         }
     }

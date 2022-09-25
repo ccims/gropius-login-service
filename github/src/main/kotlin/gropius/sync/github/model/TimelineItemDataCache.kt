@@ -21,11 +21,7 @@ data class TimelineItemDataCache(
     @Indexed
     var githubId: String,
     @Indexed
-    val issue: String,
-    @Indexed
-    val data: TimelineItemData,
-    @Indexed
-    var attempts: Int?
+    val issue: String, val data: TimelineItemData, var attempts: Int?
 ) {
     /**
      * MongoDB ID

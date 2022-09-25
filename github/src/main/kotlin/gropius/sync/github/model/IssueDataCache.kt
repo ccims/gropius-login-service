@@ -16,14 +16,10 @@ import java.net.URI
  */
 @Document
 data class IssueDataCache(
-    @Indexed(unique = true)
+    @Indexed
     var githubId: String,
     @Indexed
-    val url: URI,
-    @Indexed
-    val data: IssueDataExtensive,
-    @Indexed
-    var attempts: Int?
+    val url: URI, val data: IssueDataExtensive, var attempts: Int?
 ) {
     /**
      * MongoDB ID

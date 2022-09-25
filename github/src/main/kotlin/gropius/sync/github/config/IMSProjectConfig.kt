@@ -1,10 +1,12 @@
-package gropius.sync.github
+package gropius.sync.github.config
 
 import gropius.model.architecture.IMSProject
+import gropius.sync.JsonHelper
+import gropius.sync.github.model.RepoDescription
 
 /**
  * Config read out from a single IMSProject and an IMSConfig node
- * @param imsProject the gropius IMSProject to use as input
+ * @param imsProject the Gropius IMSProject to use as input
  * @param imsConfig the config of the parent IMS
  * @param botUser bot user name
  * @param readUser read user name
@@ -18,7 +20,7 @@ data class IMSProjectConfig(
     val repo: RepoDescription
 ) {
     /**
-     * @param imsProject the gropius IMSProject to use as input
+     * @param imsProject the Gropius IMSProject to use as input
      * @param helper Reference for the spring instance of JsonHelper
      * @param imsConfig the config of the parent IMS
      */

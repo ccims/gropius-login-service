@@ -6,6 +6,10 @@ import gropius.model.architecture.IMSProject
 import gropius.model.issue.Issue
 import gropius.repository.architecture.IMSIssueRepository
 import gropius.sync.IssueCleaner
+import gropius.sync.JsonHelper
+import gropius.sync.SyncNotificator
+import gropius.sync.github.config.IMSConfigManager
+import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.fragment.IssueData
 import gropius.sync.github.generated.fragment.IssueDataExtensive
 import gropius.sync.github.generated.fragment.TimelineItemData
@@ -16,6 +20,9 @@ import gropius.sync.github.model.TimelineEventInfo
 import gropius.sync.github.repository.IssueInfoRepository
 import gropius.sync.github.repository.RepositoryInfoRepository
 import gropius.sync.github.repository.TimelineEventInfoRepository
+import gropius.sync.github.utils.IssueGrabber
+import gropius.sync.github.utils.TimelineGrabber
+import gropius.sync.github.utils.TimelineItemHandler
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull

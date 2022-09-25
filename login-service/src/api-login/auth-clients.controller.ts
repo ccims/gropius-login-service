@@ -140,6 +140,11 @@ export class AuthClientController {
     async createNewAuthClient(@Body() input: CreateOrUpdateAuthClientInput): Promise<AuthClient> {
         CreateOrUpdateAuthClientInput.check(input);
         const newClient = new AuthClient();
+        if (input.name) {
+            newClient.name = input.name;
+        } else {
+            newClient.name = null;
+        }
         newClient.redirectUrls = [];
         if (input.redirectUrls) {
             for (const url of input.redirectUrls) {
@@ -193,6 +198,9 @@ export class AuthClientController {
             throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
         }
 
+        if (input.name) {
+            authClient.name = input.name;
+        }
         if (input.redirectUrls) {
             authClient.redirectUrls = [];
             for (const url of input.redirectUrls) {

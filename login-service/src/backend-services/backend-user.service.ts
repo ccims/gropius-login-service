@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { GraphqlService } from "src/model/graphql/graphql.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
@@ -13,21 +13,30 @@ export interface CreateUserInput {
 
 @Injectable()
 export class BackendUserService {
+    private readonly logger = new Logger(BackendUserService.name);
     constructor(private readonly graphqlService: GraphqlService, private readonly loginUserService: LoginUserService) {}
 
+    /**
+     * Checks if the user may access admin actions.
+     *
+     * Calls the backend API to retrieve the information.
+     *
+     * Potential optimation if performance is a problem: Cache admin state for one login session (activeLogin)
+     *
+     * @param user The user for which to check admin permissions
+     * @returns `true` if the user is allowed to access admin actions, `false` if not
+     */
     async checkIsUserAdmin(user: LoginUser): Promise<boolean> {
-        // todo: adapt once actual query is available
         if (!user.neo4jId) {
             throw new Error("User without neo4jId: " + user.id);
         }
-        return (
-            true ||
-            (
-                await this.graphqlService.sdk.checkUserIsAdmin({
-                    id: user.neo4jId,
-                })
-            ).node.id == ""
-        );
+        const loadedUser = await this.graphqlService.sdk.checkUserIsAdmin({ id: user.id });
+        if (loadedUser.node.__typename == "GropiusUser") {
+            if (loadedUser.node.isAdmin) {
+                return true;
+            }
+        }
+        return false;
     }
 
     async createNewUser(input: CreateUserInput, isAdmin: boolean): Promise<LoginUser> {
@@ -45,7 +54,7 @@ export class BackendUserService {
                 },
             });
             if (!backendUser.createGropiusUser.gropiusUser.id) {
-                throw new Error("No Id returned on mutation. Assuming error");
+                throw new Error("No Id returned on mutation; Assuming error");
             }
             loginUser.neo4jId = backendUser.createGropiusUser.gropiusUser.id;
             loginUser = await this.loginUserService.save(loginUser);
@@ -94,6 +103,6 @@ export class BackendUserService {
                     (result.status == "fulfilled" && !result.value.updateIMSUser.imsuser.id),
             )
             .map((result) => (result.status == "fulfilled" ? result.value : result.reason));
-        console.warn("Failures during linking ims user and Gropius user:", failedLinks);
+        this.logger.warn("Failures during linking ims user and Gropius user:", failedLinks);
     }
 }

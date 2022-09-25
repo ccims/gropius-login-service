@@ -122,7 +122,7 @@ export class TokenService {
             audience: [TokenScope.REFRESH_TOKEN],
         });
         if (payload.client_id !== requiredClientId) {
-            throw new JsonWebTokenError("Token is not for current client.");
+            throw new JsonWebTokenError("Token is not for current client");
         }
         if (!payload.sub) {
             throw new JsonWebTokenError("Active login token (code) doesn't contain an id");

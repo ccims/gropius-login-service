@@ -22,7 +22,6 @@ data class TimelineEventInfo(
     @Indexed
     val neo4jId: String?,
     val lastModifiedAt: OffsetDateTime,
-    @Indexed
     val type: String?,
     @Indexed
     val url: URI
