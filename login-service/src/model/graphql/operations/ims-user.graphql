@@ -1,0 +1,46 @@
+fragment ImsUserWithDetail on IMSUser {
+    id
+    username
+    displayName
+    email
+    templatedFields {
+        name
+        value
+    }
+    ims {
+        id
+        name
+        description
+        templatedFields {
+            name
+            value
+        }
+    }
+}
+
+query getImsUserDetails($imsUserId: ID!) {
+    node(id: $imsUserId) {
+        ...ImsUserWithDetail
+    }
+}
+
+query getImsUsersByTemplatedFieldValues($imsFilterInput: IMSFilterInput!, $userFilterInput: IMSUserFilterInput!) {
+    imss(filter: $imsFilterInput) {
+        nodes {
+            id
+            users(filter: $userFilterInput) {
+                nodes {
+                    id
+                }
+            }
+        }
+    }
+}
+
+mutation createNewImsUserInIms($input: CreateIMSUserInput!) {
+    createIMSUser(input: $input) {
+        imsuser {
+            id
+        }
+    }
+}

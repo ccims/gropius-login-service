@@ -19,6 +19,11 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.server.ResponseStatusException
 
 /**
+ * String that the audience claim of a JWT must contain for it to be accepted
+ */
+private val JWT_AUDIENCE_BACKEND = "backend";
+
+/**
  * Generates the GraphQL context map
  *
  * @param gropiusUserRepository used to get the user
@@ -72,6 +77,9 @@ class GropiusGraphQLContextFactory(
             jwtParser.parseClaimsJws(tokenWithoutBearer)
         } catch (e: JwtException) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid jwt")
+        }
+        if (!jwt.body.audience.contains(JWT_AUDIENCE_BACKEND)) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Not a backend token")
         }
         val user = jwt.body.subject!!
         return gropiusUserRepository.findById(user).awaitSingle()
