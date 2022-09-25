@@ -144,3 +144,23 @@
 .mermaid svg {
   height: unset;
 }
+
+[data-theme='dark'] .mermaid-c4 path {
+  stroke: white
+}
+
+[data-theme='dark'] .mermaid-c4 line {
+  stroke: white
+}
+
+[data-theme='dark'] .mermaid-c4 rect {
+  stroke: white
+}
+
+[data-theme='dark'] .mermaid-c4 text {
+  fill: white
+}
+
+[data-theme='dark'] .mermaid-c4 #arrowhead {
+  fill: white
+}
