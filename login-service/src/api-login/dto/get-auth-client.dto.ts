@@ -28,7 +28,8 @@ export class GetAuthClientResponse {
     isValid: boolean;
 
     /**
-     * If `true` requesting a token as this client requires the use of a client secret accoring to the oauth specification.
+     * If `true` requesting a token as this client
+     * requires the use of a client secret accoring to the oauth specification.
      *
      * If `false` client secrets can be present and given but are not required
      * @example false

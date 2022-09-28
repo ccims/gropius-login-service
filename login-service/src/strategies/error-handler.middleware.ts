@@ -31,10 +31,7 @@ export class ErrorHandlerMiddleware implements NestMiddleware {
                 throw new HttpException(errorMessage, HttpStatus.UNAUTHORIZED);
             }
         } else if (res.locals?.state == undefined || res.locals?.state == null) {
-            throw new HttpException(
-                "State of request was lost",
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
+            throw new HttpException("State of request was lost", HttpStatus.INTERNAL_SERVER_ERROR);
         } else {
             next();
         }

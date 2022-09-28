@@ -44,4 +44,6 @@ async function bootstrap() {
     app.enableCors();
     await app.listen(portNumber);
 }
-bootstrap();
+bootstrap()
+    .then(() => console.log("Application exited"))
+    .catch((err) => console.error("NestJS Application exited with error", err));

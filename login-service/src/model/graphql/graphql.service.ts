@@ -1,10 +1,11 @@
 import { Injectable, Optional } from "@nestjs/common";
 import { getSdk } from "./generated";
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient, RequestDocument, RequestOptions, Variables } from "graphql-request";
+import { RemoveIndex } from "graphql-request/dist/types";
 
 @Injectable()
 export class GraphqlService {
-    private readonly client;
+    private readonly client: GraphQLClient;
     public readonly sdk: ReturnType<typeof getSdk>;
 
     constructor(

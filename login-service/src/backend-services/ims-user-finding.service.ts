@@ -258,7 +258,7 @@ export class ImsUserFindingService {
 
         const loginUser = await loginData.user;
         if (loginUser) {
-            this.backendUserService.linkOneImsUserToGropiusUser(loginUser, newImsUser);
+            await this.backendUserService.linkOneImsUserToGropiusUser(loginUser, newImsUser);
         }
 
         return newImsUser;
