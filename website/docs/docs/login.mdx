@@ -3,13 +3,6 @@ sidebar_position: 3
 slug: /login
 ---
 
----
-
-sidebar_position: 3
-slug: /login
-
----
-
 # Login Service
 
 The following doc page uses [the defined terminology](#Terminology)
@@ -147,7 +140,6 @@ sequenceDiagram
     C->>C: Load frontend,<br>process returned code 
     C->>+LS: POST /authenticate/oauth/:id/token<br>Request containing client credentials and [CODE]
     LS-->>-C: (access_token, refresh_token) to Gropius<br>Finish gropius redirect OAuth flow
-
 `} config={ { theme: { light: 'neutral', dark: 'dark' } } } />
 
 ### Refresh Token Flow
@@ -188,7 +180,6 @@ sequenceDiagram
     B-->>-LS: 
     end
     LS-->>-C: Registration successful
-
 `} config={ { theme: { light: 'neutral', dark: 'dark' } } } />
 
 ### Self Link
