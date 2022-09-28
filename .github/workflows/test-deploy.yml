@@ -32,7 +32,13 @@ jobs:
         with:
           node-version: 16.x
           cache: npm
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: "**/package-lock.json"
+      - name: Install login-service dependencies
+        run: ./gradlew login-service:npm_ci
+      - name: Save openapi schemas
+        run: |
+          chmod +x ./website/scripts/generate-openapi-schema.sh
+          ./website/scripts/generate-openapi-schema.sh
       - name: Modify Dokka output
         uses: graphglue/dokka-html-mdx-transform@v1.7.10
         with:
@@ -46,13 +52,17 @@ jobs:
             github
           dest: "website/docs"
           folder: "api"
-      - name: Install dependencies
+      - name: Install website dependencies
         run: npm ci
         working-directory: website
       - name: Update graphql documentation
         run: |
           chmod +x ./website/scripts/update-graphql-doc.sh
           ./website/scripts/update-graphql-doc.sh
+      - name: Update rest documentation
+        run: |
+          chmod +x ./website/scripts/update-rest-doc.sh
+          ./website/scripts/update-rest-doc.sh
       - name: Build website
         run: npm run build
         working-directory: website

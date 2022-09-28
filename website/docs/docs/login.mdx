@@ -1,0 +1,38 @@
+---
+sidebar_position: 3
+slug: /login
+---
+
+# Login
+
+<Mermaid chart={`
+sequenceDiagram
+    participant F as Frontend
+    participant FS as Frontend-Server
+    participant LS as Login-Server
+    participant B as Backend
+    participant 3P as 3rd Party Auth
+    F->>FS: Get Frontend
+    FS->>F: 
+    F-->>LS: Get Auth Methods
+    LS-->>F: 
+    F->>F: Set route
+    F->>LS: /login/:id?state=???
+    LS->>F: 302 -> github/login/oauth/authorize
+    F->>3P: /login/oauthauthorize?state=
+    3P->>F: login token
+    F->>F: enter credentials
+    F->>3P: POST credientials
+    3P->>F: 302 -> /login/id/redirect/state=???
+    F->>LS: /login/:id/redirect
+    LS->>3P: /login/oauth/Access_token
+    3P->>LS: token
+    LS->>F: 302 -> frontend/?state=:frontendReq???
+    F->>FS: GetFrontend
+    FS->>F: 
+    F-->>LS: POST getToken/:id?code
+    LS-->>F: access + refreshToken
+    F->>F: Ask user for details
+    F-->>LS: POST register with access token
+    LS-->>F: new access token + refresh token
+`} config={ { theme: { light: 'neutral', dark: 'dark' } } } />

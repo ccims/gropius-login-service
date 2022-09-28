@@ -21,6 +21,7 @@ yarn-error.log*
 
 # generated api documentation
 docs/api/
+docs/login-service-api/
 
 # generated schema
 schemas/
@@ -28,3 +29,6 @@ schemas/
 # generated graphql documentation
 docs/graphql/api-public/
 docs/graphql/api-internal/
+
+# generated rest documentation
+rest-docs/login-service/
