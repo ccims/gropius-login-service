@@ -119,7 +119,8 @@ The relevant endpoints are:
 
 The diagram below shows an example login flow using an instance of the `github`-strategy with the id `:id`:
 
-<Mermaid chart={`
+<Mermaid
+    chart={`
 sequenceDiagram
     participant C as Client-App
     participant LS as Login-Server
@@ -140,7 +141,9 @@ sequenceDiagram
     C->>C: Load frontend,<br>process returned code 
     C->>+LS: POST /authenticate/oauth/:id/token<br>Request containing client credentials and [CODE]
     LS-->>-C: (access_token, refresh_token) to Gropius<br>Finish gropius redirect OAuth flow
-`} config={ { theme: { light: 'neutral', dark: 'dark' } } } />
+`}
+    config={{ theme: { light: "neutral", dark: "dark" } }}
+/>
 
 ### Refresh Token Flow
 
@@ -162,7 +165,8 @@ The user can in future also use this authentication to login and/or sync (depend
 
 A self register flow using a `userpass` strategy instance could look like this:
 
-<Mermaid chart={`
+<Mermaid
+    chart={`
 sequenceDiagram
     participant C as Client-App
     participant LS as Login-Server
@@ -180,7 +184,9 @@ sequenceDiagram
     B-->>-LS: 
     end
     LS-->>-C: Registration successful
-`} config={ { theme: { light: 'neutral', dark: 'dark' } } } />
+`}
+    config={{ theme: { light: "neutral", dark: "dark" } }}
+/>
 
 ### Self Link
 
@@ -203,38 +209,3 @@ That way an administrator can link authentication to other users (e.g. change th
     -   The first initial time a user provides authentication to the login-service with the intent to create a user account or add a new authentication method to an existing account
 -   Login:
     -   If the user provides authentication with the intent to obtain access to the gropius system using an existing user account
-
-<Mermaid
-    chart={`
-sequenceDiagram
-    participant F as Frontend
-    participant FS as Frontend-Server
-    participant LS as Login-Server
-    participant B as Backend
-    participant 3P as 3rd Party Auth
-    F->>FS: Get Frontend
-    FS->>F: 
-    F-->>LS: Get Auth Methods
-    LS-->>F: 
-    F->>F: Set route
-    F->>LS: /login/:id?state=???
-    LS->>F: 302 -> github/login/oauth/authorize
-    F->>3P: /login/oauthauthorize?state=
-    3P->>F: login token
-    F->>F: enter credentials
-    F->>3P: POST credientials
-    3P->>F: 302 -> /login/id/redirect/state=???
-    F->>LS: /login/:id/redirect
-    LS->>3P: /login/oauth/Access_token
-    3P->>LS: token
-    LS->>F: 302 -> frontend/?state=:frontendReq???
-    F->>FS: GetFrontend
-    FS->>F: 
-    F-->>LS: POST getToken/:id?code
-    LS-->>F: access + refreshToken
-    F->>F: Ask user for details
-    F-->>LS: POST register with access token
-    LS-->>F: new access token + refresh token
-`}
-    config={{ theme: { light: "neutral", dark: "dark" } }}
-/>
