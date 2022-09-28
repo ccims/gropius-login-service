@@ -30,8 +30,12 @@ export class BackendUserService {
         if (!user.neo4jId) {
             throw new Error("User without neo4jId: " + user.id);
         }
-        const loadedUser = await this.graphqlService.sdk.checkUserIsAdmin({ id: user.id });
-        if (loadedUser.node.__typename == "GropiusUser") {
+        const loadedUser = await this.graphqlService.sdk.checkUserIsAdmin({ id: user.neo4jId });
+        if (!loadedUser?.node) {
+            throw new Error(`Backend did not know neo4jid ${user.neo4jId} that it previously returned`);
+        }
+        this.logger.debug(loadedUser.node);
+        if (loadedUser?.node?.__typename == "GropiusUser") {
             if (loadedUser.node.isAdmin) {
                 return true;
             }
@@ -59,7 +63,8 @@ export class BackendUserService {
             loginUser.neo4jId = backendUser.createGropiusUser.gropiusUser.id;
             loginUser = await this.loginUserService.save(loginUser);
         } catch (err) {
-            this.loginUserService.remove(loginUser);
+            this.logger.error("Error during user creation in backend. Rolling back created user");
+            await this.loginUserService.remove(loginUser);
             throw err;
         }
         return loginUser;

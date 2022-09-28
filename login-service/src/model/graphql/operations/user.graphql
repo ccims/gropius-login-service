@@ -11,8 +11,10 @@ query getUserByName($username: String!) {
 }
 
 query checkUserIsAdmin($id: ID!) {
-    node(id: "") {
+    node(id: $id) {
+        __typename
         ... on GropiusUser {
+            __typename
             id
             isAdmin
         }
@@ -29,17 +31,21 @@ mutation createNewUser($input: CreateGropiusUserInput!) {
 
 mutation setImsUserLink($gropiusUserId: ID!, $imsUserId: ID!) {
     updateIMSUser(input: { id: $imsUserId, gropiusUser: $gropiusUserId }) {
+        __typename
         imsuser {
+            __typename
             id
         }
     }
 }
 
 fragment OnlyId on Node {
+    __typename
     id
 }
 
 fragment UserData on GropiusUser {
+    __typename
     id
     username
     displayName
