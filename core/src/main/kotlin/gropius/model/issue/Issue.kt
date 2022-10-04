@@ -182,16 +182,6 @@ class Issue(
     @delegate:Transient
     val pinnedOn by NodeSetProperty<Trackable>()
 
-    @NodeRelationship(IMSProject.PARTIALLY_SYNCED_ISSUES, Direction.INCOMING)
-    @GraphQLDescription(
-        """IMSProjects with which this Issue is currently partially synced,
-        meaning that a sync is in progress, but not completed yet.
-        """
-    )
-    @FilterProperty
-    @delegate:Transient
-    val partiallySyncedWith by NodeSetProperty<IMSProject>()
-
     @NodeRelationship(IMSIssue.ISSUE, Direction.INCOMING)
     @GraphQLDescription(
         """Descriptions of each IMSProject this issue is synced to containing information specified by the sync

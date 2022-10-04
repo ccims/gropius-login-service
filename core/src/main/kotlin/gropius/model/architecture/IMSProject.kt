@@ -34,10 +34,6 @@ class IMSProject(
     override val templatedFields: MutableMap<String, String>
 ) : ExtensibleNode(), MutableTemplatedNode {
 
-    companion object {
-        const val PARTIALLY_SYNCED_ISSUES = "PARTIALLY_SYNCED_ISSUES"
-    }
-
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Component.")
     @FilterProperty
@@ -56,12 +52,6 @@ class IMSProject(
     @FilterProperty
     @delegate:Transient
     val ims by NodeProperty<IMS>()
-
-    @NodeRelationship(PARTIALLY_SYNCED_ISSUES, Direction.OUTGOING)
-    @GraphQLDescription("Issues which are currently partially synced with this IMSProject")
-    @FilterProperty
-    @delegate:Transient
-    val partiallySyncedIssues by NodeSetProperty<Issue>()
 
     @NodeRelationship(IMSIssue.PROJECT, Direction.INCOMING)
     @GraphQLDescription("The IMSIssues synced to by this project.")
