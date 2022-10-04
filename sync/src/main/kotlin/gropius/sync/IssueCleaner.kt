@@ -52,14 +52,10 @@ class IssueCleaner(
      * Clean the open state on this issue into a consistent state
      * @param issue issue to work on
      */
-    private suspend fun cleanOpenState(issue: Issue) {
-        issue.isOpen = true
+    private suspend fun cleanState(issue: Issue) {
         for (item in issue.timelineItems().sortedBy { it.createdAt }) {
-            if (item is ReopenedEvent) {
-                issue.isOpen = true
-            }
-            if (item is ClosedEvent) {
-                issue.isOpen = false
+            if (item is StateChangedEvent) {
+                issue.state().value = item.newState().value
             }
         }
     }
@@ -74,7 +70,7 @@ class IssueCleaner(
     suspend fun cleanIssue(id: String) {
         var issue = neoOperations.findById<Issue>(id)!!
         cleanLabels(issue)
-        cleanOpenState(issue)
+        cleanState(issue)
         cleanTitle(issue)
         issue = neoOperations.save(issue).awaitSingle()
     }

@@ -3,6 +3,7 @@ package gropius.sync.github
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.Body
+import gropius.model.template.IssueState
 import gropius.model.template.IssueTemplate
 import gropius.model.template.IssueType
 import gropius.model.user.IMSUser
@@ -45,22 +46,6 @@ class NodeSourcerer(
     private val labelInfoRepository: LabelInfoRepository,
     private val tokenManager: TokenManager
 ) {
-    /**
-     * Ensure the default GitHub issue type with the default template is in the database
-     * @return The default type for GitHub issues
-     */
-    suspend fun ensureGithubType(): IssueType {
-        val types = neoOperations.findAll<IssueType>().toList()
-        for (type in types) {
-            if (type.name == "github-issue") {
-                return type
-            }
-        }
-        var type = IssueType("github-issue", "Issue synced from GitHub")
-        type.partOf() += ensureGithubTemplate()
-        type = neoOperations.save(type).awaitSingle()
-        return type
-    }
 
     /**
      * Ensure the default GitHub template is in the databse
@@ -69,11 +54,19 @@ class NodeSourcerer(
     suspend fun ensureGithubTemplate(): IssueTemplate {
         val types = neoOperations.findAll<IssueTemplate>().toList()
         for (type in types) {
-            if (type.name == "github-temp") {
+            val hasOpenAndClosedState = type.issueStates().toList().let {
+                it.size == 2 && it.first().isOpen != it.last().isOpen
+            }
+            if (type.name == "github-temp" && type.issueTypes().size == 1 && hasOpenAndClosedState) {
                 return type
             }
         }
         var template = IssueTemplate("github-temp", "Github Template", mutableMapOf(), false)
+        template.issueTypes() += IssueType("github-issue", "Issue synced from GitHub")
+        template.issueStates() += listOf(
+            IssueState("Open", "State hinting the Issue is open", true),
+            IssueState("Closed", "State hinting the Issue is closed", false)
+        )
         template = neoOperations.save(template).awaitSingle()
         return template
     }
@@ -138,17 +131,18 @@ class NodeSourcerer(
             mutableMapOf(),
             info.title,
             info.createdAt,
-            true,
             null,
             null,
             null,
             null
         )
+        val template = ensureGithubTemplate()
         issue.body().value = prepareIssueBody(imsProjectConfig, info)
         issue.body().value.issue().value = issue
         issue.createdBy().value = ensureUser(imsProjectConfig, info.author!!)
         issue.lastModifiedBy().value = ensureUser(imsProjectConfig, info.author!!)
-        issue.type().value = ensureGithubType()
+        issue.type().value = template.issueTypes().first()
+        issue.state().value = template.issueStates().first { it.isOpen }
         issue.template().value = ensureGithubTemplate()
         return issue
     }
