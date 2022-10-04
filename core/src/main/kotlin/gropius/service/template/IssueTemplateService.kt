@@ -34,6 +34,8 @@ class IssueTemplateService(
         createdTemplate(template, input)
         template.issueTypes() += input.issueTypes.map { IssueType(it.name, it.description) }
         template.issueTypes() += template.extends().flatMap { it.issueTypes() }
+        template.issueStates() += input.issueStates.map { IssueState(it.name, it.description, it.isOpen) }
+        template.issueStates() += template.extends().flatMap { it.issueStates() }
         template.assignmentTypes() += input.assignmentTypes.map { AssignmentType(it.name, it.description) }
         template.assignmentTypes() += template.extends().flatMap { it.assignmentTypes() }
         template.issuePriorities() += input.issuePriorities.map { IssuePriority(it.name, it.description, it.value) }
