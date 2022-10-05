@@ -67,9 +67,6 @@ class IssueService(
         val label = labelRepository.findById(input.label)
         checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
         checkPermission(label, Permission(NodePermission.READ, authorizationContext), "use the Label")
-        if (Collections.disjoint(issue.trackables(), label.trackables())) {
-            throw IllegalStateException("The Label cannot be added to the Issue as no common Trackable exists")
-        }
         return if (label !in issue.labels()) {
             return timelineItemRepository.save(
                 addLabelToIssue(issue, label, OffsetDateTime.now(), getUser(authorizationContext))
@@ -83,7 +80,8 @@ class IssueService(
      * Adds a [label] to an [issue] at [atTime] as [byUser] and adds a [AddedLabelEvent] to the timeline.
      * Creates the event even if the [label] was already on the [issue].
      * Only adds the [label] to the [issue] if no newer timeline item exists which removes it again.
-     * Does not check the authorization status, and does not check if the [label] can be added to this [issue].
+     * Does not check the authorization status.
+     * Checks if the [label] can be added to this [issue].
      * Does neither save the created [AddedLabelEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [AddedLabelEvent] afterwards.
      *
@@ -91,10 +89,15 @@ class IssueService(
      * @param label the [Label] to add
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [AddedLabelEvent]
+     * @throws IllegalArgumentException if [label] cannot be added to [issue]
      */
     suspend fun addLabelToIssue(
         issue: Issue, label: Label, atTime: OffsetDateTime, byUser: User
     ): AddedLabelEvent {
+        if (Collections.disjoint(issue.trackables(), label.trackables())) {
+            throw IllegalArgumentException("The Label cannot be added to the Issue as no common Trackable exists")
+        }
         val event = AddedLabelEvent(atTime, atTime)
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<RemovedLabelEvent>(issue, atTime) { it.removedLabel().value == label }) {
@@ -139,6 +142,7 @@ class IssueService(
      * @param label the [Label] to remove
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [RemovedLabelEvent]
      */
     suspend fun removeLabelFromIssue(
         issue: Issue, label: Label, atTime: OffsetDateTime, byUser: User
@@ -167,9 +171,6 @@ class IssueService(
         val artefact = artefactRepository.findById(input.artefact)
         checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
         checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
-        if (artefact.trackable().value !in issue.trackables()) {
-            throw IllegalStateException("The Artefact is not part of a Trackable the Issue is on")
-        }
         return if (artefact !in issue.artefacts()) {
             return timelineItemRepository.save(
                 addArtefactToIssue(issue, artefact, OffsetDateTime.now(), getUser(authorizationContext))
@@ -183,7 +184,8 @@ class IssueService(
      * Adds a [artefact] to an [issue] at [atTime] as [byUser] and adds a [AddedArtefactEvent] to the timeline.
      * Creates the event even if the [artefact] was already on the [issue].
      * Only adds the [artefact] to the [issue] if no newer timeline item exists which removes it again.
-     * Does not check the authorization status, and does not check if the [artefact] can be added to this [issue].
+     * Does not check the authorization status.
+     * Check if the [artefact] can be added to this [issue].
      * Does neither save the created [AddedArtefactEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [AddedArtefactEvent] afterwards.
      *
@@ -191,10 +193,15 @@ class IssueService(
      * @param artefact the [Artefact] to add
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the crated [AddedArtefactEvent]
+     * @throws IllegalArgumentException if the [artefact] cannot be added to the [issue]
      */
     suspend fun addArtefactToIssue(
         issue: Issue, artefact: Artefact, atTime: OffsetDateTime, byUser: User
     ): AddedArtefactEvent {
+        if (artefact.trackable().value !in issue.trackables()) {
+            throw IllegalArgumentException("The Artefact is not part of a Trackable the Issue is on")
+        }
         val event = AddedArtefactEvent(atTime, atTime)
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<RemovedArtefactEvent>(issue, atTime) { it.removedArtefact().value == artefact }) {
@@ -239,6 +246,7 @@ class IssueService(
      * @param artefact the [Artefact] to remove
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [RemovedArtefactEvent]
      */
     suspend fun removeArtefactFromIssue(
         issue: Issue, artefact: Artefact, atTime: OffsetDateTime, byUser: User
