@@ -9,6 +9,8 @@ import gropius.dto.input.issue.RemoveLabelFromTrackableInput
 import gropius.dto.input.issue.UpdateLabelInput
 import gropius.model.architecture.Trackable
 import gropius.model.issue.Label
+import gropius.model.issue.Issue
+import gropius.model.user.User
 import gropius.model.user.permission.TrackablePermission
 import gropius.repository.architecture.TrackableRepository
 import gropius.repository.findAllById
@@ -26,10 +28,13 @@ import java.util.*
  *
  * @param repository the associated repository used for CRUD functionality
  * @param trackableRepository used to find [Trackable]s by id
+ * @param issueService used to remove [Label]s from [Issue]s
  */
 @Service
 class LabelService(
-    repository: LabelRepository, private val trackableRepository: TrackableRepository
+    repository: LabelRepository,
+    private val trackableRepository: TrackableRepository,
+    private val issueService: IssueService
 ) : NamedAuditedNodeService<Label, LabelRepository>(repository) {
 
     /**
@@ -123,11 +128,10 @@ class LabelService(
         checkPermission(trackable, Permission(TrackablePermission.MANAGE_LABELS, authorizationContext), "manage Labels")
         trackable.labels() -= label
         label.trackables() -= trackable
-        //TODO do this via the IssueService
         val toRemove = label.issues().filter {
             Collections.disjoint(it.trackables(), label.trackables())
         }
-        label.issues() -= toRemove.toSet()
+        removeLabelFromIssues(label, toRemove, getUser(authorizationContext))
         return trackableRepository.save(trackable).awaitSingle()
     }
 
@@ -149,10 +153,25 @@ class LabelService(
                 "manage Labels on a Trackable it is on"
             )
         }
-        //TODO do this via the IssueService
-        label.issues().clear()
+        removeLabelFromIssues(label, label.issues(), getUser(authorizationContext))
         label.trackables().clear()
         repository.save(label).awaitSingle()
+    }
+
+    /**
+     * Removes [label] for each [Issue] in [issues] now [byUser].
+     * Saves [issues]
+     *
+     * @param label the [Label] to remove
+     * @param issues contains [Issue]s from which [label] is removed
+     * @param byUser the [User] which remove the [label]
+     */
+    private suspend fun removeLabelFromIssues(label: Label, issues: Collection<Issue>, byUser: User) {
+        val now = OffsetDateTime.now()
+        for (issue in issues.toSet()) {
+            issueService.removeLabelFromIssue(issue, label, now, byUser)
+        }
+        issueService.repository.saveAll(issues).collectList().awaitSingle()
     }
 
 }

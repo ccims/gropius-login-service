@@ -7,6 +7,7 @@ import gropius.dto.input.isPresent
 import gropius.dto.input.issue.CreateArtefactInput
 import gropius.dto.input.issue.UpdateArtefactInput
 import gropius.model.architecture.Trackable
+import gropius.model.issue.Issue
 import gropius.model.issue.Artefact
 import gropius.model.template.ArtefactTemplate
 import gropius.model.user.permission.TrackablePermission
@@ -28,13 +29,15 @@ import java.time.OffsetDateTime
  * @param templatedNodeService service used to update templatedFields
  * @param trackableRepository used to get [Trackable]s by id
  * @param artefactTemplateRepository used to get [ArtefactTemplate]
+ * @param issueService used to remove [Artefact]s from [Issue]s
  */
 @Service
 class ArtefactService(
     repository: ArtefactRepository,
     private val templatedNodeService: TemplatedNodeService,
     private val trackableRepository: TrackableRepository,
-    private val artefactTemplateRepository: ArtefactTemplateRepository
+    private val artefactTemplateRepository: ArtefactTemplateRepository,
+    private val issueService: IssueService
 ) : AuditedNodeService<Artefact, ArtefactRepository>(repository) {
 
     /**
@@ -101,8 +104,12 @@ class ArtefactService(
         val artefact = repository.findById(input.id)
         artefact.isDeleted = true
         artefact.referencingComments().clear()
-        //TODO delete vis IssueService
-        artefact.issues().clear()
+        val now = OffsetDateTime.now()
+        val user = getUser(authorizationContext)
+        for (issue in artefact.issues()) {
+            issueService.removeArtefactFromIssue(issue, artefact, now, user)
+        }
+        issueService.repository.saveAll(artefact.issues()).collectList().awaitSingle()
         repository.save(artefact).awaitSingle()
     }
 

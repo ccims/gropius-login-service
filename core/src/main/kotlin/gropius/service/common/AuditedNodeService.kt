@@ -51,6 +51,19 @@ abstract class AuditedNodeService<T : AuditedNode, R : GropiusRepository<T, Stri
      */
     suspend fun createdAuditedNode(node: AuditedNode, input: CreateExtensibleNodeInput, createdBy: User) {
         createdExtensibleNode(node, input)
+        createdAuditedNode(node, createdBy)
+    }
+
+    /**
+     * Updates [node] after it was created without an [CreateExtensibleNodeInput]
+     * Should be called after the node was constructed
+     * Calls [createdExtensibleNode]
+     * Sets [AuditedNode.createdBy] and [AuditedNode.lastModifiedBy]
+     *
+     * @param node the node to update
+     * @param createdBy the user who created the node
+     */
+    suspend fun createdAuditedNode(node: AuditedNode, createdBy: User) {
         node.createdBy().value = createdBy
         node.lastModifiedBy().value = createdBy
     }
