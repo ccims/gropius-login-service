@@ -12,8 +12,7 @@ import java.time.OffsetDateTime
 @DomainNode
 @GraphQLDescription("Event representing that the type of an Issue changed.")
 class TypeChangedEvent(
-    createdAt: OffsetDateTime,
-    lastModifiedAt: OffsetDateTime,
+    createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
 ) : TimelineItem(createdAt, lastModifiedAt) {
 
     companion object {

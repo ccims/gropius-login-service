@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 
 @DomainNode
 @GraphQLDescription("Event representing that the value of a templated field changed.")
-class TemplateFieldChangedEvent(
+class TemplatedFieldChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
     @property:GraphQLDescription("The name of the templated field.")
