@@ -7,8 +7,8 @@ import gropius.model.user.permission.IMS_PERMISSION_ENTRY_NAME
 
 @GraphQLDescription("Input for the updateImsPermission mutation")
 class UpdateIMSPermissionInput(
-    @GraphQLDescription("Permission entries to add, must be distinct with removedEntries")
+    @GraphQLDescription("Permission entries to add, must be disjoint with removedEntries")
     override val addedEntries: OptionalInput<List<@TypeGraphQLType(IMS_PERMISSION_ENTRY_NAME) String>>,
-    @GraphQLDescription("Permission entries to remove, must be distinct with addedEntries")
+    @GraphQLDescription("Permission entries to remove, must be disjoint with addedEntries")
     override val removedEntries: OptionalInput<List<@TypeGraphQLType(IMS_PERMISSION_ENTRY_NAME) String>>,
 ) : UpdateBasePermissionInput()

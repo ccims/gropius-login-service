@@ -34,19 +34,19 @@ fun <T> OptionalInput<T>.orElse(value: T): T {
 }
 
 /**
- * Helper function to ensure that two optional lists are distinct
+ * Helper function to ensure that two optional lists are disjoint
  * Typically used in an add/remove update context
  * Uses the properties to get the name of the properties to generate the failure message
  *
  * @param otherProperty the other property
- * @throws IllegalArgumentException if both lists are present and not distinct
+ * @throws IllegalArgumentException if both lists are present and not disjoint
  */
-infix fun KProperty0<OptionalInput<List<*>>>.ensureDistinct(otherProperty: KProperty0<OptionalInput<List<*>>>) {
+infix fun KProperty0<OptionalInput<List<*>>>.ensuredisjoint(otherProperty: KProperty0<OptionalInput<List<*>>>) {
     this.get().ifPresent { thisIds ->
         otherProperty.get().ifPresent {
             val commonIds = thisIds intersect it.toSet()
             if (commonIds.isNotEmpty()) {
-                throw IllegalArgumentException("`${this.name}` and `${otherProperty.name}` must be distinct: $commonIds")
+                throw IllegalArgumentException("`${this.name}` and `${otherProperty.name}` must be disjoint: $commonIds")
             }
         }
     }

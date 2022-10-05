@@ -74,7 +74,7 @@ class IssueMutations(
     @GraphQLDescription(
         """Removes a Label from a Trackable, requires MANAGE_LABELS on the Trackable.
         Removes the Label from all Issues where the Label cannot be anymore, as the Trackable of the Label and the Issue
-        are now distinct.
+        are now disjoint.
         """
     )
     @AutoPayloadType("The Trackable from which the Label was removed")

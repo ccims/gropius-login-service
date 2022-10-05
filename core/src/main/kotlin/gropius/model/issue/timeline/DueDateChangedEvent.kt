@@ -16,4 +16,4 @@ class DueDateChangedEvent(
     @property:GraphQLDescription("The new due date.")
     @FilterProperty
     val newDueDate: OffsetDateTime?
-) : TimelineItem(createdAt, lastModifiedAt) {}
+) : TimelineItem(createdAt, lastModifiedAt)

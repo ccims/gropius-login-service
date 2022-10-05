@@ -6,7 +6,7 @@ import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.UpdateExtensibleNodeInput
 import gropius.dto.input.common.ensureNoDuplicates
-import gropius.dto.input.ensureDistinct
+import gropius.dto.input.ensuredisjoint
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.UpdateTemplatedNodeInput
 
@@ -37,7 +37,7 @@ class UpdateRelationInput(
         templatedFields.ifPresent {
             it.ensureNoDuplicates()
         }
-        ::addedStartParts ensureDistinct ::removedStartParts
-        ::addedEndParts ensureDistinct ::removedEndParts
+        ::addedStartParts ensuredisjoint ::removedStartParts
+        ::addedEndParts ensuredisjoint ::removedEndParts
     }
 }

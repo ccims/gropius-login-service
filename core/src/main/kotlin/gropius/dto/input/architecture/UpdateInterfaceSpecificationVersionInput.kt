@@ -6,7 +6,7 @@ import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.UpdateNamedNodeInput
 import gropius.dto.input.common.ensureNoDuplicates
-import gropius.dto.input.ensureDistinct
+import gropius.dto.input.ensuredisjoint
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.UpdateTemplatedNodeInput
 
@@ -27,6 +27,6 @@ class UpdateInterfaceSpecificationVersionInput(
         templatedFields.ifPresent {
             it.ensureNoDuplicates()
         }
-        ::addedActiveParts ensureDistinct ::removedActiveParts
+        ::addedActiveParts ensuredisjoint ::removedActiveParts
     }
 }

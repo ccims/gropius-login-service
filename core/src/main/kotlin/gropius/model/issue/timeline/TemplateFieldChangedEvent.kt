@@ -22,4 +22,4 @@ class TemplateFieldChangedEvent(
     @GraphQLType("JSON")
     @FilterProperty
     val newValue: Any?
-) : TimelineItem(createdAt, lastModifiedAt) {}
+) : TimelineItem(createdAt, lastModifiedAt)

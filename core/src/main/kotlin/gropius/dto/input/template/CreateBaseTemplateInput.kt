@@ -20,7 +20,7 @@ abstract class CreateBaseTemplateInput : CreateNamedNodeInput() {
 
     @GraphQLDescription(
         """Additional initial templateFieldSpecifications, should be a JSON schema JSON.
-        Must be distinct with templateFieldSpecifications of templates this template extends.
+        Must be disjoint with templateFieldSpecifications of templates this template extends.
         """
     )
     var templateFieldSpecifications: OptionalInput<List<JSONFieldInput>> by Delegates.notNull()

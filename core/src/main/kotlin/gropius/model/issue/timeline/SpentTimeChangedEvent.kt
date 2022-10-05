@@ -17,4 +17,4 @@ class SpentTimeChangedEvent(
     @property:GraphQLDescription("The mew spent time.")
     @FilterProperty
     val newSpentTime: Duration?
-) : TimelineItem(createdAt, lastModifiedAt) {}
+) : TimelineItem(createdAt, lastModifiedAt)

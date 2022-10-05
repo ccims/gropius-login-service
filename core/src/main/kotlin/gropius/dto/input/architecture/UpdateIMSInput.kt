@@ -6,7 +6,7 @@ import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.UpdateNamedNodeInput
 import gropius.dto.input.common.ensureNoDuplicates
-import gropius.dto.input.ensureDistinct
+import gropius.dto.input.ensuredisjoint
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.UpdateTemplatedNodeInput
 
@@ -14,10 +14,10 @@ import gropius.dto.input.template.UpdateTemplatedNodeInput
 class UpdateIMSInput(
     @GraphQLDescription("Values for templatedFields to update")
     override val templatedFields: OptionalInput<List<JSONFieldInput>>,
-    @GraphQLDescription("Ids of permissions to add, must be distinct with removedPermissions.")
+    @GraphQLDescription("Ids of permissions to add, must be disjoint with removedPermissions.")
     val addedPermissions: OptionalInput<List<ID>>,
     @GraphQLDescription(
-        """Ids of permissions to remove, must be distinct with addedPermissions.
+        """Ids of permissions to remove, must be disjoint with addedPermissions.
         There must always be at least one permissions granting ADMIN to some GropiusUser left.
         """
     )
@@ -29,6 +29,6 @@ class UpdateIMSInput(
         templatedFields.ifPresent {
             it.ensureNoDuplicates()
         }
-        ::addedPermissions ensureDistinct ::removedPermissions
+        ::addedPermissions ensuredisjoint ::removedPermissions
     }
 }

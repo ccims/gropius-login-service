@@ -4,7 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.UpdateNodeInput
-import gropius.dto.input.ensureDistinct
+import gropius.dto.input.ensuredisjoint
 import gropius.dto.input.ifPresent
 import gropius.model.user.permission.BasePermission
 import kotlin.properties.Delegates
@@ -30,12 +30,12 @@ abstract class UpdateBasePermissionInput : UpdateNodeInput() {
     var removedUsers: OptionalInput<List<ID>> by Delegates.notNull()
 
     /**
-     * Entries to add, must be distinct with [removedEntries]
+     * Entries to add, must be disjoint with [removedEntries]
      */
     abstract val addedEntries: OptionalInput<List<String>>
 
     /**
-     * Entries to remove, must be distinct with [addedEntries]
+     * Entries to remove, must be disjoint with [addedEntries]
      */
     abstract val removedEntries: OptionalInput<List<String>>
 
@@ -46,8 +46,8 @@ abstract class UpdateBasePermissionInput : UpdateNodeInput() {
                 throw IllegalArgumentException("If name is defined, it must not be blank")
             }
         }
-        ::addedEntries ensureDistinct ::removedEntries
-        ::addedUsers ensureDistinct ::removedUsers
+        ::addedEntries ensuredisjoint ::removedEntries
+        ::addedUsers ensuredisjoint ::removedUsers
     }
 
 }
