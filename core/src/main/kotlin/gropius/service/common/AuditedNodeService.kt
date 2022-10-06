@@ -35,9 +35,28 @@ abstract class AuditedNodeService<T : AuditedNode, R : GropiusRepository<T, Stri
         lastModifiedAt: OffsetDateTime = OffsetDateTime.now()
     ) {
         updateExtensibleNode(node, input)
-        node.lastModifiedBy().value = lastModifiedBy
-        node.lastModifiedAt = lastModifiedAt
+        updateAuditedNode(node, lastModifiedBy, lastModifiedAt)
     }
+
+    /**
+     * Updates [node] after it was updated without an [UpdateExtensibleNodeInput]
+     * Sets [AuditedNode.lastModifiedBy] and [AuditedNode.lastModifiedAt]
+     *
+     * @param node the node to update
+     * @param lastModifiedBy the user who last modified the node
+     * @param lastModifiedAt the time when the node was last modified, defaults to `now()`
+     */
+    suspend fun updateAuditedNode(
+        node: AuditedNode,
+        lastModifiedBy: User,
+        lastModifiedAt: OffsetDateTime = OffsetDateTime.now()
+    ) {
+        if (node.lastModifiedAt <= lastModifiedAt) {
+            node.lastModifiedBy().value = lastModifiedBy
+            node.lastModifiedAt = lastModifiedAt
+        }
+    }
+
 
     /**
      * Updates [node] based on [input]

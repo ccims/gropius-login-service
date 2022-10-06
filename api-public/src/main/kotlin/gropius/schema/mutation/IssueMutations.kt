@@ -241,4 +241,103 @@ class IssueMutations(
         return issueService.removeIssueFromPinnedIssues(dfe.gropiusAuthorizationContext, input)
     }
 
+    @GraphQLDescription(
+        """Changes the `dueDate` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueDueDate(
+        @GraphQLDescription("Defines the Issue and new `dueDate`")
+        input: ChangeIssueDueDateInput, dfe: DataFetchingEnvironment
+    ): DueDateChangedEvent? {
+        return issueService.changeIssueDueDate(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `estimatedTime` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueEstimatedTime(
+        @GraphQLDescription("Defines the Issue and new `estimatedTime`")
+        input: ChangeIssueEstimatedTimeInput, dfe: DataFetchingEnvironment
+    ): EstimatedTimeChangedEvent? {
+        return issueService.changeIssueEstimatedTime(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `priority` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        Additionally, the IssuePriority must be defined by the Template of the Issue.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssuePriority(
+        @GraphQLDescription("Defines the Issue and new `priority`")
+        input: ChangeIssuePriorityInput, dfe: DataFetchingEnvironment
+    ): PriorityChangedEvent? {
+        return issueService.changeIssuePriority(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `spentTime` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueSpentTime(
+        @GraphQLDescription("Defines the Issue and new `spentTime`")
+        input: ChangeIssueSpentTimeInput, dfe: DataFetchingEnvironment
+    ): SpentTimeChangedEvent? {
+        return issueService.changeIssueSpentTime(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `startDate` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueStartDate(
+        @GraphQLDescription("Defines the Issue and new `startDate`")
+        input: ChangeIssueStartDateInput, dfe: DataFetchingEnvironment
+    ): StartDateChangedEvent? {
+        return issueService.changeIssueStartDate(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `state` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        Additionally, the IssueState must be defined by the Template of the Issue.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueState(
+        @GraphQLDescription("Defines the Issue and new `state`")
+        input: ChangeIssueStateInput, dfe: DataFetchingEnvironment
+    ): StateChangedEvent? {
+        return issueService.changeIssueState(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `title` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueTitle(
+        @GraphQLDescription("Defines the Issue and new `title`")
+        input: ChangeIssueTitleInput, dfe: DataFetchingEnvironment
+    ): TitleChangedEvent? {
+        return issueService.changeIssueTitle(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the `type` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        Additionally, the IssueType must be defined by the Template of the Issue.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueType(
+        @GraphQLDescription("Defines the Issue and new `type`")
+        input: ChangeIssueTypeInput, dfe: DataFetchingEnvironment
+    ): TypeChangedEvent? {
+        return issueService.changeIssueType(dfe.gropiusAuthorizationContext, input)
+    }
+
 }

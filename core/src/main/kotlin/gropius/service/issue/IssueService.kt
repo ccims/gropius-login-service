@@ -7,6 +7,9 @@ import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.*
+import gropius.model.template.IssuePriority
+import gropius.model.template.IssueState
+import gropius.model.template.IssueType
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
@@ -16,12 +19,17 @@ import gropius.repository.issue.ArtefactRepository
 import gropius.repository.issue.IssueRepository
 import gropius.repository.issue.LabelRepository
 import gropius.repository.issue.timeline.TimelineItemRepository
+import gropius.repository.template.IssuePriorityRepository
+import gropius.repository.template.IssueStateRepository
+import gropius.repository.template.IssueTypeRepository
 import gropius.service.common.AuditedNodeService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.reflect.KMutableProperty0
 
 /**
  * Service for [Issue]s. Provides function to update the deprecation status
@@ -31,6 +39,9 @@ import java.util.*
  * @param timelineItemRepository used to save [TimelineItem]s
  * @param artefactRepository used to find [Artefact]s by id
  * @param trackableRepository used to find [Trackable]s by id
+ * @param issuePriorityRepository used to find [IssuePriority]s by id
+ * @param issueTypeRepository used to find [IssueType]s by id
+ * @param issueStateRepository used to find [IssueState]s by id
  */
 @Service
 class IssueService(
@@ -38,7 +49,10 @@ class IssueService(
     private val labelRepository: LabelRepository,
     private val timelineItemRepository: TimelineItemRepository,
     private val artefactRepository: ArtefactRepository,
-    private val trackableRepository: TrackableRepository
+    private val trackableRepository: TrackableRepository,
+    private val issuePriorityRepository: IssuePriorityRepository,
+    private val issueTypeRepository: IssueTypeRepository,
+    private val issueStateRepository: IssueStateRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -64,6 +78,7 @@ class IssueService(
     suspend fun addIssueToTrackable(
         authorizationContext: GropiusAuthorizationContext, input: AddIssueToTrackableInput
     ): AddedToTrackableEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
         checkPermission(
@@ -71,7 +86,7 @@ class IssueService(
             Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
             "manage Issues on the Trackable"
         )
-        checkPermission(issue, Permission(TrackablePermission.EXPORT_ISSUES, authorizationContext), "export the Issue")
+        checkManageIssuePermission(issue, authorizationContext)
         return if (trackable !in issue.trackables()) {
             return timelineItemRepository.save(
                 addIssueToTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
@@ -123,6 +138,7 @@ class IssueService(
     suspend fun removeIssueFromTrackable(
         authorizationContext: GropiusAuthorizationContext, input: RemoveIssueFromTrackableInput
     ): RemovedFromTrackableEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
         checkPermission(
@@ -189,6 +205,7 @@ class IssueService(
     suspend fun addIssueToPinnedIssues(
         authorizationContext: GropiusAuthorizationContext, input: AddIssueToPinnedIssuesInput
     ): AddedToPinnedIssuesEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
         checkPermission(
@@ -253,6 +270,7 @@ class IssueService(
     suspend fun removeIssueFromPinnedIssues(
         authorizationContext: GropiusAuthorizationContext, input: RemoveIssueFromPinnedIssuesInput
     ): RemovedFromPinnedIssuesEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
         checkPermission(
@@ -309,9 +327,10 @@ class IssueService(
     suspend fun addLabelToIssue(
         authorizationContext: GropiusAuthorizationContext, input: AddLabelToIssueInput
     ): AddedLabelEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val label = labelRepository.findById(input.label)
-        checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
+        checkManageIssuePermission(issue, authorizationContext)
         checkPermission(label, Permission(NodePermission.READ, authorizationContext), "use the Label")
         return if (label !in issue.labels()) {
             return timelineItemRepository.save(
@@ -365,9 +384,10 @@ class IssueService(
     suspend fun removeLabelFromIssue(
         authorizationContext: GropiusAuthorizationContext, input: RemoveLabelFromIssueInput
     ): RemovedLabelEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val label = labelRepository.findById(input.label)
-        checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
+        checkManageIssuePermission(issue, authorizationContext)
         return if (label in issue.labels()) {
             return timelineItemRepository.save(
                 removeLabelFromIssue(issue, label, OffsetDateTime.now(), getUser(authorizationContext))
@@ -415,9 +435,10 @@ class IssueService(
     suspend fun addArtefactToIssue(
         authorizationContext: GropiusAuthorizationContext, input: AddArtefactToIssueInput
     ): AddedArtefactEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val artefact = artefactRepository.findById(input.artefact)
-        checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
+        checkManageIssuePermission(issue, authorizationContext)
         checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
         return if (artefact !in issue.artefacts()) {
             return timelineItemRepository.save(
@@ -471,9 +492,10 @@ class IssueService(
     suspend fun removeArtefactFromIssue(
         authorizationContext: GropiusAuthorizationContext, input: RemoveArtefactFromIssueInput
     ): RemovedArtefactEvent? {
+        input.validate()
         val issue = repository.findById(input.issue)
         val artefact = artefactRepository.findById(input.artefact)
-        checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
+        checkManageIssuePermission(issue, authorizationContext)
         return if (artefact in issue.artefacts()) {
             return timelineItemRepository.save(
                 removeArtefactFromIssue(issue, artefact, OffsetDateTime.now(), getUser(authorizationContext))
@@ -510,6 +532,440 @@ class IssueService(
     }
 
     /**
+     * Changes the `title` of an [Issue], return the created [TitleChangedEvent] or null if the `title`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `title` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueTitle(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueTitleInput
+    ): TitleChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        return changeIssueProperty(authorizationContext, issue, issue.title, input.title, ::changeIssueTitle)
+    }
+
+    /**
+     * Changes the `title` of an  [issue] at [atTime] as [byUser] and adds a [TitleChangedEvent] to the timeline.
+     * Creates the event even if the `title` was not changed.
+     * Only changes the `title` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [TitleChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [TitleChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `title` should be changed
+     * @param oldTitle the old `title`
+     * @param newTitle the new `title`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [TitleChangedEvent]
+     */
+    suspend fun changeIssueTitle(
+        issue: Issue, oldTitle: String, newTitle: String, atTime: OffsetDateTime, byUser: User
+    ): TitleChangedEvent {
+        val event = TitleChangedEvent(atTime, atTime, oldTitle, newTitle)
+        changeIssueProperty(issue, newTitle, atTime, byUser, issue::title, event)
+        return event
+    }
+
+    /**
+     * Changes the `startDate` of an [Issue], return the created [StartDateChangedEvent] or null if the `startDate`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `startDate` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueStartDate(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueStartDateInput
+    ): StartDateChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        return changeIssueProperty(
+            authorizationContext, issue, issue.startDate, input.startDate, ::changeIssueStartDate
+        )
+    }
+
+    /**
+     * Changes the `startDate` of an  [issue] at [atTime] as [byUser] and adds a [StartDateChangedEvent] to the timeline.
+     * Creates the event even if the `startDate` was not changed.
+     * Only changes the `startDate` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [StartDateChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [StartDateChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `startDate` should be changed
+     * @param oldStartDate the old `startDate`
+     * @param newStartDate the new `startDate`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [StartDateChangedEvent]
+     */
+    suspend fun changeIssueStartDate(
+        issue: Issue, oldStartDate: OffsetDateTime?, newStartDate: OffsetDateTime?, atTime: OffsetDateTime, byUser: User
+    ): StartDateChangedEvent {
+        val event = StartDateChangedEvent(atTime, atTime, oldStartDate, newStartDate)
+        changeIssueProperty(issue, newStartDate, atTime, byUser, issue::startDate, event)
+        return event
+    }
+
+    /**
+     * Changes the `dueDate` of an [Issue], return the created [DueDateChangedEvent] or null if the `dueDate`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `dueDate` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueDueDate(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueDueDateInput
+    ): DueDateChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        return changeIssueProperty(
+            authorizationContext, issue, issue.dueDate, input.dueDate, ::changeIssueDueDate
+        )
+    }
+
+    /**
+     * Changes the `dueDate` of an  [issue] at [atTime] as [byUser] and adds a [DueDateChangedEvent] to the timeline.
+     * Creates the event even if the `dueDate` was not changed.
+     * Only changes the `dueDate` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [DueDateChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [DueDateChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `dueDate` should be changed
+     * @param oldDueDate the old `dueDate`
+     * @param newDueDate the new `dueDate`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [DueDateChangedEvent]
+     */
+    suspend fun changeIssueDueDate(
+        issue: Issue, oldDueDate: OffsetDateTime?, newDueDate: OffsetDateTime?, atTime: OffsetDateTime, byUser: User
+    ): DueDateChangedEvent {
+        val event = DueDateChangedEvent(atTime, atTime, oldDueDate, newDueDate)
+        changeIssueProperty(issue, newDueDate, atTime, byUser, issue::dueDate, event)
+        return event
+    }
+
+    /**
+     * Changes the `estimatedTime` of an [Issue], return the created [EstimatedTimeChangedEvent] or null if the `estimatedTime`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `estimatedTime` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueEstimatedTime(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueEstimatedTimeInput
+    ): EstimatedTimeChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        return changeIssueProperty(
+            authorizationContext, issue, issue.estimatedTime, input.estimatedTime, ::changeIssueEstimatedTime
+        )
+    }
+
+    /**
+     * Changes the `estimatedTime` of an  [issue] at [atTime] as [byUser] and adds a [EstimatedTimeChangedEvent] to the timeline.
+     * Creates the event even if the `estimatedTime` was not changed.
+     * Only changes the `estimatedTime` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [EstimatedTimeChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [EstimatedTimeChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `estimatedTime` should be changed
+     * @param oldEstimatedTime the old `estimatedTime`
+     * @param newEstimatedTime the new `estimatedTime`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [EstimatedTimeChangedEvent]
+     */
+    suspend fun changeIssueEstimatedTime(
+        issue: Issue, oldEstimatedTime: Duration?, newEstimatedTime: Duration?, atTime: OffsetDateTime, byUser: User
+    ): EstimatedTimeChangedEvent {
+        val event = EstimatedTimeChangedEvent(atTime, atTime, oldEstimatedTime, newEstimatedTime)
+        changeIssueProperty(issue, newEstimatedTime, atTime, byUser, issue::estimatedTime, event)
+        return event
+    }
+
+    /**
+     * Changes the `spentTime` of an [Issue], return the created [SpentTimeChangedEvent] or null if the `spentTime`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `spentTime` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueSpentTime(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueSpentTimeInput
+    ): SpentTimeChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        return changeIssueProperty(
+            authorizationContext, issue, issue.spentTime, input.spentTime, ::changeIssueSpentTime
+        )
+    }
+
+    /**
+     * Changes the `spentTime` of an  [issue] at [atTime] as [byUser] and adds a [SpentTimeChangedEvent] to the timeline.
+     * Creates the event even if the `spentTime` was not changed.
+     * Only changes the `spentTime` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [SpentTimeChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [SpentTimeChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `spentTime` should be changed
+     * @param oldSpentTime the old `spentTime`
+     * @param newSpentTime the new `spentTime`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [SpentTimeChangedEvent]
+     */
+    suspend fun changeIssueSpentTime(
+        issue: Issue, oldSpentTime: Duration?, newSpentTime: Duration?, atTime: OffsetDateTime, byUser: User
+    ): SpentTimeChangedEvent {
+        val event = SpentTimeChangedEvent(atTime, atTime, oldSpentTime, newSpentTime)
+        changeIssueProperty(issue, newSpentTime, atTime, byUser, issue::spentTime, event)
+        return event
+    }
+
+    /**
+     * Changes the `priority` of an [Issue], return the created [PriorityChangedEvent] or null if the `priority`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `priority` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssuePriority(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssuePriorityInput
+    ): PriorityChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        val priority = input.priority?.let { issuePriorityRepository.findById(it) }
+        return changeIssueProperty(
+            authorizationContext, issue, issue.priority().value, priority, ::changeIssuePriority
+        ) {
+            if ((priority != null) && (issue.template().value !in priority.partOf())) {
+                throw IllegalArgumentException(
+                    "IssuePriority cannot be used on the Issue as it is not provided by the template of the Issue"
+                )
+            }
+        }
+    }
+
+    /**
+     * Changes the `priority` of an  [issue] at [atTime] as [byUser] and adds a [PriorityChangedEvent] to the timeline.
+     * Creates the event even if the `priority` was not changed.
+     * Only changes the `priority` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [PriorityChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [PriorityChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `priority` should be changed
+     * @param oldPriority the old `priority`
+     * @param newPriority the new `priority`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [PriorityChangedEvent]
+     */
+    suspend fun changeIssuePriority(
+        issue: Issue, oldPriority: IssuePriority?, newPriority: IssuePriority?, atTime: OffsetDateTime, byUser: User
+    ): PriorityChangedEvent {
+        val event = PriorityChangedEvent(atTime, atTime)
+        event.newPriority().value = newPriority
+        event.oldPriority().value = oldPriority
+        changeIssueProperty(issue, newPriority, atTime, byUser, issue.priority()::value, event)
+        return event
+    }
+
+    /**
+     * Changes the `state` of an [Issue], return the created [StateChangedEvent] or null if the `state`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `state` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueState(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueStateInput
+    ): StateChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        val state = issueStateRepository.findById(input.state)
+        return changeIssueProperty(
+            authorizationContext, issue, issue.state().value, state, ::changeIssueState
+        ) {
+            if (issue.template().value !in state.partOf()) {
+                throw IllegalArgumentException(
+                    "IssueState cannot be used on the Issue as it is not provided by the template of the Issue"
+                )
+            }
+        }
+    }
+
+    /**
+     * Changes the `state` of an  [issue] at [atTime] as [byUser] and adds a [StateChangedEvent] to the timeline.
+     * Creates the event even if the `state` was not changed.
+     * Only changes the `state` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [StateChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [StateChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `state` should be changed
+     * @param oldState the old `state`
+     * @param newState the new `state`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [StateChangedEvent]
+     */
+    suspend fun changeIssueState(
+        issue: Issue, oldState: IssueState, newState: IssueState, atTime: OffsetDateTime, byUser: User
+    ): StateChangedEvent {
+        val event = StateChangedEvent(atTime, atTime)
+        event.newState().value = newState
+        event.oldState().value = oldState
+        changeIssueProperty(issue, newState, atTime, byUser, issue.state()::value, event)
+        return event
+    }
+
+    /**
+     * Changes the `type` of an [Issue], return the created [TypeChangedEvent] or null if the `type`
+     * was not changed.
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `type` and of which issue to change it
+     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueType(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueTypeInput
+    ): TypeChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        val type = issueTypeRepository.findById(input.type)
+        return changeIssueProperty(
+            authorizationContext, issue, issue.type().value, type, ::changeIssueType
+        ) {
+            if (issue.template().value !in type.partOf()) {
+                throw IllegalArgumentException(
+                    "IssueType cannot be used on the Issue as it is not provided by the template of the Issue"
+                )
+            }
+        }
+    }
+
+    /**
+     * Changes the `type` of an  [issue] at [atTime] as [byUser] and adds a [TypeChangedEvent] to the timeline.
+     * Creates the event even if the `type` was not changed.
+     * Only changes the `type` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the created [TypeChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [TypeChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where the `type` should be changed
+     * @param oldType the old `type`
+     * @param newType the new `type`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [TypeChangedEvent]
+     */
+    suspend fun changeIssueType(
+        issue: Issue, oldType: IssueType, newType: IssueType, atTime: OffsetDateTime, byUser: User
+    ): TypeChangedEvent {
+        val event = TypeChangedEvent(atTime, atTime)
+        event.newType().value = newType
+        event.oldType().value = oldType
+        changeIssueProperty(issue, newType, atTime, byUser, issue.type()::value, event)
+        return event
+    }
+
+    /**
+     * Checks that the user has [TrackablePermission.MANAGE_ISSUES] on [issue]
+     *
+     * @param issue the [Issue] where the permission must be granted
+     * @param authorizationContext necessary for checking for the permission
+     * @throws IllegalArgumentException if the permission is not granted
+     */
+    private suspend fun checkManageIssuePermission(
+        issue: Issue, authorizationContext: GropiusAuthorizationContext
+    ) {
+        checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
+    }
+
+    /**
+     * Changes a property of [issue], return the created event or null if the property was not changed.
+     * Checks the authorization status ([TrackablePermission.MANAGE_ISSUES] on the [issue])
+     * [additionalChecks] to perform additional checks.
+     *
+     * @param T the type of the property
+     * @param E the type of the timeline item
+     * @param authorizationContext used to check for the required permission
+     * @param issue the  [Issue] to update
+     * @param currentValue the current value of the property
+     * @param newValue the new value of the property
+     * @param internalFunction used to create the returned event and apply the change
+     * @param additionalChecks executed after the check for [TrackablePermission.MANAGE_ISSUES]
+     * @return the saved created event or `null` if no event was created
+     */
+    private suspend fun <T, E : TimelineItem> changeIssueProperty(
+        authorizationContext: GropiusAuthorizationContext,
+        issue: Issue,
+        currentValue: T,
+        newValue: T,
+        internalFunction: suspend (issue: Issue, oldValue: T, newValue: T, atTime: OffsetDateTime, byUser: User) -> E,
+        additionalChecks: suspend () -> Any = {}
+    ): E? {
+        checkManageIssuePermission(issue, authorizationContext)
+        additionalChecks()
+        return if (currentValue != newValue) {
+            return timelineItemRepository.save(
+                internalFunction(issue, currentValue, newValue, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Changes a property of an  [issue] at [atTime] as [byUser] and adds the [event] to the timeline.
+     * Only changes the property if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Does neither save the [event] nor the [issue].
+     * Calls [createdTimelineItem] on the [event].
+     *
+     * @param T the type of the property
+     * @param E the type of the timeline item
+     * @param issue the [Issue] where the `spentTime` should be changed
+     * @param newValue the new value of the property
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param property the property on the [issue]
+     * @param event the already created [TimelineItem] for the change
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    private suspend inline fun <T, reified E : TimelineItem> changeIssueProperty(
+        issue: Issue, newValue: T, atTime: OffsetDateTime, byUser: User, property: KMutableProperty0<T>, event: E
+    ) {
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<E>(issue, atTime) && (property.get() != newValue)) {
+            property.set(newValue)
+            updateAuditedNode(issue, byUser, atTime)
+        }
+    }
+
+    /**
      * Called after a [TimelineItem] was created
      * Adds it to the [issue], calls [createdAuditedNode] and updates [Issue.lastUpdatedAt] and [Issue.participants].
      * Also sets [TimelineItem.issue], to allow to save [timelineItem] instead of [issue].
@@ -539,7 +995,7 @@ class IssueService(
      * @return the result of the check
      */
     private suspend inline fun <reified T : TimelineItem> existsNewerTimelineItem(
-        issue: Issue, time: OffsetDateTime, itemFilter: (T) -> Boolean
+        issue: Issue, time: OffsetDateTime, itemFilter: (T) -> Boolean = { true }
     ): Boolean {
         return issue.timelineItems().any {
             (it is T) && (it.createdAt > time) && itemFilter(it)
