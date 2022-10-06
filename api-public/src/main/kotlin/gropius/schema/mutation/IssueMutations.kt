@@ -11,10 +11,7 @@ import gropius.graphql.AutoPayloadType
 import gropius.model.architecture.Trackable
 import gropius.model.issue.Artefact
 import gropius.model.issue.Label
-import gropius.model.issue.timeline.AddedArtefactEvent
-import gropius.model.issue.timeline.AddedLabelEvent
-import gropius.model.issue.timeline.RemovedArtefactEvent
-import gropius.model.issue.timeline.RemovedLabelEvent
+import gropius.model.issue.timeline.*
 import gropius.service.issue.ArtefactService
 import gropius.service.issue.IssueService
 import gropius.service.issue.LabelService
@@ -49,7 +46,7 @@ class IssueMutations(
         return labelService.createLabel(dfe.gropiusAuthorizationContext, input)
     }
 
-    @GraphQLDescription("Updates the specified Label, requires MANAGE_LABEL on any Trackable the Label is on")
+    @GraphQLDescription("Updates the specified Label, requires MANAGE_LABELS on any Trackable the Label is on")
     @AutoPayloadType("The updated Label")
     suspend fun updateLabel(
         @GraphQLDescription("Defines which Label to update and how to update it")
@@ -109,7 +106,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Updates the specified Artefact, requires MANAGE_ARTEFACT on the Trackable the Artefact is part of
+        """Updates the specified Artefact, requires MANAGE_ARTEFACTS on the Trackable the Artefact is part of
         """
     )
     @AutoPayloadType("The updated Artefact")
@@ -134,7 +131,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Adds a Label to an Issue, requires MANAGE_ISSUE on any Trackable the issue is on and READ on the Label.
+        """Adds a Label to an Issue, requires MANAGE_ISSUES on any Trackable the issue is on and READ on the Label.
         Additionally, the Label must be on at least on Trackable the Issue is on.
         If the Label is already on the Issue, no event is created.
         """
@@ -148,7 +145,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Removes a Label from an Issue, requires MANAGE_ISSUe on any Trackable the issue is on.
+        """Removes a Label from an Issue, requires MANAGE_ISSUES on any Trackable the issue is on.
         If the Label is not on the Issue, no event is created.
         """
     )
@@ -161,7 +158,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Adds a Artefact to an Issue, requires MANAGE_ISSUE on any Trackable the issue is on and READ on the Artefact.
+        """Adds a Artefact to an Issue, requires MANAGE_ISSUES on any Trackable the issue is on and READ on the Artefact.
         Additionally, the Artefact must be part of a Trackable the Issue is on.
         If the Artefact is already on the Issue, no event is created.
         """
@@ -175,7 +172,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Removes a Artefact from an Issue, requires MANAGE_ISSUe on any Trackable the issue is on.
+        """Removes a Artefact from an Issue, requires MANAGE_ISSUES on any Trackable the issue is on.
         If the Artefact is not on the Issue, no event is created.
         """
     )
@@ -185,6 +182,63 @@ class IssueMutations(
         input: RemoveArtefactFromIssueInput, dfe: DataFetchingEnvironment
     ): RemovedArtefactEvent? {
         return issueService.removeArtefactFromIssue(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Adds an Issue to a Trackable, requires MANAGE_ISSUES on the Trackable the Issue should be added to,
+        and EXPORT_ISSUES on any Trackable the Issue currently is on.
+        If the Issue is already on the Trackable, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun addIssueToTrackable(
+        @GraphQLDescription("Defines the Issue and Trackable")
+        input: AddIssueToTrackableInput, dfe: DataFetchingEnvironment
+    ): AddedToTrackableEvent? {
+        return issueService.addIssueToTrackable(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Removes an Issue from a Trackable, requires MANAGE_ISSUES on the Trackable where the Issue should
+        be removed from.
+        Also removes any Artefacts and Labels which cannot be any more on the Issue, and unpins the issue on the
+        defined Trackable if it was pinned.
+        The created events can be found in the childItems of the returned RemovedFromTrackableEvent.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun removeIssueFromTrackable(
+        @GraphQLDescription("Defines the Issue and Trackable")
+        input: RemoveIssueFromTrackableInput, dfe: DataFetchingEnvironment
+    ): RemovedFromTrackableEvent? {
+        return issueService.removeIssueFromTrackable(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Pins an Issue on a Trackable, requires MANAGE_ISSUES on the Trackable the Issue should be pinned on.
+        Additionally, the Issue must already be on the Trackable.
+        If the Issue is already pinned on the Trackable, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun addIssueToPinnedIssues(
+        @GraphQLDescription("Defines the Issue and Trackable")
+        input: AddIssueToPinnedIssuesInput, dfe: DataFetchingEnvironment
+    ): AddedToPinnedIssuesEvent? {
+        return issueService.addIssueToPinnedIssues(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Unpins the Issue on a Trackable, requires MANAGE_ISSUES on the Trackable where the Issue should
+        be unpinned.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun removeIssueFromPinnedIssues(
+        @GraphQLDescription("Defines the Issue and Trackable")
+        input: RemoveIssueFromPinnedIssuesInput, dfe: DataFetchingEnvironment
+    ): RemovedFromPinnedIssuesEvent? {
+        return issueService.removeIssueFromPinnedIssues(dfe.gropiusAuthorizationContext, input)
     }
 
 }

@@ -1,10 +1,8 @@
 package gropius.service.issue
 
 import gropius.authorization.GropiusAuthorizationContext
-import gropius.dto.input.issue.AddArtefactToIssueInput
-import gropius.dto.input.issue.AddLabelToIssueInput
-import gropius.dto.input.issue.RemoveArtefactFromIssueInput
-import gropius.dto.input.issue.RemoveLabelFromIssueInput
+import gropius.dto.input.issue.*
+import gropius.model.architecture.Trackable
 import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
@@ -12,6 +10,7 @@ import gropius.model.issue.timeline.*
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
+import gropius.repository.architecture.TrackableRepository
 import gropius.repository.findById
 import gropius.repository.issue.ArtefactRepository
 import gropius.repository.issue.IssueRepository
@@ -22,7 +21,7 @@ import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
-import java.util.Collections
+import java.util.*
 
 /**
  * Service for [Issue]s. Provides function to update the deprecation status
@@ -31,13 +30,15 @@ import java.util.Collections
  * @param labelRepository used to find [Label]s by id
  * @param timelineItemRepository used to save [TimelineItem]s
  * @param artefactRepository used to find [Artefact]s by id
+ * @param trackableRepository used to find [Trackable]s by id
  */
 @Service
 class IssueService(
     repository: IssueRepository,
     private val labelRepository: LabelRepository,
     private val timelineItemRepository: TimelineItemRepository,
-    private val artefactRepository: ArtefactRepository
+    private val artefactRepository: ArtefactRepository,
+    private val trackableRepository: TrackableRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -49,6 +50,251 @@ class IssueService(
     suspend fun deleteIssue(node: Issue) {
         node.isDeleted = true
         repository.save(node).awaitSingle()
+    }
+
+    /**
+     * Adds an [Issue] to a [Trackable], returns the created [AddedToTrackableEvent],
+     * or `null` if the [Issue] was already on the [Trackable].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [Issue] to add to which [Trackable]
+     * @return the saved created [AddedToTrackableEvent] or `null` if no event was created
+     */
+    suspend fun addIssueToTrackable(
+        authorizationContext: GropiusAuthorizationContext, input: AddIssueToTrackableInput
+    ): AddedToTrackableEvent? {
+        val issue = repository.findById(input.issue)
+        val trackable = trackableRepository.findById(input.trackable)
+        checkPermission(
+            trackable,
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable"
+        )
+        checkPermission(issue, Permission(TrackablePermission.EXPORT_ISSUES, authorizationContext), "export the Issue")
+        return if (trackable !in issue.trackables()) {
+            return timelineItemRepository.save(
+                addIssueToTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Adds an [issue] to a [trackable] at [atTime] as [byUser] and adds a [AddedToTrackableEvent] to the timeline.
+     * Creates the event even if the [issue] was already on the [trackable].
+     * Only adds the [issue] to the [trackable] if no newer timeline item exists which removes it again.
+     * Does not check the authorization status.
+     * Does neither save the created [AddedToTrackableEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [AddedToTrackableEvent] afterwards.
+     *
+     * @param issue the [Issue] to add to [trackable]
+     * @param trackable the [Trackable] where the [issue] should be added
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [AddedToTrackableEvent]
+     */
+    suspend fun addIssueToTrackable(
+        issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
+    ): AddedToTrackableEvent {
+        val event = AddedToTrackableEvent(atTime, atTime)
+        event.addedToTrackable().value = trackable
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<RemovedFromTrackableEvent>(
+                issue, atTime
+            ) { it.removedFromTrackable().value == trackable }
+        ) {
+            issue.trackables() += trackable
+        }
+        return event
+    }
+
+    /**
+     * Removes an [Issue] from a [Trackable], returns the created [RemovedFromPinnedIssuesEvent],
+     * or `null` if the [Issue] was not pinned on the [Trackable].
+     * Also removes [Label]s and [Artefact]s if necessary, and unpins it on the specified [Trackable].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [Issue] to remove from which [Trackable]
+     * @return the saved created [RemovedFromTrackableEvent] or `null` if no event was created
+     */
+    suspend fun removeIssueFromTrackable(
+        authorizationContext: GropiusAuthorizationContext, input: RemoveIssueFromTrackableInput
+    ): RemovedFromTrackableEvent? {
+        val issue = repository.findById(input.issue)
+        val trackable = trackableRepository.findById(input.trackable)
+        checkPermission(
+            trackable,
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable"
+        )
+        return if (trackable in issue.trackables()) {
+            return timelineItemRepository.save(
+                removeIssueFromTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Removes an [issue] from a [trackable] at [atTime] as [byUser] and adds a [RemovedFromTrackableEvent]
+     * to the timeline.
+     * Also removes [Label]s and [Artefact]s if necessary, and unpins it on the specified [Trackable].
+     * Creates the event even if the [issue] was not on the [trackable].
+     * Only removes the [issue] from the [trackable] if no newer timeline item exists which adds it again.
+     * Does not check the authorization status.
+     * Does neither save the created [RemovedFromTrackableEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [RemovedFromTrackableEvent] afterwards.
+     *
+     * @param issue the [Issue] to remove from [trackable]
+     * @param trackable the [Trackable] where [issue] should be removed
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [RemovedFromTrackableEvent]
+     */
+    suspend fun removeIssueFromTrackable(
+        issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
+    ): RemovedFromTrackableEvent {
+        val event = RemovedFromTrackableEvent(atTime, atTime)
+        event.removedFromTrackable().value = trackable
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<AddedToTrackableEvent>(
+                issue, atTime
+            ) { it.addedToTrackable().value == trackable }
+        ) {
+            issue.trackables() -= trackable
+            if (trackable in issue.pinnedOn()) {
+                event.childItems() += removeIssueFromPinnedIssues(issue, trackable, atTime, byUser)
+            }
+            event.childItems() += issue.artefacts().filter { it.trackable().value == trackable }
+                .map { removeArtefactFromIssue(issue, it, atTime, byUser) }
+            event.childItems() += issue.labels().filter { Collections.disjoint(issue.trackables(), it.trackables()) }
+                .map { removeLabelFromIssue(issue, it, atTime, byUser) }
+        }
+        return event
+    }
+
+    /**
+     * Pins an [Issue] on a [Trackable], returns the created [AddedToPinnedIssuesEvent],
+     * or `null` if the [Issue] was already pinned on the [Trackable].
+     * Checks the authorization status, checks that the [Issue] can be pinned on the [Trackable]
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [Issue] to pin on which [Trackable]
+     * @return the saved created [AddedToPinnedIssuesEvent] or `null` if no event was created
+     */
+    suspend fun addIssueToPinnedIssues(
+        authorizationContext: GropiusAuthorizationContext, input: AddIssueToPinnedIssuesInput
+    ): AddedToPinnedIssuesEvent? {
+        val issue = repository.findById(input.issue)
+        val trackable = trackableRepository.findById(input.trackable)
+        checkPermission(
+            trackable,
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable where the Issue should be pinned"
+        )
+        return if (trackable !in issue.pinnedOn()) {
+            return timelineItemRepository.save(
+                addIssueToPinnedIssues(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Pins an [issue] on [trackable] at [atTime] as [byUser] and adds a [AddedToPinnedIssuesEvent]
+     * to the timeline.
+     * Creates the event even if the [issue] was already pinned on the [trackable].
+     * Only adds the [issue] to the `pinnedIssues` on  [trackable] if no newer timeline item exists which removes
+     * it again.
+     * Does not check the authorization status.
+     * Checks if the [issue] can be pinned to this [trackable].
+     * Does neither save the created [AddedToPinnedIssuesEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [AddedToPinnedIssuesEvent] afterwards.
+     *
+     * @param issue the [Issue] to pin
+     * @param trackable the [Trackable] where the [issue] should be pinned
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [AddedToPinnedIssuesEvent]
+     * @throws IllegalArgumentException if [issue] cannot be pinned on [trackable]
+     */
+    suspend fun addIssueToPinnedIssues(
+        issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
+    ): AddedToPinnedIssuesEvent {
+        if (trackable !in issue.trackables()) {
+            throw IllegalArgumentException("The Issue cannot be pinned on the Trackable as it is not on the Trackable")
+        }
+        val event = AddedToPinnedIssuesEvent(atTime, atTime)
+        event.pinnedOn().value = trackable
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<RemovedFromPinnedIssuesEvent>(
+                issue, atTime
+            ) { it.unpinnedOn().value == trackable }
+        ) {
+            issue.pinnedOn() += trackable
+        }
+        return event
+    }
+
+    /**
+     * Unpins an [Issue] on a [Trackable], returns the created [RemovedFromPinnedIssuesEvent],
+     * or `null` if the [Issue] was not pinned on the [Trackable].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [Issue] to unpin on which [Trackable]
+     * @return the saved created [RemovedFromPinnedIssuesEvent] or `null` if no event was created
+     */
+    suspend fun removeIssueFromPinnedIssues(
+        authorizationContext: GropiusAuthorizationContext, input: RemoveIssueFromPinnedIssuesInput
+    ): RemovedFromPinnedIssuesEvent? {
+        val issue = repository.findById(input.issue)
+        val trackable = trackableRepository.findById(input.trackable)
+        checkPermission(
+            trackable,
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable where the Issue should be unpinned"
+        )
+        return if (trackable in issue.pinnedOn()) {
+            return timelineItemRepository.save(
+                removeIssueFromPinnedIssues(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Unpins an [issue] on a [trackable] at [atTime] as [byUser] and adds a [RemovedFromPinnedIssuesEvent]
+     * to the timeline.
+     * Creates the event even if the [issue] was not pinned on the [trackable].
+     * Only removes the [issue] from the `pinnedIssues` on [trackable] if no newer timeline item exists which
+     * adds it again.
+     * Does not check the authorization status.
+     * Does neither save the created [RemovedFromPinnedIssuesEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [RemovedFromPinnedIssuesEvent] afterwards.
+     *
+     * @param issue the [Issue] to unpin
+     * @param trackable the [Trackable] where [issue] should be unpinned
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [RemovedFromPinnedIssuesEvent]
+     */
+    suspend fun removeIssueFromPinnedIssues(
+        issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
+    ): RemovedFromPinnedIssuesEvent {
+        val event = RemovedFromPinnedIssuesEvent(atTime, atTime)
+        event.unpinnedOn().value = trackable
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<AddedToPinnedIssuesEvent>(issue, atTime) { it.pinnedOn().value == trackable }) {
+            issue.pinnedOn() -= trackable
+        }
+        return event
     }
 
     /**
@@ -99,6 +345,7 @@ class IssueService(
             throw IllegalArgumentException("The Label cannot be added to the Issue as no common Trackable exists")
         }
         val event = AddedLabelEvent(atTime, atTime)
+        event.addedLabel().value = label
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<RemovedLabelEvent>(issue, atTime) { it.removedLabel().value == label }) {
             issue.labels() += label
@@ -148,6 +395,7 @@ class IssueService(
         issue: Issue, label: Label, atTime: OffsetDateTime, byUser: User
     ): RemovedLabelEvent {
         val event = RemovedLabelEvent(atTime, atTime)
+        event.removedLabel().value = label
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<AddedLabelEvent>(issue, atTime) { it.addedLabel().value == label }) {
             issue.labels() -= label
@@ -203,6 +451,7 @@ class IssueService(
             throw IllegalArgumentException("The Artefact is not part of a Trackable the Issue is on")
         }
         val event = AddedArtefactEvent(atTime, atTime)
+        event.addedArtefact().value = artefact
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<RemovedArtefactEvent>(issue, atTime) { it.removedArtefact().value == artefact }) {
             issue.artefacts() += artefact
@@ -252,6 +501,7 @@ class IssueService(
         issue: Issue, artefact: Artefact, atTime: OffsetDateTime, byUser: User
     ): RemovedArtefactEvent {
         val event = RemovedArtefactEvent(atTime, atTime)
+        event.removedArtefact().value = artefact
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<AddedArtefactEvent>(issue, atTime) { it.addedArtefact().value == artefact }) {
             issue.artefacts() -= artefact
