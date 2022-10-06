@@ -73,4 +73,9 @@ class ComponentVersion(
     override suspend fun relationPartnerTemplate(cache: NodeCache?): RelationPartnerTemplate<*, *> {
         return component(cache).value.template(cache).value
     }
+
+    @GraphQLIgnore
+    override suspend fun relatedTrackable(cache: NodeCache?): Trackable {
+        return component(cache).value
+    }
 }

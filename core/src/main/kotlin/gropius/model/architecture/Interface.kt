@@ -57,4 +57,9 @@ class Interface(
         val interfaceSpecificationVersion = interfaceDefinition(cache).value.interfaceSpecificationVersion(cache).value
         return interfaceSpecificationVersion.interfaceSpecification(cache).value.template(cache).value
     }
+
+    @GraphQLIgnore
+    override suspend fun relatedTrackable(cache: NodeCache?): Trackable {
+        return interfaceDefinition(cache).value.interfaceSpecificationVersion(cache).value.relatedTrackable(cache)
+    }
 }

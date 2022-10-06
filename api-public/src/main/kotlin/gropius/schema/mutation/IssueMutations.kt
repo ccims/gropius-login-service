@@ -201,8 +201,9 @@ class IssueMutations(
     @GraphQLDescription(
         """Removes an Issue from a Trackable, requires MANAGE_ISSUES on the Trackable where the Issue should
         be removed from.
-        Also removes any Artefacts and Labels which cannot be any more on the Issue, and unpins the issue on the
-        defined Trackable if it was pinned.
+        If the Issue is not on the Trackable, no event is created.
+        Also removes any Artefacts, Labels and AffectedByIssue which cannot be any more on the Issue, 
+        and unpins the issue on the defined Trackable if it was pinned.
         The created events can be found in the childItems of the returned RemovedFromTrackableEvent.
         """
     )
@@ -231,6 +232,7 @@ class IssueMutations(
     @GraphQLDescription(
         """Unpins the Issue on a Trackable, requires MANAGE_ISSUES on the Trackable where the Issue should
         be unpinned.
+        If the Issue is not pinned on the Trackable, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -243,6 +245,7 @@ class IssueMutations(
 
     @GraphQLDescription(
         """Changes the `dueDate` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        If the `dueDate` is equal to the already existing `dueDate`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -255,6 +258,7 @@ class IssueMutations(
 
     @GraphQLDescription(
         """Changes the `estimatedTime` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        If the `estimatedTime` is equal to the already existing `estimatedTime`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -268,6 +272,7 @@ class IssueMutations(
     @GraphQLDescription(
         """Changes the `priority` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
         Additionally, the IssuePriority must be defined by the Template of the Issue.
+        If the `priority` is equal to the already existing `priority`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -280,6 +285,7 @@ class IssueMutations(
 
     @GraphQLDescription(
         """Changes the `spentTime` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        If the `spentTime` is equal to the already existing `spentTime`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -292,6 +298,7 @@ class IssueMutations(
 
     @GraphQLDescription(
         """Changes the `startDate` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        If the `startDate` is equal to the already existing `startDate`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -305,6 +312,7 @@ class IssueMutations(
     @GraphQLDescription(
         """Changes the `state` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
         Additionally, the IssueState must be defined by the Template of the Issue.
+        If the `state` is equal to the already existing `state`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -317,6 +325,7 @@ class IssueMutations(
 
     @GraphQLDescription(
         """Changes the `title` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        If the `title` is equal to the already existing `title`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -330,6 +339,7 @@ class IssueMutations(
     @GraphQLDescription(
         """Changes the `type` of an Issue requires MANAGE_ISSUES on any of the Trackables the Issue is on.
         Additionally, the IssueType must be defined by the Template of the Issue.
+        If the `type` is equal to the already existing `type`, no event is created.
         """
     )
     @AutoPayloadType("The created event, if present")
@@ -338,6 +348,35 @@ class IssueMutations(
         input: ChangeIssueTypeInput, dfe: DataFetchingEnvironment
     ): TypeChangedEvent? {
         return issueService.changeIssueType(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Adds an AffectedByIssue to an Issue, requires MANAGE_ISSUES on the Trackable associated with the 
+        AffectedByIssue.
+        Additionally, the Issue must be on that Trackable.
+        If the Issue already affects the AffectedByIssue, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun addAffectedEntityToIssue(
+        @GraphQLDescription("Defines the Issue and Trackable")
+        input: AddAffectedEntityToIssueInput, dfe: DataFetchingEnvironment
+    ): AddedAffectedEntityEvent? {
+        return issueService.addAffectedEntityToIssue(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Removes an AffectedByIssue from an Issue, requires MANAGE_ISSUES on the Trackable associated with the
+        AffectedByIssue.
+        If the Issue does not affect the AffectedByIssue, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun removeAffectedEntityFromIssue(
+        @GraphQLDescription("Defines the Issue and Trackable")
+        input: RemoveAffectedEntityFromIssueInput, dfe: DataFetchingEnvironment
+    ): RemovedAffectedEntityEvent? {
+        return issueService.removeAffectedEntityFromIssue(dfe.gropiusAuthorizationContext, input)
     }
 
 }

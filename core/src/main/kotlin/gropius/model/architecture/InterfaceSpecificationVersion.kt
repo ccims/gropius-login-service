@@ -7,6 +7,7 @@ import gropius.model.template.InterfaceSpecificationVersionTemplate
 import gropius.model.template.MutableTemplatedNode
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
+import io.github.graphglue.model.property.NodeCache
 import org.springframework.data.annotation.Transient
 import org.springframework.data.neo4j.core.schema.CompositeProperty
 
@@ -74,4 +75,8 @@ class InterfaceSpecificationVersion(
     @delegate:Transient
     val interfaceDefinitions by NodeSetProperty<InterfaceDefinition>()
 
+    @GraphQLIgnore
+    override suspend fun relatedTrackable(cache: NodeCache?): Trackable {
+        return interfaceSpecification(cache).value.relatedTrackable(cache)
+    }
 }

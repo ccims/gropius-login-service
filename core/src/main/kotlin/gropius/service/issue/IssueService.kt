@@ -2,6 +2,7 @@ package gropius.service.issue
 
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.issue.*
+import gropius.model.architecture.AffectedByIssue
 import gropius.model.architecture.Trackable
 import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
@@ -13,6 +14,7 @@ import gropius.model.template.IssueType
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
+import gropius.repository.architecture.AffectedByIssueRepository
 import gropius.repository.architecture.TrackableRepository
 import gropius.repository.findById
 import gropius.repository.issue.ArtefactRepository
@@ -42,6 +44,7 @@ import kotlin.reflect.KMutableProperty0
  * @param issuePriorityRepository used to find [IssuePriority]s by id
  * @param issueTypeRepository used to find [IssueType]s by id
  * @param issueStateRepository used to find [IssueState]s by id
+ * @param affectedByIssueRepository used to find [AffectedByIssue]s by id
  */
 @Service
 class IssueService(
@@ -52,7 +55,8 @@ class IssueService(
     private val trackableRepository: TrackableRepository,
     private val issuePriorityRepository: IssuePriorityRepository,
     private val issueTypeRepository: IssueTypeRepository,
-    private val issueStateRepository: IssueStateRepository
+    private val issueStateRepository: IssueStateRepository,
+    private val affectedByIssueRepository: AffectedByIssueRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -86,7 +90,7 @@ class IssueService(
             Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
             "manage Issues on the Trackable"
         )
-        checkManageIssuePermission(issue, authorizationContext)
+        checkManageIssuesPermission(issue, authorizationContext)
         return if (trackable !in issue.trackables()) {
             return timelineItemRepository.save(
                 addIssueToTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
@@ -182,13 +186,18 @@ class IssueService(
             ) { it.addedToTrackable().value == trackable }
         ) {
             issue.trackables() -= trackable
+            var timeOffset = 0L
             if (trackable in issue.pinnedOn()) {
-                event.childItems() += removeIssueFromPinnedIssues(issue, trackable, atTime, byUser)
+                event.childItems() += removeIssueFromPinnedIssues(
+                    issue, trackable, atTime.plusNanos(timeOffset++), byUser
+                )
             }
             event.childItems() += issue.artefacts().filter { it.trackable().value == trackable }
-                .map { removeArtefactFromIssue(issue, it, atTime, byUser) }
+                .map { removeArtefactFromIssue(issue, it, atTime.plusNanos(timeOffset++), byUser) }
             event.childItems() += issue.labels().filter { Collections.disjoint(issue.trackables(), it.trackables()) }
-                .map { removeLabelFromIssue(issue, it, atTime, byUser) }
+                .map { removeLabelFromIssue(issue, it, atTime.plusNanos(timeOffset++), byUser) }
+            event.childItems() += issue.affects().filter { it.relatedTrackable() == trackable }
+                .map { removeAffectedEntityFromIssue(issue, it, atTime.plusNanos(timeOffset), byUser) }
         }
         return event
     }
@@ -330,7 +339,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val label = labelRepository.findById(input.label)
-        checkManageIssuePermission(issue, authorizationContext)
+        checkManageIssuesPermission(issue, authorizationContext)
         checkPermission(label, Permission(NodePermission.READ, authorizationContext), "use the Label")
         return if (label !in issue.labels()) {
             return timelineItemRepository.save(
@@ -387,7 +396,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val label = labelRepository.findById(input.label)
-        checkManageIssuePermission(issue, authorizationContext)
+        checkManageIssuesPermission(issue, authorizationContext)
         return if (label in issue.labels()) {
             return timelineItemRepository.save(
                 removeLabelFromIssue(issue, label, OffsetDateTime.now(), getUser(authorizationContext))
@@ -438,7 +447,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val artefact = artefactRepository.findById(input.artefact)
-        checkManageIssuePermission(issue, authorizationContext)
+        checkManageIssuesPermission(issue, authorizationContext)
         checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
         return if (artefact !in issue.artefacts()) {
             return timelineItemRepository.save(
@@ -495,7 +504,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val artefact = artefactRepository.findById(input.artefact)
-        checkManageIssuePermission(issue, authorizationContext)
+        checkManageIssuesPermission(issue, authorizationContext)
         return if (artefact in issue.artefacts()) {
             return timelineItemRepository.save(
                 removeArtefactFromIssue(issue, artefact, OffsetDateTime.now(), getUser(authorizationContext))
@@ -887,13 +896,141 @@ class IssueService(
     }
 
     /**
+     * Adds an [AffectedByIssue] to an [Issue], returns the created [AddedAffectedEntityEvent],
+     * or `null` if the [AffectedByIssue] was already on the [Issue].
+     * Checks the authorization status, checks that the [AffectedByIssue] can be added to on the [Issue]
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [AffectedByIssue] to add to which [Issue]
+     * @return the saved created [AddedAffectedEntityEvent] or `null` if no event was created
+     */
+    suspend fun addAffectedEntityToIssue(
+        authorizationContext: GropiusAuthorizationContext, input: AddAffectedEntityToIssueInput
+    ): AddedAffectedEntityEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        val affectedEntity = affectedByIssueRepository.findById(input.affectedEntity)
+        checkPermission(
+            affectedEntity.relatedTrackable(),
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable related to the affectedEntity"
+        )
+        return if (affectedEntity !in issue.affects()) {
+            return timelineItemRepository.save(
+                addAffectedEntityToIssue(issue, affectedEntity, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Adds an [affectedEntity] to an [issue] at [atTime] as [byUser] and adds a [AddedAffectedEntityEvent]
+     * to the timeline.
+     * Creates the event even if the [affectedEntity] was already affected by the [issue].
+     * Only adds the [affectedEntity] to the `affects` on the [issue] if no newer timeline item exists which removes
+     * it again.
+     * Does not check the authorization status.
+     * Checks if the [affectedEntity] can be affected by the [issue].
+     * Does neither save the created [AddedToPinnedIssuesEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [AddedAffectedEntityEvent] afterwards.
+     *
+     * @param issue the [Issue] which should affect [affectedEntity]
+     * @param affectedEntity the [AffectedByIssue] which should be affected by the [issue]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [AddedAffectedEntityEvent]
+     * @throws IllegalArgumentException if [issue] cannot affect the [affectedEntity]
+     */
+    suspend fun addAffectedEntityToIssue(
+        issue: Issue, affectedEntity: AffectedByIssue, atTime: OffsetDateTime, byUser: User
+    ): AddedAffectedEntityEvent {
+        val relatedTrackable = affectedEntity.relatedTrackable()
+        if (relatedTrackable !in issue.trackables()) {
+            throw IllegalArgumentException("The Issue is not on a Trackable related to the entity")
+        }
+        val event = AddedAffectedEntityEvent(atTime, atTime)
+        event.addedAffectedEntity().value = affectedEntity
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<RemovedAffectedEntityEvent>(
+                issue, atTime
+            ) { it.removedAffectedEntity().value == affectedEntity }
+        ) {
+            issue.affects() += affectedEntity
+        }
+        return event
+    }
+
+    /**
+     * Removes an [AffectedByIssue] from an [Issue], returns the created [RemovedAffectedEntityEvent],
+     * or `null` if the [AffectedByIssue] was not affected by the [Issue].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [AffectedByIssue] to remove from which [Issue]
+     * @return the saved created [RemovedAffectedEntityEvent] or `null` if no event was created
+     */
+    suspend fun removeAffectedEntityFromIssue(
+        authorizationContext: GropiusAuthorizationContext, input: RemoveAffectedEntityFromIssueInput
+    ): RemovedAffectedEntityEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        val affectedEntity = affectedByIssueRepository.findById(input.affectedEntity)
+        checkPermission(
+            affectedEntity.relatedTrackable(),
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable related to the affectedEntity"
+        )
+        return if (affectedEntity in issue.affects()) {
+            return timelineItemRepository.save(
+                removeAffectedEntityFromIssue(
+                    issue, affectedEntity, OffsetDateTime.now(), getUser(authorizationContext)
+                )
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Removes an [affectedEntity] from an [issue] at [atTime] as [byUser] and adds a [RemovedAffectedEntityEvent]
+     * to the timeline.
+     * Creates the event even if the [affectedEntity] was not affected by the [issue].
+     * Only removes the [affectedEntity] from the `affects` on the [issue] if no newer timeline item exists which adds
+     * it again.
+     * Does not check the authorization status.
+     * Does neither save the created [RemovedAffectedEntityEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [RemovedAffectedEntityEvent] afterwards.
+     *
+     * @param issue the [Issue] which no longer should affect [affectedEntity]
+     * @param affectedEntity the [AffectedByIssue] which should be removed from the affected entities on the [issue]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [RemovedAffectedEntityEvent]
+     */
+    suspend fun removeAffectedEntityFromIssue(
+        issue: Issue, affectedEntity: AffectedByIssue, atTime: OffsetDateTime, byUser: User
+    ): RemovedAffectedEntityEvent {
+        val event = RemovedAffectedEntityEvent(atTime, atTime)
+        event.removedAffectedEntity().value = affectedEntity
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<AddedAffectedEntityEvent>(
+                issue, atTime
+            ) { it.addedAffectedEntity().value == affectedEntity }
+        ) {
+            issue.affects() -= affectedEntity
+        }
+        return event
+    }
+
+    /**
      * Checks that the user has [TrackablePermission.MANAGE_ISSUES] on [issue]
      *
      * @param issue the [Issue] where the permission must be granted
      * @param authorizationContext necessary for checking for the permission
      * @throws IllegalArgumentException if the permission is not granted
      */
-    private suspend fun checkManageIssuePermission(
+    private suspend fun checkManageIssuesPermission(
         issue: Issue, authorizationContext: GropiusAuthorizationContext
     ) {
         checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
@@ -919,7 +1056,7 @@ class IssueService(
         newValue: T,
         internalFunction: suspend (issue: Issue, oldValue: T, newValue: T, atTime: OffsetDateTime, byUser: User) -> E,
     ): E? {
-        checkManageIssuePermission(issue, authorizationContext)
+        checkManageIssuesPermission(issue, authorizationContext)
         return if (currentValue != newValue) {
             return timelineItemRepository.save(
                 internalFunction(issue, currentValue, newValue, OffsetDateTime.now(), getUser(authorizationContext))

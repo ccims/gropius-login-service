@@ -7,6 +7,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.template.BaseTemplate
 import gropius.model.template.InterfaceSpecificationTemplate
 import gropius.model.template.MutableTemplatedNode
+import io.github.graphglue.model.property.NodeCache
 import org.springframework.data.annotation.Transient
 import org.springframework.data.neo4j.core.schema.CompositeProperty
 
@@ -63,4 +64,9 @@ class InterfaceSpecification(
     @FilterProperty
     @delegate:Transient
     val component by NodeProperty<Component>()
+
+    @GraphQLIgnore
+    override suspend fun relatedTrackable(cache: NodeCache?): Trackable {
+        return component(cache).value
+    }
 }

@@ -1,6 +1,7 @@
 package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
+import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.authorization.RELATED_TO_NODE_PERMISSION_RULE
 import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
@@ -8,6 +9,7 @@ import gropius.model.issue.Label
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.*
+import io.github.graphglue.model.property.NodeCache
 import org.springframework.data.annotation.Transient
 import java.net.URI
 
@@ -112,4 +114,8 @@ abstract class Trackable(
     @delegate:Transient
     val pinnedIssues by NodeSetProperty<Issue>()
 
+    @GraphQLIgnore
+    override suspend fun relatedTrackable(cache: NodeCache?): Trackable {
+        return this
+    }
 }
