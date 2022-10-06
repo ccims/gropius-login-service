@@ -742,7 +742,7 @@ class IssueService(
     /**
      * Changes the `priority` of an [Issue], return the created [PriorityChangedEvent] or null if the `priority`
      * was not changed.
-     * Checks the authorization status
+     * Checks the authorization status, and check that the new [IssuePriority] can be used on the [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `priority` and of which issue to change it
@@ -754,15 +754,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val priority = input.priority?.let { issuePriorityRepository.findById(it) }
-        return changeIssueProperty(
-            authorizationContext, issue, issue.priority().value, priority, ::changeIssuePriority
-        ) {
-            if ((priority != null) && (issue.template().value !in priority.partOf())) {
-                throw IllegalArgumentException(
-                    "IssuePriority cannot be used on the Issue as it is not provided by the template of the Issue"
-                )
-            }
-        }
+        return changeIssueProperty(authorizationContext, issue, issue.priority().value, priority, ::changeIssuePriority)
     }
 
     /**
@@ -770,6 +762,7 @@ class IssueService(
      * Creates the event even if the `priority` was not changed.
      * Only changes the `priority` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
+     * Checks that the [newPriority] can be used on the [issue].
      * Does neither save the created [PriorityChangedEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [PriorityChangedEvent] afterwards.
      *
@@ -783,6 +776,11 @@ class IssueService(
     suspend fun changeIssuePriority(
         issue: Issue, oldPriority: IssuePriority?, newPriority: IssuePriority?, atTime: OffsetDateTime, byUser: User
     ): PriorityChangedEvent {
+        if ((newPriority != null) && (issue.template().value !in newPriority.partOf())) {
+            throw IllegalArgumentException(
+                "IssuePriority cannot be used on the Issue as it is not provided by the template of the Issue"
+            )
+        }
         val event = PriorityChangedEvent(atTime, atTime)
         event.newPriority().value = newPriority
         event.oldPriority().value = oldPriority
@@ -793,7 +791,7 @@ class IssueService(
     /**
      * Changes the `state` of an [Issue], return the created [StateChangedEvent] or null if the `state`
      * was not changed.
-     * Checks the authorization status
+     * Checks the authorization status, and checks that the new [IssueState] can be used on the [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `state` and of which issue to change it
@@ -805,15 +803,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val state = issueStateRepository.findById(input.state)
-        return changeIssueProperty(
-            authorizationContext, issue, issue.state().value, state, ::changeIssueState
-        ) {
-            if (issue.template().value !in state.partOf()) {
-                throw IllegalArgumentException(
-                    "IssueState cannot be used on the Issue as it is not provided by the template of the Issue"
-                )
-            }
-        }
+        return changeIssueProperty(authorizationContext, issue, issue.state().value, state, ::changeIssueState)
     }
 
     /**
@@ -821,6 +811,7 @@ class IssueService(
      * Creates the event even if the `state` was not changed.
      * Only changes the `state` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
+     * Checks that the [newState] can be used with the [issue].
      * Does neither save the created [StateChangedEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [StateChangedEvent] afterwards.
      *
@@ -834,6 +825,11 @@ class IssueService(
     suspend fun changeIssueState(
         issue: Issue, oldState: IssueState, newState: IssueState, atTime: OffsetDateTime, byUser: User
     ): StateChangedEvent {
+        if (issue.template().value !in newState.partOf()) {
+            throw IllegalArgumentException(
+                "IssueState cannot be used on the Issue as it is not provided by the template of the Issue"
+            )
+        }
         val event = StateChangedEvent(atTime, atTime)
         event.newState().value = newState
         event.oldState().value = oldState
@@ -844,7 +840,7 @@ class IssueService(
     /**
      * Changes the `type` of an [Issue], return the created [TypeChangedEvent] or null if the `type`
      * was not changed.
-     * Checks the authorization status
+     * Checks the authorization status, and checks that the new [IssueType] can be used with the [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `type` and of which issue to change it
@@ -856,15 +852,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val type = issueTypeRepository.findById(input.type)
-        return changeIssueProperty(
-            authorizationContext, issue, issue.type().value, type, ::changeIssueType
-        ) {
-            if (issue.template().value !in type.partOf()) {
-                throw IllegalArgumentException(
-                    "IssueType cannot be used on the Issue as it is not provided by the template of the Issue"
-                )
-            }
-        }
+        return changeIssueProperty(authorizationContext, issue, issue.type().value, type, ::changeIssueType)
     }
 
     /**
@@ -872,6 +860,7 @@ class IssueService(
      * Creates the event even if the `type` was not changed.
      * Only changes the `type` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
+     * Checks that the [newType] can be used with the [issue].
      * Does neither save the created [TypeChangedEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [TypeChangedEvent] afterwards.
      *
@@ -885,6 +874,11 @@ class IssueService(
     suspend fun changeIssueType(
         issue: Issue, oldType: IssueType, newType: IssueType, atTime: OffsetDateTime, byUser: User
     ): TypeChangedEvent {
+        if (issue.template().value !in newType.partOf()) {
+            throw IllegalArgumentException(
+                "IssueType cannot be used on the Issue as it is not provided by the template of the Issue"
+            )
+        }
         val event = TypeChangedEvent(atTime, atTime)
         event.newType().value = newType
         event.oldType().value = oldType
@@ -926,7 +920,6 @@ class IssueService(
         currentValue: T,
         newValue: T,
         internalFunction: suspend (issue: Issue, oldValue: T, newValue: T, atTime: OffsetDateTime, byUser: User) -> E,
-        additionalChecks: suspend () -> Any = {}
     ): E? {
         checkManageIssuePermission(issue, authorizationContext)
         additionalChecks()
