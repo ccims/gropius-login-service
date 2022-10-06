@@ -902,7 +902,6 @@ class IssueService(
     /**
      * Changes a property of [issue], return the created event or null if the property was not changed.
      * Checks the authorization status ([TrackablePermission.MANAGE_ISSUES] on the [issue])
-     * [additionalChecks] to perform additional checks.
      *
      * @param T the type of the property
      * @param E the type of the timeline item
@@ -911,7 +910,6 @@ class IssueService(
      * @param currentValue the current value of the property
      * @param newValue the new value of the property
      * @param internalFunction used to create the returned event and apply the change
-     * @param additionalChecks executed after the check for [TrackablePermission.MANAGE_ISSUES]
      * @return the saved created event or `null` if no event was created
      */
     private suspend fun <T, E : TimelineItem> changeIssueProperty(
@@ -922,7 +920,6 @@ class IssueService(
         internalFunction: suspend (issue: Issue, oldValue: T, newValue: T, atTime: OffsetDateTime, byUser: User) -> E,
     ): E? {
         checkManageIssuePermission(issue, authorizationContext)
-        additionalChecks()
         return if (currentValue != newValue) {
             return timelineItemRepository.save(
                 internalFunction(issue, currentValue, newValue, OffsetDateTime.now(), getUser(authorizationContext))
