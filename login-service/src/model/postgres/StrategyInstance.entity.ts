@@ -83,7 +83,8 @@ export class StrategyInstance {
     isSelfRegisterActive: boolean;
 
     /**
-     * If `true`, and {@link Strategy.canSync} is `true`, the sync service can retrieve access tokens for ims users from this strategy instnce.
+     * If `true`, and {@link Strategy.canSync} is `true`,
+     * the sync service can retrieve access tokens for ims users from this strategy instnce.
      *
      * If `false`, no tokens will be handed out for the instance
      *
@@ -93,7 +94,8 @@ export class StrategyInstance {
     isSyncActive: boolean;
 
     /**
-     * If `true`, a user automatically gets a registration token if they tried to login and an account was not found but the user provided credentials
+     * If `true`, a user automatically gets a registration token,
+     * if they tried to login and an account was not found but the user provided credentials
      * (i.e. sucessfully authenticated with the 3rd party).
      * Needs {@link Strategy.allowsImplicitSignup} to be `true`.
      *

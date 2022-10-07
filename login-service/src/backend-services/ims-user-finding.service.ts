@@ -163,6 +163,28 @@ export class ImsUserFindingService {
         return extracted;
     }
 
+    /**
+     * Converts an object of string keys and values to an object with the same keys
+     * where the values are wrapped as a filter for graphql.
+     *
+     * Example:
+     * - Input: `{test: "123", other: "key"}`
+     * - Output: `{test: {eq: "123"}, other: {eq: "key"}}`
+     *
+     * @param data The object for which to wrap the values in (string) filters
+     * @returns The filter object
+     */
+    private transformObjectToFilterObject(data: { [key: string]: string }): { [key: string]: { eq: string } } {
+        const filterObject: { [key: string]: { eq: string } } = {};
+        for (const key in data) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
+                const value = data[key];
+                filterObject[key] = { eq: value };
+            }
+        }
+        return filterObject;
+    }
+
     async getMatchingLoginData(
         matchingInstance: StrategyInstance,
         matchingStrategy: Strategy,
@@ -236,7 +258,7 @@ export class ImsUserFindingService {
 
         const loginUser = await loginData.user;
         if (loginUser) {
-            this.backendUserService.linkOneImsUserToGropiusUser(loginUser, newImsUser);
+            await this.backendUserService.linkOneImsUserToGropiusUser(loginUser, newImsUser);
         }
 
         return newImsUser;
@@ -264,13 +286,17 @@ export class ImsUserFindingService {
         if (!requiredImsTemplatedValues) {
             throw new Error("Strategy instance didn't provide ims templated values. Check can sync");
         }
-        const directRequiredIms = this.extractFieldsFromObject(requiredImsTemplatedValues, imsTemplatedDirectFields);
+        const directRequiredIms = this.transformObjectToFilterObject(
+            this.extractFieldsFromObject(requiredImsTemplatedValues, imsTemplatedDirectFields),
+        );
 
         const requiredUserTemplatedFields = strategy.getImsUserTemplatedValuesForLoginData(loginData);
         if (!requiredUserTemplatedFields) {
             throw new Error("Strategy didn't provide required IMSUser templated values. Check can sync");
         }
-        const directRequiredUser = this.extractFieldsFromObject(requiredUserTemplatedFields, userTemplatedDirectFields);
+        const directRequiredUser = this.transformObjectToFilterObject(
+            this.extractFieldsFromObject(requiredUserTemplatedFields, userTemplatedDirectFields),
+        );
 
         const matchingImsUsers = await this.graphqlService.sdk.getImsUsersByTemplatedFieldValues({
             imsFilterInput: {
