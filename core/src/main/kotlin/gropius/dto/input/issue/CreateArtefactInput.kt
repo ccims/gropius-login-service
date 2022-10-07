@@ -4,7 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.CreateExtensibleNodeInput
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.ensureNoDuplicates
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.template.CreateTemplatedNodeInput
 import java.net.URI
 
@@ -28,7 +28,7 @@ class CreateArtefactInput(
 
     override fun validate() {
         super.validate()
-        templatedFields.ensureNoDuplicates()
+        templatedFields.validateAndEnsureNoDuplicates()
     }
 
 }

@@ -5,7 +5,7 @@ import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.UpdateNamedNodeInput
-import gropius.dto.input.common.ensureNoDuplicates
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.ensuredisjoint
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.UpdateTemplatedNodeInput
@@ -27,7 +27,7 @@ class UpdateIMSInput(
     override fun validate() {
         super.validate()
         templatedFields.ifPresent {
-            it.ensureNoDuplicates()
+            it.validateAndEnsureNoDuplicates()
         }
         ::addedPermissions ensuredisjoint ::removedPermissions
     }

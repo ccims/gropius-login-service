@@ -1,6 +1,8 @@
 package gropius.service.issue
 
+import com.fasterxml.jackson.databind.JsonNode
 import gropius.authorization.GropiusAuthorizationContext
+import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.issue.*
 import gropius.model.architecture.AffectedByIssue
 import gropius.model.architecture.Trackable
@@ -25,6 +27,8 @@ import gropius.repository.template.IssuePriorityRepository
 import gropius.repository.template.IssueStateRepository
 import gropius.repository.template.IssueTypeRepository
 import gropius.service.common.AuditedNodeService
+import gropius.service.template.TemplatedNodeService
+import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
@@ -45,6 +49,8 @@ import kotlin.reflect.KMutableProperty0
  * @param issueTypeRepository used to find [IssueType]s by id
  * @param issueStateRepository used to find [IssueState]s by id
  * @param affectedByIssueRepository used to find [AffectedByIssue]s by id
+ * @param templatedNodeService used to validate and update templated fields
+ * @param jsonNodeMapper used to serialize templated fields
  */
 @Service
 class IssueService(
@@ -56,7 +62,9 @@ class IssueService(
     private val issuePriorityRepository: IssuePriorityRepository,
     private val issueTypeRepository: IssueTypeRepository,
     private val issueStateRepository: IssueStateRepository,
-    private val affectedByIssueRepository: AffectedByIssueRepository
+    private val affectedByIssueRepository: AffectedByIssueRepository,
+    private val templatedNodeService: TemplatedNodeService,
+    private val jsonNodeMapper: JsonNodeMapper
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -112,7 +120,7 @@ class IssueService(
      * @param trackable the [Trackable] where the [issue] should be added
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [AddedToTrackableEvent]
+     * @returns the created [AddedToTrackableEvent]
      */
     suspend fun addIssueToTrackable(
         issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
@@ -173,7 +181,7 @@ class IssueService(
      * @param trackable the [Trackable] where [issue] should be removed
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [RemovedFromTrackableEvent]
+     * @returns the created [RemovedFromTrackableEvent]
      */
     suspend fun removeIssueFromTrackable(
         issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
@@ -246,7 +254,7 @@ class IssueService(
      * @param trackable the [Trackable] where the [issue] should be pinned
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [AddedToPinnedIssuesEvent]
+     * @returns the created [AddedToPinnedIssuesEvent]
      * @throws IllegalArgumentException if [issue] cannot be pinned on [trackable]
      */
     suspend fun addIssueToPinnedIssues(
@@ -310,7 +318,7 @@ class IssueService(
      * @param trackable the [Trackable] where [issue] should be unpinned
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [RemovedFromPinnedIssuesEvent]
+     * @returns the created [RemovedFromPinnedIssuesEvent]
      */
     suspend fun removeIssueFromPinnedIssues(
         issue: Issue, trackable: Trackable, atTime: OffsetDateTime, byUser: User
@@ -363,7 +371,7 @@ class IssueService(
      * @param label the [Label] to add
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [AddedLabelEvent]
+     * @returns the created [AddedLabelEvent]
      * @throws IllegalArgumentException if [label] cannot be added to [issue]
      */
     suspend fun addLabelToIssue(
@@ -418,7 +426,7 @@ class IssueService(
      * @param label the [Label] to remove
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [RemovedLabelEvent]
+     * @returns the created [RemovedLabelEvent]
      */
     suspend fun removeLabelFromIssue(
         issue: Issue, label: Label, atTime: OffsetDateTime, byUser: User
@@ -526,7 +534,7 @@ class IssueService(
      * @param artefact the [Artefact] to remove
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [RemovedArtefactEvent]
+     * @returns the created [RemovedArtefactEvent]
      */
     suspend fun removeArtefactFromIssue(
         issue: Issue, artefact: Artefact, atTime: OffsetDateTime, byUser: User
@@ -541,13 +549,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `title` of an [Issue], return the created [TitleChangedEvent] or null if the `title`
+     * Changes the `title` of an [Issue], returns the created [TitleChangedEvent] or null if the `title`
      * was not changed.
      * Checks the authorization status
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `title` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [TitleChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueTitle(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueTitleInput
@@ -570,7 +578,7 @@ class IssueService(
      * @param newTitle the new `title`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [TitleChangedEvent]
+     * @returns the created [TitleChangedEvent]
      */
     suspend fun changeIssueTitle(
         issue: Issue, oldTitle: String, newTitle: String, atTime: OffsetDateTime, byUser: User
@@ -581,13 +589,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `startDate` of an [Issue], return the created [StartDateChangedEvent] or null if the `startDate`
+     * Changes the `startDate` of an [Issue], returns the created [StartDateChangedEvent] or null if the `startDate`
      * was not changed.
      * Checks the authorization status
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `startDate` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [StartDateChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueStartDate(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueStartDateInput
@@ -612,7 +620,7 @@ class IssueService(
      * @param newStartDate the new `startDate`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [StartDateChangedEvent]
+     * @returns the created [StartDateChangedEvent]
      */
     suspend fun changeIssueStartDate(
         issue: Issue, oldStartDate: OffsetDateTime?, newStartDate: OffsetDateTime?, atTime: OffsetDateTime, byUser: User
@@ -623,13 +631,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `dueDate` of an [Issue], return the created [DueDateChangedEvent] or null if the `dueDate`
+     * Changes the `dueDate` of an [Issue], returns the created [DueDateChangedEvent] or null if the `dueDate`
      * was not changed.
      * Checks the authorization status
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `dueDate` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [DueDateChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueDueDate(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueDueDateInput
@@ -654,7 +662,7 @@ class IssueService(
      * @param newDueDate the new `dueDate`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [DueDateChangedEvent]
+     * @returns the created [DueDateChangedEvent]
      */
     suspend fun changeIssueDueDate(
         issue: Issue, oldDueDate: OffsetDateTime?, newDueDate: OffsetDateTime?, atTime: OffsetDateTime, byUser: User
@@ -665,13 +673,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `estimatedTime` of an [Issue], return the created [EstimatedTimeChangedEvent] or null if the `estimatedTime`
-     * was not changed.
+     * Changes the `estimatedTime` of an [Issue], returns the created [EstimatedTimeChangedEvent] or null if the
+     * `estimatedTime` was not changed.
      * Checks the authorization status
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `estimatedTime` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [EstimatedTimeChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueEstimatedTime(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueEstimatedTimeInput
@@ -684,7 +692,8 @@ class IssueService(
     }
 
     /**
-     * Changes the `estimatedTime` of an  [issue] at [atTime] as [byUser] and adds a [EstimatedTimeChangedEvent] to the timeline.
+     * Changes the `estimatedTime` of an  [issue] at [atTime] as [byUser] and adds a [EstimatedTimeChangedEvent]
+     * to the timeline.
      * Creates the event even if the `estimatedTime` was not changed.
      * Only changes the `estimatedTime` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -696,7 +705,7 @@ class IssueService(
      * @param newEstimatedTime the new `estimatedTime`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [EstimatedTimeChangedEvent]
+     * @returns the created [EstimatedTimeChangedEvent]
      */
     suspend fun changeIssueEstimatedTime(
         issue: Issue, oldEstimatedTime: Duration?, newEstimatedTime: Duration?, atTime: OffsetDateTime, byUser: User
@@ -707,13 +716,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `spentTime` of an [Issue], return the created [SpentTimeChangedEvent] or null if the `spentTime`
+     * Changes the `spentTime` of an [Issue], returns the created [SpentTimeChangedEvent] or null if the `spentTime`
      * was not changed.
      * Checks the authorization status
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `spentTime` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [SpentTimeChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueSpentTime(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueSpentTimeInput
@@ -738,7 +747,7 @@ class IssueService(
      * @param newSpentTime the new `spentTime`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [SpentTimeChangedEvent]
+     * @returns the created [SpentTimeChangedEvent]
      */
     suspend fun changeIssueSpentTime(
         issue: Issue, oldSpentTime: Duration?, newSpentTime: Duration?, atTime: OffsetDateTime, byUser: User
@@ -749,13 +758,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `priority` of an [Issue], return the created [PriorityChangedEvent] or null if the `priority`
+     * Changes the `priority` of an [Issue], returns the created [PriorityChangedEvent] or null if the `priority`
      * was not changed.
      * Checks the authorization status, and check that the new [IssuePriority] can be used on the [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `priority` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [PriorityChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssuePriority(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssuePriorityInput
@@ -780,7 +789,7 @@ class IssueService(
      * @param newPriority the new `priority`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [PriorityChangedEvent]
+     * @returns the created [PriorityChangedEvent]
      */
     suspend fun changeIssuePriority(
         issue: Issue, oldPriority: IssuePriority?, newPriority: IssuePriority?, atTime: OffsetDateTime, byUser: User
@@ -811,13 +820,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `state` of an [Issue], return the created [StateChangedEvent] or null if the `state`
+     * Changes the `state` of an [Issue], returns the created [StateChangedEvent] or null if the `state`
      * was not changed.
      * Checks the authorization status, and checks that the new [IssueState] can be used on the [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `state` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [StateChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueState(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueStateInput
@@ -842,7 +851,7 @@ class IssueService(
      * @param newState the new `state`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [StateChangedEvent]
+     * @returns the created [StateChangedEvent]
      */
     suspend fun changeIssueState(
         issue: Issue, oldState: IssueState, newState: IssueState, atTime: OffsetDateTime, byUser: User
@@ -871,13 +880,13 @@ class IssueService(
     }
 
     /**
-     * Changes the `type` of an [Issue], return the created [TypeChangedEvent] or null if the `type`
+     * Changes the `type` of an [Issue], returns the created [TypeChangedEvent] or null if the `type`
      * was not changed.
      * Checks the authorization status, and checks that the new [IssueType] can be used with the [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the new `type` and of which issue to change it
-     * @return the saved created [RemovedArtefactEvent] or `null` if no event was created
+     * @return the saved created [TypeChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueType(
         authorizationContext: GropiusAuthorizationContext, input: ChangeIssueTypeInput
@@ -902,7 +911,7 @@ class IssueService(
      * @param newType the new `type`
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [TypeChangedEvent]
+     * @returns the created [TypeChangedEvent]
      */
     suspend fun changeIssueType(
         issue: Issue, oldType: IssueType, newType: IssueType, atTime: OffsetDateTime, byUser: User
@@ -974,7 +983,7 @@ class IssueService(
      * @param affectedEntity the [AffectedByIssue] which should be affected by the [issue]
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [AddedAffectedEntityEvent]
+     * @returns the created [AddedAffectedEntityEvent]
      * @throws IllegalArgumentException if [issue] cannot affect the [affectedEntity]
      */
     suspend fun addAffectedEntityToIssue(
@@ -1041,7 +1050,7 @@ class IssueService(
      * @param affectedEntity the [AffectedByIssue] which should be removed from the affected entities on the [issue]
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
-     * @return the created [RemovedAffectedEntityEvent]
+     * @returns the created [RemovedAffectedEntityEvent]
      */
     suspend fun removeAffectedEntityFromIssue(
         issue: Issue, affectedEntity: AffectedByIssue, atTime: OffsetDateTime, byUser: User
@@ -1059,20 +1068,74 @@ class IssueService(
     }
 
     /**
+     * Changes the value of a templated field on an [Issue], returns the created [TemplatedFieldChangedEvent]
+     * or null if the value of the templated field was not changed.
+     * Checks the authorization status, and checks that the field exists and the value is compatible.
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the name and new value of the templated field to update
+     * @return the saved created [TemplatedFieldChangedEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueTemplatedField(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueTemplatedFieldInput
+    ): TemplatedFieldChangedEvent? {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        checkManageIssuesPermission(issue, authorizationContext)
+        val newSerializedValue = jsonNodeMapper.jsonNodeToDeterministicString(input.value as JsonNode)
+        val oldSerializedValue = issue.templatedFields[input.name]
+        return if (newSerializedValue != oldSerializedValue) {
+            changeIssueTemplatedField(
+                issue, input, oldSerializedValue, OffsetDateTime.now(), getUser(authorizationContext)
+            )
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Changes the value of a templated field on an [issue] at [atTime] as [byUser] and adds
+     * a [TemplatedFieldChangedEvent] to the timeline.
+     * Creates the event even if the templated field was not changed.
+     * Only changes the value of the templated field if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Checks that the templated field exists and that the value is compatible.
+     * Does neither save the created [TemplatedFieldChangedEvent] nor the [issue].
+     * It is necessary to save the [issue] or returned [TemplatedFieldChangedEvent] afterwards.
+     *
+     * @param issue the [Issue] where a templated field should be changed
+     * @param field defines the name and new value of the templated field to update
+     * @param oldValue the old value of the templated field in serialized form
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [TypeChangedEvent]
+     */
+    suspend fun changeIssueTemplatedField(
+        issue: Issue, field: JSONFieldInput, oldValue: String?, atTime: OffsetDateTime, byUser: User
+    ): TemplatedFieldChangedEvent {
+        templatedNodeService.ensureTemplatedFieldExist(issue.template().value, field.name)
+        val newValue = jsonNodeMapper.jsonNodeToDeterministicString(field.value as JsonNode)
+        val event = TemplatedFieldChangedEvent(atTime, atTime, field.name, oldValue, newValue)
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<TemplatedFieldChangedEvent>(issue, atTime) { it.fieldName == field.name }) {
+            templatedNodeService.updateTemplatedField(issue, field)
+        }
+        return event
+    }
+
+    /**
      * Checks that the user has [TrackablePermission.MANAGE_ISSUES] on [issue]
      *
      * @param issue the [Issue] where the permission must be granted
      * @param authorizationContext necessary for checking for the permission
      * @throws IllegalArgumentException if the permission is not granted
      */
-    private suspend fun checkManageIssuesPermission(
-        issue: Issue, authorizationContext: GropiusAuthorizationContext
-    ) {
+    private suspend fun checkManageIssuesPermission(issue: Issue, authorizationContext: GropiusAuthorizationContext) {
         checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
     }
 
     /**
-     * Changes a property of [issue], return the created event or null if the property was not changed.
+     * Changes a property of [issue], returns the created event or null if the property was not changed.
      * Checks the authorization status ([TrackablePermission.MANAGE_ISSUES] on the [issue])
      *
      * @param T the type of the property

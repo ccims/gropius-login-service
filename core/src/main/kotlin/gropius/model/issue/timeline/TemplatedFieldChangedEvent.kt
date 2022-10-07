@@ -1,9 +1,12 @@
 package gropius.model.issue.timeline
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
+import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import com.expediagroup.graphql.generator.annotations.GraphQLType
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.graphglue.model.DomainNode
 import io.github.graphglue.model.FilterProperty
+import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
 
 @DomainNode
@@ -14,12 +17,30 @@ class TemplatedFieldChangedEvent(
     @property:GraphQLDescription("The name of the templated field.")
     @FilterProperty
     val fieldName: String,
-    @property:GraphQLDescription("The old value of the templated field.")
+    @GraphQLIgnore
+    val oldValue: String?,
+    @GraphQLIgnore
+    val newValue: String?
+) : TimelineItem(createdAt, lastModifiedAt) {
+
+    @GraphQLDescription("The old value of the templated field.")
     @GraphQLType("JSON")
-    @FilterProperty
-    val oldValue: Any?,
-    @property:GraphQLDescription("The new value of the templated field.")
+    fun oldValue(
+        @Autowired
+        @GraphQLIgnore
+        objectMapper: ObjectMapper
+    ): Any? {
+        return oldValue?.let { objectMapper.readTree(it) }
+    }
+
+    @GraphQLDescription("The new value of the templated field.")
     @GraphQLType("JSON")
-    @FilterProperty
-    val newValue: Any?
-) : TimelineItem(createdAt, lastModifiedAt)
+    fun newValue(
+        @Autowired
+        @GraphQLIgnore
+        objectMapper: ObjectMapper
+    ): Any? {
+        return newValue?.let { objectMapper.readTree(it) }
+    }
+
+}

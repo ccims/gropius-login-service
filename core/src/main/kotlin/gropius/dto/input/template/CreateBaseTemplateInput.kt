@@ -8,7 +8,7 @@ import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersionDetector
 import gropius.dto.input.common.CreateNamedNodeInput
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.ensureNoDuplicates
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.ifPresent
 import gropius.model.template.BaseTemplate
 import kotlin.properties.Delegates
@@ -28,7 +28,7 @@ abstract class CreateBaseTemplateInput : CreateNamedNodeInput() {
     override fun validate() {
         super.validate()
         templateFieldSpecifications.ifPresent {
-            it.ensureNoDuplicates()
+            it.validateAndEnsureNoDuplicates()
             for (field in it) {
                 val schema = field.value as JsonNode
                 val jsonSchema =

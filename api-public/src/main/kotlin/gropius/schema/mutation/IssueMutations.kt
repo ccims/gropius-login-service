@@ -379,4 +379,20 @@ class IssueMutations(
         return issueService.removeAffectedEntityFromIssue(dfe.gropiusAuthorizationContext, input)
     }
 
+    @GraphQLDescription(
+        """Changes the value of a templated field on an Issue, requires MANAGE_ISSUES on any of the Trackables 
+        the Issue is on.
+        Additionally, the field with the name must be defined by the template of the Issue, and the provided new value
+        must be compatible.
+        If the new value is equal to the current value of the templated field, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueTemplatedField(
+        @GraphQLDescription("Defines the Issue, the templated field and its new value")
+        input: ChangeIssueTemplatedFieldInput, dfe: DataFetchingEnvironment
+    ): TemplatedFieldChangedEvent? {
+        return issueService.changeIssueTemplatedField(dfe.gropiusAuthorizationContext, input)
+    }
+
 }
