@@ -785,16 +785,29 @@ class IssueService(
     suspend fun changeIssuePriority(
         issue: Issue, oldPriority: IssuePriority?, newPriority: IssuePriority?, atTime: OffsetDateTime, byUser: User
     ): PriorityChangedEvent {
-        if ((newPriority != null) && (issue.template().value !in newPriority.partOf())) {
-            throw IllegalArgumentException(
-                "IssuePriority cannot be used on the Issue as it is not provided by the template of the Issue"
-            )
+        if (newPriority != null) {
+            checkIssuePriorityCompatibility(issue, newPriority)
         }
         val event = PriorityChangedEvent(atTime, atTime)
         event.newPriority().value = newPriority
         event.oldPriority().value = oldPriority
         changeIssueProperty(issue, newPriority, atTime, byUser, issue.priority()::value, event)
         return event
+    }
+
+    /**
+     * Checks that the `priority` of an [issue] can be changed to [newPriority]
+     *
+     * @param issue the [Issue] to check compatibility with, must have a set template
+     * @param newPriority the new `priority` of the [issue]
+     * @throws IllegalArgumentException if the [newPriority] is not compatible with the template of the [issue]
+     */
+    private suspend fun checkIssuePriorityCompatibility(issue: Issue, newPriority: IssuePriority) {
+        if (issue.template().value !in newPriority.partOf()) {
+            throw IllegalArgumentException(
+                "IssuePriority cannot be used on the Issue as it is not provided by the template of the Issue"
+            )
+        }
     }
 
     /**
@@ -834,16 +847,27 @@ class IssueService(
     suspend fun changeIssueState(
         issue: Issue, oldState: IssueState, newState: IssueState, atTime: OffsetDateTime, byUser: User
     ): StateChangedEvent {
-        if (issue.template().value !in newState.partOf()) {
-            throw IllegalArgumentException(
-                "IssueState cannot be used on the Issue as it is not provided by the template of the Issue"
-            )
-        }
+        checkIssueStateCompatibility(issue, newState)
         val event = StateChangedEvent(atTime, atTime)
         event.newState().value = newState
         event.oldState().value = oldState
         changeIssueProperty(issue, newState, atTime, byUser, issue.state()::value, event)
         return event
+    }
+
+    /**
+     * Checks that the `state` of an [issue] can be changed to [newState]
+     *
+     * @param issue the [Issue] to check compatibility with, must have a set template
+     * @param newState the new `state` of the [issue]
+     * @throws IllegalArgumentException if the [newState] is not compatible with the template of the [issue]
+     */
+    private suspend fun checkIssueStateCompatibility(issue: Issue, newState: IssueState) {
+        if (issue.template().value !in newState.partOf()) {
+            throw IllegalArgumentException(
+                "IssueState cannot be used on the Issue as it is not provided by the template of the Issue"
+            )
+        }
     }
 
     /**
@@ -883,16 +907,27 @@ class IssueService(
     suspend fun changeIssueType(
         issue: Issue, oldType: IssueType, newType: IssueType, atTime: OffsetDateTime, byUser: User
     ): TypeChangedEvent {
-        if (issue.template().value !in newType.partOf()) {
-            throw IllegalArgumentException(
-                "IssueType cannot be used on the Issue as it is not provided by the template of the Issue"
-            )
-        }
+        checkIssueTypeCompatibility(issue, newType)
         val event = TypeChangedEvent(atTime, atTime)
         event.newType().value = newType
         event.oldType().value = oldType
         changeIssueProperty(issue, newType, atTime, byUser, issue.type()::value, event)
         return event
+    }
+
+    /**
+     * Checks that the `type` of an [issue] can be changed to [newType]
+     *
+     * @param issue the [Issue] to check compatibility with, must have a set template
+     * @param newType the new `type` of the [issue]
+     * @throws IllegalArgumentException if the [newType] is not compatible with the template of the [issue]
+     */
+    private suspend fun checkIssueTypeCompatibility(issue: Issue, newType: IssueType) {
+        if (issue.template().value !in newType.partOf()) {
+            throw IllegalArgumentException(
+                "IssueType cannot be used on the Issue as it is not provided by the template of the Issue"
+            )
+        }
     }
 
     /**
