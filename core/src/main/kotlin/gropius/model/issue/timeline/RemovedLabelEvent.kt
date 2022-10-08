@@ -7,7 +7,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that a Label was removed from an Issue.")
+@GraphQLDescription(
+    """Event representing that a Label was removed from an Issue.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class RemovedLabelEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
 ) : PublicTimelineItem(createdAt, lastModifiedAt) {

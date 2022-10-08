@@ -10,7 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the value of a templated field changed.")
+@GraphQLDescription(
+    """Event representing that the value of a templated field changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class TemplatedFieldChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,

@@ -7,7 +7,11 @@ import java.time.Duration
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the spent time of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the spent time of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class SpentTimeChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,

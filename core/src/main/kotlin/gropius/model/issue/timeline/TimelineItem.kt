@@ -8,7 +8,7 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Supertype of all timeline items. Always part of an Issue")
+@GraphQLDescription("Supertype of all timeline items. Always part of an Issue.")
 abstract class TimelineItem(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
 ) : AuditedNode(createdAt, lastModifiedAt) {

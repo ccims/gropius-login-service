@@ -10,7 +10,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the type of an IssueRelation changed.")
+@GraphQLDescription(
+    """Event representing that the type of an IssueRelation changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class IssueRelationTypeChangedEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
 ) : AbstractTypeChangedEvent<IssueRelationType>(createdAt, lastModifiedAt) {

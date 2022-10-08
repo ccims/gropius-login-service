@@ -16,6 +16,7 @@ import java.time.OffsetDateTime
     Can reference Artefacts.
     Can be deleted, if deleted, the body is set to an empty String and the referencedComments are cleared.
     Keeps track when it was last edited and by who, but does not keep track of the change history.
+    READ is granted if READ is granted on `issue`.
     """
 )
 class IssueComment(

@@ -7,7 +7,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the Issue was added to a Trackable.")
+@GraphQLDescription(
+    """Event representing that the Issue was added to a Trackable.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class AddedToTrackableEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
 ) : PublicTimelineItem(createdAt, lastModifiedAt) {

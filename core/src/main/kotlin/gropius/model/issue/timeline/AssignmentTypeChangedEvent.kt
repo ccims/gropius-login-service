@@ -10,7 +10,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the type of an Assignment changed.")
+@GraphQLDescription(
+    """Event representing that the type of an Assignment changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class AssignmentTypeChangedEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
 ) : AbstractTypeChangedEvent<AssignmentType>(createdAt, lastModifiedAt) {

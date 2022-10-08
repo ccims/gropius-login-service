@@ -14,6 +14,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription(
     """Event representing that a User is assigned to an Issue.
     An Assignment is only active if it is still in `assignments` on Issue.
+    READ is granted if READ is granted on `issue`.
     """
 )
 class Assignment(createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime) : PublicTimelineItem(createdAt, lastModifiedAt) {

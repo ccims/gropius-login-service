@@ -6,7 +6,11 @@ import io.github.graphglue.model.FilterProperty
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the start date of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the start date of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class StartDateChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,

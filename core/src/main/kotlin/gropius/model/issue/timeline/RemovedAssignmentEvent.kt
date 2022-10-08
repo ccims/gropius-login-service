@@ -12,6 +12,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription(
     """Event representing that a User was unassigned from an Issue, 
     meaning an Assignment was removed from an Issue.
+    READ is granted if READ is granted on `issue`.
     """
 )
 class RemovedAssignmentEvent(

@@ -9,7 +9,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an outgoing IssueRelation was removed.")
+@GraphQLDescription(
+    """Event representing that an outgoing IssueRelation was removed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class RemovedOutgoingRelationEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,

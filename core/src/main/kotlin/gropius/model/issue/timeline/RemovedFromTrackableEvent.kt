@@ -7,7 +7,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an Issue was removed from a Trackable.")
+@GraphQLDescription(
+    """Event representing that an Issue was removed from a Trackable.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class RemovedFromTrackableEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
 ) : ParentTimelineItem(createdAt, lastModifiedAt) {

@@ -8,6 +8,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription(
     """Main Body of an Issue.
     Each Issue has exactly one Body. Keeps track when it was last edited and by who, but does not keep track of the change history.
+    READ is granted if READ is granted on `issue`.
     """
 )
 class Body(
