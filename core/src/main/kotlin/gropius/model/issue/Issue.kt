@@ -25,6 +25,9 @@ import java.time.OffsetDateTime
     Issues are synced to all IMSProjects of Trackables they are part of.
     All changes to the Issue are reflected by the timeline.
     READ is granted if READ is granted on any Trackable in `trackables`.
+    Caution: due to confidentiality reasons, updates to `incomingRelations` do not cause updates on `lastModifiedBy`
+    and `participants`, however, `lastModifiedAt` and `lastUpdatedAt` is still changed.
+    The same applies to RelatedByIssueEvent, RemovedIncomingRelationEvent and IncomingRelationTypeChangedEvent.
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["trackables"])

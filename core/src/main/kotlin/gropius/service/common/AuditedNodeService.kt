@@ -29,10 +29,7 @@ abstract class AuditedNodeService<T : AuditedNode, R : GropiusRepository<T, Stri
      * @param lastModifiedAt the time when the node was last modified, defaults to `now()`
      */
     suspend fun updateAuditedNode(
-        node: AuditedNode,
-        input: UpdateExtensibleNodeInput,
-        lastModifiedBy: User,
-        lastModifiedAt: OffsetDateTime = OffsetDateTime.now()
+        node: AuditedNode, input: UpdateExtensibleNodeInput, lastModifiedBy: User, lastModifiedAt: OffsetDateTime
     ) {
         updateExtensibleNode(node, input)
         updateAuditedNode(node, lastModifiedBy, lastModifiedAt)
@@ -47,16 +44,13 @@ abstract class AuditedNodeService<T : AuditedNode, R : GropiusRepository<T, Stri
      * @param lastModifiedAt the time when the node was last modified, defaults to `now()`
      */
     suspend fun updateAuditedNode(
-        node: AuditedNode,
-        lastModifiedBy: User,
-        lastModifiedAt: OffsetDateTime = OffsetDateTime.now()
+        node: AuditedNode, lastModifiedBy: User, lastModifiedAt: OffsetDateTime
     ) {
         if (node.lastModifiedAt <= lastModifiedAt) {
             node.lastModifiedBy().value = lastModifiedBy
             node.lastModifiedAt = lastModifiedAt
         }
     }
-
 
     /**
      * Updates [node] based on [input]

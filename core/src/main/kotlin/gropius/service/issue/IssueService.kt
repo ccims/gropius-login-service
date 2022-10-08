@@ -10,9 +10,7 @@ import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.*
-import gropius.model.template.IssuePriority
-import gropius.model.template.IssueState
-import gropius.model.template.IssueType
+import gropius.model.template.*
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
@@ -22,10 +20,11 @@ import gropius.repository.findById
 import gropius.repository.issue.ArtefactRepository
 import gropius.repository.issue.IssueRepository
 import gropius.repository.issue.LabelRepository
+import gropius.repository.issue.timeline.AssignmentRepository
+import gropius.repository.issue.timeline.IssueRelationRepository
 import gropius.repository.issue.timeline.TimelineItemRepository
-import gropius.repository.template.IssuePriorityRepository
-import gropius.repository.template.IssueStateRepository
-import gropius.repository.template.IssueTypeRepository
+import gropius.repository.template.*
+import gropius.repository.user.UserRepository
 import gropius.service.common.AuditedNodeService
 import gropius.service.template.TemplatedNodeService
 import gropius.util.JsonNodeMapper
@@ -51,6 +50,11 @@ import kotlin.reflect.KMutableProperty0
  * @param affectedByIssueRepository used to find [AffectedByIssue]s by id
  * @param templatedNodeService used to validate and update templated fields
  * @param jsonNodeMapper used to serialize templated fields
+ * @param userRepository used to find [User]s by id
+ * @param assignmentRepository used to find [Assignment]s by id
+ * @param assignmentTypeRepository used to find [AssignmentType]s by id
+ * @param issueRelationRepository used to find [IssueRelation]s by id
+ * @param issueRelationTypeRepository used to find [IssueRelationType]s by id
  */
 @Service
 class IssueService(
@@ -64,7 +68,12 @@ class IssueService(
     private val issueStateRepository: IssueStateRepository,
     private val affectedByIssueRepository: AffectedByIssueRepository,
     private val templatedNodeService: TemplatedNodeService,
-    private val jsonNodeMapper: JsonNodeMapper
+    private val jsonNodeMapper: JsonNodeMapper,
+    private val userRepository: UserRepository,
+    private val assignmentRepository: AssignmentRepository,
+    private val assignmentTypeRepository: AssignmentTypeRepository,
+    private val issueRelationRepository: IssueRelationRepository,
+    private val issueRelationTypeRepository: IssueRelationTypeRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -100,7 +109,7 @@ class IssueService(
         )
         checkManageIssuesPermission(issue, authorizationContext)
         return if (trackable !in issue.trackables()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 addIssueToTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -159,7 +168,7 @@ class IssueService(
             "manage Issues on the Trackable"
         )
         return if (trackable in issue.trackables()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 removeIssueFromTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -229,7 +238,7 @@ class IssueService(
             "manage Issues on the Trackable where the Issue should be pinned"
         )
         return if (trackable !in issue.pinnedOn()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 addIssueToPinnedIssues(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -241,7 +250,7 @@ class IssueService(
      * Pins an [issue] on [trackable] at [atTime] as [byUser] and adds a [AddedToPinnedIssuesEvent]
      * to the timeline.
      * Creates the event even if the [issue] was already pinned on the [trackable].
-     * Only adds the [issue] to the `pinnedIssues` on  [trackable] if no newer timeline item exists which removes
+     * Only adds the [issue] to the `pinnedIssues` on [trackable] if no newer timeline item exists which removes
      * it again.
      * Does not check the authorization status.
      * Checks if the [issue] can be pinned to this [trackable].
@@ -294,7 +303,7 @@ class IssueService(
             "manage Issues on the Trackable where the Issue should be unpinned"
         )
         return if (trackable in issue.pinnedOn()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 removeIssueFromPinnedIssues(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -348,7 +357,7 @@ class IssueService(
         checkManageIssuesPermission(issue, authorizationContext)
         checkPermission(label, Permission(NodePermission.READ, authorizationContext), "use the Label")
         return if (label !in issue.labels()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 addLabelToIssue(issue, label, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -404,7 +413,7 @@ class IssueService(
         val label = labelRepository.findById(input.label)
         checkManageIssuesPermission(issue, authorizationContext)
         return if (label in issue.labels()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 removeLabelFromIssue(issue, label, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -456,7 +465,7 @@ class IssueService(
         checkManageIssuesPermission(issue, authorizationContext)
         checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
         return if (artefact !in issue.artefacts()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 addArtefactToIssue(issue, artefact, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -512,7 +521,7 @@ class IssueService(
         val artefact = artefactRepository.findById(input.artefact)
         checkManageIssuesPermission(issue, authorizationContext)
         return if (artefact in issue.artefacts()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 removeArtefactFromIssue(issue, artefact, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -564,7 +573,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `title` of an  [issue] at [atTime] as [byUser] and adds a [TitleChangedEvent] to the timeline.
+     * Changes the `title` of an [issue] at [atTime] as [byUser] and adds a [TitleChangedEvent] to the timeline.
      * Creates the event even if the `title` was not changed.
      * Only changes the `title` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -606,7 +615,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `startDate` of an  [issue] at [atTime] as [byUser] and adds a [StartDateChangedEvent] to the timeline.
+     * Changes the `startDate` of an [issue] at [atTime] as [byUser] and adds a [StartDateChangedEvent] to the timeline.
      * Creates the event even if the `startDate` was not changed.
      * Only changes the `startDate` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -648,7 +657,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `dueDate` of an  [issue] at [atTime] as [byUser] and adds a [DueDateChangedEvent] to the timeline.
+     * Changes the `dueDate` of an [issue] at [atTime] as [byUser] and adds a [DueDateChangedEvent] to the timeline.
      * Creates the event even if the `dueDate` was not changed.
      * Only changes the `dueDate` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -690,7 +699,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `estimatedTime` of an  [issue] at [atTime] as [byUser] and adds a [EstimatedTimeChangedEvent]
+     * Changes the `estimatedTime` of an [issue] at [atTime] as [byUser] and adds a [EstimatedTimeChangedEvent]
      * to the timeline.
      * Creates the event even if the `estimatedTime` was not changed.
      * Only changes the `estimatedTime` if no newer timeline item exists which changes it.
@@ -733,7 +742,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `spentTime` of an  [issue] at [atTime] as [byUser] and adds a [SpentTimeChangedEvent] to the timeline.
+     * Changes the `spentTime` of an [issue] at [atTime] as [byUser] and adds a [SpentTimeChangedEvent] to the timeline.
      * Creates the event even if the `spentTime` was not changed.
      * Only changes the `spentTime` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -774,7 +783,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `priority` of an  [issue] at [atTime] as [byUser] and adds a [PriorityChangedEvent] to the timeline.
+     * Changes the `priority` of an [issue] at [atTime] as [byUser] and adds a [PriorityChangedEvent] to the timeline.
      * Creates the event even if the `priority` was not changed.
      * Only changes the `priority` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -836,7 +845,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `state` of an  [issue] at [atTime] as [byUser] and adds a [StateChangedEvent] to the timeline.
+     * Changes the `state` of an [issue] at [atTime] as [byUser] and adds a [StateChangedEvent] to the timeline.
      * Creates the event even if the `state` was not changed.
      * Only changes the `state` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -883,7 +892,7 @@ class IssueService(
      * Checks the authorization status, and checks that the new [IssueType] can be used with the [Issue]
      *
      * @param authorizationContext used to check for the required permission
-     * @param input defines the new `type` and of which issue to change it
+     * @param input defines the new `type` and of which [Issue] to change it
      * @return the saved created [TypeChangedEvent] or `null` if no event was created
      */
     suspend fun changeIssueType(
@@ -896,7 +905,7 @@ class IssueService(
     }
 
     /**
-     * Changes the `type` of an  [issue] at [atTime] as [byUser] and adds a [TypeChangedEvent] to the timeline.
+     * Changes the `type` of an [issue] at [atTime] as [byUser] and adds a [TypeChangedEvent] to the timeline.
      * Creates the event even if the `type` was not changed.
      * Only changes the `type` if no newer timeline item exists which changes it.
      * Does not check the authorization status.
@@ -959,7 +968,7 @@ class IssueService(
             "affect the entity with Issues"
         )
         return if (affectedEntity !in issue.affects()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 addAffectedEntityToIssue(issue, affectedEntity, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -1025,7 +1034,7 @@ class IssueService(
             )
         }
         return if (affectedEntity in issue.affects()) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 removeAffectedEntityFromIssue(
                     issue, affectedEntity, OffsetDateTime.now(), getUser(authorizationContext)
                 )
@@ -1084,9 +1093,11 @@ class IssueService(
         val newSerializedValue = jsonNodeMapper.jsonNodeToDeterministicString(input.value as JsonNode)
         val oldSerializedValue = issue.templatedFields[input.name]
         return if (newSerializedValue != oldSerializedValue) {
-            changeIssueTemplatedField(
-                issue, input, oldSerializedValue, OffsetDateTime.now(), getUser(authorizationContext)
-            )
+            timelineItemRepository.save(
+                changeIssueTemplatedField(
+                    issue, input, oldSerializedValue, OffsetDateTime.now(), getUser(authorizationContext)
+                )
+            ).awaitSingle()
         } else {
             null
         }
@@ -1118,6 +1129,192 @@ class IssueService(
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<TemplatedFieldChangedEvent>(issue, atTime) { it.fieldName == field.name }) {
             templatedNodeService.updateTemplatedField(issue, field)
+            updateAuditedNode(issue, byUser, atTime)
+        }
+        return event
+    }
+
+    /**
+     * Creates a new [Assignment], returns the created [Assignment].
+     * Checks the authorization status, and checks that the chosen type is compatible with the template of the [Issue].
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the [Issue], [User] and optional [AssignmentType] of the [Assignment]
+     * @return the saved created [Assignment]
+     */
+    suspend fun createAssignment(
+        authorizationContext: GropiusAuthorizationContext, input: CreateAssignmentInput
+    ): Assignment {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        checkManageIssuesPermission(issue, authorizationContext)
+        val user = userRepository.findById(input.user)
+        val assignmentType = input.assignmentType?.let { assignmentTypeRepository.findById(it) }
+        val assignment =
+            createAssignment(issue, user, assignmentType, OffsetDateTime.now(), getUser(authorizationContext))
+        return assignmentRepository.save(assignment).awaitSingle()
+    }
+
+    /**
+     * Creates a new [Assignment] on an [issue] at [atTime] as [byUser].
+     * Does not check the authorization status.
+     * If present, checks that the [assignmentType] is compatible with the template of the [issue].
+     * Does neither save the created [Assignment] nor the [issue].
+     * It is necessary to save the [issue] or returned [Assignment] afterwards.
+     *
+     * @param issue the [Issue] to which the [user] should be assigned
+     * @param user the [User] to assign to [issue]
+     * @param assignmentType the optional type of the created [Assignment], must be compatible with the template of [issue]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [Assignment]
+     */
+    suspend fun createAssignment(
+        issue: Issue, user: User, assignmentType: AssignmentType?, atTime: OffsetDateTime, byUser: User
+    ): Assignment {
+        if (assignmentType != null) {
+            checkAssignmentTypeCompatibility(issue, assignmentType)
+        }
+        val event = Assignment(atTime, atTime)
+        event.user().value = user
+        event.type().value = assignmentType
+        createdTimelineItem(issue, event, atTime, byUser)
+        issue.assignments() += event
+        return event
+    }
+
+    /**
+     * Checks that the `type` of an [Assignment] on [issue] can be changed to [newType]
+     *
+     * @param issue the [Issue] to check compatibility with, must have a set template
+     * @param newType the new `type` of an [Assignment] on the [issue]
+     * @throws IllegalArgumentException if the [newType] is not compatible with the template of the [issue]
+     */
+    private suspend fun checkAssignmentTypeCompatibility(issue: Issue, newType: AssignmentType) {
+        if (issue.template().value !in newType.partOf()) {
+            throw IllegalArgumentException(
+                "AssignmentType cannot be used on the Assignment as it is not provided by the template of the Issue of the Assignment"
+            )
+        }
+    }
+
+    /**
+     * Changes the `type` of an [Assignment], returns the created [AssignmentTypeChangedEvent] or null if the `type`
+     * was not changed.
+     * Checks the authorization status, and checks that the new [AssignmentType] can be used with the [Issue] the
+     * [Assignment] is on.
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `type` and of which [Assignment] to change it
+     * @return the saved created [AssignmentTypeChangedEvent] or `null` if no event was created
+     */
+    suspend fun changeAssignmentType(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeAssignmentTypeInput
+    ): AssignmentTypeChangedEvent? {
+        input.validate()
+        val assignment = assignmentRepository.findById(input.assignment)
+        checkManageIssuesPermission(assignment.issue().value, authorizationContext)
+        val newType = input.type?.let { assignmentTypeRepository.findById(it) }
+        val oldType = assignment.type().value
+        return if (oldType != newType) {
+            timelineItemRepository.save(
+                changeAssignmentType(
+                    assignment, oldType, newType, OffsetDateTime.now(), getUser(authorizationContext)
+                )
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Changes the `type` of an [assignment] at [atTime] as [byUser] and adds a [AssignmentTypeChangedEvent]
+     * to the timeline.
+     * Creates the event even if the `type` was not changed.
+     * Only changes the `type` if no newer timeline item exists which changes it.
+     * Does not check the authorization status.
+     * Checks that the [newType] can be used with the [Issue] the [assignment] is on.
+     * Does neither save the created [AssignmentTypeChangedEvent] nor the [assignment] nor the [Issue].
+     * It is necessary to save the [assignment], the returned [AssignmentTypeChangedEvent] or the [Issue]
+     * the [assignment] is on afterwards.
+     *
+     * @param assignment the [Assignment] where the `type` should be changed
+     * @param oldType the old `type`
+     * @param newType the new `type`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [AssignmentTypeChangedEvent]
+     */
+    suspend fun changeAssignmentType(
+        assignment: Assignment, oldType: AssignmentType?, newType: AssignmentType?, atTime: OffsetDateTime, byUser: User
+    ): AssignmentTypeChangedEvent {
+        val issue = assignment.issue().value
+        if (newType != null) {
+            checkAssignmentTypeCompatibility(issue, newType)
+        }
+        val event = AssignmentTypeChangedEvent(atTime, atTime)
+        event.assignment().value = assignment
+        event.oldType().value = oldType
+        event.newType().value = newType
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<AssignmentTypeChangedEvent>(issue, atTime) {
+                it.assignment().value == assignment
+            } && assignment.type().value != newType) {
+            assignment.type().value = newType
+        }
+        return event
+    }
+
+    /**
+     * Removes an [Assignment] from its [Issue], returns the created [RemovedAssignmentEvent], or `null` if
+     * the [Assignment] was already removed from its [Issue].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [Assignment] to remove
+     * @return the saved created [RemovedAssignmentEvent] or `null` if no event was created
+     */
+    suspend fun removeAssignment(
+        authorizationContext: GropiusAuthorizationContext, input: RemoveAssignmentInput
+    ): RemovedAssignmentEvent? {
+        input.validate()
+        val assignment = assignmentRepository.findById(input.assignment)
+        val issue = assignment.issue().value
+        checkManageIssuesPermission(issue, authorizationContext)
+        return if (assignment in issue.assignments()) {
+            timelineItemRepository.save(
+                removeAssignment(assignment, OffsetDateTime.now(), getUser(authorizationContext))
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Removes an [assignment] from its [Issue] at [atTime] as [byUser] and adds a [RemovedAssignmentEvent]
+     * to the timeline.
+     * Creates the event even if the [assignment] was already removed from its [Issue].
+     * Does not check the authorization status.
+     * Does neither save the created [RemovedAssignmentEvent] nor the [Issue] of the [assignment].
+     * It is necessary to save the [Issue] of the [assignment] or returned [RemovedAssignmentEvent] afterwards.
+     *
+     * @param assignment the [Assignment] to remove from its [Issue]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [RemovedAssignmentEvent]
+     */
+    suspend fun removeAssignment(
+        assignment: Assignment, atTime: OffsetDateTime, byUser: User
+    ): RemovedAssignmentEvent {
+        val issue = assignment.issue().value
+        val event = RemovedAssignmentEvent(atTime, atTime)
+        event.removedAssignment().value = assignment
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<RemovedAssignmentEvent>(
+                issue, atTime
+            ) { it.removedAssignment().value == assignment }
+        ) {
+            issue.assignments() -= assignment
         }
         return event
     }
@@ -1140,7 +1337,7 @@ class IssueService(
      * @param T the type of the property
      * @param E the type of the timeline item
      * @param authorizationContext used to check for the required permission
-     * @param issue the  [Issue] to update
+     * @param issue the [Issue] to update
      * @param currentValue the current value of the property
      * @param newValue the new value of the property
      * @param internalFunction used to create the returned event and apply the change
@@ -1155,7 +1352,7 @@ class IssueService(
     ): E? {
         checkManageIssuesPermission(issue, authorizationContext)
         return if (currentValue != newValue) {
-            return timelineItemRepository.save(
+            timelineItemRepository.save(
                 internalFunction(issue, currentValue, newValue, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
         } else {
@@ -1164,7 +1361,7 @@ class IssueService(
     }
 
     /**
-     * Changes a property of an  [issue] at [atTime] as [byUser] and adds the [event] to the timeline.
+     * Changes a property of an [issue] at [atTime] as [byUser] and adds the [event] to the timeline.
      * Only changes the property if no newer timeline item exists which changes it.
      * Does not check the authorization status.
      * Does neither save the [event] nor the [issue].
@@ -1185,7 +1382,6 @@ class IssueService(
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<E>(issue, atTime) && (property.get() != newValue)) {
             property.set(newValue)
-            updateAuditedNode(issue, byUser, atTime)
         }
     }
 
@@ -1203,6 +1399,7 @@ class IssueService(
         issue: Issue, timelineItem: TimelineItem, atTime: OffsetDateTime, byUser: User
     ) {
         createdAuditedNode(timelineItem, byUser)
+        updateAuditedNode(issue, byUser, atTime)
         timelineItem.issue().value = issue
         issue.timelineItems() += timelineItem
         issue.participants() += byUser

@@ -29,10 +29,7 @@ abstract class NamedAuditedNodeService<T : NamedAuditedNode, R : GropiusReposito
      * @param lastModifiedAt the time when the node was last modified, defaults to `now()`
      */
     suspend fun updateNamedAuditedNode(
-        node: NamedAuditedNode,
-        input: UpdateNamedNodeInput,
-        lastModifiedBy: User,
-        lastModifiedAt: OffsetDateTime = OffsetDateTime.now()
+        node: NamedAuditedNode, input: UpdateNamedNodeInput, lastModifiedBy: User, lastModifiedAt: OffsetDateTime
     ) {
         updateAuditedNode(node, input, lastModifiedBy, lastModifiedAt)
         input.name.ifPresent {

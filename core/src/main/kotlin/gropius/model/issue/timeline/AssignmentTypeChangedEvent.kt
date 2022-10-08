@@ -17,7 +17,7 @@ import java.time.OffsetDateTime
 )
 class AssignmentTypeChangedEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
-) : AbstractTypeChangedEvent<AssignmentType>(createdAt, lastModifiedAt) {
+) : AbstractTypeChangedEvent<AssignmentType?>(createdAt, lastModifiedAt) {
 
     companion object {
         const val ASSIGNMENT = "ASSIGNMENT"

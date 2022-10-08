@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
  */
 @DomainNode
 @GraphQLIgnore
-abstract class AbstractTypeChangedEvent<T : Node>(
+abstract class AbstractTypeChangedEvent<T : Node?>(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
 ) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
