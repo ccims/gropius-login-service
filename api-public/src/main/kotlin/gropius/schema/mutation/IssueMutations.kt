@@ -394,4 +394,90 @@ class IssueMutations(
         return issueService.changeIssueTemplatedField(dfe.gropiusAuthorizationContext, input)
     }
 
+    @GraphQLDescription(
+        """Assigns a User to an Issue by creating an Assignment, requires MANAGE_ISSUES on any of the Trackables the
+        Issue is on.
+        Additionally, if present, the type must be compatible with the template of the Issue.            
+        """
+    )
+    @AutoPayloadType("The created Assignment")
+    suspend fun createAssignment(
+        @GraphQLDescription("Defines the Issue, User, and optional AssignmentType")
+        input: CreateAssignmentInput, dfe: DataFetchingEnvironment
+    ): Assignment {
+        return issueService.createAssignment(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the type of an Assignment, requires MANAGE_ISSUES on any of the Trackables the Issue the Assignment
+        is part of is on.
+        Additionally, if present, the new type must be compatible with the template of the Issue.
+        If the current type of the Assignment is equal to the new one, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeAssignmentType(
+        @GraphQLDescription("Defines the Assignment to update and its new AssignmentType")
+        input: ChangeAssignmentTypeInput, dfe: DataFetchingEnvironment
+    ): AssignmentTypeChangedEvent? {
+        return issueService.changeAssignmentType(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Removes an Assignment from an Issue, require MANAGE_ISSUES on any of the Trackables the Issue the Assignment
+        is part of is on.
+        If the Assignment was already removed, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun removeAssignment(
+        @GraphQLDescription("Defines the Assignment to remove")
+        input: RemoveAssignmentInput, dfe: DataFetchingEnvironment
+    ): RemovedAssignmentEvent? {
+        return issueService.removeAssignment(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Creates an IssueRelation, requires RELATE_FROM_ISSUES on any of the Trackables the Issue is on, and
+        RELATE_TO_ISSUES on any of the Trackables the related Issue is on.
+        Additionally, if present, the type must be compatible with the template of the Issue.            
+        """
+    )
+    @AutoPayloadType("The created IssueRelation")
+    suspend fun createIssueRelation(
+        @GraphQLDescription("Defines the Issue, related Issue, and optional IssueRelationType")
+        input: CreateIssueRelationInput, dfe: DataFetchingEnvironment
+    ): IssueRelation {
+        return issueService.createIssueRelation(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Changes the type of an IssueRelation, requires MANAGE_ISSUES on any of the Trackables the Issue the 
+        IssueRelation is part of is on.
+        Additionally, if present, the new type must be compatible with the template of the Issue.
+        If the current type of the IssueRelation is equal to the new one, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueRelationType(
+        @GraphQLDescription("Defines the IssueRelation to update and its new IssueRelationType")
+        input: ChangeIssueRelationTypeInput, dfe: DataFetchingEnvironment
+    ): OutgoingRelationTypeChangedEvent? {
+        return issueService.changeIssueRelationType(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Removes an IssueRelation from an Issue, require RELATE_FROM_ISSUES on any of the Trackables the Issue the
+        IssueRelation starts at is on.
+        If the IssueRelation was already removed, no event is created.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun removeIssueRelation(
+        @GraphQLDescription("Defines the IssueRelation to remove")
+        input: RemoveIssueRelationInput, dfe: DataFetchingEnvironment
+    ): RemovedOutgoingRelationEvent? {
+        return issueService.removeIssueRelation(dfe.gropiusAuthorizationContext, input)
+    }
+
 }

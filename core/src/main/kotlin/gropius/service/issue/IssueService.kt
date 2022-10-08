@@ -1310,12 +1310,224 @@ class IssueService(
         val event = RemovedAssignmentEvent(atTime, atTime)
         event.removedAssignment().value = assignment
         createdTimelineItem(issue, event, atTime, byUser)
-        if (!existsNewerTimelineItem<RemovedAssignmentEvent>(
-                issue, atTime
-            ) { it.removedAssignment().value == assignment }
-        ) {
-            issue.assignments() -= assignment
+        issue.assignments() -= assignment
+        return event
+    }
+
+    /**
+     * Creates a new [IssueRelation], returns the created [IssueRelation].
+     * Checks the authorization status, and checks that the chosen type is compatible with the template of the [Issue].
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the [Issue], [User] and optional [IssueRelationType] of the [IssueRelation]
+     * @return the saved created [IssueRelation]
+     */
+    suspend fun createIssueRelation(
+        authorizationContext: GropiusAuthorizationContext, input: CreateIssueRelationInput
+    ): IssueRelation {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        val relatedIssue = repository.findById(input.relatedIssue)
+        checkPermission(
+            issue,
+            Permission(TrackablePermission.RELATE_FROM_ISSUES, authorizationContext),
+            "create IssueRelations starting at issue"
+        )
+        checkPermission(
+            relatedIssue,
+            Permission(TrackablePermission.RELATE_FROM_ISSUES, authorizationContext),
+            "create IssueRelations ending at relatedIssue"
+        )
+        val issueRelationType = input.issueRelationType?.let { issueRelationTypeRepository.findById(it) }
+        val issueRelation = createIssueRelation(
+            issue, relatedIssue, issueRelationType, OffsetDateTime.now(), getUser(authorizationContext)
+        )
+        return issueRelationRepository.save(issueRelation).awaitSingle()
+    }
+
+    /**
+     * Creates a new [IssueRelation] from [issue] to [relatedIssue] at [atTime] as [byUser] and adds it to the timeline
+     * of [issue]. Also creates a [RelatedByIssueEvent] and adds it to the timeline of [relatedIssue].
+     * Does not check the authorization status.
+     * If present, checks that the [issueRelationType] is compatible with the template of the [issue].
+     * Does neither save the created [IssueRelation] nor the [issue].
+     * It is necessary to save the [issue] or returned [IssueRelation] afterwards.
+     *
+     * @param issue the [Issue] from which the created [IssueRelation] starts
+     * @param relatedIssue the [Issue] where the created [IssueRelation] ends
+     * @param issueRelationType the optional type of the created [IssueRelation], must be compatible with the template of [issue]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [IssueRelation]
+     */
+    suspend fun createIssueRelation(
+        issue: Issue, relatedIssue: Issue, issueRelationType: IssueRelationType?, atTime: OffsetDateTime, byUser: User
+    ): IssueRelation {
+        if (issueRelationType != null) {
+            checkIssueRelationTypeCompatibility(issue, issueRelationType)
         }
+        val relation = IssueRelation(atTime, atTime)
+        relation.relatedIssue().value = relatedIssue
+        relation.type().value = issueRelationType
+        createdTimelineItem(issue, relation, atTime, byUser)
+        issue.outgoingRelations() += relation
+        val relatedEvent = RelatedByIssueEvent(atTime, atTime)
+        relatedEvent.relation().value = relation
+        createdTimelineItemOnRelatedIssue(relatedIssue, relatedEvent, atTime, byUser)
+        relatedIssue.incomingRelations() += relation
+        return relation
+    }
+
+    /**
+     * Checks that the `type` of an [IssueRelation] on [issue] can be changed to [newType]
+     *
+     * @param issue the [Issue] to check compatibility with, must have a set template
+     * @param newType the new `type` of an [IssueRelation] on the [issue]
+     * @throws IllegalArgumentException if the [newType] is not compatible with the template of the [issue]
+     */
+    private suspend fun checkIssueRelationTypeCompatibility(issue: Issue, newType: IssueRelationType) {
+        if (issue.template().value !in newType.partOf()) {
+            throw IllegalArgumentException(
+                "IssueRelationType cannot be used on the IssueRelation as it is not provided by the template of the Issue of the IssueRelation"
+            )
+        }
+    }
+
+    /**
+     * Changes the `type` of an [IssueRelation], returns the created [OutgoingRelationTypeChangedEvent] or null if
+     * the `type` was not changed.
+     * Checks the authorization status, and checks that the new [IssueRelationType] can be used with the [Issue] the
+     * [IssueRelation] starts at.
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new `type` and of which [IssueRelation] to change it
+     * @return the saved created [OutgoingRelationTypeChangedEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueRelationType(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueRelationTypeInput
+    ): OutgoingRelationTypeChangedEvent? {
+        input.validate()
+        val issueRelation = issueRelationRepository.findById(input.issueRelation)
+        checkManageIssuesPermission(issueRelation.issue().value, authorizationContext)
+        val newType = input.type?.let { issueRelationTypeRepository.findById(it) }
+        val oldType = issueRelation.type().value
+        return if (oldType != newType) {
+            val event = changeIssueRelationType(
+                issueRelation, oldType, newType, OffsetDateTime.now(), getUser(authorizationContext)
+            )
+            repository.save(issueRelation.relatedIssue().value).awaitSingle()
+            timelineItemRepository.save(event).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Changes the `type` of an [issueRelation] at [atTime] as [byUser] and adds a [OutgoingRelationTypeChangedEvent]
+     * to the timeline on the start [Issue], and an  [IncomingRelationTypeChangedEvent] to the timeline on the related
+     * [Issue].
+     * Creates the event even if the `type` was not changed.
+     * Only changes the `type` if no newer timeline item exists which changes it, this is only checked on the start
+     * [Issue].
+     * Does not check the authorization status.
+     * Checks that the [newType] can be used with the [Issue] the [issueRelation] is on.
+     * Does neither save the created [OutgoingRelationTypeChangedEvent] nor the [issueRelation] nor the [Issue].
+     * It is necessary to save the [issueRelation], the returned [OutgoingRelationTypeChangedEvent] or the [Issue]
+     * the [issueRelation] is on afterwards.
+     * Caution: it is also necessary to save the related [Issue] manually!
+     *
+     * @param issueRelation the [IssueRelation] where the `type` should be changed
+     * @param oldType the old `type`
+     * @param newType the new `type`
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [OutgoingRelationTypeChangedEvent]
+     */
+    suspend fun changeIssueRelationType(
+        issueRelation: IssueRelation,
+        oldType: IssueRelationType?,
+        newType: IssueRelationType?,
+        atTime: OffsetDateTime,
+        byUser: User
+    ): OutgoingRelationTypeChangedEvent {
+        val issue = issueRelation.issue().value
+        if (newType != null) {
+            checkIssueRelationTypeCompatibility(issue, newType)
+        }
+        val event = OutgoingRelationTypeChangedEvent(atTime, atTime)
+        event.issueRelation().value = issueRelation
+        event.oldType().value = oldType
+        event.newType().value = newType
+        createdTimelineItem(issue, event, atTime, byUser)
+        val relatedEvent = IncomingRelationTypeChangedEvent(atTime, atTime)
+        relatedEvent.issueRelation().value = issueRelation
+        relatedEvent.oldType().value = oldType
+        relatedEvent.newType().value = newType
+        createdTimelineItemOnRelatedIssue(issueRelation.relatedIssue().value, relatedEvent, atTime, byUser)
+        if (!existsNewerTimelineItem<OutgoingRelationTypeChangedEvent>(issue, atTime) {
+                it.issueRelation().value == issueRelation
+            } && issueRelation.type().value != newType) {
+            issueRelation.type().value = newType
+        }
+        return event
+    }
+
+    /**
+     * Removes an [IssueRelation] from its [Issue], returns the created [RemovedOutgoingRelationEvent], or `null` if
+     * the [IssueRelation] was already removed from its [Issue].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [IssueRelation] to remove
+     * @return the saved created [RemovedOutgoingRelationEvent] or `null` if no event was created
+     */
+    suspend fun removeIssueRelation(
+        authorizationContext: GropiusAuthorizationContext, input: RemoveIssueRelationInput
+    ): RemovedOutgoingRelationEvent? {
+        input.validate()
+        val issueRelation = issueRelationRepository.findById(input.issueRelation)
+        val issue = issueRelation.issue().value
+        checkPermission(
+            issue,
+            Permission(TrackablePermission.RELATE_FROM_ISSUES, authorizationContext),
+            "manage outgoing relations on the Issue at the start of the IssueRelation"
+        )
+        return if (issueRelation in issue.outgoingRelations()) {
+            val event = removeIssueRelation(issueRelation, OffsetDateTime.now(), getUser(authorizationContext))
+            repository.save(issueRelation.relatedIssue().value).awaitSingle()
+            timelineItemRepository.save(event).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Removes an [issueRelation] from its [Issue] at [atTime] as [byUser] and adds a [RemovedOutgoingRelationEvent]
+     * to the timeline. Also creates a [RemovedIncomingRelationEvent] and adds it to the timeline of the related [Issue].
+     * Creates the event even if the [issueRelation] was already removed from its [Issue].
+     * Does not check the authorization status.
+     * Does neither save the created [RemovedOutgoingRelationEvent] nor the [Issue] of the [issueRelation].
+     * It is necessary to save the [Issue] of the [issueRelation] or returned [RemovedOutgoingRelationEvent] afterwards.
+     * Caution: it is also necessary to save the related [Issue] manually!
+     *
+     * @param issueRelation the [IssueRelation] to remove from its [Issue]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [RemovedOutgoingRelationEvent]
+     */
+    suspend fun removeIssueRelation(
+        issueRelation: IssueRelation, atTime: OffsetDateTime, byUser: User
+    ): RemovedOutgoingRelationEvent {
+        val issue = issueRelation.issue().value
+        val relatedIssue = issueRelation.relatedIssue().value
+        val event = RemovedOutgoingRelationEvent(atTime, atTime)
+        event.removedRelation().value = issueRelation
+        createdTimelineItem(issue, event, atTime, byUser)
+        val relatedEvent = RemovedIncomingRelationEvent(atTime, atTime)
+        relatedEvent.removedRelation().value = issueRelation
+        createdTimelineItemOnRelatedIssue(relatedIssue, relatedEvent, atTime, byUser)
+        issue.outgoingRelations() -= issueRelation
+        relatedIssue.incomingRelations() -= issueRelation
         return event
     }
 
@@ -1388,6 +1600,7 @@ class IssueService(
     /**
      * Called after a [TimelineItem] was created
      * Adds it to the [issue], calls [createdAuditedNode] and updates [Issue.lastUpdatedAt] and [Issue.participants].
+     * Also calls [updateAuditedNode] on the [issue].
      * Also sets [TimelineItem.issue], to allow to save [timelineItem] instead of [issue].
      *
      * @param issue associated [Issue] to which [timelineItem] should be added
@@ -1404,6 +1617,27 @@ class IssueService(
         issue.timelineItems() += timelineItem
         issue.participants() += byUser
         issue.lastUpdatedAt = maxOf(issue.lastUpdatedAt, atTime)
+    }
+
+    /**
+     * Called after a [TimelineItem] was created on a related [Issue]
+     * Adds it to the [issue], calls [createdAuditedNode] and updates [Issue.lastModifiedAt] and [Issue.lastUpdatedAt]
+     * Also sets [TimelineItem.issue], to allow to save [timelineItem] instead of [issue].
+     * Due to confidentiality reasons, [Issue.participants], [Issue.lastModifiedBy] are not updated.
+     *
+     * @param issue associated [Issue] to which [timelineItem] should be added
+     * @param timelineItem the created [TimelineItem]
+     * @param atTime point in time at which [timelineItem] was created
+     * @param byUser the [User] who created [timelineItem]
+     */
+    private suspend fun createdTimelineItemOnRelatedIssue(
+        issue: Issue, timelineItem: TimelineItem, atTime: OffsetDateTime, byUser: User
+    ) {
+        createdAuditedNode(timelineItem, byUser)
+        timelineItem.issue().value = issue
+        issue.timelineItems() += timelineItem
+        issue.lastUpdatedAt = maxOf(issue.lastUpdatedAt, atTime)
+        issue.lastModifiedAt = maxOf(issue.lastModifiedAt, atTime)
     }
 
     /**

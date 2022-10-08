@@ -15,6 +15,7 @@ abstract class TimelineItem(
 
     @NodeRelationship(Issue.TIMELINE, Direction.INCOMING)
     @GraphQLDescription("The Issue this TimelineItem is part of.")
+    @GraphQLNullable
     @FilterProperty
     @delegate:Transient
     val issue by NodeProperty<Issue>()

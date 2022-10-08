@@ -88,7 +88,7 @@ class ArtefactService(
         input.from.ifPresent { artefact.from = it }
         input.to.ifPresent { artefact.to = it }
         input.version.ifPresent { artefact.version = it }
-        updateAuditedNode(artefact, input, getUser(authorizationContext))
+        updateAuditedNode(artefact, input, getUser(authorizationContext), OffsetDateTime.now())
         return repository.save(artefact).awaitSingle()
     }
 

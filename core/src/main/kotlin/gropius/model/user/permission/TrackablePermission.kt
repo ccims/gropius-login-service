@@ -36,14 +36,14 @@ abstract class TrackablePermission<T : Trackable>(
         const val CREATE_ISSUES = "CREATE_ISSUES"
 
         /**
-         * Permission to check if the user can link **to** [Issue]s on the [Trackable]
+         * Permission to check if the user can create IssueRelations **to** [Issue]s on the [Trackable]
          */
-        const val LINK_TO_ISSUES = "LINK_TO_ISSUES"
+        const val RELATE_TO_ISSUES = "RELATE_TO_ISSUES"
 
         /**
-         * Permission to check if the user can link **from** [Issue]s on the [Trackable]
+         * Permission to check if the user can create IssueRelations **from** [Issue]s on the [Trackable]
          */
-        const val LINK_FROM_ISSUES = "LINK_FROM_ISSUES"
+        const val RELATE_FROM_ISSUES = "RELATE_FROM_ISSUES"
 
         /**
          * Permission to check if the user can affect entities part of this [Trackable],

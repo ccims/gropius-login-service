@@ -4,7 +4,6 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.architecture.AffectedByIssue
 import gropius.model.architecture.IMSIssue
-import gropius.model.architecture.IMSProject
 import gropius.model.architecture.Trackable
 import gropius.model.common.AuditedNode
 import gropius.model.issue.timeline.*
@@ -31,8 +30,8 @@ import java.time.OffsetDateTime
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["trackables"])
-@Authorization(TrackablePermission.LINK_TO_ISSUES, allowFromRelated = ["trackables"])
-@Authorization(TrackablePermission.LINK_FROM_ISSUES, allowFromRelated = ["trackables"])
+@Authorization(TrackablePermission.RELATE_TO_ISSUES, allowFromRelated = ["trackables"])
+@Authorization(TrackablePermission.RELATE_FROM_ISSUES, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.MODERATOR, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.COMMENT, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.MANAGE_ISSUES, allowFromRelated = ["trackables"])

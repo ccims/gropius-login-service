@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription("Event representing that the type of an IssueRelation changed.")
 abstract class RelationTypeChangedEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
-) : AbstractTypeChangedEvent<IssueRelationType>(createdAt, lastModifiedAt) {
+) : AbstractTypeChangedEvent<IssueRelationType?>(createdAt, lastModifiedAt) {
 
     companion object {
         const val ISSUE_RELATION = "ISSUE_RELATION"

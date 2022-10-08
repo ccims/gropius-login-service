@@ -31,11 +31,11 @@ import java.net.URI
     )]
 )
 @Authorization(
-    TrackablePermission.LINK_TO_ISSUES,
+    TrackablePermission.RELATE_TO_ISSUES,
     allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 @Authorization(
-    TrackablePermission.LINK_FROM_ISSUES,
+    TrackablePermission.RELATE_FROM_ISSUES,
     allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 @Authorization(

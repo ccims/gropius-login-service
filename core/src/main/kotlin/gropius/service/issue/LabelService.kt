@@ -80,7 +80,7 @@ class LabelService(
         input.color.ifPresent {
             label.color = it
         }
-        updateNamedAuditedNode(label, input, getUser(authorizationContext))
+        updateNamedAuditedNode(label, input, getUser(authorizationContext), OffsetDateTime.now())
         return repository.save(label).awaitSingle()
     }
 
