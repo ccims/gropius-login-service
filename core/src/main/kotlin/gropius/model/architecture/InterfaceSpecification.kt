@@ -7,7 +7,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.template.BaseTemplate
 import gropius.model.template.InterfaceSpecificationTemplate
 import gropius.model.template.MutableTemplatedNode
-import io.github.graphglue.model.property.NodeCache
+import gropius.model.user.permission.TrackablePermission
 import org.springframework.data.annotation.Transient
 import org.springframework.data.neo4j.core.schema.CompositeProperty
 
@@ -22,6 +22,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["component", "versions"])
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["component"])
+@Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["component"])
 class InterfaceSpecification(
     name: String,
     description: String,
@@ -65,8 +66,4 @@ class InterfaceSpecification(
     @delegate:Transient
     val component by NodeProperty<Component>()
 
-    @GraphQLIgnore
-    override suspend fun relatedTrackable(cache: NodeCache?): Trackable {
-        return component(cache).value
-    }
 }

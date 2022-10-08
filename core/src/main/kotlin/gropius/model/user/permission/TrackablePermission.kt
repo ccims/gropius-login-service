@@ -3,7 +3,7 @@ package gropius.model.user.permission
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.architecture.IMSProject
 import gropius.model.architecture.Trackable
-import gropius.model.architecture.Project
+import gropius.model.architecture.InterfaceSpecification
 import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
@@ -44,6 +44,12 @@ abstract class TrackablePermission<T : Trackable>(
          * Permission to check if the user can link **from** [Issue]s on the [Trackable]
          */
         const val LINK_FROM_ISSUES = "LINK_FROM_ISSUES"
+
+        /**
+         * Permission to check if the user can affect entities part of this [Trackable],
+         * e.g. the [Trackable] itself or [InterfaceSpecification]s with [Issue]s
+         */
+        const val AFFECT_ENTITIES_WITH_ISSUES = "LINK_FROM_ISSUES"
 
         /**
          * Permission to check if the user can moderate [Issue]s on the [Trackable]

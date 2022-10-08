@@ -204,8 +204,6 @@ class IssueService(
                 .map { removeArtefactFromIssue(issue, it, atTime.plusNanos(timeOffset++), byUser) }
             event.childItems() += issue.labels().filter { Collections.disjoint(issue.trackables(), it.trackables()) }
                 .map { removeLabelFromIssue(issue, it, atTime.plusNanos(timeOffset++), byUser) }
-            event.childItems() += issue.affects().filter { it.relatedTrackable() == trackable }
-                .map { removeAffectedEntityFromIssue(issue, it, atTime.plusNanos(timeOffset), byUser) }
         }
         return event
     }
@@ -942,7 +940,7 @@ class IssueService(
     /**
      * Adds an [AffectedByIssue] to an [Issue], returns the created [AddedAffectedEntityEvent],
      * or `null` if the [AffectedByIssue] was already on the [Issue].
-     * Checks the authorization status, checks that the [AffectedByIssue] can be added to on the [Issue]
+     * Checks the authorization status.
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines which [AffectedByIssue] to add to which [Issue]
@@ -953,11 +951,12 @@ class IssueService(
     ): AddedAffectedEntityEvent? {
         input.validate()
         val issue = repository.findById(input.issue)
+        checkManageIssuesPermission(issue, authorizationContext)
         val affectedEntity = affectedByIssueRepository.findById(input.affectedEntity)
         checkPermission(
-            affectedEntity.relatedTrackable(),
-            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
-            "manage Issues on the Trackable related to the affectedEntity"
+            affectedEntity,
+            Permission(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, authorizationContext),
+            "affect the entity with Issues"
         )
         return if (affectedEntity !in issue.affects()) {
             return timelineItemRepository.save(
@@ -975,7 +974,6 @@ class IssueService(
      * Only adds the [affectedEntity] to the `affects` on the [issue] if no newer timeline item exists which removes
      * it again.
      * Does not check the authorization status.
-     * Checks if the [affectedEntity] can be affected by the [issue].
      * Does neither save the created [AddedToPinnedIssuesEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [AddedAffectedEntityEvent] afterwards.
      *
@@ -989,10 +987,6 @@ class IssueService(
     suspend fun addAffectedEntityToIssue(
         issue: Issue, affectedEntity: AffectedByIssue, atTime: OffsetDateTime, byUser: User
     ): AddedAffectedEntityEvent {
-        val relatedTrackable = affectedEntity.relatedTrackable()
-        if (relatedTrackable !in issue.trackables()) {
-            throw IllegalArgumentException("The Issue is not on a Trackable related to the entity")
-        }
         val event = AddedAffectedEntityEvent(atTime, atTime)
         event.addedAffectedEntity().value = affectedEntity
         createdTimelineItem(issue, event, atTime, byUser)
@@ -1020,11 +1014,16 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val affectedEntity = affectedByIssueRepository.findById(input.affectedEntity)
-        checkPermission(
-            affectedEntity.relatedTrackable(),
-            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
-            "manage Issues on the Trackable related to the affectedEntity"
-        )
+        if (!(evaluatePermission(
+                issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext)
+            ) || evaluatePermission(
+                affectedEntity, Permission(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, authorizationContext)
+            ))
+        ) {
+            throw IllegalArgumentException(
+                "User has neither the permission to manage the Issue nor to affect the entity with issues"
+            )
+        }
         return if (affectedEntity in issue.affects()) {
             return timelineItemRepository.save(
                 removeAffectedEntityFromIssue(

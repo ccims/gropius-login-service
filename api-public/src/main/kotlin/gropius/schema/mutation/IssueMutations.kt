@@ -351,9 +351,8 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Adds an AffectedByIssue to an Issue, requires MANAGE_ISSUES on the Trackable associated with the 
-        AffectedByIssue.
-        Additionally, the Issue must be on that Trackable.
+        """Adds an AffectedByIssue to an Issue, requires MANAGE_ISSUES on any of the Trackables the Issue is on,
+        and AFFECT_ENTITIES_WITH_ISSUES on the Trackable associated with the AffectedByIssue.
         If the Issue already affects the AffectedByIssue, no event is created.
         """
     )
@@ -366,8 +365,8 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Removes an AffectedByIssue from an Issue, requires MANAGE_ISSUES on the Trackable associated with the
-        AffectedByIssue.
+        """Removes an AffectedByIssue from an Issue, requires MANAGE_ISSUES on any of the Trackables the Issue is on,
+        or AFFECT_ENTITIES_WITH_ISSUES on the Trackable associated with the AffectedByIssue.
         If the Issue does not affect the AffectedByIssue, no event is created.
         """
     )
