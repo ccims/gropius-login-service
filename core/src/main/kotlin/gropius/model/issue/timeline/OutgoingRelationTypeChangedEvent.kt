@@ -3,17 +3,15 @@ package gropius.model.issue.timeline
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
-import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
 @GraphQLDescription(
-    """Event representing that an outgoing IssueRelation was removed.
+    """Event representing that the type of an incoming IssueRelation changed.
     READ is granted if READ is granted on `issue`.
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["issue"])
-class RemovedOutgoingRelationEvent(
-    createdAt: OffsetDateTime,
-    lastModifiedAt: OffsetDateTime,
-) : RemovedRelationEvent(createdAt, lastModifiedAt)
+class OutgoingRelationTypeChangedEvent(
+    createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
+) : RelationTypeChangedEvent(createdAt, lastModifiedAt)
