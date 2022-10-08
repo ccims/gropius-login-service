@@ -21,7 +21,7 @@ class TemplatedFieldChangedEvent(
     val oldValue: String?,
     @GraphQLIgnore
     val newValue: String?
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     @GraphQLDescription("The old value of the templated field.")
     @GraphQLType("JSON")

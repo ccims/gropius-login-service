@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription("Event representing that an Artefact was removed from an Issue.")
 class RemovedArtefactEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val REMOVED_ARTEFACT = "REMOVED_ARTEFACT"

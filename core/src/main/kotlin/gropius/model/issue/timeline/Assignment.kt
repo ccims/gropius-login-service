@@ -16,7 +16,7 @@ import java.time.OffsetDateTime
     An Assignment is only active if it is still in `assignments` on Issue.
     """
 )
-class Assignment(createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime) : TimelineItem(createdAt, lastModifiedAt) {
+class Assignment(createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val TYPE = "TYPE"

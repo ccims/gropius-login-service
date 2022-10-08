@@ -33,7 +33,7 @@ abstract class Comment(
     @FilterProperty
     @OrderProperty
     var bodyLastEditedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val BODY_LAST_EDITED_BY = "BODY_LAST_EDITED_BY"

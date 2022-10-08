@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription("Event representing that a Label was removed from an Issue.")
 class RemovedLabelEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val REMOVED_LABEL = "REMOVED_LABEL"

@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 class RemovedIncomingRelationEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val REMOVED_RELATION = "REMOVED_RELATION"

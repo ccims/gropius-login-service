@@ -16,7 +16,7 @@ import java.time.OffsetDateTime
 )
 class RemovedAssignmentEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val REMOVED_ASSIGNMENT = "REMOVED_ASSIGNMENT"

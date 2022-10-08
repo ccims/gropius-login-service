@@ -17,4 +17,4 @@ class EstimatedTimeChangedEvent(
     @property:GraphQLDescription("The new estimated time of the Issue.")
     @FilterProperty
     val newEstimatedTime: Duration?
-) : TimelineItem(createdAt, lastModifiedAt)
+) : PublicTimelineItem(createdAt, lastModifiedAt)

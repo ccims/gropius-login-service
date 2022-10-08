@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription("Event representing that a Label was added to an Issue.")
 class AddedLabelEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val ADDED_LABEL = "ADDED_LABEL"

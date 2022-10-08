@@ -13,7 +13,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription("Event representing that the state of an Issue changed.")
 class StateChangedEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val OLD_STATE = "OLD_STATE"

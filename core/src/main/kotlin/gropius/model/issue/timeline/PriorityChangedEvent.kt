@@ -14,7 +14,7 @@ import java.time.OffsetDateTime
 class PriorityChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val OLD_PRIORITY = "OLD_PRIORITY"

@@ -18,7 +18,7 @@ import java.time.OffsetDateTime
 class IssueRelation(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val TYPE = "TYPE"

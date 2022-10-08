@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 @GraphQLDescription("Event representing that an Artefact was added to an Issue.")
 class AddedArtefactEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val ADDED_ARTEFACT = "ADDED_ARTEFACT"

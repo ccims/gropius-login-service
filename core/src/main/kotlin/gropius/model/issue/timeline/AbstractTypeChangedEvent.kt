@@ -15,7 +15,7 @@ import java.time.OffsetDateTime
 @GraphQLIgnore
 abstract class AbstractTypeChangedEvent<T : Node>(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val OLD_TYPE = "OLD_TYPE"

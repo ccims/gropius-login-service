@@ -16,4 +16,4 @@ class TitleChangedEvent(
     @property:GraphQLDescription("The new title.")
     @FilterProperty
     val newTitle: String
-) : TimelineItem(createdAt, lastModifiedAt)
+) : PublicTimelineItem(createdAt, lastModifiedAt)

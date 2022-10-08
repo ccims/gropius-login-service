@@ -16,4 +16,4 @@ class StartDateChangedEvent(
     @property:GraphQLDescription("The new start date.")
     @FilterProperty
     val newStartDate: OffsetDateTime?
-) : TimelineItem(createdAt, lastModifiedAt)
+) : PublicTimelineItem(createdAt, lastModifiedAt)
