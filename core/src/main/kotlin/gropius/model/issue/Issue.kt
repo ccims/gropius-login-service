@@ -30,8 +30,6 @@ import java.time.OffsetDateTime
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["trackables"])
-@Authorization(TrackablePermission.RELATE_TO_ISSUES, allowFromRelated = ["trackables"])
-@Authorization(TrackablePermission.RELATE_FROM_ISSUES, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.MODERATOR, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.COMMENT, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.MANAGE_ISSUES, allowFromRelated = ["trackables"])

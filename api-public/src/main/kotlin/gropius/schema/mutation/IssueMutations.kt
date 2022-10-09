@@ -438,8 +438,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Creates an IssueRelation, requires RELATE_FROM_ISSUES on any of the Trackables the Issue is on, and
-        RELATE_TO_ISSUES on any of the Trackables the related Issue is on.
+        """Creates an IssueRelation, requires MANAGE_ISSUES on any of the Trackables the Issue is on.
         Additionally, if present, the type must be compatible with the template of the Issue.            
         """
     )
@@ -467,7 +466,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Removes an IssueRelation from an Issue, require RELATE_FROM_ISSUES on any of the Trackables the Issue the
+        """Removes an IssueRelation from an Issue, require MANAGE_ISSUES on any of the Trackables the Issue the
         IssueRelation starts at is on.
         If the IssueRelation was already removed, no event is created.
         """

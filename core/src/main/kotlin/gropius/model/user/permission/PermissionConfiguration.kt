@@ -41,16 +41,6 @@ class PermissionConfiguration {
                 This includes adding Issues from other Trackables.
             """.trimIndent()
         ), PermissionEntry(
-            TrackablePermission.RELATE_TO_ISSUES, """
-                Allows to create IssueRelations from Issues (on this or other Trackables) **to** Issues on this
-                Trackable. 
-            """.trimIndent()
-        ), PermissionEntry(
-            TrackablePermission.RELATE_FROM_ISSUES, """
-                Allows to create IssueRelations **from** Issues on this Trackable to other Issues
-                (on this or other Trackables).
-            """.trimIndent()
-        ), PermissionEntry(
             TrackablePermission.MODERATOR, """
                 Allows to moderate Issues on this Trackable.
                 This allows everything `MANAGE_ISSUES` allows.

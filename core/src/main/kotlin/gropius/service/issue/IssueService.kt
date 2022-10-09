@@ -1328,14 +1328,10 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val relatedIssue = repository.findById(input.relatedIssue)
-        checkPermission(
-            issue,
-            Permission(TrackablePermission.RELATE_FROM_ISSUES, authorizationContext),
-            "create IssueRelations starting at issue"
-        )
+        checkManageIssuesPermission(issue, authorizationContext)
         checkPermission(
             relatedIssue,
-            Permission(TrackablePermission.RELATE_FROM_ISSUES, authorizationContext),
+            Permission(NodePermission.READ, authorizationContext),
             "create IssueRelations ending at relatedIssue"
         )
         val issueRelationType = input.issueRelationType?.let { issueRelationTypeRepository.findById(it) }
@@ -1487,11 +1483,7 @@ class IssueService(
         input.validate()
         val issueRelation = issueRelationRepository.findById(input.issueRelation)
         val issue = issueRelation.issue().value
-        checkPermission(
-            issue,
-            Permission(TrackablePermission.RELATE_FROM_ISSUES, authorizationContext),
-            "manage outgoing relations on the Issue at the start of the IssueRelation"
-        )
+        checkManageIssuesPermission(issue, authorizationContext)
         return if (issueRelation in issue.outgoingRelations()) {
             val event = removeIssueRelation(issueRelation, OffsetDateTime.now(), getUser(authorizationContext))
             repository.save(issueRelation.relatedIssue().value).awaitSingle()
