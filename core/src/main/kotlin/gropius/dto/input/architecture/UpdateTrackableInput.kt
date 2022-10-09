@@ -4,7 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.UpdateNamedNodeInput
-import gropius.dto.input.ensuredisjoint
+import gropius.dto.input.ensureDisjoint
 import gropius.model.architecture.Trackable
 import java.net.URI
 import kotlin.properties.Delegates
@@ -30,6 +30,6 @@ abstract class UpdateTrackableInput : UpdateNamedNodeInput() {
 
     override fun validate() {
         super.validate()
-        ::addedPermissions ensuredisjoint ::removedPermissions
+        ::addedPermissions ensureDisjoint ::removedPermissions
     }
 }

@@ -1,7 +1,6 @@
 package gropius.dto.input
 
 import com.expediagroup.graphql.generator.execution.OptionalInput
-import com.expediagroup.graphql.generator.scalars.ID
 import kotlin.reflect.KProperty0
 
 /**
@@ -41,7 +40,7 @@ fun <T> OptionalInput<T>.orElse(value: T): T {
  * @param otherProperty the other property
  * @throws IllegalArgumentException if both lists are present and not disjoint
  */
-infix fun KProperty0<OptionalInput<List<*>>>.ensuredisjoint(otherProperty: KProperty0<OptionalInput<List<*>>>) {
+infix fun KProperty0<OptionalInput<List<*>>>.ensureDisjoint(otherProperty: KProperty0<OptionalInput<List<*>>>) {
     this.get().ifPresent { thisIds ->
         otherProperty.get().ifPresent {
             val commonIds = thisIds intersect it.toSet()

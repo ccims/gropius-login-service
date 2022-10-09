@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.issue.*
+import gropius.dto.input.orElse
 import gropius.model.architecture.AffectedByIssue
 import gropius.model.architecture.Trackable
 import gropius.model.issue.Artefact
@@ -16,6 +17,7 @@ import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
 import gropius.repository.architecture.AffectedByIssueRepository
 import gropius.repository.architecture.TrackableRepository
+import gropius.repository.findAllById
 import gropius.repository.findById
 import gropius.repository.issue.ArtefactRepository
 import gropius.repository.issue.IssueRepository
@@ -1150,8 +1152,10 @@ class IssueService(
         checkManageIssuesPermission(issue, authorizationContext)
         val user = userRepository.findById(input.user)
         val assignmentType = input.assignmentType?.let { assignmentTypeRepository.findById(it) }
-        val assignment =
-            createAssignment(issue, user, assignmentType, OffsetDateTime.now(), getUser(authorizationContext))
+        val byUser = getUser(authorizationContext)
+        val atTime = OffsetDateTime.now()
+        val assignment = createAssignment(issue, user, assignmentType, atTime, byUser)
+        createdAuditedNode(assignment, input, byUser)
         return assignmentRepository.save(assignment).awaitSingle()
     }
 
@@ -1335,9 +1339,9 @@ class IssueService(
             "create IssueRelations ending at relatedIssue"
         )
         val issueRelationType = input.issueRelationType?.let { issueRelationTypeRepository.findById(it) }
-        val issueRelation = createIssueRelation(
-            issue, relatedIssue, issueRelationType, OffsetDateTime.now(), getUser(authorizationContext)
-        )
+        val byUser = getUser(authorizationContext)
+        val issueRelation = createIssueRelation(issue, relatedIssue, issueRelationType, OffsetDateTime.now(), byUser)
+        createdAuditedNode(issueRelation, input, byUser)
         return issueRelationRepository.save(issueRelation).awaitSingle()
     }
 
@@ -1521,6 +1525,59 @@ class IssueService(
         issue.outgoingRelations() -= issueRelation
         relatedIssue.incomingRelations() -= issueRelation
         return event
+    }
+
+    /**
+     * Creates a new [IssueComment], returns the created [IssueComment].
+     * Checks the authorization status, and checks that the referenced [Artefact] can be used on the [Issue].
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the [Issue], [User] and optional [IssueRelationType] of the [IssueRelation]
+     * @return the saved created [IssueComment]
+     */
+    suspend fun createIssueComment(
+        authorizationContext: GropiusAuthorizationContext, input: CreateIssueCommentInput
+    ): IssueComment {
+        input.validate()
+        val issue = repository.findById(input.issue)
+        checkManageIssuesPermission(issue, authorizationContext)
+        val artefacts = artefactRepository.findAllById((input.referencedArtefacts.orElse(emptyList())))
+        for (artefact in artefacts) {
+            checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
+        }
+        val byUser = getUser(authorizationContext)
+        val issueComment = createIssueComment(issue, input.body, artefacts, OffsetDateTime.now(), byUser)
+        createdAuditedNode(issueComment, input, byUser)
+        return timelineItemRepository.save(issueComment).awaitSingle()
+    }
+
+    /**
+     * Creates a new IssueComment on [issue] at [atTime] as [byUser].
+     * Does not check the authorization status.
+     * Checks for each [Artefact] in [referencedArtefacts] that it is on a [Trackable] the [issue] is on.
+     * Does neither save the created [IssueComment] nor the [issue].
+     * It is necessary to save the [issue] or returned [IssueRelation] afterwards.
+     *
+     * @param issue the [Issue] from which the created [IssueRelation] starts
+     * @param body the body of the created [IssueComment]
+     * @param referencedArtefacts [Artefact]s the created [IssueComment] should reference
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @returns the created [IssueComment]
+     */
+    suspend fun createIssueComment(
+        issue: Issue, body: String, referencedArtefacts: List<Artefact>, atTime: OffsetDateTime, byUser: User
+    ): IssueComment {
+        for (artefact in referencedArtefacts) {
+            if (artefact.trackable().value !in issue.trackables()) {
+                throw IllegalStateException("Artefact cannot be referenced as it is not on any of the Trackables the Issue is on")
+            }
+        }
+        val issueComment = IssueComment(atTime, atTime, body, atTime, false)
+        issueComment.referencedArtefacts() += referencedArtefacts
+        issue.issueComments() += issueComment
+        createdTimelineItem(issue, issueComment, atTime, byUser)
+        return issueComment
     }
 
     /**
