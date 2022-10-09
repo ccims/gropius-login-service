@@ -20,11 +20,6 @@ class ComponentPermission(
 ) : TrackablePermission<Component>(name, description, entries, allUsers) {
 
     companion object {
-        /**
-         * Permission to check if a user can create [Relation]s with a version of the [Component]
-         * or an [Interface] of the [Component] as end
-         */
-        const val RELATE_TO_COMPONENT = "RELATE_TO_COMPONENT"
 
         /**
          * Permission to check if a user can create [Relation]s with a version of the [Component]

@@ -1,7 +1,6 @@
 package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import gropius.authorization.RELATED_TO_NODE_PERMISSION_RULE
 import gropius.model.user.permission.COMPONENT_PERMISSION_ENTRY_NAME
 import gropius.model.user.permission.ComponentPermission
 import gropius.model.user.permission.NodePermission
@@ -27,10 +26,6 @@ import java.net.URI
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["versions"])
-@Authorization(
-    ComponentPermission.RELATE_TO_COMPONENT,
-    allow = [Rule(COMPONENT_PERMISSION_ENTRY_NAME, options = [NodePermission.ADMIN])]
-)
 @Authorization(
     ComponentPermission.RELATE_FROM_COMPONENT,
     allow = [Rule(COMPONENT_PERMISSION_ENTRY_NAME, options = [NodePermission.ADMIN])]

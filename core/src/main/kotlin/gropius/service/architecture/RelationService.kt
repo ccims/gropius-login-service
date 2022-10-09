@@ -89,7 +89,7 @@ class RelationService(
         start: RelationPartner,
         end: RelationPartner,
         authorizationContext: GropiusAuthorizationContext
-        ) {
+    ) {
         checkPermission(
             start,
             Permission(ComponentPermission.RELATE_FROM_COMPONENT, authorizationContext),
@@ -97,7 +97,7 @@ class RelationService(
         )
         checkPermission(
             end,
-            Permission(ComponentPermission.RELATE_TO_COMPONENT, authorizationContext),
+            Permission(NodePermission.READ, authorizationContext),
             "use the specified end in Relations"
         )
     }
@@ -208,14 +208,11 @@ class RelationService(
     ) {
         input.validate()
         val relation = repository.findById(input.id)
-        if (!evaluatePermission(
-                relation.start().value, Permission(ComponentPermission.RELATE_FROM_COMPONENT, authorizationContext)
-            ) && !evaluatePermission(
-                relation.end().value, Permission(ComponentPermission.RELATE_TO_COMPONENT, authorizationContext)
-            )
-        ) {
-            throw IllegalArgumentException("User does not have permission to delete the Relation")
-        }
+        checkPermission(
+            relation.start().value,
+            Permission(ComponentPermission.RELATE_FROM_COMPONENT, authorizationContext),
+            "delete the Relation"
+        )
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.deleteRelation(relation)
         nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
