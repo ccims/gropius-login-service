@@ -163,7 +163,11 @@ class RelationService(
     ): Relation {
         input.validate()
         val relation = repository.findById(input.id)
-        checkRelationAuthorization(relation.start().value, relation.end().value, authorizationContext)
+        checkPermission(
+            relation.start().value,
+            Permission(ComponentPermission.RELATE_FROM_COMPONENT, authorizationContext),
+            "update the Relation"
+        )
         val nodesToSave = mutableSetOf<Node>(relation)
         nodesToSave += updateRelationTemplate(input, relation)
         input.addedStartParts.ifPresent { relation.startParts() += getInterfaceParts(relation.start().value, it) }
