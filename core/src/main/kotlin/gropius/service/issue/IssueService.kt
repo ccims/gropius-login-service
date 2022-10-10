@@ -85,6 +85,25 @@ class IssueService(
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
+     * Deletes an [Issue].
+     * Checks the authorization status
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines which [Issue] to delete
+     */
+    suspend fun deleteIssue(authorizationContext: GropiusAuthorizationContext, input: DeleteNodeInput) {
+        val issue = repository.findById(input.id)
+        for (trackable in issue.trackables()) {
+            checkPermission(
+                issue,
+                Permission(TrackablePermission.MODERATOR, authorizationContext),
+                "delete Issues on a Trackable the Issue is on"
+            )
+        }
+        deleteIssue(issue)
+    }
+
+    /**
      * Deletes an [Issue]
      * Does not check the authorization status
      *
@@ -158,7 +177,7 @@ class IssueService(
      * Removes an [Issue] from a [Trackable], returns the created [RemovedFromPinnedIssuesEvent],
      * or `null` if the [Issue] was not pinned on the [Trackable].
      * Also removes [Label]s and [Artefact]s if necessary, and unpins it on the specified [Trackable].
-     * Checks the authorization status
+     * Checks the authorization status, checks that the [Issue] remains on at least one [Trackable].
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines which [Issue] to remove from which [Trackable]
@@ -191,6 +210,7 @@ class IssueService(
      * Creates the event even if the [issue] was not on the [trackable].
      * Only removes the [issue] from the [trackable] if no newer timeline item exists which adds it again.
      * Does not check the authorization status.
+     * Checks that the [issue] remains on at least one [Trackable].
      * Does neither save the created [RemovedFromTrackableEvent] nor the [issue].
      * It is necessary to save the [issue] or returned [RemovedFromTrackableEvent] afterwards.
      *
@@ -211,6 +231,9 @@ class IssueService(
             ) { it.addedToTrackable().value == trackable }
         ) {
             issue.trackables() -= trackable
+            if (issue.trackables().isEmpty()) {
+                throw IllegalStateException("An Issue must remain on at least Trackable")
+            }
             var timeOffset = 0L
             if (trackable in issue.pinnedOn()) {
                 event.childItems() += removeIssueFromPinnedIssues(
@@ -1576,7 +1599,12 @@ class IssueService(
      * @returns the created [IssueComment]
      */
     suspend fun createIssueComment(
-        issue: Issue, answers: Comment?, body: String, referencedArtefacts: List<Artefact>, atTime: OffsetDateTime, byUser: User
+        issue: Issue,
+        answers: Comment?,
+        body: String,
+        referencedArtefacts: List<Artefact>,
+        atTime: OffsetDateTime,
+        byUser: User
     ): IssueComment {
         if (answers != null && answers.issue().value != issue) {
             throw IllegalStateException("An IssueComment must answer a Comment on the same Issue")
@@ -1721,10 +1749,7 @@ class IssueService(
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
      */
     suspend fun updateBody(
-        body: Body,
-        newBodyValue: String?,
-        atTime: OffsetDateTime,
-        byUser: User
+        body: Body, newBodyValue: String?, atTime: OffsetDateTime, byUser: User
     ) {
         if (newBodyValue != null && newBodyValue != body.body && atTime >= body.bodyLastEditedAt) {
             body.body = newBodyValue
@@ -1764,9 +1789,7 @@ class IssueService(
      * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
      */
     suspend fun deleteIssueComment(
-        issueComment: IssueComment,
-        atTime: OffsetDateTime,
-        byUser: User
+        issueComment: IssueComment, atTime: OffsetDateTime, byUser: User
     ) {
         issueComment.isCommentDeleted = true
         issueComment.referencedArtefacts().clear()

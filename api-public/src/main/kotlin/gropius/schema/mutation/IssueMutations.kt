@@ -34,6 +34,16 @@ class IssueMutations(
     private val artefactService: ArtefactService
 ) : Mutation {
 
+    @GraphQLDescription("Deletes the specified Issue, requires MODERATOR on all of the Trackables the Issue is on.")
+    @AutoPayloadType("The id of the deleted Issue")
+    suspend fun deleteComponent(
+        @GraphQLDescription("Defines which Issue to delete")
+        input: DeleteNodeInput, dfe: DataFetchingEnvironment
+    ): ID {
+        issueService.deleteIssue(dfe.gropiusAuthorizationContext, input)
+        return input.id
+    }
+
     @GraphQLDescription(
         """Creates a new Label on at least one Trackable. Requires MANAGE_LABELS on all provided Trackables.
         """
@@ -201,6 +211,7 @@ class IssueMutations(
     @GraphQLDescription(
         """Removes an Issue from a Trackable, requires MANAGE_ISSUES on the Trackable where the Issue should
         be removed from.
+        Additionally requires that the Issue is on at least one Trackable afterwards.
         If the Issue is not on the Trackable, no event is created.
         Also removes any Artefacts, Labels and AffectedByIssue which cannot be any more on the Issue, 
         and unpins the issue on the defined Trackable if it was pinned.
