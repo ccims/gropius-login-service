@@ -479,4 +479,60 @@ class IssueMutations(
         return issueService.removeIssueRelation(dfe.gropiusAuthorizationContext, input)
     }
 
+    @GraphQLDescription(
+        """Creates an IssueComment, requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        Requires READ on referenced Artefacts, additionally, those must be part of a Trackable the Issue is on.
+        If present, the Comment it answers must be on the same Issue.
+        """
+    )
+    @AutoPayloadType("The created IssueComment")
+    suspend fun createIssueComment(
+        @GraphQLDescription("Defines the IssueComment")
+        input: CreateIssueCommentInput, dfe: DataFetchingEnvironment
+    ): IssueComment {
+        return issueService.createIssueComment(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Updates an IssueComment. If the user created the IssueComment, requires READ on any of the Trackables the
+        Issue is on. Otherwise, requires MODERATOR on any of the Trackables the Issue is on.
+        Requires READ on referenced Artefacts, additionally, added ones must be part of a Trackable the Issue is on.
+        """
+    )
+    @AutoPayloadType("The updated IssueComment")
+    suspend fun updateIssueComment(
+        @GraphQLDescription("Defines how to update which IssueComment")
+        input: UpdateIssueCommentInput, dfe: DataFetchingEnvironment
+    ): IssueComment {
+        return issueService.updateIssueComment(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Updates an IssueComment. If the user created the IssueComment, requires READ on any of the Trackables the
+        Issue is on. Otherwise, requires MODERATOR on any of the Trackables the Issue is on.
+        """
+    )
+    @AutoPayloadType("The updated Body")
+    suspend fun updateBody(
+        @GraphQLDescription("Defines how to update which Body")
+        input: UpdateBodyInput, dfe: DataFetchingEnvironment
+    ): Body {
+        return issueService.updateBody(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
+        """Deletes an IssueComment. If the user created the IssueComment, requires READ on any of the Trackables the
+        Issue is on. Otherwise, requires MODERATOR on any of the Trackables the Issue is on.
+        The IssueComment then is marked as deleted, its body set to "", and the referenced Artefacts are cleared.
+        It is no longer possible to update the IssueComment.
+        """
+    )
+    @AutoPayloadType("The updated IssueComment")
+    suspend fun deleteIssueComment(
+        @GraphQLDescription("Defines how to update which IssueComment")
+        input: DeleteNodeInput, dfe: DataFetchingEnvironment
+    ): IssueComment {
+        return issueService.deleteIssueComment(dfe.gropiusAuthorizationContext, input)
+    }
+
 }

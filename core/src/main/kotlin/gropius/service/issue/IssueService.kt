@@ -59,6 +59,7 @@ import kotlin.reflect.KMutableProperty0
  * @param issueRelationTypeRepository used to find [IssueRelationType]s by id
  * @param issueCommentRepository used to find [IssueComment]s by id
  * @param bodyRepository used to find [Body]s by id
+ * @param commentRepository used to find [Comment]s by id
  */
 @Service
 class IssueService(
@@ -79,7 +80,8 @@ class IssueService(
     private val issueRelationRepository: IssueRelationRepository,
     private val issueRelationTypeRepository: IssueRelationTypeRepository,
     private val issueCommentRepository: IssueCommentRepository,
-    private val bodyRepository: BodyRepository
+    private val bodyRepository: BodyRepository,
+    private val commentRepository: CommentRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -1534,6 +1536,7 @@ class IssueService(
     /**
      * Creates a new [IssueComment], returns the created [IssueComment].
      * Checks the authorization status, and checks that the referenced [Artefact] can be used on the [Issue].
+     * Also, checks that the [Comment] it answers, if present,  is on the same [Issue]
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines the [Issue], [User] and optional [IssueRelationType] of the [IssueRelation]
@@ -1549,8 +1552,9 @@ class IssueService(
         for (artefact in artefacts) {
             checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
         }
+        val answers = input.answers?.let { commentRepository.findById(it) }
         val byUser = getUser(authorizationContext)
-        val issueComment = createIssueComment(issue, input.body, artefacts, OffsetDateTime.now(), byUser)
+        val issueComment = createIssueComment(issue, answers, input.body, artefacts, OffsetDateTime.now(), byUser)
         createdAuditedNode(issueComment, input, byUser)
         return timelineItemRepository.save(issueComment).awaitSingle()
     }
@@ -1559,10 +1563,12 @@ class IssueService(
      * Creates a new IssueComment on [issue] at [atTime] as [byUser].
      * Does not check the authorization status.
      * Checks for each [Artefact] in [referencedArtefacts] that it is on a [Trackable] the [issue] is on.
+     * If present, checks that the [Comment] it [answers] is on the same [issue].
      * Does neither save the created [IssueComment] nor the [issue].
      * It is necessary to save the [issue] or returned [IssueRelation] afterwards.
      *
      * @param issue the [Issue] from which the created [IssueRelation] starts
+     * @param answers the [Comment] the created [IssueComment] answers
      * @param body the body of the created [IssueComment]
      * @param referencedArtefacts [Artefact]s the created [IssueComment] should reference
      * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
@@ -1570,9 +1576,13 @@ class IssueService(
      * @returns the created [IssueComment]
      */
     suspend fun createIssueComment(
-        issue: Issue, body: String, referencedArtefacts: List<Artefact>, atTime: OffsetDateTime, byUser: User
+        issue: Issue, answers: Comment?, body: String, referencedArtefacts: List<Artefact>, atTime: OffsetDateTime, byUser: User
     ): IssueComment {
+        if (answers != null && answers.issue().value != issue) {
+            throw IllegalStateException("An IssueComment must answer a Comment on the same Issue")
+        }
         val issueComment = IssueComment(atTime, atTime, body, atTime, false)
+        issueComment.answers().value = answers
         addArtefactsToIssueComment(issueComment, referencedArtefacts)
         issue.issueComments() += issueComment
         createdTimelineItem(issue, issueComment, atTime, byUser)

@@ -9,6 +9,8 @@ import gropius.dto.input.common.CreateExtensibleNodeInput
 class CreateIssueCommentInput(
     @GraphQLDescription("The id of the Issue the IssueComment is created on")
     val issue: ID,
+    @GraphQLDescription("The id of the Comment the created IssueComment answers")
+    val answers: ID?,
     @GraphQLDescription("Initial body of the IssueComment")
     val body: String,
     @GraphQLDescription("Ids of initially referenced artefacts")
