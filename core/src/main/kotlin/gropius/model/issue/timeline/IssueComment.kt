@@ -27,7 +27,7 @@ class IssueComment(
     @property:GraphQLDescription("If true, the IssueComment was deleted and the body is no longer visible.")
     @GraphQLName("isDeleted")
     @FilterProperty
-    val isCommentDeleted: Boolean
+    var isCommentDeleted: Boolean
 ) : Comment(createdAt, lastModifiedAt, body, bodyLastEditedAt) {
 
     companion object {

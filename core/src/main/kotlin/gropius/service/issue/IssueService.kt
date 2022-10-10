@@ -2,6 +2,7 @@ package gropius.service.issue
 
 import com.fasterxml.jackson.databind.JsonNode
 import gropius.authorization.GropiusAuthorizationContext
+import gropius.dto.input.common.DeleteNodeInput
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.issue.*
 import gropius.dto.input.orElse
@@ -12,6 +13,7 @@ import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.*
 import gropius.model.template.*
+import gropius.model.user.GropiusUser
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
@@ -22,9 +24,7 @@ import gropius.repository.findById
 import gropius.repository.issue.ArtefactRepository
 import gropius.repository.issue.IssueRepository
 import gropius.repository.issue.LabelRepository
-import gropius.repository.issue.timeline.AssignmentRepository
-import gropius.repository.issue.timeline.IssueRelationRepository
-import gropius.repository.issue.timeline.TimelineItemRepository
+import gropius.repository.issue.timeline.*
 import gropius.repository.template.*
 import gropius.repository.user.UserRepository
 import gropius.service.common.AuditedNodeService
@@ -57,6 +57,8 @@ import kotlin.reflect.KMutableProperty0
  * @param assignmentTypeRepository used to find [AssignmentType]s by id
  * @param issueRelationRepository used to find [IssueRelation]s by id
  * @param issueRelationTypeRepository used to find [IssueRelationType]s by id
+ * @param issueCommentRepository used to find [IssueComment]s by id
+ * @param bodyRepository used to find [Body]s by id
  */
 @Service
 class IssueService(
@@ -75,7 +77,9 @@ class IssueService(
     private val assignmentRepository: AssignmentRepository,
     private val assignmentTypeRepository: AssignmentTypeRepository,
     private val issueRelationRepository: IssueRelationRepository,
-    private val issueRelationTypeRepository: IssueRelationTypeRepository
+    private val issueRelationTypeRepository: IssueRelationTypeRepository,
+    private val issueCommentRepository: IssueCommentRepository,
+    private val bodyRepository: BodyRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
 
     /**
@@ -1568,16 +1572,195 @@ class IssueService(
     suspend fun createIssueComment(
         issue: Issue, body: String, referencedArtefacts: List<Artefact>, atTime: OffsetDateTime, byUser: User
     ): IssueComment {
+        val issueComment = IssueComment(atTime, atTime, body, atTime, false)
+        addArtefactsToIssueComment(issueComment, referencedArtefacts)
+        issue.issueComments() += issueComment
+        createdTimelineItem(issue, issueComment, atTime, byUser)
+        return issueComment
+    }
+
+    /**
+     * Adds [referencedArtefacts] to the `referencedArtefacts` of [issueComment]
+     * Does not mark the [issueComment] as updated
+     *
+     * @param issueComment the [IssueComment] where to add the [referencedArtefacts]
+     * @param referencedArtefacts the [Artefact]s to add
+     */
+    private suspend fun addArtefactsToIssueComment(issueComment: IssueComment, referencedArtefacts: List<Artefact>) {
+        val issue = issueComment.issue().value
         for (artefact in referencedArtefacts) {
             if (artefact.trackable().value !in issue.trackables()) {
                 throw IllegalStateException("Artefact cannot be referenced as it is not on any of the Trackables the Issue is on")
             }
         }
-        val issueComment = IssueComment(atTime, atTime, body, atTime, false)
         issueComment.referencedArtefacts() += referencedArtefacts
-        issue.issueComments() += issueComment
-        createdTimelineItem(issue, issueComment, atTime, byUser)
-        return issueComment
+    }
+
+    /**
+     * Updates an [IssueComment], returns the updated [IssueComment].
+     * Checks the authorization status, and checks that the added referenced [Artefact] can be used on the [Issue].
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the [IssueComment] to update
+     * @return the saved updated [IssueComment]
+     */
+    suspend fun updateIssueComment(
+        authorizationContext: GropiusAuthorizationContext, input: UpdateIssueCommentInput
+    ): IssueComment {
+        input.validate()
+        val issueComment = issueCommentRepository.findById(input.id)
+        val user = getUser(authorizationContext)
+        checkCommentEditPermission(issueComment, user, authorizationContext)
+        val addedArtefacts = artefactRepository.findAllById(input.addedReferencedArtefacts.orElse(emptyList()))
+        val removedArtefacts = artefactRepository.findAllById(input.removedReferencedArtefacts.orElse(emptyList()))
+        for (artefact in addedArtefacts + removedArtefacts) {
+            checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
+        }
+        val byUser = getUser(authorizationContext)
+        val atTime = OffsetDateTime.now()
+        updateIssueComment(issueComment, input.body.orElse(null), addedArtefacts, removedArtefacts, atTime, byUser)
+        updateAuditedNode(issueComment, input, byUser, atTime)
+        return timelineItemRepository.save(issueComment).awaitSingle()
+    }
+
+    /**
+     * Updates an [issueComment] at [atTime] as [byUser].
+     * Does not check the authorization status.
+     * Checks for each [Artefact] in [addedArtefacts] that it can be used with the [Issue] the [issueComment] is on
+     * Does not save the updated [IssueComment].
+     * It is necessary to save the updated [issueComment] afterwards.
+     *
+     * @param issueComment the [IssueComment] to update
+     * @param newBodyValue if not `null`, the new body of the [issueComment]
+     * @param addedArtefacts referenced [Artefact]s to add
+     * @param removedArtefacts referenced [Artefact]s to remove
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    suspend fun updateIssueComment(
+        issueComment: IssueComment,
+        newBodyValue: String?,
+        addedArtefacts: List<Artefact>,
+        removedArtefacts: List<Artefact>,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        issueComment.referencedArtefacts() -= removedArtefacts.toSet()
+        addArtefactsToIssueComment(issueComment, addedArtefacts)
+        if (newBodyValue != null && newBodyValue != issueComment.body && atTime >= issueComment.bodyLastEditedAt) {
+            issueComment.body = newBodyValue
+            issueComment.bodyLastEditedAt = atTime
+            issueComment.bodyLastEditedBy().value = byUser
+        }
+        updateAuditedNode(issueComment, byUser, atTime)
+    }
+
+    /**
+     * Checks that a [user] has the permission to update a [comment]
+     *
+     * @param comment the [Comment] to check for the permission on
+     * @param user the [User] who needs the permission
+     * @param authorizationContext required to check for the permission
+     * @throws IllegalStateException if the [user] does not have the permission
+     */
+    private suspend fun checkCommentEditPermission(
+        comment: Comment, user: GropiusUser, authorizationContext: GropiusAuthorizationContext
+    ) {
+        if (comment.createdBy().value != user) {
+            checkPermission(
+                comment, Permission(TrackablePermission.MODERATOR, authorizationContext), "update the IssueComment"
+            )
+        } else {
+            checkPermission(
+                comment, Permission(NodePermission.READ, authorizationContext), "update the IssueComment"
+            )
+        }
+    }
+
+    /**
+     * Updates an [IssueComment], returns the updated [IssueComment].
+     * Checks the authorization status, and checks that the added referenced [Artefact] can be used on the [Issue].
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the [IssueComment] to update
+     * @return the saved updated [IssueComment]
+     */
+    suspend fun updateBody(
+        authorizationContext: GropiusAuthorizationContext, input: UpdateBodyInput
+    ): Body {
+        input.validate()
+        val body = bodyRepository.findById(input.id)
+        val user = getUser(authorizationContext)
+        checkCommentEditPermission(body, user, authorizationContext)
+        val byUser = getUser(authorizationContext)
+        val atTime = OffsetDateTime.now()
+        updateBody(body, input.body.orElse(null), atTime, byUser)
+        updateAuditedNode(body, input, byUser, atTime)
+        return timelineItemRepository.save(body).awaitSingle()
+    }
+
+    /**
+     * Updates an [body] at [atTime] as [byUser].
+     * Does not check the authorization status.
+     * Does not save the updated [Body].
+     * It is necessary to save the updated [body] afterwards.
+     *
+     * @param body the [Body] to update
+     * @param newBodyValue if not `null`, the new body of the [body]
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    suspend fun updateBody(
+        body: Body,
+        newBodyValue: String?,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        if (newBodyValue != null && newBodyValue != body.body && atTime >= body.bodyLastEditedAt) {
+            body.body = newBodyValue
+            body.bodyLastEditedAt = atTime
+            body.bodyLastEditedBy().value = byUser
+        }
+        updateAuditedNode(body, byUser, atTime)
+    }
+
+    /**
+     * Deletes an [IssueComment], returns the deleted [IssueComment].
+     * Checks the authorization status.
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the [IssueComment] to delete
+     * @return the saved deleted [IssueComment]
+     */
+    suspend fun deleteIssueComment(
+        authorizationContext: GropiusAuthorizationContext, input: DeleteNodeInput
+    ): IssueComment {
+        input.validate()
+        val issueComment = issueCommentRepository.findById(input.id)
+        val user = getUser(authorizationContext)
+        checkCommentEditPermission(issueComment, user, authorizationContext)
+        deleteIssueComment(issueComment, OffsetDateTime.now(), getUser(authorizationContext))
+        return timelineItemRepository.save(issueComment).awaitSingle()
+    }
+
+    /**
+     * Deletes an [issueComment] at [atTime] as [byUser].
+     * Does not check the authorization status.
+     * Does not save the deleted [IssueComment].
+     * It is necessary to save the deleted [issueComment] afterwards.
+     *
+     * @param issueComment the [IssueComment] to delete
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    suspend fun deleteIssueComment(
+        issueComment: IssueComment,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        issueComment.isCommentDeleted = true
+        issueComment.referencedArtefacts().clear()
+        updateAuditedNode(issueComment, byUser, atTime)
     }
 
     /**
