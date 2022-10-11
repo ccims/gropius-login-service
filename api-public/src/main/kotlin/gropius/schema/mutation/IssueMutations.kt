@@ -505,7 +505,7 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
-        """Creates an IssueComment, requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        """Creates an IssueComment, requires COMMENT on any of the Trackables the Issue is on.
         Requires READ on referenced Artefacts, additionally, those must be part of a Trackable the Issue is on.
         If present, the Comment it answers must be on the same Issue.
         """

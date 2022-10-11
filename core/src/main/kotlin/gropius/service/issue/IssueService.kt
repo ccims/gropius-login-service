@@ -1646,7 +1646,7 @@ class IssueService(
     ): IssueComment {
         input.validate()
         val issue = repository.findById(input.issue)
-        checkManageIssuesPermission(issue, authorizationContext)
+        checkPermission(issue, Permission(TrackablePermission.COMMENT, authorizationContext), "create Comments")
         val artefacts = artefactRepository.findAllById((input.referencedArtefacts.orElse(emptyList())))
         for (artefact in artefacts) {
             checkPermission(artefact, Permission(NodePermission.READ, authorizationContext), "use the Artefact")
