@@ -1,9 +1,12 @@
 package gropius.service.issue
 
+import com.expediagroup.graphql.generator.execution.OptionalInput
+import com.expediagroup.graphql.generator.scalars.ID
 import com.fasterxml.jackson.databind.JsonNode
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.common.DeleteNodeInput
 import gropius.dto.input.common.JSONFieldInput
+import gropius.dto.input.ifPresent
 import gropius.dto.input.issue.*
 import gropius.dto.input.orElse
 import gropius.model.architecture.AffectedByIssue
@@ -17,6 +20,7 @@ import gropius.model.user.GropiusUser
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.TrackablePermission
+import gropius.repository.GropiusRepository
 import gropius.repository.architecture.AffectedByIssueRepository
 import gropius.repository.architecture.TrackableRepository
 import gropius.repository.findAllById
@@ -31,6 +35,7 @@ import gropius.service.common.AuditedNodeService
 import gropius.service.template.TemplatedNodeService
 import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
+import io.github.graphglue.model.Node
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -163,6 +168,278 @@ class IssueService(
         createdTimelineItem(issue, bodyItem, atTime, byUser)
         issue.body().value = bodyItem
         return issue
+    }
+
+    /**
+     * Changes the template of an [Issue], return the created [TemplateChangedEvent] or `null` if the [Issue]
+     * was already pinned on the [Trackable].
+     * Checks the authorization status, checks that all inputs are compatible with the new template.
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the new [IssueTemplate] and of which [Issue] to change it
+     * @return the saved created [TemplateChangedEvent] or `null` if no event was created
+     */
+    suspend fun changeIssueTemplate(
+        authorizationContext: GropiusAuthorizationContext, input: ChangeIssueTemplateInput
+    ): TemplateChangedEvent? {
+        val issue = repository.findById(input.issue)
+        checkManageIssuesPermission(issue, authorizationContext)
+        val template = issueTemplateRepository.findById(input.template)
+        return if (issue.template().value != template) {
+            timelineItemRepository.save(
+                changeIssueTemplate(
+                    issue,
+                    issue.template().value,
+                    template,
+                    input.templatedFields.orElse(emptyList()),
+                    input.type.orElse(null)?.let { issueTypeRepository.findById(it) },
+                    input.state.orElse(null)?.let { issueStateRepository.findById(it) },
+                    input.priority.orElse(null)?.let { issuePriorityRepository.findById(it) },
+                    input.assignmentTypeMapping.toMapping(assignmentTypeRepository),
+                    input.issueRelationTypeMapping.toMapping(issueRelationTypeRepository),
+                    OffsetDateTime.now(),
+                    getUser(authorizationContext)
+                )
+            ).awaitSingle()
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Transforms a list of [TypeMappingInput] to a mapping using the provided [typeRepository]
+     *
+     * @param T the type of the returned types
+     * @param typeRepository used to map [ID] to [T]
+     * @return the generated mapping
+     */
+    private suspend fun <T : Node> OptionalInput<List<TypeMappingInput>>.toMapping(
+        typeRepository: GropiusRepository<T, String>
+    ): Map<T, T?> {
+        ifPresent { inputs ->
+            val allTypeIds = inputs.flatMap { listOf(it.newType, it.oldType) }.filterNotNull().toSet()
+            val allTypesById = typeRepository.findAllById(allTypeIds).associateBy { it.graphQLId }
+            return inputs.associate { allTypesById[it.oldType]!! to allTypesById[it.newType] }
+        }
+        return emptyMap()
+    }
+
+    /**
+     * Changes the template of an [Issue], return the created [TemplateChangedEvent].
+     * Also creates the [TemplateChangedEvent] if the template of the issue does not change.
+     * Uses [templatedFields], [type], [state], [priority], [assignmentTypeMapping] and [issueRelationTypeMapping] to
+     * enforce compatibility with the new template, however only updates fields which are incompatible with the new
+     * template.
+     * Does not check the authorization status.
+     * Checks that all inputs are compatible with the new template, and checks that the templatedFields are valid
+     * after the update.
+     *
+     * @param issue the [Issue] to update the template of
+     * @param oldTemplate the old template of the [issue]
+     * @param newTemplate the new template of the [issue]
+     * @param templatedFields values to update incompatible templated fields
+     * @param type new [IssueType] in case existing one is incompatible
+     * @param state new [IssueState] in case existing one is incompatible
+     * @param priority new [IssuePriority] in case existing one is incompatible
+     * @param assignmentTypeMapping used to map incompatible [AssignmentType]s
+     * @param issueRelationTypeMapping used to map incompatible [IssueRelationType]s
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [TemplateChangedEvent]
+     */
+    suspend fun changeIssueTemplate(
+        issue: Issue,
+        oldTemplate: IssueTemplate,
+        newTemplate: IssueTemplate,
+        templatedFields: List<JSONFieldInput>,
+        type: IssueType?,
+        state: IssueState?,
+        priority: IssuePriority?,
+        assignmentTypeMapping: Map<AssignmentType, AssignmentType?>,
+        issueRelationTypeMapping: Map<IssueRelationType, IssueRelationType?>,
+        atTime: OffsetDateTime,
+        byUser: User
+    ): TemplateChangedEvent {
+        val event = TemplateChangedEvent(atTime, atTime)
+        event.oldTemplate().value = oldTemplate
+        event.newTemplate().value = newTemplate
+        createdTimelineItem(issue, event, atTime, byUser)
+        if (!existsNewerTimelineItem<TemplateChangedEvent>(issue, atTime) && issue.template().value != newTemplate) {
+            issue.template().value = newTemplate
+            var timeOffset = 1L
+            updateTemplatedFieldsAfterTemplateUpdate(
+                issue, event, templatedFields, atTime.plusNanos(timeOffset++), byUser
+            )
+            updateIssueFieldsAfterTemplateUpdate(
+                issue, event, type, state, priority, atTime.plusNanos(timeOffset++), byUser
+            )
+            updateAssignmentsAfterTemplateUpdate(
+                issue, event, assignmentTypeMapping, atTime.plusNanos(timeOffset++), byUser
+            )
+            updateIssueRelationsAfterTemplateUpdate(
+                issue, event, issueRelationTypeMapping, atTime.plusNanos(timeOffset), byUser
+            )
+        }
+        return event
+    }
+
+    /**
+     * Updates types of [Assignment] on [issue] where the old type is incompatible with the new template of [issue]
+     * based on [assignmentTypeMapping] and removes types with no replacement.
+     * Adds the crated events to `childItems` on [event]
+     *
+     * @param issue the [Issue] of which the template was updated
+     * @param event the event representing the template update
+     * @param assignmentTypeMapping used to map old [AssignmentType]s to new [AssignmentType]s
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    private suspend fun updateAssignmentsAfterTemplateUpdate(
+        issue: Issue,
+        event: TemplateChangedEvent,
+        assignmentTypeMapping: Map<AssignmentType, AssignmentType?>,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        val newTemplate = issue.template().value
+        for (assignment in issue.assignments()) {
+            val assignmentType = assignment.type().value
+            if (assignmentType != null && assignmentType !in newTemplate.assignmentTypes()) {
+                event.childItems() += changeAssignmentType(
+                    assignment, assignmentType, assignmentTypeMapping[assignmentType], atTime, byUser
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates types of [IssueRelation] on [issue] where the old type is incompatible with the new template of [issue]
+     * based on [issueRelationTypeMapping] and removes types with no replacement.
+     * Adds the crated events to `childItems` on [event]
+     *
+     * @param issue the [Issue] of which the template was updated
+     * @param event the event representing the template update
+     * @param issueRelationTypeMapping used to map old [IssueRelationType]s to new [IssueRelationType]s
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    private suspend fun updateIssueRelationsAfterTemplateUpdate(
+        issue: Issue,
+        event: TemplateChangedEvent,
+        issueRelationTypeMapping: Map<IssueRelationType, IssueRelationType?>,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        val newTemplate = issue.template().value
+        for (issueRelation in issue.outgoingRelations()) {
+            val issueRelationType = issueRelation.type().value
+            if (issueRelationType != null && issueRelationType !in newTemplate.relationTypes()) {
+                event.childItems() += changeIssueRelationType(
+                    issueRelation, issueRelationType, issueRelationTypeMapping[issueRelationType], atTime, byUser
+                )
+            }
+        }
+    }
+
+    /**
+     * Updates `type`, `state`, and `priority` on [issue] after a template update if the old value is incompatible
+     * with the new template.
+     * Adds the crated events to `childItems` on [event]
+     *
+     * @param issue the [Issue] of which the template was updated
+     * @param event the event representing the template update
+     * @param type new [IssueType] in case existing one is incompatible
+     * @param state new [IssueState] in case existing one is incompatible
+     * @param priority new [IssuePriority] in case existing one is incompatible
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    private suspend fun updateIssueFieldsAfterTemplateUpdate(
+        issue: Issue,
+        event: TemplateChangedEvent,
+        type: IssueType?,
+        state: IssueState?,
+        priority: IssuePriority?,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        val newTemplate = issue.template().value
+        if (issue.type().value !in newTemplate.issueTypes()) {
+            val existingType = type ?: throw IllegalStateException("Old IssueType not compatible")
+            event.childItems() += changeIssueType(
+                issue, issue.type().value, existingType, atTime, byUser
+            )
+        }
+        if (issue.state().value !in newTemplate.issueStates()) {
+            val existingState = state ?: throw IllegalStateException("Old IssueState not compatible")
+            event.childItems() += changeIssueState(
+                issue, issue.state().value, existingState, atTime, byUser
+            )
+        }
+        if (issue.priority().value !in newTemplate.issuePriorities()) {
+            event.childItems() += changeIssuePriority(
+                issue, issue.priority().value, priority, atTime, byUser
+            )
+        }
+    }
+
+    /**
+     * Updates templated fields on [issue] after a template update, uses [templatedFields] for new values for currently
+     * incompatible fields and removes fields which are no longer defined by the template.
+     * Adds the crated events to `childItems` on [event]
+     *
+     * @param issue the [Issue] of which the template was updated
+     * @param event the event representing the template update
+     * @param templatedFields new values for templated fields to update currently incompatible fields
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     */
+    private suspend fun updateTemplatedFieldsAfterTemplateUpdate(
+        issue: Issue,
+        event: TemplateChangedEvent,
+        templatedFields: List<JSONFieldInput>,
+        atTime: OffsetDateTime,
+        byUser: User
+    ) {
+        val newTemplate = issue.template().value
+        val templatedFieldsByName = templatedFields.associateBy { it.name }
+        for (field in newTemplate.templateFieldSpecifications.keys) {
+            if (!templatedNodeService.validateTemplatedField(issue, field)) {
+                event.childItems() += changeIssueTemplatedField(
+                    issue,
+                    templatedFieldsByName[field] ?: throw IllegalStateException("No new value for $field provided"),
+                    issue.templatedFields[field],
+                    atTime,
+                    byUser
+                )
+            }
+        }
+        issue.templatedFields.keys.filter { it !in newTemplate.templateFieldSpecifications }.forEach {
+            event.childItems() += removeTemplatedField(issue, it, atTime, byUser)
+        }
+    }
+
+    /**
+     * Removes a templated field from an [Issue] at [atTime] as [byUser].
+     * Should only be used during template update.
+     * Does not check the authorization status.
+     * Assumes that a templated field with name [field] exists.
+     * Does neither save the created [RemovedTemplatedFieldEvent] or the [issue].
+     * Requires to save the returned [RemovedTemplatedFieldEvent] or the [issue].
+     *
+     * @param issue the [Issue] from which the templated field is removed
+     * @param field the name of the templated field to remove
+     * @param atTime the point in time when the modification happened, updates [Issue.lastUpdatedAt] if necessary
+     * @param byUser the [User] who caused the update, updates [Issue.participants] if necessary
+     * @return the created [RemovedTemplatedFieldEvent]
+     */
+    private suspend fun removeTemplatedField(
+        issue: Issue, field: String, atTime: OffsetDateTime, byUser: User
+    ): RemovedTemplatedFieldEvent {
+        val event = RemovedTemplatedFieldEvent(atTime, atTime, field, issue.templatedFields[field]!!)
+        createdTimelineItem(issue, event, atTime, byUser)
+        issue.templatedFields.remove(field)
+        return event
     }
 
     /**
@@ -318,7 +595,7 @@ class IssueService(
             if (issue.trackables().isEmpty()) {
                 throw IllegalStateException("An Issue must remain on at least Trackable")
             }
-            var timeOffset = 0L
+            var timeOffset = 1L
             if (trackable in issue.pinnedOn()) {
                 event.childItems() += removeIssueFromPinnedIssues(
                     issue, trackable, atTime.plusNanos(timeOffset++), byUser

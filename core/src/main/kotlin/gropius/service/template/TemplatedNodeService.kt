@@ -149,6 +149,27 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
     }
 
     /**
+     * Validates a value of a templated field
+     *
+     * @param templatedNode the [TemplatedNode] of which a field should be validated
+     * @param field the name of the templated field to validate
+     * @return `true` if the current value of the templated field is compatible with the template
+     */
+    suspend fun validateTemplatedField(templatedNode: TemplatedNode, field: String): Boolean {
+        val unparsedValue = templatedNode.templatedFields[field]
+        return if (unparsedValue != null) {
+            val schema = templatedNode.template().value.templateFieldSpecifications[field]!!
+            val parsedSchema = objectMapper.readTree(schema)
+            val validator =
+                JsonSchemaFactory.getInstance(SpecVersionDetector.detect(parsedSchema)).getSchema(parsedSchema)
+            val validationResult = validator.validate(objectMapper.readTree(unparsedValue))
+            return validationResult.isEmpty()
+        } else {
+            false
+        }
+    }
+
+    /**
      * Validates a value for a templated field
      *
      * @param value the new value for the templated field

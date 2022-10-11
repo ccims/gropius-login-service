@@ -59,6 +59,25 @@ class IssueMutations(
     }
 
     @GraphQLDescription(
+        """Changes the Template of an Issue. Requires MANAGE_ISSUES on any of the Trackables the Issue is on.
+        Incompatible old values of type, state, priority, templated fields, and priorities of Assignments and outgoing
+        IssueRelations are updated with provided new values, requires that those new values are compatible with the new
+        template. If the old value already is compatible with the new template, fields are not changed!
+        In case of priority and types of Assignments and outgoing IssueRelations, if the old value is incompatible and
+        no new value was provided, the old value is removed.
+        Only creates an event if the new template is not equal to the current template.
+        Events for other changes can be found in the childItems of the returned event.
+        """
+    )
+    @AutoPayloadType("The created event, if present")
+    suspend fun changeIssueTemplate(
+        @GraphQLDescription("Defines the new IssueTemplate, the Issue and other fields to update")
+        input: ChangeIssueTemplateInput, dfe: DataFetchingEnvironment
+    ): TemplateChangedEvent? {
+        return issueService.changeIssueTemplate(dfe.gropiusAuthorizationContext, input)
+    }
+
+    @GraphQLDescription(
         """Creates a new Label on at least one Trackable. Requires MANAGE_LABELS on all provided Trackables.
         """
     )
