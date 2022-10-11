@@ -60,6 +60,7 @@ import kotlin.reflect.KMutableProperty0
  * @param issueCommentRepository used to find [IssueComment]s by id
  * @param bodyRepository used to find [Body]s by id
  * @param commentRepository used to find [Comment]s by id
+ * @param issueTemplateRepository used to find [IssueTemplate]s by id
  */
 @Service
 class IssueService(
@@ -81,8 +82,88 @@ class IssueService(
     private val issueRelationTypeRepository: IssueRelationTypeRepository,
     private val issueCommentRepository: IssueCommentRepository,
     private val bodyRepository: BodyRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    private val issueTemplateRepository: IssueTemplateRepository
 ) : AuditedNodeService<Issue, IssueRepository>(repository) {
+
+    /**
+     * Creates an [Issue].
+     * Checks the authorization status, checks that the `type`, `state` and `templatedFields` are compatible with the
+     * `template`
+     *
+     * @param authorizationContext used to check for the required permission
+     * @param input defines the created [Issue]
+     * @return the saved crated [Issue]
+     */
+    suspend fun createIssue(authorizationContext: GropiusAuthorizationContext, input: CreateIssueInput): Issue {
+        val trackables = trackableRepository.findAllById(input.trackables)
+        for (trackable in trackables) {
+            checkCreateIssuesPermission(trackable, authorizationContext)
+        }
+        val template = issueTemplateRepository.findById(input.template)
+        val type = issueTypeRepository.findById(input.type)
+        val state = issueStateRepository.findById(input.state)
+        val byUser = getUser(authorizationContext)
+        val issue = createIssue(
+            trackables,
+            template,
+            input.title,
+            input.body,
+            type,
+            state,
+            input.templatedFields,
+            OffsetDateTime.now(),
+            byUser
+        )
+        createdAuditedNode(issue, input, byUser)
+        return repository.save(issue).awaitSingle()
+    }
+
+    /**
+     * Creates an [Issue] at [atTime] as [byUser] on [trackables].
+     * Also creates the [Body] of the [Issue].
+     * Does not check the authorization status.
+     * Checks that [trackables] is not empty, checks that the [type], [state] and [templatedFields] are compatible with
+     * [template].
+     * Does not save the created [Issue], it is required to save the returned [Issue] afterwards.
+     *
+     * @param trackables the [Trackable]s on which the [Issue] is created
+     * @param template the initial [template]
+     * @param title the initial title
+     * @param body the initial body, used to create the [Body]
+     * @param type the initial type, must be compatible with [template]
+     * @param state the initial state, must be compatible with [template]
+     * @param templatedFields the initial templated fields, must be compatible with [template]
+     * @param atTime the point in time when the [Issue] is created
+     * @param byUser the [User] who creates the [Issue]
+     */
+    suspend fun createIssue(
+        trackables: List<Trackable>,
+        template: IssueTemplate,
+        title: String,
+        body: String,
+        type: IssueType,
+        state: IssueState,
+        templatedFields: List<JSONFieldInput>,
+        atTime: OffsetDateTime,
+        byUser: User
+    ): Issue {
+        if (trackables.isEmpty()) {
+            throw IllegalStateException("An Issue must be created on at least one Trackable")
+        }
+        val fields = templatedNodeService.validateInitialTemplatedFields(template, templatedFields)
+        val issue = Issue(atTime, atTime, fields, title, atTime, null, null, null, null)
+        issue.template().value = template
+        checkIssueTypeCompatibility(issue, type)
+        checkIssueStateCompatibility(issue, state)
+        issue.type().value = type
+        issue.state().value = state
+        createdAuditedNode(issue, byUser)
+        val bodyItem = Body(atTime, atTime, body, atTime)
+        createdTimelineItem(issue, bodyItem, atTime, byUser)
+        issue.body().value = bodyItem
+        return issue
+    }
 
     /**
      * Deletes an [Issue].
@@ -100,7 +181,7 @@ class IssueService(
                 "delete Issues on a Trackable the Issue is on"
             )
         }
-        deleteIssue(issue)
+        deleteIssueAndSave(issue)
     }
 
     /**
@@ -109,9 +190,20 @@ class IssueService(
      *
      * @param node the Issue to delete
      */
+    suspend fun deleteIssueAndSave(node: Issue) {
+        deleteIssue(node)
+        repository.save(node).awaitSingle()
+    }
+
+    /**
+     * Deletes an [Issue]
+     * Does not check the authorization status
+     * Does not save the [node]. It is required to save [node] afterwards.
+     *
+     * @param node the Issue to delete
+     */
     suspend fun deleteIssue(node: Issue) {
         node.isDeleted = true
-        repository.save(node).awaitSingle()
     }
 
     /**
@@ -129,11 +221,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
-        checkPermission(
-            trackable,
-            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
-            "manage Issues on the Trackable"
-        )
+        checkManageIssuesPermission(trackable, authorizationContext)
         checkManageIssuesPermission(issue, authorizationContext)
         return if (trackable !in issue.trackables()) {
             timelineItemRepository.save(
@@ -189,11 +277,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
-        checkPermission(
-            trackable,
-            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
-            "manage Issues on the Trackable"
-        )
+        checkManageIssuesPermission(trackable, authorizationContext)
         return if (trackable in issue.trackables()) {
             timelineItemRepository.save(
                 removeIssueFromTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
@@ -263,11 +347,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
-        checkPermission(
-            trackable,
-            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
-            "manage Issues on the Trackable where the Issue should be pinned"
-        )
+        checkManageIssuesPermission(trackable, authorizationContext)
         return if (trackable !in issue.pinnedOn()) {
             timelineItemRepository.save(
                 addIssueToPinnedIssues(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
@@ -328,11 +408,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val trackable = trackableRepository.findById(input.trackable)
-        checkPermission(
-            trackable,
-            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
-            "manage Issues on the Trackable where the Issue should be unpinned"
-        )
+        checkManageIssuesPermission(trackable, authorizationContext)
         return if (trackable in issue.pinnedOn()) {
             timelineItemRepository.save(
                 removeIssueFromPinnedIssues(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
@@ -1805,6 +1881,40 @@ class IssueService(
      */
     private suspend fun checkManageIssuesPermission(issue: Issue, authorizationContext: GropiusAuthorizationContext) {
         checkPermission(issue, Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext), "manage the Issue")
+    }
+
+    /**
+     * Checks that the user has [TrackablePermission.MANAGE_ISSUES] on [trackable]
+     *
+     * @param trackable the [Trackable] where the permission must be granted
+     * @param authorizationContext necessary for checking for the permission
+     * @throws IllegalArgumentException if the permission is not granted
+     */
+    private suspend fun checkManageIssuesPermission(
+        trackable: Trackable, authorizationContext: GropiusAuthorizationContext
+    ) {
+        checkPermission(
+            trackable,
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "manage Issues on the Trackable"
+        )
+    }
+
+    /**
+     * Checks that the user has [TrackablePermission.CREATE_ISSUES] on [trackable]
+     *
+     * @param trackable the [Trackable] where the permission must be granted
+     * @param authorizationContext necessary for checking for the permission
+     * @throws IllegalArgumentException if the permission is not granted
+     */
+    private suspend fun checkCreateIssuesPermission(
+        trackable: Trackable, authorizationContext: GropiusAuthorizationContext
+    ) {
+        checkPermission(
+            trackable,
+            Permission(TrackablePermission.MANAGE_ISSUES, authorizationContext),
+            "create Issues on the Trackable"
+        )
     }
 
     /**

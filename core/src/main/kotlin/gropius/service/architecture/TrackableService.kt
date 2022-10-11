@@ -72,7 +72,7 @@ abstract class TrackableService<T : Trackable, R : GropiusRepository<T, String>>
         labelRepository.deleteAll(labelsToDelete)
         node.issues().forEach {
             if (it.trackables().size == 1) {
-                issueService.deleteIssue(it)
+                issueService.deleteIssueAndSave(it)
             }
         }
         node.syncsTo().forEach {

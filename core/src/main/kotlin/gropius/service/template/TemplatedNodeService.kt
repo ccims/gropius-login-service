@@ -124,8 +124,23 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
     suspend fun validateInitialTemplatedFields(
         template: BaseTemplate<*, *>, input: CreateTemplatedNodeInput
     ): MutableMap<String, String> {
-        ensureTemplatedFieldsExist(template, input.templatedFields.map { it.name })
-        val fieldLookup = input.templatedFields.associateBy { it.name }
+        return validateInitialTemplatedFields(template, input.templatedFields)
+    }
+
+    /**
+     * Validates the initial input for [TemplatedNode.templatedFields]
+     * If no input is provided for a field, `null` is assigned as default value
+     *
+     * @param template the initial associated template for the node to create
+     * @param fields initial templated fields
+     * @return the initial value for [TemplatedNode.templatedFields]
+     * @throws IllegalArgumentException if the value for a templated field is not compatible with its schema
+     */
+    suspend fun validateInitialTemplatedFields(
+        template: BaseTemplate<*, *>, fields: List<JSONFieldInput>
+    ): MutableMap<String, String> {
+        ensureTemplatedFieldsExist(template, fields.map { it.name })
+        val fieldLookup = fields.associateBy { it.name }
         return template.templateFieldSpecifications.mapValues {
             val value: JsonNode = fieldLookup[it.key]?.value as JsonNode? ?: JsonNodeFactory.instance.nullNode()
             validateField(value, it.value, it.key)

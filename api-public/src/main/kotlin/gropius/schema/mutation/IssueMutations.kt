@@ -10,6 +10,7 @@ import gropius.dto.input.issue.*
 import gropius.graphql.AutoPayloadType
 import gropius.model.architecture.Trackable
 import gropius.model.issue.Artefact
+import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.*
 import gropius.service.issue.ArtefactService
@@ -34,9 +35,22 @@ class IssueMutations(
     private val artefactService: ArtefactService
 ) : Mutation {
 
+    @GraphQLDescription(
+        """Creates a new Issue on at least one Trackable, requires CREATE_ISSUES on all Trackables it should be created on.
+        Additionally, checks that the `type`, `state` and `templatedFields` are compatible with the `template`.
+        """
+    )
+    @AutoPayloadType("The created Issue")
+    suspend fun createIssue(
+        @GraphQLDescription("Defines the created Issue")
+        input: CreateIssueInput, dfe: DataFetchingEnvironment
+    ): Issue {
+        return issueService.createIssue(dfe.gropiusAuthorizationContext, input)
+    }
+
     @GraphQLDescription("Deletes the specified Issue, requires MODERATOR on all of the Trackables the Issue is on.")
     @AutoPayloadType("The id of the deleted Issue")
-    suspend fun deleteComponent(
+    suspend fun deleteIssue(
         @GraphQLDescription("Defines which Issue to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
     ): ID {
