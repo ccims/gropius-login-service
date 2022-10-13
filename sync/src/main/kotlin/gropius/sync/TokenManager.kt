@@ -1,4 +1,4 @@
-package gropius.sync.github
+package gropius.sync
 
 import gropius.model.architecture.IMS
 import gropius.model.user.IMSUser

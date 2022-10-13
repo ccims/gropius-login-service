@@ -1,5 +1,6 @@
 package gropius.sync.github
 
+import gropius.sync.TokenManager
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.Body

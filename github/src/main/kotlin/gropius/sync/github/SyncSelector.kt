@@ -1,5 +1,6 @@
 package gropius.sync.github
 
+import gropius.sync.TokenManager
 import com.apollographql.apollo3.ApolloClient
 import gropius.repository.architecture.IMSIssueRepository
 import gropius.sync.IssueCleaner
