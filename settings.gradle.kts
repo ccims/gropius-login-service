@@ -11,6 +11,7 @@ pluginManagement {
         id("org.jetbrains.dokka") version kotlinVersion
         id("com.apollographql.apollo3") version apolloVersion
         id("com.github.node-gradle.node") version nodeGradleVersion
+        kotlin("plugin.serialization") version kotlinVersion
     }
 }
 
