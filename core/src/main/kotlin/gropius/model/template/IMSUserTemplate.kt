@@ -1,7 +1,7 @@
 package gropius.model.template
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import gropius.model.architecture.Interface
+import gropius.model.user.IMSUser
 import io.github.graphglue.model.DomainNode
 
 @DomainNode
@@ -13,6 +13,6 @@ import io.github.graphglue.model.DomainNode
 )
 class IMSUserTemplate(
     name: String, description: String, templateFieldSpecifications: MutableMap<String, String>
-) : SubTemplate<Interface, InterfaceSpecificationTemplate, InterfaceTemplate>(
+) : SubTemplate<IMSUser, IMSTemplate, IMSUserTemplate>(
     name, description, templateFieldSpecifications
 )
