@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRep
 import org.springframework.data.neo4j.core.ReactiveDatabaseSelectionProvider
 import org.springframework.data.neo4j.core.transaction.ReactiveNeo4jTransactionManager
 import kotlin.system.exitProcess
+import org.slf4j.LoggerFactory
 
 /**
  * Configuration provider for the neo4j transaction manager
@@ -54,11 +55,18 @@ class Application : CommandLineRunner {
     @Autowired
     lateinit var syncSelector: SyncSelector
 
+    /**
+     * Logger used to print notifications
+     */
+    private val logger = LoggerFactory.getLogger(Application::class.java)
+
     override fun run(vararg args: String?) {
         try {
             runBlocking {
                 syncSelector.sync()
             }
+        } catch (e: Exception) {
+            logger.error("Error in sync", e)
         } finally {
             exitProcess(0)//TODO: remove ASAP
         }

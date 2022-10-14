@@ -3,6 +3,7 @@ pluginManagement {
     val kotlinVersion: String by settings
     val apolloVersion: String by settings
     val nodeGradleVersion: String by settings
+    val kotlinSerializationVersion: String by settings
 
     plugins {
         id("org.springframework.boot") version springBootVersion
@@ -11,6 +12,7 @@ pluginManagement {
         id("org.jetbrains.dokka") version kotlinVersion
         id("com.apollographql.apollo3") version apolloVersion
         id("com.github.node-gradle.node") version nodeGradleVersion
+        kotlin("plugin.serialization") version kotlinSerializationVersion
     }
 }
 

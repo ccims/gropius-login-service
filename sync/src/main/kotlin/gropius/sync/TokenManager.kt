@@ -2,18 +2,22 @@ package gropius.sync
 
 import gropius.model.architecture.IMS
 import gropius.model.user.IMSUser
-import gropius.sync.SyncNotificator
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.serialization.Serializable
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findById
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json
 import org.springframework.stereotype.Component
 import java.net.URI
+import io.ktor.serialization.kotlinx.json.*
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 
 /**
  * Configuration properties for the GitHub API
@@ -38,6 +42,10 @@ class TokenManager(
 ) {
     val client = HttpClient() {
         expectSuccess = true
+        install(ContentNegotiation) {
+            json()
+            json(contentType = ContentType.parse("application/json; charset=utf-8"))
+        }
     }
 
     /**
@@ -45,7 +53,8 @@ class TokenManager(
      * @param token Token if available
      * @param isImsUserKnown True if the user exists and just has no token
      */
-    private data class TokenResponse(val token: String?, val isImsUserKnown: Boolean)
+    @Serializable
+    data class TokenResponse(val token: String?, val isImsUserKnown: Boolean)
 
     /**
      * Request an user token from the auth service
