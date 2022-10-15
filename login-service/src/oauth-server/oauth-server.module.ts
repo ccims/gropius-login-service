@@ -46,17 +46,17 @@ export class OauthServerModule {
                 // its just to make absolutely sure, no unauthorized request gets through
                 this.errorHandler,
             ],
-            path: "strategy/oauth/:id/authorize/:mode?",
+            path: "authenticate/oauth/:id/authorize/:mode?",
         });
 
         this.middlewares.push({
             middlewares: [this.strategies, this.oauthRedirect, this.errorHandler],
-            path: "strategy/oauth/:id/callback",
+            path: "authenticate/oauth/:id/callback",
         });
 
         this.middlewares.push({
             middlewares: [this.modeExtractor, this.oauthToken, this.errorHandler],
-            path: "strategy/oauth/:id?/token/:mode?",
+            path: "authenticate/oauth/:id?/token/:mode?",
         });
     }
 

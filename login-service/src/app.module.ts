@@ -55,7 +55,7 @@ import { InitializationModule } from "./initialization/initialization.module";
             { path: "login", module: ApiLoginModule },
             { path: "login", module: StrategiesModule },
             { path: "syncApi", module: ApiSyncModule },
-            { path: "strategy", module: OauthServerModule },
+            { path: "authenticate", module: OauthServerModule },
         ]),
         BackendServicesModule,
         InitializationModule,

@@ -19,7 +19,8 @@ export class GetStrategyResponse {
     canLoginRegister: boolean;
 
     /**
-     * `true` iff instances of this strategy have the theoretical capability of providing api tokens to the a sync service
+     * `true` iff instances of this strategy have the theoretical capability
+     * of providing api tokens to the a sync service
      *
      * @example false
      */
