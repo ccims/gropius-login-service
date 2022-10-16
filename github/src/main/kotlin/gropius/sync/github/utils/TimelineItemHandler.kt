@@ -78,6 +78,7 @@ class TimelineItemHandler(
         val newState = loadedIssue.template().value.issueStates().firstOrNull { !it.isOpen }
         return newState?.let {
             var stateChangedEvent = StateChangedEvent(event.createdAt, OffsetDateTime.now())
+            stateChangedEvent.oldState().value = issue.load(neoOperations).state().value
             stateChangedEvent.newState().value = newState
             stateChangedEvent.issue().value = loadedIssue
             stateChangedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
@@ -104,6 +105,7 @@ class TimelineItemHandler(
         val newState = loadedIssue.template().value.issueStates().firstOrNull { it.isOpen }
         return newState?.let {
             var stateChangedEvent = StateChangedEvent(event.createdAt, OffsetDateTime.now())
+            stateChangedEvent.oldState().value = issue.load(neoOperations).state().value
             stateChangedEvent.newState().value = newState
             stateChangedEvent.issue().value = loadedIssue
             stateChangedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
