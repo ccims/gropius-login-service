@@ -57,7 +57,7 @@ async function createConfig() {
                     },
                     {
                         type: "doc",
-                        docId: apiSidebar[0]?.items[0]?.id ?? apiSidebar[0]?.items[0]?.link?.id ?? "docs/docs",
+                        docId: apiSidebar[0]?.id ?? apiSidebar[0]?.link?.id ?? "docs/docs",
                         position: "left",
                         label: "API",
                     },
