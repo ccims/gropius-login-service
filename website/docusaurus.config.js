@@ -57,7 +57,7 @@ async function createConfig() {
                     },
                     {
                         type: "doc",
-                        docId: apiSidebar[0]?.items[0]?.id ?? apiSidebar[0]?.items[0]?.link?.id ?? "docs/docs",
+                        docId: apiSidebar[0]?.id ?? apiSidebar[0]?.link?.id ?? apiSidebar[0]?.link?.slug ?? "docs/docs",
                         position: "left",
                         label: "API",
                     },
@@ -108,7 +108,7 @@ async function createConfig() {
                 })
             }),
             [
-                "@edno/docusaurus2-graphql-doc-generator",
+                "@graphql-markdown/docusaurus",
                 {
                     id: "api-public",
                     schema: "./schemas/api-public.gql",
@@ -120,7 +120,7 @@ async function createConfig() {
                 },
             ],
             [
-                "@edno/docusaurus2-graphql-doc-generator",
+                "@graphql-markdown/docusaurus",
                 {
                     id: "api-internal",
                     schema: "./schemas/api-internal.gql",
