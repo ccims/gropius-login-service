@@ -133,7 +133,7 @@ class IMSConfigManager(
         /**
          * Name of the ensured IMSIssueTemplate
          */
-        private const val IMS_USER_TEMPLATE_NAME = "Github Issue"
+        private const val IMS_USER_TEMPLATE_NAME = "Github User"
 
         /**
          * Fields of the required IMSIssueTemplate
@@ -187,6 +187,7 @@ class IMSConfigManager(
             imsTemplate.imsUserTemplate().value = IMSUserTemplate(
                 IMS_USER_TEMPLATE_NAME, "", IMS_USER_TEMPLATE_FIELDS.toMutableMap()
             )
+            imsTemplate.imsUserTemplate().value.partOf().value = imsTemplate
             acceptableTemplates.plus(neoOperations.save(imsTemplate).awaitSingle())
         }
         return acceptableTemplates

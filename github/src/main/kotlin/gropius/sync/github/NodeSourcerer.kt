@@ -9,6 +9,7 @@ import gropius.model.template.IssueType
 import gropius.model.user.IMSUser
 import gropius.model.user.User
 import gropius.sync.JsonHelper
+import gropius.sync.TokenManager
 import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.fragment.*
 import gropius.sync.github.generated.fragment.UserData.Companion.asNode
@@ -196,6 +197,7 @@ class NodeSourcerer(
                 mutableMapOf("github_id" to (helper.objectMapper.writeValueAsString(githubId) ?: "null"))
             )
             user.ims().value = imsProjectConfig.imsConfig.ims
+            user.template().value = user.ims().value.template().value.imsUserTemplate().value
             user = neoOperations.save(user).awaitSingle()
             userInfoRepository.save(UserInfo(username, user.rawId!!, imsProjectConfig.url)).awaitSingle()
             tokenManager.advertiseIMSUser(user)

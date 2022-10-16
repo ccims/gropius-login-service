@@ -4,6 +4,7 @@ import {
     HttpException,
     HttpStatus,
     Injectable,
+    Logger,
     UnauthorizedException,
 } from "@nestjs/common";
 import { Request, Response } from "express";
@@ -20,6 +21,7 @@ import { UserLoginDataService } from "src/model/services/user-login-data.service
  */
 @Injectable()
 export class CheckRegistrationTokenService {
+    private readonly logger = new Logger(CheckRegistrationTokenService.name);
     constructor(
         private readonly tokenService: TokenService,
         private readonly loginDataService: UserLoginDataService,
@@ -43,11 +45,11 @@ export class CheckRegistrationTokenService {
         activeLoginId: string,
     ) {
         if (!activeLogin) {
-            console.error(`No active login with id from token; id:`, activeLoginId);
+            this.logger.warn(`No active login with id from token; id:`, activeLoginId);
             throw new UnauthorizedException(undefined, "Register token is (no longer) valid");
         }
         if (!loginData) {
-            console.error(`No login data for active login; id:`, activeLoginId);
+            this.logger.warn(`No login data for active login; id:`, activeLoginId);
             throw new UnauthorizedException(undefined, "Register token is (no longer) valid");
         }
         if (loginData.expires != null && loginData.expires <= new Date()) {
@@ -60,7 +62,7 @@ export class CheckRegistrationTokenService {
             throw new UnauthorizedException(undefined, "Login has been set invalid");
         }
         if (loginData.state !== LoginState.WAITING_FOR_REGISTER) {
-            console.error("State is not waiting for register of login data", loginData.id);
+            this.logger.warn("State is not waiting for register of login data", loginData.id);
             throw new UnauthorizedException(undefined, "A user is already registered for this login");
         }
     }
@@ -82,7 +84,7 @@ export class CheckRegistrationTokenService {
         if (!!loginDataUser) {
             if (userMustBe) {
                 if (loginDataUser.id !== userMustBe.id) {
-                    console.error(
+                    this.logger.warn(
                         "User already exists and is not the user that currently tries to link for login data, user",
                         loginData.id,
                         userMustBe.id,
@@ -95,7 +97,7 @@ export class CheckRegistrationTokenService {
                     // ok. required user matches login data user
                 }
             } else {
-                console.error("User already esists for login data", loginData.id);
+                this.logger.warn("User already esists for login data", loginData.id);
                 throw new UnauthorizedException(undefined, "A user is already registered for this login");
             }
         }
@@ -123,7 +125,7 @@ export class CheckRegistrationTokenService {
         try {
             activeLoginId = await this.tokenService.verifyRegistrationToken(token);
         } catch (err) {
-            console.error("Invalid registration token: ", err);
+            this.logger.warn("Invalid registration token: ", err);
             throw new UnauthorizedException(undefined, "Invalid registration token: " + (err.message ?? err));
         }
         const activeLogin = await this.activeLoginService.findOneBy({

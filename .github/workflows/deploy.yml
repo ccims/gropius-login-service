@@ -11,10 +11,10 @@ env:
 jobs:
   deploy:
     name: Deploy to GitHub Pages
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
@@ -38,7 +38,7 @@ jobs:
           chmod +x ./website/scripts/generate-openapi-schema.sh
           ./website/scripts/generate-openapi-schema.sh
       - name: Modify Dokka output
-        uses: graphglue/dokka-html-mdx-transform@v1.7.10
+        uses: graphglue/dokka-html-mdx-transform@v1.7.20
         with:
           src: "build/dokka/htmlMultiModule"
           modules: |

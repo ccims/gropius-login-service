@@ -37,7 +37,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
      * - tokenUrl: Oauth token url. Optional, default: "https://github.com/login/oauth/access_token"
      * - clientId: Id of GitHub oauth app. Optional, default: GROPIUS_OAUTH_CLIENT_ID config variable
      * - clientSecret: secret of GitHub oaut app. Optional, default: GROPIUS_OAUTH_CLIENT_SECRET config value
-     * - callbackUrl: Oauth callback url. Should be [URL]/strategy/:id/callback. Optional, default empty
+     * - callbackUrl: Oauth callback url. Should be [URL]/authenticate/:id/callback. Optional, default empty
      *
      * @param instanceConfig The instance config for a github strategy instance to check
      * @returns The extended config (with default parameters for the global github) if check successful

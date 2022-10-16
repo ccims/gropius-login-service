@@ -5,6 +5,7 @@ import {
     Get,
     HttpException,
     HttpStatus,
+    Logger,
     Post,
     Put,
     Query,
@@ -27,6 +28,7 @@ import { OpenApiTag } from "src/openapi-tag";
 @ApiTags(OpenApiTag.SYNC_API)
 @ApiBearerAuth(OpenApiTag.SYNC_API)
 export class SyncImsUserController {
+    private readonly logger = new Logger(SyncImsUserController.name);
     constructor(
         private readonly imsUserService: UserLoginDataImsUserService,
         private readonly strategyService: StrategiesService,
@@ -44,7 +46,7 @@ export class SyncImsUserController {
                 neo4jId: imsUserId,
             });
         } catch (err) {
-            console.error("Error loading imsuser by neo4jId", err);
+            this.logger.warn("Error loading imsuser by neo4jId", err);
             throw new HttpException("Could not load ims user by id; Check the id syntax", HttpStatus.BAD_REQUEST);
         }
         if (!imsUser) {

@@ -147,13 +147,6 @@ class PermissionConfiguration {
     fun componentPermissionEntries() = PermissionEntryCollection<ComponentPermission>(
         trackablePermissionEntries + setOf(
             PermissionEntry(
-                ComponentPermission.RELATE_TO_COMPONENT, """
-                    Allows to create Relations with a version of this Component or an Interface of this Component
-                    as end.
-                    Note: this should be handled carefully, as such Relations can result in new Interfaces
-                    on the ComponentVersion.
-                """.trimIndent()
-            ), PermissionEntry(
                 ComponentPermission.RELATE_FROM_COMPONENT, """
                     Allows to create Relations with a version of this Component or an Interface of this Component
                     as start.

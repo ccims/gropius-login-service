@@ -11720,14 +11720,14 @@ export type Versioned = {
   version: Scalars['String'];
 };
 
-export type ImsUserWithDetailFragment = { __typename?: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename?: 'JSONField', name: string, value?: any | null }>, ims: { __typename?: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename?: 'JSONField', name: string, value?: any | null }> } };
+export type ImsUserWithDetailFragment = { __typename: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }>, ims: { __typename: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }> } };
 
 export type GetImsUserDetailsQueryVariables = Exact<{
   imsUserId: Scalars['ID'];
 }>;
 
 
-export type GetImsUserDetailsQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'Body' } | { __typename?: 'ClosedEvent' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename?: 'GropiusUser' } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename?: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename?: 'JSONField', name: string, value?: any | null }>, ims: { __typename?: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename?: 'JSONField', name: string, value?: any | null }> } } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'ReopenedEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'TemplateFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
+export type GetImsUserDetailsQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'Body' } | { __typename?: 'ClosedEvent' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename?: 'GropiusUser' } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }>, ims: { __typename: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }> } } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'ReopenedEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'TemplateFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
 
 export type GetImsUsersByTemplatedFieldValuesQueryVariables = Exact<{
   imsFilterInput: ImsFilterInput;
@@ -11735,42 +11735,42 @@ export type GetImsUsersByTemplatedFieldValuesQueryVariables = Exact<{
 }>;
 
 
-export type GetImsUsersByTemplatedFieldValuesQuery = { __typename?: 'Query', imss: { __typename?: 'IMSConnection', nodes: Array<{ __typename?: 'IMS', id: string, users: { __typename?: 'IMSUserConnection', nodes: Array<{ __typename?: 'IMSUser', id: string }> } }> } };
+export type GetImsUsersByTemplatedFieldValuesQuery = { __typename?: 'Query', imss: { __typename: 'IMSConnection', nodes: Array<{ __typename: 'IMS', id: string, users: { __typename: 'IMSUserConnection', nodes: Array<{ __typename: 'IMSUser', id: string }> } }> } };
 
 export type CreateNewImsUserInImsMutationVariables = Exact<{
   input: CreateImsUserInput;
 }>;
 
 
-export type CreateNewImsUserInImsMutation = { __typename?: 'Mutation', createIMSUser?: { __typename?: 'CreateIMSUserPayload', imsuser?: { __typename?: 'IMSUser', id: string } | null } | null };
+export type CreateNewImsUserInImsMutation = { __typename?: 'Mutation', createIMSUser?: { __typename: 'CreateIMSUserPayload', imsuser?: { __typename: 'IMSUser', id: string } | null } | null };
 
 export type GetBasicGropiusUserDataQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type GetBasicGropiusUserDataQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'Body' } | { __typename?: 'ClosedEvent' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename?: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename?: 'IMSUser' } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'ReopenedEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'TemplateFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
+export type GetBasicGropiusUserDataQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'Body' } | { __typename?: 'ClosedEvent' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename?: 'IMSUser' } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'ReopenedEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'TemplateFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
 
 export type GetUserByNameQueryVariables = Exact<{
   username: Scalars['String'];
 }>;
 
 
-export type GetUserByNameQuery = { __typename?: 'Query', gropiusUser: { __typename?: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } };
+export type GetUserByNameQuery = { __typename?: 'Query', gropiusUser: { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } };
 
 export type CheckUserIsAdminQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type CheckUserIsAdminQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'Body' } | { __typename?: 'ClosedEvent' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename?: 'GropiusUser', id: string, isAdmin: boolean } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename?: 'IMSUser' } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'ReopenedEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'TemplateFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
+export type CheckUserIsAdminQuery = { __typename?: 'Query', node?: { __typename: 'AddedAffectedEntityEvent' } | { __typename: 'AddedArtefactEvent' } | { __typename: 'AddedLabelEvent' } | { __typename: 'AddedToPinnedIssuesEvent' } | { __typename: 'AddedToTrackableEvent' } | { __typename: 'Artefact' } | { __typename: 'ArtefactTemplate' } | { __typename: 'Assignment' } | { __typename: 'AssignmentType' } | { __typename: 'Body' } | { __typename: 'ClosedEvent' } | { __typename: 'Component' } | { __typename: 'ComponentPermission' } | { __typename: 'ComponentTemplate' } | { __typename: 'ComponentVersion' } | { __typename: 'ComponentVersionTemplate' } | { __typename: 'DueDateChangedEvent' } | { __typename: 'EstimatedTimeChangedEvent' } | { __typename: 'GlobalPermission' } | { __typename: 'GropiusUser', id: string, isAdmin: boolean } | { __typename: 'IMS' } | { __typename: 'IMSIssue' } | { __typename: 'IMSIssueTemplate' } | { __typename: 'IMSPermission' } | { __typename: 'IMSProject' } | { __typename: 'IMSProjectTemplate' } | { __typename: 'IMSTemplate' } | { __typename: 'IMSUser' } | { __typename: 'IMSUserTemplate' } | { __typename: 'Interface' } | { __typename: 'InterfaceDefinition' } | { __typename: 'InterfaceDefinitionTemplate' } | { __typename: 'InterfacePart' } | { __typename: 'InterfacePartTemplate' } | { __typename: 'InterfaceSpecification' } | { __typename: 'InterfaceSpecificationDerivationCondition' } | { __typename: 'InterfaceSpecificationTemplate' } | { __typename: 'InterfaceSpecificationVersion' } | { __typename: 'InterfaceSpecificationVersionTemplate' } | { __typename: 'InterfaceTemplate' } | { __typename: 'IntraComponentDependencyParticipant' } | { __typename: 'IntraComponentDependencySpecification' } | { __typename: 'Issue' } | { __typename: 'IssueComment' } | { __typename: 'IssuePriority' } | { __typename: 'IssueRelation' } | { __typename: 'IssueRelationType' } | { __typename: 'IssueTemplate' } | { __typename: 'IssueType' } | { __typename: 'Label' } | { __typename: 'PriorityChangedEvent' } | { __typename: 'Project' } | { __typename: 'ProjectPermission' } | { __typename: 'RelatedByIssueEvent' } | { __typename: 'Relation' } | { __typename: 'RelationCondition' } | { __typename: 'RelationTemplate' } | { __typename: 'RemovedAffectedEntityEvent' } | { __typename: 'RemovedArtefactEvent' } | { __typename: 'RemovedAssignmentEvent' } | { __typename: 'RemovedFromPinnedIssuesEvent' } | { __typename: 'RemovedFromTrackableEvent' } | { __typename: 'RemovedIncomingRelationEvent' } | { __typename: 'RemovedLabelEvent' } | { __typename: 'RemovedOutgoingRelationEvent' } | { __typename: 'ReopenedEvent' } | { __typename: 'SpentTimeChangedEvent' } | { __typename: 'StartDateChangedEvent' } | { __typename: 'TemplateFieldChangedEvent' } | { __typename: 'TitleChangedEvent' } | { __typename: 'TypeChangedEvent' } | null };
 
 export type CreateNewUserMutationVariables = Exact<{
   input: CreateGropiusUserInput;
 }>;
 
 
-export type CreateNewUserMutation = { __typename?: 'Mutation', createGropiusUser?: { __typename?: 'CreateGropiusUserPayload', gropiusUser?: { __typename?: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | null } | null };
+export type CreateNewUserMutation = { __typename?: 'Mutation', createGropiusUser?: { __typename?: 'CreateGropiusUserPayload', gropiusUser?: { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | null } | null };
 
 export type SetImsUserLinkMutationVariables = Exact<{
   gropiusUserId: Scalars['ID'];
@@ -11778,169 +11778,173 @@ export type SetImsUserLinkMutationVariables = Exact<{
 }>;
 
 
-export type SetImsUserLinkMutation = { __typename?: 'Mutation', updateIMSUser?: { __typename?: 'UpdateIMSUserPayload', imsuser?: { __typename?: 'IMSUser', id: string } | null } | null };
+export type SetImsUserLinkMutation = { __typename?: 'Mutation', updateIMSUser?: { __typename: 'UpdateIMSUserPayload', imsuser?: { __typename: 'IMSUser', id: string } | null } | null };
 
-type OnlyId_AddedAffectedEntityEvent_Fragment = { __typename?: 'AddedAffectedEntityEvent', id: string };
+type OnlyId_AddedAffectedEntityEvent_Fragment = { __typename: 'AddedAffectedEntityEvent', id: string };
 
-type OnlyId_AddedArtefactEvent_Fragment = { __typename?: 'AddedArtefactEvent', id: string };
+type OnlyId_AddedArtefactEvent_Fragment = { __typename: 'AddedArtefactEvent', id: string };
 
-type OnlyId_AddedLabelEvent_Fragment = { __typename?: 'AddedLabelEvent', id: string };
+type OnlyId_AddedLabelEvent_Fragment = { __typename: 'AddedLabelEvent', id: string };
 
-type OnlyId_AddedToPinnedIssuesEvent_Fragment = { __typename?: 'AddedToPinnedIssuesEvent', id: string };
+type OnlyId_AddedToPinnedIssuesEvent_Fragment = { __typename: 'AddedToPinnedIssuesEvent', id: string };
 
-type OnlyId_AddedToTrackableEvent_Fragment = { __typename?: 'AddedToTrackableEvent', id: string };
+type OnlyId_AddedToTrackableEvent_Fragment = { __typename: 'AddedToTrackableEvent', id: string };
 
-type OnlyId_Artefact_Fragment = { __typename?: 'Artefact', id: string };
+type OnlyId_Artefact_Fragment = { __typename: 'Artefact', id: string };
 
-type OnlyId_ArtefactTemplate_Fragment = { __typename?: 'ArtefactTemplate', id: string };
+type OnlyId_ArtefactTemplate_Fragment = { __typename: 'ArtefactTemplate', id: string };
 
-type OnlyId_Assignment_Fragment = { __typename?: 'Assignment', id: string };
+type OnlyId_Assignment_Fragment = { __typename: 'Assignment', id: string };
 
-type OnlyId_AssignmentType_Fragment = { __typename?: 'AssignmentType', id: string };
+type OnlyId_AssignmentType_Fragment = { __typename: 'AssignmentType', id: string };
 
-type OnlyId_Body_Fragment = { __typename?: 'Body', id: string };
+type OnlyId_Body_Fragment = { __typename: 'Body', id: string };
 
-type OnlyId_ClosedEvent_Fragment = { __typename?: 'ClosedEvent', id: string };
+type OnlyId_ClosedEvent_Fragment = { __typename: 'ClosedEvent', id: string };
 
-type OnlyId_Component_Fragment = { __typename?: 'Component', id: string };
+type OnlyId_Component_Fragment = { __typename: 'Component', id: string };
 
-type OnlyId_ComponentPermission_Fragment = { __typename?: 'ComponentPermission', id: string };
+type OnlyId_ComponentPermission_Fragment = { __typename: 'ComponentPermission', id: string };
 
-type OnlyId_ComponentTemplate_Fragment = { __typename?: 'ComponentTemplate', id: string };
+type OnlyId_ComponentTemplate_Fragment = { __typename: 'ComponentTemplate', id: string };
 
-type OnlyId_ComponentVersion_Fragment = { __typename?: 'ComponentVersion', id: string };
+type OnlyId_ComponentVersion_Fragment = { __typename: 'ComponentVersion', id: string };
 
-type OnlyId_ComponentVersionTemplate_Fragment = { __typename?: 'ComponentVersionTemplate', id: string };
+type OnlyId_ComponentVersionTemplate_Fragment = { __typename: 'ComponentVersionTemplate', id: string };
 
-type OnlyId_DueDateChangedEvent_Fragment = { __typename?: 'DueDateChangedEvent', id: string };
+type OnlyId_DueDateChangedEvent_Fragment = { __typename: 'DueDateChangedEvent', id: string };
 
-type OnlyId_EstimatedTimeChangedEvent_Fragment = { __typename?: 'EstimatedTimeChangedEvent', id: string };
+type OnlyId_EstimatedTimeChangedEvent_Fragment = { __typename: 'EstimatedTimeChangedEvent', id: string };
 
-type OnlyId_GlobalPermission_Fragment = { __typename?: 'GlobalPermission', id: string };
+type OnlyId_GlobalPermission_Fragment = { __typename: 'GlobalPermission', id: string };
 
-type OnlyId_GropiusUser_Fragment = { __typename?: 'GropiusUser', id: string };
+type OnlyId_GropiusUser_Fragment = { __typename: 'GropiusUser', id: string };
 
-type OnlyId_Ims_Fragment = { __typename?: 'IMS', id: string };
+type OnlyId_Ims_Fragment = { __typename: 'IMS', id: string };
 
-type OnlyId_ImsIssue_Fragment = { __typename?: 'IMSIssue', id: string };
+type OnlyId_ImsIssue_Fragment = { __typename: 'IMSIssue', id: string };
 
-type OnlyId_ImsIssueTemplate_Fragment = { __typename?: 'IMSIssueTemplate', id: string };
+type OnlyId_ImsIssueTemplate_Fragment = { __typename: 'IMSIssueTemplate', id: string };
 
-type OnlyId_ImsPermission_Fragment = { __typename?: 'IMSPermission', id: string };
+type OnlyId_ImsPermission_Fragment = { __typename: 'IMSPermission', id: string };
 
-type OnlyId_ImsProject_Fragment = { __typename?: 'IMSProject', id: string };
+type OnlyId_ImsProject_Fragment = { __typename: 'IMSProject', id: string };
 
-type OnlyId_ImsProjectTemplate_Fragment = { __typename?: 'IMSProjectTemplate', id: string };
+type OnlyId_ImsProjectTemplate_Fragment = { __typename: 'IMSProjectTemplate', id: string };
 
-type OnlyId_ImsTemplate_Fragment = { __typename?: 'IMSTemplate', id: string };
+type OnlyId_ImsTemplate_Fragment = { __typename: 'IMSTemplate', id: string };
 
-type OnlyId_ImsUser_Fragment = { __typename?: 'IMSUser', id: string };
+type OnlyId_ImsUser_Fragment = { __typename: 'IMSUser', id: string };
 
-type OnlyId_ImsUserTemplate_Fragment = { __typename?: 'IMSUserTemplate', id: string };
+type OnlyId_ImsUserTemplate_Fragment = { __typename: 'IMSUserTemplate', id: string };
 
-type OnlyId_Interface_Fragment = { __typename?: 'Interface', id: string };
+type OnlyId_Interface_Fragment = { __typename: 'Interface', id: string };
 
-type OnlyId_InterfaceDefinition_Fragment = { __typename?: 'InterfaceDefinition', id: string };
+type OnlyId_InterfaceDefinition_Fragment = { __typename: 'InterfaceDefinition', id: string };
 
-type OnlyId_InterfaceDefinitionTemplate_Fragment = { __typename?: 'InterfaceDefinitionTemplate', id: string };
+type OnlyId_InterfaceDefinitionTemplate_Fragment = { __typename: 'InterfaceDefinitionTemplate', id: string };
 
-type OnlyId_InterfacePart_Fragment = { __typename?: 'InterfacePart', id: string };
+type OnlyId_InterfacePart_Fragment = { __typename: 'InterfacePart', id: string };
 
-type OnlyId_InterfacePartTemplate_Fragment = { __typename?: 'InterfacePartTemplate', id: string };
+type OnlyId_InterfacePartTemplate_Fragment = { __typename: 'InterfacePartTemplate', id: string };
 
-type OnlyId_InterfaceSpecification_Fragment = { __typename?: 'InterfaceSpecification', id: string };
+type OnlyId_InterfaceSpecification_Fragment = { __typename: 'InterfaceSpecification', id: string };
 
-type OnlyId_InterfaceSpecificationDerivationCondition_Fragment = { __typename?: 'InterfaceSpecificationDerivationCondition', id: string };
+type OnlyId_InterfaceSpecificationDerivationCondition_Fragment = { __typename: 'InterfaceSpecificationDerivationCondition', id: string };
 
-type OnlyId_InterfaceSpecificationTemplate_Fragment = { __typename?: 'InterfaceSpecificationTemplate', id: string };
+type OnlyId_InterfaceSpecificationTemplate_Fragment = { __typename: 'InterfaceSpecificationTemplate', id: string };
 
-type OnlyId_InterfaceSpecificationVersion_Fragment = { __typename?: 'InterfaceSpecificationVersion', id: string };
+type OnlyId_InterfaceSpecificationVersion_Fragment = { __typename: 'InterfaceSpecificationVersion', id: string };
 
-type OnlyId_InterfaceSpecificationVersionTemplate_Fragment = { __typename?: 'InterfaceSpecificationVersionTemplate', id: string };
+type OnlyId_InterfaceSpecificationVersionTemplate_Fragment = { __typename: 'InterfaceSpecificationVersionTemplate', id: string };
 
-type OnlyId_InterfaceTemplate_Fragment = { __typename?: 'InterfaceTemplate', id: string };
+type OnlyId_InterfaceTemplate_Fragment = { __typename: 'InterfaceTemplate', id: string };
 
-type OnlyId_IntraComponentDependencyParticipant_Fragment = { __typename?: 'IntraComponentDependencyParticipant', id: string };
+type OnlyId_IntraComponentDependencyParticipant_Fragment = { __typename: 'IntraComponentDependencyParticipant', id: string };
 
-type OnlyId_IntraComponentDependencySpecification_Fragment = { __typename?: 'IntraComponentDependencySpecification', id: string };
+type OnlyId_IntraComponentDependencySpecification_Fragment = { __typename: 'IntraComponentDependencySpecification', id: string };
 
-type OnlyId_Issue_Fragment = { __typename?: 'Issue', id: string };
+type OnlyId_Issue_Fragment = { __typename: 'Issue', id: string };
 
-type OnlyId_IssueComment_Fragment = { __typename?: 'IssueComment', id: string };
+type OnlyId_IssueComment_Fragment = { __typename: 'IssueComment', id: string };
 
-type OnlyId_IssuePriority_Fragment = { __typename?: 'IssuePriority', id: string };
+type OnlyId_IssuePriority_Fragment = { __typename: 'IssuePriority', id: string };
 
-type OnlyId_IssueRelation_Fragment = { __typename?: 'IssueRelation', id: string };
+type OnlyId_IssueRelation_Fragment = { __typename: 'IssueRelation', id: string };
 
-type OnlyId_IssueRelationType_Fragment = { __typename?: 'IssueRelationType', id: string };
+type OnlyId_IssueRelationType_Fragment = { __typename: 'IssueRelationType', id: string };
 
-type OnlyId_IssueTemplate_Fragment = { __typename?: 'IssueTemplate', id: string };
+type OnlyId_IssueTemplate_Fragment = { __typename: 'IssueTemplate', id: string };
 
-type OnlyId_IssueType_Fragment = { __typename?: 'IssueType', id: string };
+type OnlyId_IssueType_Fragment = { __typename: 'IssueType', id: string };
 
-type OnlyId_Label_Fragment = { __typename?: 'Label', id: string };
+type OnlyId_Label_Fragment = { __typename: 'Label', id: string };
 
-type OnlyId_PriorityChangedEvent_Fragment = { __typename?: 'PriorityChangedEvent', id: string };
+type OnlyId_PriorityChangedEvent_Fragment = { __typename: 'PriorityChangedEvent', id: string };
 
-type OnlyId_Project_Fragment = { __typename?: 'Project', id: string };
+type OnlyId_Project_Fragment = { __typename: 'Project', id: string };
 
-type OnlyId_ProjectPermission_Fragment = { __typename?: 'ProjectPermission', id: string };
+type OnlyId_ProjectPermission_Fragment = { __typename: 'ProjectPermission', id: string };
 
-type OnlyId_RelatedByIssueEvent_Fragment = { __typename?: 'RelatedByIssueEvent', id: string };
+type OnlyId_RelatedByIssueEvent_Fragment = { __typename: 'RelatedByIssueEvent', id: string };
 
-type OnlyId_Relation_Fragment = { __typename?: 'Relation', id: string };
+type OnlyId_Relation_Fragment = { __typename: 'Relation', id: string };
 
-type OnlyId_RelationCondition_Fragment = { __typename?: 'RelationCondition', id: string };
+type OnlyId_RelationCondition_Fragment = { __typename: 'RelationCondition', id: string };
 
-type OnlyId_RelationTemplate_Fragment = { __typename?: 'RelationTemplate', id: string };
+type OnlyId_RelationTemplate_Fragment = { __typename: 'RelationTemplate', id: string };
 
-type OnlyId_RemovedAffectedEntityEvent_Fragment = { __typename?: 'RemovedAffectedEntityEvent', id: string };
+type OnlyId_RemovedAffectedEntityEvent_Fragment = { __typename: 'RemovedAffectedEntityEvent', id: string };
 
-type OnlyId_RemovedArtefactEvent_Fragment = { __typename?: 'RemovedArtefactEvent', id: string };
+type OnlyId_RemovedArtefactEvent_Fragment = { __typename: 'RemovedArtefactEvent', id: string };
 
-type OnlyId_RemovedAssignmentEvent_Fragment = { __typename?: 'RemovedAssignmentEvent', id: string };
+type OnlyId_RemovedAssignmentEvent_Fragment = { __typename: 'RemovedAssignmentEvent', id: string };
 
-type OnlyId_RemovedFromPinnedIssuesEvent_Fragment = { __typename?: 'RemovedFromPinnedIssuesEvent', id: string };
+type OnlyId_RemovedFromPinnedIssuesEvent_Fragment = { __typename: 'RemovedFromPinnedIssuesEvent', id: string };
 
-type OnlyId_RemovedFromTrackableEvent_Fragment = { __typename?: 'RemovedFromTrackableEvent', id: string };
+type OnlyId_RemovedFromTrackableEvent_Fragment = { __typename: 'RemovedFromTrackableEvent', id: string };
 
-type OnlyId_RemovedIncomingRelationEvent_Fragment = { __typename?: 'RemovedIncomingRelationEvent', id: string };
+type OnlyId_RemovedIncomingRelationEvent_Fragment = { __typename: 'RemovedIncomingRelationEvent', id: string };
 
-type OnlyId_RemovedLabelEvent_Fragment = { __typename?: 'RemovedLabelEvent', id: string };
+type OnlyId_RemovedLabelEvent_Fragment = { __typename: 'RemovedLabelEvent', id: string };
 
-type OnlyId_RemovedOutgoingRelationEvent_Fragment = { __typename?: 'RemovedOutgoingRelationEvent', id: string };
+type OnlyId_RemovedOutgoingRelationEvent_Fragment = { __typename: 'RemovedOutgoingRelationEvent', id: string };
 
-type OnlyId_ReopenedEvent_Fragment = { __typename?: 'ReopenedEvent', id: string };
+type OnlyId_ReopenedEvent_Fragment = { __typename: 'ReopenedEvent', id: string };
 
-type OnlyId_SpentTimeChangedEvent_Fragment = { __typename?: 'SpentTimeChangedEvent', id: string };
+type OnlyId_SpentTimeChangedEvent_Fragment = { __typename: 'SpentTimeChangedEvent', id: string };
 
-type OnlyId_StartDateChangedEvent_Fragment = { __typename?: 'StartDateChangedEvent', id: string };
+type OnlyId_StartDateChangedEvent_Fragment = { __typename: 'StartDateChangedEvent', id: string };
 
-type OnlyId_TemplateFieldChangedEvent_Fragment = { __typename?: 'TemplateFieldChangedEvent', id: string };
+type OnlyId_TemplateFieldChangedEvent_Fragment = { __typename: 'TemplateFieldChangedEvent', id: string };
 
-type OnlyId_TitleChangedEvent_Fragment = { __typename?: 'TitleChangedEvent', id: string };
+type OnlyId_TitleChangedEvent_Fragment = { __typename: 'TitleChangedEvent', id: string };
 
-type OnlyId_TypeChangedEvent_Fragment = { __typename?: 'TypeChangedEvent', id: string };
+type OnlyId_TypeChangedEvent_Fragment = { __typename: 'TypeChangedEvent', id: string };
 
 export type OnlyIdFragment = OnlyId_AddedAffectedEntityEvent_Fragment | OnlyId_AddedArtefactEvent_Fragment | OnlyId_AddedLabelEvent_Fragment | OnlyId_AddedToPinnedIssuesEvent_Fragment | OnlyId_AddedToTrackableEvent_Fragment | OnlyId_Artefact_Fragment | OnlyId_ArtefactTemplate_Fragment | OnlyId_Assignment_Fragment | OnlyId_AssignmentType_Fragment | OnlyId_Body_Fragment | OnlyId_ClosedEvent_Fragment | OnlyId_Component_Fragment | OnlyId_ComponentPermission_Fragment | OnlyId_ComponentTemplate_Fragment | OnlyId_ComponentVersion_Fragment | OnlyId_ComponentVersionTemplate_Fragment | OnlyId_DueDateChangedEvent_Fragment | OnlyId_EstimatedTimeChangedEvent_Fragment | OnlyId_GlobalPermission_Fragment | OnlyId_GropiusUser_Fragment | OnlyId_Ims_Fragment | OnlyId_ImsIssue_Fragment | OnlyId_ImsIssueTemplate_Fragment | OnlyId_ImsPermission_Fragment | OnlyId_ImsProject_Fragment | OnlyId_ImsProjectTemplate_Fragment | OnlyId_ImsTemplate_Fragment | OnlyId_ImsUser_Fragment | OnlyId_ImsUserTemplate_Fragment | OnlyId_Interface_Fragment | OnlyId_InterfaceDefinition_Fragment | OnlyId_InterfaceDefinitionTemplate_Fragment | OnlyId_InterfacePart_Fragment | OnlyId_InterfacePartTemplate_Fragment | OnlyId_InterfaceSpecification_Fragment | OnlyId_InterfaceSpecificationDerivationCondition_Fragment | OnlyId_InterfaceSpecificationTemplate_Fragment | OnlyId_InterfaceSpecificationVersion_Fragment | OnlyId_InterfaceSpecificationVersionTemplate_Fragment | OnlyId_InterfaceTemplate_Fragment | OnlyId_IntraComponentDependencyParticipant_Fragment | OnlyId_IntraComponentDependencySpecification_Fragment | OnlyId_Issue_Fragment | OnlyId_IssueComment_Fragment | OnlyId_IssuePriority_Fragment | OnlyId_IssueRelation_Fragment | OnlyId_IssueRelationType_Fragment | OnlyId_IssueTemplate_Fragment | OnlyId_IssueType_Fragment | OnlyId_Label_Fragment | OnlyId_PriorityChangedEvent_Fragment | OnlyId_Project_Fragment | OnlyId_ProjectPermission_Fragment | OnlyId_RelatedByIssueEvent_Fragment | OnlyId_Relation_Fragment | OnlyId_RelationCondition_Fragment | OnlyId_RelationTemplate_Fragment | OnlyId_RemovedAffectedEntityEvent_Fragment | OnlyId_RemovedArtefactEvent_Fragment | OnlyId_RemovedAssignmentEvent_Fragment | OnlyId_RemovedFromPinnedIssuesEvent_Fragment | OnlyId_RemovedFromTrackableEvent_Fragment | OnlyId_RemovedIncomingRelationEvent_Fragment | OnlyId_RemovedLabelEvent_Fragment | OnlyId_RemovedOutgoingRelationEvent_Fragment | OnlyId_ReopenedEvent_Fragment | OnlyId_SpentTimeChangedEvent_Fragment | OnlyId_StartDateChangedEvent_Fragment | OnlyId_TemplateFieldChangedEvent_Fragment | OnlyId_TitleChangedEvent_Fragment | OnlyId_TypeChangedEvent_Fragment;
 
-export type UserDataFragment = { __typename?: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null };
+export type UserDataFragment = { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null };
 
 export const ImsUserWithDetailFragmentDoc = gql`
     fragment ImsUserWithDetail on IMSUser {
+  __typename
   id
   username
   displayName
   email
   templatedFields {
+    __typename
     name
     value
   }
   ims {
+    __typename
     id
     name
     description
     templatedFields {
+      __typename
       name
       value
     }
@@ -11949,11 +11953,13 @@ export const ImsUserWithDetailFragmentDoc = gql`
     `;
 export const OnlyIdFragmentDoc = gql`
     fragment OnlyId on Node {
+  __typename
   id
 }
     `;
 export const UserDataFragmentDoc = gql`
     fragment UserData on GropiusUser {
+  __typename
   id
   username
   displayName
@@ -11970,10 +11976,14 @@ export const GetImsUserDetailsDocument = gql`
 export const GetImsUsersByTemplatedFieldValuesDocument = gql`
     query getImsUsersByTemplatedFieldValues($imsFilterInput: IMSFilterInput!, $userFilterInput: IMSUserFilterInput!) {
   imss(filter: $imsFilterInput) {
+    __typename
     nodes {
+      __typename
       id
       users(filter: $userFilterInput) {
+        __typename
         nodes {
+          __typename
           id
         }
       }
@@ -11984,7 +11994,9 @@ export const GetImsUsersByTemplatedFieldValuesDocument = gql`
 export const CreateNewImsUserInImsDocument = gql`
     mutation createNewImsUserInIms($input: CreateIMSUserInput!) {
   createIMSUser(input: $input) {
+    __typename
     imsuser {
+      __typename
       id
     }
   }
@@ -12006,8 +12018,10 @@ export const GetUserByNameDocument = gql`
     ${UserDataFragmentDoc}`;
 export const CheckUserIsAdminDocument = gql`
     query checkUserIsAdmin($id: ID!) {
-  node(id: "") {
+  node(id: $id) {
+    __typename
     ... on GropiusUser {
+      __typename
       id
       isAdmin
     }
@@ -12026,7 +12040,9 @@ export const CreateNewUserDocument = gql`
 export const SetImsUserLinkDocument = gql`
     mutation setImsUserLink($gropiusUserId: ID!, $imsUserId: ID!) {
   updateIMSUser(input: {id: $imsUserId, gropiusUser: $gropiusUserId}) {
+    __typename
     imsuser {
+      __typename
       id
     }
   }
