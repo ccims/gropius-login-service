@@ -307,8 +307,7 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription(
-        """Creates a new Relation, requires RELATE_FROM_COMPONENT on the Component associated with 
-        start AND RELATE_TO_COMPONENT on the Component associated with end.
+        """Creates a new Relation, requires RELATE_FROM_COMPONENT on the Component associated with start.
         """
     )
     @AutoPayloadType("The created Relation")
@@ -322,8 +321,7 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription(
-        """Updates the specified Relation, requires RELATE_FROM_COMPONENT on the Component associated with 
-        start AND RELATE_TO_COMPONENT on the Component associated with end.
+        """Updates the specified Relation, requires RELATE_FROM_COMPONENT on the Component associated with start.
         """
     )
     @AutoPayloadType("The updated Relation")
@@ -337,8 +335,7 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription(
-        """Deletes the specified Relation, requires RELATE_FROM_COMPONENT on the Component associated with 
-        start OR RELATE_TO_COMPONENT on the Component associated with end.
+        """Deletes the specified Relation, requires RELATE_FROM_COMPONENT on the Component associated with start.
         """
     )
     @AutoPayloadType("The id of the deleted Relation")

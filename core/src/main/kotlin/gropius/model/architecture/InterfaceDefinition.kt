@@ -22,7 +22,6 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["componentVersion"])
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["componentVersion"])
-@Authorization(ComponentPermission.RELATE_TO_COMPONENT, allowFromRelated = ["componentVersion"])
 @Authorization(ComponentPermission.RELATE_FROM_COMPONENT, allowFromRelated = ["componentVersion"])
 class InterfaceDefinition(
     @property:GraphQLDescription(

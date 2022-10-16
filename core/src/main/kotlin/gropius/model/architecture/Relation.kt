@@ -15,13 +15,15 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @GraphQLDescription(
     """A relation between RelationPartners (ComponentVersions and Interfaces).
     Relations are always directional.
-    The template defines which RelationPartners are possible as start / end.
+    Relations can derive Interfaces from `end` to `start` if both `start` and `end` are ComponentVersions
+    and the template of this Relation allows it.
+    The template defines which RelationPartners are possible as `start` / `end`.
     For both start and end, if it is an Interface, it is possible to define the InterfaceParts this includes.
     Caution: This is **not** a supertype of IssueRelation.
-    READ is granted if READ is granted on `start` or `end`.
+    READ is granted if READ is granted on `start`.
     """
 )
-@Authorization(NodePermission.READ, allowFromRelated = ["start", "end"])
+@Authorization(NodePermission.READ, allowFromRelated = ["start"])
 class Relation(
     @property:GraphQLIgnore
     @CompositeProperty
