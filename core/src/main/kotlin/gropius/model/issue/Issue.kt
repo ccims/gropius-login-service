@@ -129,7 +129,8 @@ class Issue(
     @GraphQLDescription(
         """The state of the Issue, e.g. OPEN. Allowed IssueStates are defined by the template.
         The state also defines if this Issue is considered open or closed.
-        """)
+        """
+    )
     @FilterProperty
     @delegate:Transient
     val state by NodeProperty<IssueState>()
