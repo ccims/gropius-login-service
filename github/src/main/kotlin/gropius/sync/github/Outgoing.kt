@@ -1,6 +1,5 @@
 package gropius.sync.github
 
-import gropius.sync.TokenManager
 import com.apollographql.apollo3.ApolloClient
 import gropius.GithubConfigurationProperties
 import gropius.model.architecture.IMS
@@ -14,6 +13,7 @@ import gropius.repository.issue.IssueRepository
 import gropius.repository.user.IMSUserRepository
 import gropius.sync.JsonHelper
 import gropius.sync.SyncNotificator
+import gropius.sync.TokenManager
 import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.*
 import gropius.sync.github.generated.MutateAddLabelMutation.Data.AddLabelsToLabelable.Labelable.Companion.asIssue
@@ -63,20 +63,32 @@ class Outgoing(
     private val logger = LoggerFactory.getLogger(Outgoing::class.java)
 
     /**
-     * Find the last consecutive list of blocks of the same close/reopen type
+     * Find the last consecutive list of blocks of the same searchLambda
      * @param relevantTimeline List of timeline items filtered for issue and sorted by date
+     * @param searchLambda Lambda returning a value that is equal if the items should be considered equal
      * @return Consecutive same type timeline items
      */
-    private fun findFinalTypeBlock(relevantTimeline: List<TimelineItem>): List<TimelineItem> {
+    private suspend fun <T> findFinalBlock(
+        relevantTimeline: List<TimelineItem>, searchLambda: suspend (TimelineItem) -> T
+    ): List<TimelineItem> {
         val lastItem = relevantTimeline.last()
         val finalItems = mutableListOf<TimelineItem>()
         for (item in relevantTimeline.reversed()) {
-            if (item::class != lastItem::class) {
+            if (searchLambda(item) != searchLambda(lastItem)) {
                 break
             }
             finalItems += item
         }
         return finalItems
+    }
+
+    /**
+     * Find the last consecutive list of blocks of the same type
+     * @param relevantTimeline List of timeline items filtered for issue and sorted by date
+     * @return Consecutive same type timeline items
+     */
+    private suspend fun findFinalTypeBlock(relevantTimeline: List<TimelineItem>): List<TimelineItem> {
+        return findFinalBlock(relevantTimeline) { it::class };
     }
 
     /**
@@ -174,7 +186,7 @@ class Outgoing(
         return listOf {
             val client = createClient(imsProjectConfig, userList)
             val response = client.mutation(MutateReopenIssueMutation(issueInfo.githubId)).execute()
-            val item = response.data?.closeIssue?.issue?.timelineItems?.nodes?.lastOrNull()
+            val item = response.data?.reopenIssue?.issue?.timelineItems?.nodes?.lastOrNull()
             if (item != null) {
                 incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
             }
@@ -340,7 +352,7 @@ class Outgoing(
         if (relevantTimeline.isEmpty()) {
             return listOf()
         }
-        val finalBlock = findFinalTypeBlock(relevantTimeline)
+        val finalBlock = findFinalBlock(relevantTimeline) { (it as StateChangedEvent).newState().value.isOpen }
         for (item in finalBlock) {
             if (timelineEventInfoRepository.findByNeo4jId(item.rawId!!) != null) {
                 return listOf()
@@ -479,13 +491,12 @@ class Outgoing(
         restoresDefaultState: Boolean
     ): Boolean {
         if (isAddingItem(finalBlock.last())) {
-            val lastNegativeEvent = relevantTimeline.filter { isAddingItem(it) }
+            val lastNegativeEvent = relevantTimeline.filter { isRemovingItem(it) }
                 .lastOrNull { timelineEventInfoRepository.findByNeo4jId(it.rawId!!)?.githubId != null }
             if (lastNegativeEvent == null) {
                 return !restoresDefaultState
             } else {
-                if (relevantTimeline.filter { isRemovingItem(it) }
-                        .filter { it.lastModifiedAt > lastNegativeEvent.lastModifiedAt }
+                if (relevantTimeline.filter { isAddingItem(it) }.filter { it.createdAt > lastNegativeEvent.createdAt }
                         .firstOrNull { timelineEventInfoRepository.findByNeo4jId(it.rawId!!)?.githubId != null } == null) {
                     return true
                 }
@@ -547,8 +558,7 @@ class Outgoing(
                 finalBlock, relevantTimeline, false
             )
         ) {
-            collectedMutations += githubAddLabel(
-                imsProjectConfig,
+            collectedMutations += githubAddLabel(imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
@@ -557,8 +567,7 @@ class Outgoing(
                 finalBlock, relevantTimeline, true
             )
         ) {
-            collectedMutations += githubRemoveLabel(
-                imsProjectConfig,
+            collectedMutations += githubRemoveLabel(imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
@@ -575,8 +584,9 @@ class Outgoing(
     suspend fun issueModified(
         imsProjectConfig: IMSProjectConfig, issue: Issue, issueInfo: IssueInfo
     ): List<suspend () -> Unit> {
+        logger.info("Issue (${issue.title}) ${issue.rawId} has outgoing modifications")
         val collectedMutations = mutableListOf<suspend () -> Unit>()
-        val timeline = issue.timelineItems().toList().sortedBy { it.lastModifiedAt }
+        val timeline = issue.timelineItems().toList().sortedBy { it.createdAt }
         collectedMutations += pushReopenClose(imsProjectConfig, issueInfo, timeline)
         collectedMutations += pushLabels(imsProjectConfig, issueInfo, timeline)
         collectedMutations += pushComments(imsProjectConfig, issueInfo, timeline)

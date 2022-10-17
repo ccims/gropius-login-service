@@ -11,7 +11,7 @@ mutation MutateCloseIssue($id: ID!) {
     }
 }
 mutation MutateReopenIssue($id: ID!) {
-    closeIssue(input:{issueId:$id}){
+    reopenIssue(input:{issueId:$id}){
         issue {
             timelineItems(itemTypes: [REOPENED_EVENT], last: 1) {
                 nodes {
