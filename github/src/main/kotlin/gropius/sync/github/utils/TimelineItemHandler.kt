@@ -1,7 +1,6 @@
 package gropius.sync.github.utils
 
 import gropius.model.issue.timeline.*
-import gropius.model.template.IssueState
 import gropius.sync.github.NodeSourcerer
 import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.fragment.*
@@ -75,8 +74,18 @@ class TimelineItemHandler(
         imsProjectConfig: IMSProjectConfig, issue: IssueInfo, event: ClosedEventTimelineItemData
     ): Pair<String?, OffsetDateTime?> {
         val loadedIssue = issue.load(neoOperations)
+        // TODO better state detection
         val newState = loadedIssue.template().value.issueStates().firstOrNull { !it.isOpen }
-        return handleIssueStateChange(imsProjectConfig, issue, event, newState)
+        return newState?.let {
+            var stateChangedEvent = StateChangedEvent(event.createdAt, OffsetDateTime.now())
+            stateChangedEvent.oldState().value = issue.load(neoOperations).state().value
+            stateChangedEvent.newState().value = newState
+            stateChangedEvent.issue().value = loadedIssue
+            stateChangedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
+            stateChangedEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
+            stateChangedEvent = neoOperations.save(stateChangedEvent).awaitSingle()
+            Pair(stateChangedEvent.rawId, event.createdAt)
+        } ?: Pair(null, null)
     }
 
     /**
@@ -92,31 +101,13 @@ class TimelineItemHandler(
         imsProjectConfig: IMSProjectConfig, issue: IssueInfo, event: ReopenedEventTimelineItemData
     ): Pair<String?, OffsetDateTime?> {
         val loadedIssue = issue.load(neoOperations)
-        val newState = loadedIssue.template().value.issueStates().firstOrNull { it.isOpen }
-        return handleIssueStateChange(imsProjectConfig, issue, event, newState)
-    }
-
-    /**
-     * Save timeline item to database
-     * @param imsProjectConfig Config to use
-     * @param issue Affected issue
-     * @param event raw GitHub timeline item
-     * @param imsProjectConfig Config of the active project
-     * @param newState State to transistion into
-     * @return the neo4j-id for the created item (if created) and the last DateTime concerning this item
-     */
-    private suspend fun handleIssueStateChange(
-        imsProjectConfig: IMSProjectConfig,
-        issue: IssueInfo,
-        event: ReopenedEventTimelineItemData,
-        newState: IssueState?
-    ): Pair<String?, OffsetDateTime?> {
         // TODO better state detection
+        val newState = loadedIssue.template().value.issueStates().firstOrNull { it.isOpen }
         return newState?.let {
             var stateChangedEvent = StateChangedEvent(event.createdAt, OffsetDateTime.now())
             stateChangedEvent.oldState().value = issue.load(neoOperations).state().value
             stateChangedEvent.newState().value = newState
-            stateChangedEvent.issue().value = issue.load(neoOperations)
+            stateChangedEvent.issue().value = loadedIssue
             stateChangedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
             stateChangedEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
             stateChangedEvent = neoOperations.save(stateChangedEvent).awaitSingle()
