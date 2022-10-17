@@ -106,7 +106,7 @@ class Incoming(
     ): OffsetDateTime? {
         val dbEntry = timelineEventInfoRepository.findByUrlAndGithubId(imsProjectConfig.url, event.asNode()!!.id)
         return if (event.asIssueComment() != null) {
-            handleTimelineEventIssueComment(imsProjectConfig, issueInfo, event, dbEntry)
+            handleTimelineEventIssueComment(imsProjectConfig, issueInfo, event, dbEntry?.neo4jId)
         } else {
             dbEntry?.lastModifiedAt ?: handleTimelineEventNonIssueComment(imsProjectConfig, issueInfo, event)
         }
@@ -142,22 +142,25 @@ class Incoming(
      * @param issueInfo the issue the timeline belongs to
      * @param event a single timeline item
      * @param imsProjectConfig Config of the active project
-     * @param dbEntry Possible existing match in the mongodb of previous sync
+     * @param neo4jID ID of the issue if it already exists in db
      * @return The time of the event or null for error
      */
     @Suppress("UNUSED_VALUE")
-    private suspend fun handleTimelineEventIssueComment(
-        imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, event: TimelineItemData, dbEntry: TimelineEventInfo?
+    suspend fun handleTimelineEventIssueComment(
+        imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, event: TimelineItemData, neo4jID: String?
     ): OffsetDateTime? {
         val (neoId, time) = timelineItemHandler.handleIssueComment(
-            imsProjectConfig, issueInfo, event.asIssueComment()!!, dbEntry?.neo4jId
+            imsProjectConfig, issueInfo, event.asIssueComment()!!, neo4jID
         )
         if (time != null) {
-            timelineEventInfoRepository.save(
-                TimelineEventInfo(
+            val node =
+                (if (neoId != null) timelineEventInfoRepository.findByNeo4jId(neoId) else null) ?: TimelineEventInfo(
                     event.asNode()!!.id, neoId, time, event.__typename, imsProjectConfig.url
                 )
-            ).awaitSingle()
+            node.githubId = event.asNode()!!.id
+            node.neo4jId = neoId
+            node.lastModifiedAt = time
+            timelineEventInfoRepository.save(node).awaitSingle()
             var issue = neoOperations.findById<Issue>(issueInfo.neo4jId)!!
             issue.lastUpdatedAt = maxOf(issue.lastUpdatedAt, time)
             issue = neoOperations.save(issue).awaitSingle()

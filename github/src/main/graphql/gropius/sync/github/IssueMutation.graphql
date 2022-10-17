@@ -62,7 +62,7 @@ mutation MutateCreateComment($id: ID!, $body: String!) {
     addComment(input: {body: $body, subjectId: $id}) {
         commentEdge {
             node {
-                ...IssueCommentData
+                ...TimelineItemData
             }
         }
     }

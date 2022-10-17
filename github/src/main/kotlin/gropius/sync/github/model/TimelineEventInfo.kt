@@ -18,10 +18,10 @@ import java.time.OffsetDateTime
 @Document
 data class TimelineEventInfo(
     @Indexed
-    val githubId: String,
+    var githubId: String,
     @Indexed
-    val neo4jId: String?,
-    val lastModifiedAt: OffsetDateTime,
+    var neo4jId: String?,
+    var lastModifiedAt: OffsetDateTime,
     val type: String?,
     @Indexed
     val url: URI

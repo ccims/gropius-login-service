@@ -17,6 +17,7 @@ import gropius.sync.TokenManager
 import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.*
 import gropius.sync.github.generated.MutateAddLabelMutation.Data.AddLabelsToLabelable.Labelable.Companion.asIssue
+import gropius.sync.github.generated.MutateCreateCommentMutation.Data.AddComment.CommentEdge.Node.Companion.asIssueTimelineItems
 import gropius.sync.github.generated.MutateCreateLabelMutation.Data.CreateLabel.Label.Companion.labelData
 import gropius.sync.github.generated.MutateRemoveLabelMutation.Data.RemoveLabelsFromLabelable.Labelable.Companion.asIssue
 import gropius.sync.github.model.IssueInfo
@@ -331,9 +332,10 @@ class Outgoing(
         return listOf {
             val client = createClient(imsProjectConfig, listOf(user))
             val response = client.mutation(MutateCreateCommentMutation(issueInfo.githubId, comment.body)).execute()
-            val item = response.data?.addComment?.commentEdge?.node
+            val item = response.data?.addComment?.commentEdge?.node?.asIssueTimelineItems()
             if (item != null) {
-                timelineItemHandler.handleIssueComment(imsProjectConfig, issueInfo, item, null)
+                println("HANDLING")
+                incoming.handleTimelineEventIssueComment(imsProjectConfig, issueInfo, item, comment.rawId)
             }
         }
     }
@@ -413,7 +415,8 @@ class Outgoing(
         imsProjectConfig: IMSProjectConfig,
         issueInfo: IssueInfo
     ): List<suspend () -> Unit> {
-        return if (shouldSyncType({ it is StateChangedEvent && it.newState().value.isOpen },
+        return if (shouldSyncType(
+                { it is StateChangedEvent && it.newState().value.isOpen },
                 { it is StateChangedEvent && !it.newState().value.isOpen },
                 finalBlock,
                 relevantTimeline,
@@ -441,7 +444,8 @@ class Outgoing(
         imsProjectConfig: IMSProjectConfig,
         issueInfo: IssueInfo
     ): List<suspend () -> Unit> {
-        return if (shouldSyncType({ it is StateChangedEvent && !it.newState().value.isOpen },
+        return if (shouldSyncType(
+                { it is StateChangedEvent && !it.newState().value.isOpen },
                 { it is StateChangedEvent && it.newState().value.isOpen },
                 finalBlock,
                 relevantTimeline,
@@ -466,7 +470,8 @@ class Outgoing(
     private suspend inline fun <reified AddingItem : TimelineItem, reified RemovingItem : TimelineItem> shouldSyncType(
         finalBlock: List<TimelineItem>, relevantTimeline: List<TimelineItem>, restoresDefaultState: Boolean
     ): Boolean {
-        return shouldSyncType({ it is AddingItem },
+        return shouldSyncType(
+            { it is AddingItem },
             { it is RemovingItem },
             finalBlock,
             relevantTimeline,
