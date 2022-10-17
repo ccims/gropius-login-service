@@ -165,6 +165,7 @@ class IssueService(
         issue.state().value = state
         createdAuditedNode(issue, byUser)
         val bodyItem = Body(atTime, atTime, body, atTime)
+        bodyItem.bodyLastEditedBy().value = byUser
         createdTimelineItem(issue, bodyItem, atTime, byUser)
         issue.body().value = bodyItem
         return issue
@@ -1963,6 +1964,7 @@ class IssueService(
             throw IllegalStateException("An IssueComment must answer a Comment on the same Issue")
         }
         val issueComment = IssueComment(atTime, atTime, body, atTime, false)
+        issueComment.bodyLastEditedBy().value = byUser
         issueComment.answers().value = answers
         addArtefactsToIssueComment(issueComment, referencedArtefacts)
         issue.issueComments() += issueComment
