@@ -168,6 +168,9 @@ class IssueService(
         bodyItem.bodyLastEditedBy().value = byUser
         createdTimelineItem(issue, bodyItem, atTime, byUser)
         issue.body().value = bodyItem
+        for (trackable in trackables) {
+            addIssueToTrackable(issue, trackable, atTime, byUser)
+        }
         return issue
     }
 
