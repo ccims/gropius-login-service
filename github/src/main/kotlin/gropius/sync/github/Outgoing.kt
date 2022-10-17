@@ -336,8 +336,7 @@ class Outgoing(
     private suspend fun pushReopenClose(
         imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, timeline: List<TimelineItem>
     ): List<suspend () -> Unit> {
-        val relevantTimeline =
-            timeline.filter { (it is ReopenedEvent) || (it is ClosedEvent) }
+        val relevantTimeline = timeline.filterIsInstance<StateChangedEvent>()
         if (relevantTimeline.isEmpty()) {
             return listOf()
         }
@@ -347,7 +346,7 @@ class Outgoing(
                 return listOf()
             }
         }
-        return handleFinalReopenCloseBlock(finalBlock, relevantTimeline, imsProjectConfig, issueInfo)
+        return handleFinalStateChangedBlock(finalBlock, relevantTimeline, imsProjectConfig, issueInfo)
     }
 
     /**
@@ -369,39 +368,78 @@ class Outgoing(
     }
 
     /**
-     * Convert the finalBlock of an reopenClose relevantTimeline into the mutations
+     * Convert the finalBlock of an stateChanged relevantTimeline into the mutations
      * @param imsProjectConfig active config
      * @param issueInfo info of the issue containing the timeline item
      * @param relevantTimeline TimelineItems for this issue filtered to reopen/close and sorted by date
      * @param finalBlock Final similarly typed block of relevantTimeline
      * @return List of functions that contain the actual mutation executors
      */
-    private suspend fun handleFinalReopenCloseBlock(
+    private suspend fun handleFinalStateChangedBlock(
         finalBlock: List<TimelineItem>,
         relevantTimeline: List<TimelineItem>,
         imsProjectConfig: IMSProjectConfig,
         issueInfo: IssueInfo
-    ): MutableList<suspend () -> Unit> {
-        val collectedMutations = mutableListOf<suspend () -> Unit>()
-        if (shouldSyncType<ReopenedEvent, ClosedEvent>(
-                finalBlock, relevantTimeline, true
+    ): List<suspend () -> Unit> {
+        return handleFinalStateChangedToClosedBlock(
+            finalBlock, relevantTimeline, imsProjectConfig, issueInfo
+        ) + handleFinalStateChangedToOpenBlock(finalBlock, relevantTimeline, imsProjectConfig, issueInfo)
+    }
+
+    /**
+     * Convert the finalBlock of an stateChanged relevantTimeline into the mutations
+     * Handles only events which change it to open
+     * @param imsProjectConfig active config
+     * @param issueInfo info of the issue containing the timeline item
+     * @param relevantTimeline TimelineItems for this issue filtered to reopen/close and sorted by date
+     * @param finalBlock Final similarly typed block of relevantTimeline
+     * @return List of functions that contain the actual mutation executors
+     */
+    private suspend fun handleFinalStateChangedToOpenBlock(
+        finalBlock: List<TimelineItem>,
+        relevantTimeline: List<TimelineItem>,
+        imsProjectConfig: IMSProjectConfig,
+        issueInfo: IssueInfo
+    ): List<suspend () -> Unit> {
+        return if (shouldSyncType({ it is StateChangedEvent && it.newState().value.isOpen },
+                { it is StateChangedEvent && !it.newState().value.isOpen },
+                finalBlock,
+                relevantTimeline,
+                true
             )
         ) {
-            collectedMutations += githubReopenIssue(
-                imsProjectConfig,
-                issueInfo,
-                finalBlock.map { it.lastModifiedBy().value })
+            githubReopenIssue(imsProjectConfig, issueInfo, finalBlock.map { it.lastModifiedBy().value })
+        } else {
+            emptyList()
         }
-        if (shouldSyncType<ClosedEvent, ReopenedEvent>(
-                finalBlock, relevantTimeline, false
+    }
+
+    /**
+     * Convert the finalBlock of an stateChanged relevantTimeline into the mutations
+     * Handles only events which change it to closed
+     * @param imsProjectConfig active config
+     * @param issueInfo info of the issue containing the timeline item
+     * @param relevantTimeline TimelineItems for this issue filtered to reopen/close and sorted by date
+     * @param finalBlock Final similarly typed block of relevantTimeline
+     * @return List of functions that contain the actual mutation executors
+     */
+    private suspend fun handleFinalStateChangedToClosedBlock(
+        finalBlock: List<TimelineItem>,
+        relevantTimeline: List<TimelineItem>,
+        imsProjectConfig: IMSProjectConfig,
+        issueInfo: IssueInfo
+    ): List<suspend () -> Unit> {
+        return if (shouldSyncType({ it is StateChangedEvent && !it.newState().value.isOpen },
+                { it is StateChangedEvent && it.newState().value.isOpen },
+                finalBlock,
+                relevantTimeline,
+                false
             )
         ) {
-            collectedMutations += githubCloseIssue(
-                imsProjectConfig,
-                issueInfo,
-                finalBlock.map { it.lastModifiedBy().value })
+            githubCloseIssue(imsProjectConfig, issueInfo, finalBlock.map { it.lastModifiedBy().value })
+        } else {
+            emptyList()
         }
-        return collectedMutations
     }
 
     /**
@@ -416,16 +454,39 @@ class Outgoing(
     private suspend inline fun <reified AddingItem : TimelineItem, reified RemovingItem : TimelineItem> shouldSyncType(
         finalBlock: List<TimelineItem>, relevantTimeline: List<TimelineItem>, restoresDefaultState: Boolean
     ): Boolean {
-        if (finalBlock.last() is AddingItem) {
-            val lastNegativeEvent = relevantTimeline.filterIsInstance<AddingItem>()
+        return shouldSyncType({ it is AddingItem },
+            { it is RemovingItem },
+            finalBlock,
+            relevantTimeline,
+            restoresDefaultState
+        )
+    }
+
+    /**
+     * Check if TimelineItem should be synced or ignored
+     * @param isAddingItem filter for items with the same semantic as the item to add
+     * @param isRemovingItem filter for items invalidating the items matching [isAddingItem]
+     * @param finalBlock the last block of similar items that should be checked for syncing
+     * @param relevantTimeline Sorted part of the timeline containing only TimelineItems interacting with finalBlock
+     * @param restoresDefaultState if the timeline item converges the state of the issue towards the state of an empty issue
+     * @return true if and only if there are unsynced changes that should be synced to GitHub
+     */
+    private suspend fun shouldSyncType(
+        isAddingItem: suspend (TimelineItem) -> Boolean,
+        isRemovingItem: suspend (TimelineItem) -> Boolean,
+        finalBlock: List<TimelineItem>,
+        relevantTimeline: List<TimelineItem>,
+        restoresDefaultState: Boolean
+    ): Boolean {
+        if (isAddingItem(finalBlock.last())) {
+            val lastNegativeEvent = relevantTimeline.filter { isAddingItem(it) }
                 .lastOrNull { timelineEventInfoRepository.findByNeo4jId(it.rawId!!)?.githubId != null }
             if (lastNegativeEvent == null) {
                 return !restoresDefaultState
             } else {
-                if (relevantTimeline.filterIsInstance<RemovingItem>()
+                if (relevantTimeline.filter { isRemovingItem(it) }
                         .filter { it.lastModifiedAt > lastNegativeEvent.lastModifiedAt }
-                        .firstOrNull { timelineEventInfoRepository.findByNeo4jId(it.rawId!!)?.githubId != null } == null
-                ) {
+                        .firstOrNull { timelineEventInfoRepository.findByNeo4jId(it.rawId!!)?.githubId != null } == null) {
                     return true
                 }
             }

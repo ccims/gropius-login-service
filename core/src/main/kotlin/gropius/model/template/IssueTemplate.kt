@@ -12,7 +12,7 @@ import org.springframework.data.annotation.Transient
 @GraphQLDescription(
     """Template for Issues.
     Defines templated fields with specific types (defined using JSON schema).
-    Defines possible IssueTypes and IssuePriorities for Issues with this Template,
+    Defines possible IssueTypes, IssueStates and IssuePriorities for Issues with this Template,
     possible AssignmentTypes for Assignments to Issues with this template, and possible 
     RelationTypes for outgoing IssueRelations for Issues with this template.
     All those are derived, if this Template extends another IssueTemplate.
@@ -27,6 +27,12 @@ class IssueTemplate(
     @FilterProperty
     @delegate:Transient
     val issueTypes by NodeSetProperty<IssueType>()
+
+    @NodeRelationship(IssueState.PART_OF, Direction.INCOMING)
+    @GraphQLDescription("Set of all states Issues with this Template can have.")
+    @FilterProperty
+    @delegate:Transient
+    val issueStates by NodeSetProperty<IssueState>()
 
     @NodeRelationship(AssignmentType.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Set of all types Assignments to Issues with this Template can have.")

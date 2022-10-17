@@ -48,9 +48,6 @@ class Issue(
     @FilterProperty
     @OrderProperty
     var lastUpdatedAt: OffsetDateTime,
-    @property:GraphQLDescription("If true, this Issue is currently open, otherwise it is closed")
-    @FilterProperty
-    var isOpen: Boolean,
     @property:GraphQLDescription("DateTime when working on this Issue started / will start.")
     @FilterProperty
     @OrderProperty
@@ -74,6 +71,7 @@ class Issue(
         const val ISSUE_COMMENT = "ISSUE_COMMENT"
         const val BODY = "BODY"
         const val TYPE = "TYPE"
+        const val STATE = "STATE"
         const val PRIORITY = "PRIORITY"
         const val LABEL = "LABEL"
         const val ARTEFACT = "ARTEFACT"
@@ -126,6 +124,16 @@ class Issue(
     @FilterProperty
     @delegate:Transient
     val type by NodeProperty<IssueType>()
+
+    @NodeRelationship(STATE, Direction.OUTGOING)
+    @GraphQLDescription(
+        """The state of the Issue, e.g. OPEN. Allowed IssueStates are defined by the template.
+        The state also defines if this Issue is considered open or closed.
+        """
+    )
+    @FilterProperty
+    @delegate:Transient
+    val state by NodeProperty<IssueState>()
 
     @NodeRelationship(PRIORITY, Direction.OUTGOING)
     @GraphQLDescription("The priority of the Issue, e.g. HIGH. Allowed IssuePriorities are defined by the template.")

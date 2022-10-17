@@ -63,6 +63,7 @@ class TimelineItemHandler(
 
     /**
      * Save timeline item to database
+     * Only changes the state if a fitting state exists
      * @param imsProjectConfig Config to use
      * @param issue Affected issue
      * @param event raw GitHub timeline item
@@ -72,16 +73,24 @@ class TimelineItemHandler(
     private suspend fun handleIssueClosed(
         imsProjectConfig: IMSProjectConfig, issue: IssueInfo, event: ClosedEventTimelineItemData
     ): Pair<String?, OffsetDateTime?> {
-        var closedEvent = ClosedEvent(event.createdAt, OffsetDateTime.now())
-        closedEvent.issue().value = issue.load(neoOperations)
-        closedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
-        closedEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
-        closedEvent = neoOperations.save(closedEvent).awaitSingle()
-        return Pair(closedEvent.rawId, event.createdAt)
+        val loadedIssue = issue.load(neoOperations)
+        // TODO better state detection
+        val newState = loadedIssue.template().value.issueStates().firstOrNull { !it.isOpen }
+        return newState?.let {
+            var stateChangedEvent = StateChangedEvent(event.createdAt, OffsetDateTime.now())
+            stateChangedEvent.oldState().value = issue.load(neoOperations).state().value
+            stateChangedEvent.newState().value = newState
+            stateChangedEvent.issue().value = loadedIssue
+            stateChangedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
+            stateChangedEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
+            stateChangedEvent = neoOperations.save(stateChangedEvent).awaitSingle()
+            Pair(stateChangedEvent.rawId, event.createdAt)
+        } ?: Pair(null, null)
     }
 
     /**
      * Save timeline item to database
+     * Only changes the state if a fitting state exists
      * @param imsProjectConfig Config to use
      * @param issue Affected issue
      * @param event raw GitHub timeline item
@@ -91,12 +100,19 @@ class TimelineItemHandler(
     private suspend fun handleIssueReopen(
         imsProjectConfig: IMSProjectConfig, issue: IssueInfo, event: ReopenedEventTimelineItemData
     ): Pair<String?, OffsetDateTime?> {
-        var reopenedEvent = ReopenedEvent(event.createdAt, OffsetDateTime.now())
-        reopenedEvent.issue().value = issue.load(neoOperations)
-        reopenedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
-        reopenedEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
-        reopenedEvent = neoOperations.save(reopenedEvent).awaitSingle()
-        return Pair(reopenedEvent.rawId, event.createdAt)
+        val loadedIssue = issue.load(neoOperations)
+        // TODO better state detection
+        val newState = loadedIssue.template().value.issueStates().firstOrNull { it.isOpen }
+        return newState?.let {
+            var stateChangedEvent = StateChangedEvent(event.createdAt, OffsetDateTime.now())
+            stateChangedEvent.oldState().value = issue.load(neoOperations).state().value
+            stateChangedEvent.newState().value = newState
+            stateChangedEvent.issue().value = loadedIssue
+            stateChangedEvent.createdBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
+            stateChangedEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.actor!!)
+            stateChangedEvent = neoOperations.save(stateChangedEvent).awaitSingle()
+            Pair(stateChangedEvent.rawId, event.createdAt)
+        } ?: Pair(null, null)
     }
 
     /**
