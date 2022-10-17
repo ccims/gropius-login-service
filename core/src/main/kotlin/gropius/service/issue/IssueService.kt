@@ -1969,9 +1969,9 @@ class IssueService(
         val issueComment = IssueComment(atTime, atTime, body, atTime, false)
         issueComment.bodyLastEditedBy().value = byUser
         issueComment.answers().value = answers
-        addArtefactsToIssueComment(issueComment, referencedArtefacts)
         issue.issueComments() += issueComment
         createdTimelineItem(issue, issueComment, atTime, byUser)
+        addArtefactsToIssueComment(issueComment, referencedArtefacts)
         return issueComment
     }
 
