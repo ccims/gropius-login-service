@@ -334,7 +334,6 @@ class Outgoing(
             val response = client.mutation(MutateCreateCommentMutation(issueInfo.githubId, comment.body)).execute()
             val item = response.data?.addComment?.commentEdge?.node?.asIssueTimelineItems()
             if (item != null) {
-                println("HANDLING")
                 incoming.handleTimelineEventIssueComment(imsProjectConfig, issueInfo, item, comment.rawId)
             }
         }
