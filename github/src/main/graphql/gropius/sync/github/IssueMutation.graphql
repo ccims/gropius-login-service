@@ -67,3 +67,10 @@ mutation MutateCreateComment($id: ID!, $body: String!) {
         }
     }
 }
+mutation MutateCreateIssue($id: ID!, $title: String!, $body: String!) {
+    createIssue(input: {repositoryId: $id, title: $title, body: $body}) {
+        issue {
+            ...IssueDataExtensive
+        }
+    }
+}

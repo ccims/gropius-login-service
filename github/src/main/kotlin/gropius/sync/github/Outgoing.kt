@@ -26,7 +26,6 @@ import gropius.sync.github.repository.IssueInfoRepository
 import gropius.sync.github.repository.LabelInfoRepository
 import gropius.sync.github.repository.TimelineEventInfoRepository
 import gropius.sync.github.utils.TimelineItemHandler
-import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.reactor.awaitSingle
 import org.neo4j.cypherdsl.core.Cypher
 import org.slf4j.LoggerFactory
@@ -248,18 +247,23 @@ class Outgoing(
     ): List<suspend () -> Unit> {
         return listOf {
             val client = createClient(imsProjectConfig, userList)
-            val createLabelResponse = client.mutation(
-                MutateCreateLabelMutation(
-                    issueInfo.githubId, label.name, label.description, label.color
-                )
-            ).execute()
-            val newLabel = createLabelResponse.data?.createLabel?.label?.labelData()
-            if (newLabel != null) {
-                nodeSourcerer.ensureLabel(imsProjectConfig, newLabel)
-                val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, newLabel.id)).execute()
-                val item = response.data?.addLabelsToLabelable?.labelable?.asIssue()?.timelineItems?.nodes?.lastOrNull()
-                if (item != null) {
-                    incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
+            val repositoryId = client.query(RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo))
+                .execute().data?.repository?.id
+            if(repositoryId!=null) {
+                val createLabelResponse = client.mutation(
+                    MutateCreateLabelMutation(
+                        repositoryId, label.name, label.description, label.color
+                    )
+                ).execute()
+                val newLabel = createLabelResponse.data?.createLabel?.label?.labelData()
+                if (newLabel != null) {
+                    nodeSourcerer.ensureLabel(imsProjectConfig, newLabel)
+                    val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, newLabel.id)).execute()
+                    val item =
+                        response.data?.addLabelsToLabelable?.labelable?.asIssue()?.timelineItems?.nodes?.lastOrNull()
+                    if (item != null) {
+                        incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
+                    }
                 }
             }
         }
@@ -580,6 +584,33 @@ class Outgoing(
     }
 
     /**
+     * Mutate the labels of an issue upto GitHub
+     * @param imsProjectConfig active config
+     * @param issueInfo info of the issue containing the timeline item
+     * @param relevantTimeline Sorted labeling TimelineItems filtered for the same label
+     * @param collectedMutations List to insert the mutations into
+     * @param label The label this group manipulates
+     * @return true if the item has already been synced and should not be synced again
+     */
+    private suspend fun createIssue(
+        imsProjectConfig: IMSProjectConfig, issue: Issue
+    ): List<suspend () -> Unit> {
+        val collectedMutations = mutableListOf<suspend () -> Unit>()
+        val client = createClient(imsProjectConfig, listOf(issue.createdBy().value))
+        val repositoryId = client.query(RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo))
+            .execute().data?.repository?.id
+        if (repositoryId != null) {
+            val response =
+                client.mutation(MutateCreateIssueMutation(repositoryId, issue.title, issue.body().value.body)).execute()
+            val item = response.data?.createIssue?.issue
+            if (item != null) {
+                nodeSourcerer.ensureIssue(imsProjectConfig, item, issue.rawId)
+            }
+        }
+        return collectedMutations
+    }
+
+    /**
      * Check a modified issue for mutateable changes
      * @param issue Issue to check
      * @param imsProjectConfig active config
@@ -603,12 +634,16 @@ class Outgoing(
      */
     suspend fun syncIssues(imsProjectConfig: IMSProjectConfig) {
         val collectedMutations = mutableListOf<suspend () -> Unit>()
-        for (issueInfo in issueInfoRepository.findByUrl(imsProjectConfig.url).toSet()) {
-            val issue = issueRepository.findById(issueInfo.neo4jId).awaitSingle()
-            if ((issueInfo.lastOutgoingSync == null) || (issue.lastUpdatedAt != issueInfo.lastOutgoingSync)) {
-                collectedMutations += issueModified(imsProjectConfig, issue, issueInfo)
-                issueInfo.lastOutgoingSync = issue.lastUpdatedAt
-                issueInfoRepository.save(issueInfo).awaitSingle()
+        for (issue in imsProjectConfig.imsProject.trackable().value.issues()) {
+            val issueInfo = issueInfoRepository.findByUrlAndNeo4jId(imsProjectConfig.url, issue.rawId!!)
+            if (issueInfo?.githubId != null) {
+                if ((issueInfo.lastOutgoingSync == null) || (issue.lastUpdatedAt != issueInfo.lastOutgoingSync)) {
+                    collectedMutations += issueModified(imsProjectConfig, issue, issueInfo)
+                    issueInfo.lastOutgoingSync = issue.lastUpdatedAt
+                    issueInfoRepository.save(issueInfo).awaitSingle()
+                }
+            } else {
+                collectedMutations += createIssue(imsProjectConfig, issue)
             }
         }
         if (collectedMutations.size > githubConfigurationProperties.maxMutationCount) {
