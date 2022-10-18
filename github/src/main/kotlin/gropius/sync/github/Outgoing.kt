@@ -225,11 +225,12 @@ class Outgoing(
     private suspend fun githubAddLabel(
         imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, label: Label, userList: Iterable<User>
     ): List<suspend () -> Unit> {
-        logger.info("Scheduling adding ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
         val labelInfo = labelInfoRepository.findByNeo4jId(label.rawId!!)
         return if (labelInfo != null) {
+            logger.info("Scheduling adding existing ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
             addExistingLabel(labelInfo, imsProjectConfig, userList, issueInfo)
         } else {
+            logger.info("Scheduling adding new ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
             addCreatedLabel(imsProjectConfig, userList, issueInfo, label)
         }
     }
@@ -249,7 +250,7 @@ class Outgoing(
             val client = createClient(imsProjectConfig, userList)
             val repositoryId = client.query(RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo))
                 .execute().data?.repository?.id
-            if(repositoryId!=null) {
+            if (repositoryId != null) {
                 val createLabelResponse = client.mutation(
                     MutateCreateLabelMutation(
                         repositoryId, label.name, label.description, label.color
@@ -418,8 +419,7 @@ class Outgoing(
         imsProjectConfig: IMSProjectConfig,
         issueInfo: IssueInfo
     ): List<suspend () -> Unit> {
-        return if (shouldSyncType(
-                { it is StateChangedEvent && it.newState().value.isOpen },
+        return if (shouldSyncType({ it is StateChangedEvent && it.newState().value.isOpen },
                 { it is StateChangedEvent && !it.newState().value.isOpen },
                 finalBlock,
                 relevantTimeline,
@@ -447,8 +447,7 @@ class Outgoing(
         imsProjectConfig: IMSProjectConfig,
         issueInfo: IssueInfo
     ): List<suspend () -> Unit> {
-        return if (shouldSyncType(
-                { it is StateChangedEvent && !it.newState().value.isOpen },
+        return if (shouldSyncType({ it is StateChangedEvent && !it.newState().value.isOpen },
                 { it is StateChangedEvent && it.newState().value.isOpen },
                 finalBlock,
                 relevantTimeline,
@@ -473,8 +472,7 @@ class Outgoing(
     private suspend inline fun <reified AddingItem : TimelineItem, reified RemovingItem : TimelineItem> shouldSyncType(
         finalBlock: List<TimelineItem>, relevantTimeline: List<TimelineItem>, restoresDefaultState: Boolean
     ): Boolean {
-        return shouldSyncType(
-            { it is AddingItem },
+        return shouldSyncType({ it is AddingItem },
             { it is RemovingItem },
             finalBlock,
             relevantTimeline,
@@ -566,7 +564,8 @@ class Outgoing(
                 finalBlock, relevantTimeline, false
             )
         ) {
-            collectedMutations += githubAddLabel(imsProjectConfig,
+            collectedMutations += githubAddLabel(
+                imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
@@ -575,7 +574,8 @@ class Outgoing(
                 finalBlock, relevantTimeline, true
             )
         ) {
-            collectedMutations += githubRemoveLabel(imsProjectConfig,
+            collectedMutations += githubRemoveLabel(
+                imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
