@@ -57,6 +57,7 @@ class LabelService(
         }
         val now = OffsetDateTime.now()
         val label = Label(now, now, input.name, input.description, input.color)
+        label.trackables() += trackables
         createdAuditedNode(label, input, getUser(authorizationContext))
         return repository.save(label).awaitSingle()
     }
