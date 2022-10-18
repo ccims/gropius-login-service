@@ -225,13 +225,15 @@ class Outgoing(
     private suspend fun githubAddLabel(
         imsProjectConfig: IMSProjectConfig, issueInfo: IssueInfo, label: Label, userList: Iterable<User>
     ): List<suspend () -> Unit> {
-        val labelInfo = labelInfoRepository.findByNeo4jId(label.rawId!!)
-        return if (labelInfo != null) {
-            logger.info("Scheduling adding existing ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
-            addExistingLabel(labelInfo, imsProjectConfig, userList, issueInfo)
-        } else {
-            logger.info("Scheduling adding new ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
-            addCreatedLabel(imsProjectConfig, userList, issueInfo, label)
+        return listOf {
+            val labelInfo = labelInfoRepository.findByNeo4jId(label.rawId!!)
+            if (labelInfo != null) {
+                logger.info("Adding existing ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
+                addExistingLabel(labelInfo, imsProjectConfig, userList, issueInfo)
+            } else {
+                logger.info("Adding new ${label.name} (${label.rawId}) to ${issueInfo.neo4jId}")
+                addCreatedLabel(imsProjectConfig, userList, issueInfo, label)
+            }
         }
     }
 
@@ -243,28 +245,32 @@ class Outgoing(
      * @param label the label that has been added
      * @return List of functions that contain the actual mutation executors
      */
-    private fun addCreatedLabel(
+    private suspend fun addCreatedLabel(
         imsProjectConfig: IMSProjectConfig, userList: Iterable<User>, issueInfo: IssueInfo, label: Label
-    ): List<suspend () -> Unit> {
-        return listOf {
-            val client = createClient(imsProjectConfig, userList)
-            val repositoryId = client.query(RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo))
-                .execute().data?.repository?.id
-            if (repositoryId != null) {
-                val createLabelResponse = client.mutation(
-                    MutateCreateLabelMutation(
-                        repositoryId, label.name, label.description, label.color
-                    )
-                ).execute()
-                val newLabel = createLabelResponse.data?.createLabel?.label?.labelData()
-                if (newLabel != null) {
-                    nodeSourcerer.ensureLabel(imsProjectConfig, newLabel)
-                    val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, newLabel.id)).execute()
-                    val item =
-                        response.data?.addLabelsToLabelable?.labelable?.asIssue()?.timelineItems?.nodes?.lastOrNull()
-                    if (item != null) {
-                        incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
-                    }
+    ) {
+
+        val client = createClient(imsProjectConfig, userList)
+        val repositoryId = client.query(RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo))
+            .execute().data?.repository?.id
+        if (repositoryId != null) {
+            val createLabelResponse = client.mutation(
+                MutateCreateLabelMutation(
+                    repositoryId, label.name, label.description, label.color
+                )
+            ).execute()
+            if (createLabelResponse.errors != null) {
+                logger.warn("Errors while syncing label: ${createLabelResponse.errors}")
+            }
+            val newLabel = createLabelResponse.data?.createLabel?.label?.labelData()
+            if (newLabel != null) {
+                nodeSourcerer.ensureLabel(imsProjectConfig, newLabel, label.rawId)
+                val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, newLabel.id)).execute()
+                if (response.errors != null) {
+                    logger.warn("Errors while syncing label: ${createLabelResponse.errors}")
+                }
+                val item = response.data?.addLabelsToLabelable?.labelable?.asIssue()?.timelineItems?.nodes?.lastOrNull()
+                if (item != null) {
+                    incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
                 }
             }
         }
@@ -278,20 +284,16 @@ class Outgoing(
      * @param labelInfo info about the label that has been added
      * @return List of functions that contain the actual mutation executors
      */
-    private fun addExistingLabel(
+    private suspend fun addExistingLabel(
         labelInfo: LabelInfo, imsProjectConfig: IMSProjectConfig, userList: Iterable<User>, issueInfo: IssueInfo
-    ): List<suspend () -> Unit> {
-        return if (labelInfo.url == imsProjectConfig.url) {
-            listOf {
-                val client = createClient(imsProjectConfig, userList)
-                val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, labelInfo.githubId)).execute()
-                val item = response.data?.addLabelsToLabelable?.labelable?.asIssue()?.timelineItems?.nodes?.lastOrNull()
-                if (item != null) {
-                    incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
-                }
+    ) {
+        if (labelInfo.url == imsProjectConfig.url) {
+            val client = createClient(imsProjectConfig, userList)
+            val response = client.mutation(MutateAddLabelMutation(issueInfo.githubId, labelInfo.githubId)).execute()
+            val item = response.data?.addLabelsToLabelable?.labelable?.asIssue()?.timelineItems?.nodes?.lastOrNull()
+            if (item != null) {
+                incoming.handleTimelineEvent(imsProjectConfig, issueInfo, item)
             }
-        } else {
-            emptyList()
         }
     }
 
@@ -530,10 +532,7 @@ class Outgoing(
         }
         val collectedMutations = mutableListOf<suspend () -> Unit>()
         for ((label, relevantTimeline) in groups) {
-            if (handleSingleLabel(
-                    relevantTimeline, collectedMutations, imsProjectConfig, issueInfo, label
-                )
-            ) return listOf()
+            handleSingleLabel(relevantTimeline, collectedMutations, imsProjectConfig, issueInfo, label)
         }
         return collectedMutations
     }
@@ -556,7 +555,7 @@ class Outgoing(
     ): Boolean {
         val finalBlock = findFinalTypeBlock(relevantTimeline)
         for (item in finalBlock) {
-            if (timelineEventInfoRepository.findByNeo4jId(item.rawId!!) != null) {
+            if (timelineEventInfoRepository.findByNeo4jId(item.rawId!!)?.githubId != null) {
                 return true
             }
         }
@@ -564,8 +563,7 @@ class Outgoing(
                 finalBlock, relevantTimeline, false
             )
         ) {
-            collectedMutations += githubAddLabel(
-                imsProjectConfig,
+            collectedMutations += githubAddLabel(imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
@@ -574,8 +572,7 @@ class Outgoing(
                 finalBlock, relevantTimeline, true
             )
         ) {
-            collectedMutations += githubRemoveLabel(
-                imsProjectConfig,
+            collectedMutations += githubRemoveLabel(imsProjectConfig,
                 issueInfo,
                 label,
                 finalBlock.map { it.lastModifiedBy().value })
