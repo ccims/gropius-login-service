@@ -230,7 +230,6 @@ class Incoming(
      * @param apolloClient the client to use4 for grpahql queries
      */
     suspend fun syncIssues(imsProjectConfig: IMSProjectConfig, apolloClient: ApolloClient) {
-
         syncProject(imsProjectConfig, apolloClient)
         for (issueInfo in issueInfoRepository.findByUrlAndDirtyIsTrue(imsProjectConfig.url).toList()) {
             val issue = neoOperations.findById<Issue>(issueInfo.neo4jId)!!

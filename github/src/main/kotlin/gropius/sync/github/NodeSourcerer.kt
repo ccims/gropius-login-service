@@ -127,15 +127,7 @@ class NodeSourcerer(
      */
     private suspend fun prepareIssueFromIssueData(imsProjectConfig: IMSProjectConfig, info: IssueData): Issue {
         val issue = Issue(
-            info.createdAt,
-            OffsetDateTime.now(),
-            mutableMapOf(),
-            info.title,
-            info.createdAt,
-            null,
-            null,
-            null,
-            null
+            info.createdAt, OffsetDateTime.now(), mutableMapOf(), info.title, info.createdAt, null, null, null, null
         )
         val template = ensureGithubTemplate()
         issue.body().value = prepareIssueBody(imsProjectConfig, info)
@@ -152,14 +144,17 @@ class NodeSourcerer(
      * Ensure a given issue is in the database
      * @param info The issue to be created this body for
      * @param imsProjectConfig Config of the active project
+     * @param neo4jID issue to use
      * @return The Gropius issue and the mongodb issue mapping
      */
-    suspend fun ensureIssue(imsProjectConfig: IMSProjectConfig, info: IssueData): Pair<Issue, IssueInfo> {
+    suspend fun ensureIssue(
+        imsProjectConfig: IMSProjectConfig, info: IssueData, neo4jID: String? = null
+    ): Pair<Issue, IssueInfo> {
         var issueInfo = issueInfoRepository.findByUrlAndGithubId(imsProjectConfig.url, info.id)
-        val issue: Issue = if (issueInfo == null) {
+        val issue: Issue = if ((neo4jID == null) && (issueInfo == null)) {
             prepareIssueFromIssueData(imsProjectConfig, info)
         } else {
-            neoOperations.findById(issueInfo.neo4jId)!!
+            neoOperations.findById(neo4jID ?: issueInfo?.neo4jId!!)!!
         }
         val bodyChanged = fillIssueBodyAndSave(imsProjectConfig, info, issue)
         if ((issueInfo == null) || bodyChanged) {
