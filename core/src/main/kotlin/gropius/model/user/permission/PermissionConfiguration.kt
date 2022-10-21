@@ -41,14 +41,6 @@ class PermissionConfiguration {
                 This includes adding Issues from other Trackables.
             """.trimIndent()
         ), PermissionEntry(
-            TrackablePermission.LINK_TO_ISSUES, """
-                Allows to link Issues (on this or other Trackables) **to** Issues on this Trackable. 
-            """.trimIndent()
-        ), PermissionEntry(
-            TrackablePermission.LINK_FROM_ISSUES, """
-                Allows to link **from** Issues on this Trackable to other Issues (on this or other Trackables).
-            """.trimIndent()
-        ), PermissionEntry(
             TrackablePermission.MODERATOR, """
                 Allows to moderate Issues on this Trackable.
                 This allows everything `MANAGE_ISSUES` allows.
@@ -89,6 +81,16 @@ class PermissionConfiguration {
             TrackablePermission.EXPORT_LABELS, """
                 Allows adding Labels on this Trackable to other Trackables.
             """.trimIndent()
+        ), PermissionEntry(
+            TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, """
+                Allows affecting entities part of this Trackable with any Issues.
+                Affectable entitites include
+                  - the Trackable itself
+                  - in case the Trackable is a Component
+                    - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
+                    - Interfaces on the Component
+                    - ComponentVersions of the Component
+            """.trimIndent()
         )
     )
 
@@ -104,18 +106,15 @@ class PermissionConfiguration {
                 GlobalPermission.CAN_CREATE_PROJECTS, """
                     Allows to create new Projects.
                 """.trimIndent()
-            ),
-            PermissionEntry(
+            ), PermissionEntry(
                 GlobalPermission.CAN_CREATE_COMPONENTS, """
                     Allows to create new Components.
                 """.trimIndent()
-            ),
-            PermissionEntry(
+            ), PermissionEntry(
                 GlobalPermission.CAN_CREATE_IMSS, """
                     Allows to create new IMSs.
                 """.trimIndent()
-            ),
-            PermissionEntry(
+            ), PermissionEntry(
                 GlobalPermission.CAN_CREATE_TEMPLATES, """
                     Allows to create new Templates.
                 """.trimIndent()

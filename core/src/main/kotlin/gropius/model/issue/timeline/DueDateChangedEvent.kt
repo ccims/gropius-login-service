@@ -6,7 +6,11 @@ import io.github.graphglue.model.FilterProperty
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the due date of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the due date of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class DueDateChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
@@ -16,4 +20,4 @@ class DueDateChangedEvent(
     @property:GraphQLDescription("The new due date.")
     @FilterProperty
     val newDueDate: OffsetDateTime?
-) : TimelineItem(createdAt, lastModifiedAt) {}
+) : PublicTimelineItem(createdAt, lastModifiedAt)

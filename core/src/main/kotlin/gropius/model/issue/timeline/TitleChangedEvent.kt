@@ -6,7 +6,11 @@ import io.github.graphglue.model.FilterProperty
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the title of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the title of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class TitleChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
@@ -16,4 +20,4 @@ class TitleChangedEvent(
     @property:GraphQLDescription("The new title.")
     @FilterProperty
     val newTitle: String
-) : TimelineItem(createdAt, lastModifiedAt) {}
+) : PublicTimelineItem(createdAt, lastModifiedAt)

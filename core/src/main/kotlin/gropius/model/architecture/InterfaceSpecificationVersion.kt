@@ -6,6 +6,7 @@ import gropius.model.template.BaseTemplate
 import gropius.model.template.InterfaceSpecificationVersionTemplate
 import gropius.model.template.MutableTemplatedNode
 import gropius.model.user.permission.NodePermission
+import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.*
 import org.springframework.data.annotation.Transient
 import org.springframework.data.neo4j.core.schema.CompositeProperty
@@ -26,6 +27,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
     allowFromRelated = ["interfaceSpecification", "interfaceDefinitions"]
 )
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["interfaceSpecification"])
+@Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["interfaceSpecification"])
 class InterfaceSpecificationVersion(
     name: String,
     description: String,

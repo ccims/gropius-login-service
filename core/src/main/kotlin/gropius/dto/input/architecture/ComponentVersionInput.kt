@@ -3,7 +3,7 @@ package gropius.dto.input.architecture
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.dto.input.common.CreateNamedNodeInput
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.ensureNoDuplicates
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.template.CreateTemplatedNodeInput
 import kotlin.properties.Delegates
 
@@ -18,6 +18,6 @@ open class ComponentVersionInput : CreateNamedNodeInput(), CreateTemplatedNodeIn
 
     override fun validate() {
         super.validate()
-        templatedFields.ensureNoDuplicates()
+        templatedFields.validateAndEnsureNoDuplicates()
     }
 }

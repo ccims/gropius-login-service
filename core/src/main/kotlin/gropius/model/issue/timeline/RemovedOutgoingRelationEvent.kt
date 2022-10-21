@@ -1,28 +1,19 @@
 package gropius.model.issue.timeline
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import io.github.graphglue.model.Direction
-import io.github.graphglue.model.DomainNode
-import io.github.graphglue.model.FilterProperty
-import io.github.graphglue.model.NodeRelationship
+import gropius.model.user.permission.NodePermission
+import io.github.graphglue.model.*
 import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an outgoing IssueRelation was removed.")
+@GraphQLDescription(
+    """Event representing that an outgoing IssueRelation was removed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
+@Authorization(NodePermission.READ, allowFromRelated = ["issue"])
 class RemovedOutgoingRelationEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
-
-    companion object {
-        const val REMOVED_RELATION = "REMOVED_RELATION"
-    }
-
-    @NodeRelationship(REMOVED_RELATION, Direction.OUTGOING)
-    @GraphQLDescription("The IssueRelation removed from `outgoingRelations`.")
-    @FilterProperty
-    @delegate:Transient
-    val removedRelation by NodeProperty<IssueRelation>()
-
-}
+) : RemovedRelationEvent(createdAt, lastModifiedAt)

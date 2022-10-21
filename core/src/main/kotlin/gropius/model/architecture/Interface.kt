@@ -5,6 +5,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.template.*
 import gropius.model.user.permission.ComponentPermission
 import gropius.model.user.permission.NodePermission
+import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.*
 import io.github.graphglue.model.property.NodeCache
 import org.springframework.data.annotation.Transient
@@ -21,6 +22,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(NodePermission.READ, allowFromRelated = ["interfaceDefinition"])
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["interfaceDefinition"])
 @Authorization(ComponentPermission.RELATE_FROM_COMPONENT, allowFromRelated = ["interfaceDefinition"])
+@Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["interfaceDefinition"])
 class Interface(
     name: String,
     description: String,
@@ -56,4 +58,5 @@ class Interface(
         val interfaceSpecificationVersion = interfaceDefinition(cache).value.interfaceSpecificationVersion(cache).value
         return interfaceSpecificationVersion.interfaceSpecification(cache).value.template(cache).value
     }
+
 }

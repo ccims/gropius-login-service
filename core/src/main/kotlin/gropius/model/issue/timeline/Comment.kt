@@ -11,6 +11,7 @@ import java.time.OffsetDateTime
     """Supertype for IssueComment and Body.
     Represents a text block in the Timeline.
     Keeps track when it was last edited and by who, but does not keep track of the change history.
+    READ is granted if READ is granted on `issue`.
     """
 )
 abstract class Comment(
@@ -33,7 +34,7 @@ abstract class Comment(
     @FilterProperty
     @OrderProperty
     var bodyLastEditedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val BODY_LAST_EDITED_BY = "BODY_LAST_EDITED_BY"

@@ -6,6 +6,7 @@ import io.github.graphglue.model.*
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.template.*
 import gropius.model.user.permission.ComponentPermission
+import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.property.NodeCache
 import org.springframework.data.annotation.Transient
 import org.springframework.data.neo4j.core.schema.CompositeProperty
@@ -22,6 +23,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["component"])
 @Authorization(ComponentPermission.RELATE_FROM_COMPONENT, allowFromRelated = ["component"])
 @Authorization(ComponentPermission.ADD_TO_PROJECTS, allowFromRelated = ["component"])
+@Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["component"])
 class ComponentVersion(
     name: String,
     description: String,
@@ -72,4 +74,5 @@ class ComponentVersion(
     override suspend fun relationPartnerTemplate(cache: NodeCache?): RelationPartnerTemplate<*, *> {
         return component(cache).value.template(cache).value
     }
+
 }

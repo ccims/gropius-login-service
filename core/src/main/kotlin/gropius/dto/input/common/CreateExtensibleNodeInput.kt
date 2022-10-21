@@ -17,7 +17,7 @@ abstract class CreateExtensibleNodeInput : Input() {
     override fun validate() {
         super.validate()
         extensionFields.ifPresent {
-            it.ensureNoDuplicates()
+            it.validateAndEnsureNoDuplicates()
         }
     }
 }

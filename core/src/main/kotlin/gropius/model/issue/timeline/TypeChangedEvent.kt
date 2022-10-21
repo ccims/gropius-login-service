@@ -10,26 +10,11 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the type of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the type of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class TypeChangedEvent(
-    createdAt: OffsetDateTime,
-    lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
-
-    companion object {
-        const val OLD_TYPE = "OLD_TYPE"
-        const val NEW_TYPE = "NEW_TYPE"
-    }
-
-    @NodeRelationship(OLD_TYPE, Direction.OUTGOING)
-    @GraphQLDescription("The old type.")
-    @FilterProperty
-    @delegate:Transient
-    val oldType by NodeProperty<IssueType>()
-
-    @NodeRelationship(NEW_TYPE, Direction.OUTGOING)
-    @GraphQLDescription("The new type.")
-    @FilterProperty
-    @delegate:Transient
-    val newType by NodeProperty<IssueType>()
-}
+    createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
+) : AbstractTypeChangedEvent<IssueType>(createdAt, lastModifiedAt)

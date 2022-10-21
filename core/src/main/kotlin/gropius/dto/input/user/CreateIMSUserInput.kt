@@ -3,6 +3,7 @@ package gropius.dto.input.user
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.template.CreateTemplatedNodeInput
 
 @GraphQLDescription("Input for the createIMSUser mutation")
@@ -15,4 +16,10 @@ class CreateIMSUserInput(
     val gropiusUser: ID?,
     @GraphQLDescription("Initial values for all templatedFields")
     override var templatedFields: List<JSONFieldInput>
-) : CreateUserInput(), CreateTemplatedNodeInput
+) : CreateUserInput(), CreateTemplatedNodeInput {
+
+    override fun validate() {
+        super.validate()
+        templatedFields.validateAndEnsureNoDuplicates()
+    }
+}

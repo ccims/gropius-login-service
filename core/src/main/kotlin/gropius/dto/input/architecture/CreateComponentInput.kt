@@ -5,7 +5,7 @@ import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.Input
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.ensureNoDuplicates
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.CreateTemplatedNodeInput
 
@@ -23,7 +23,7 @@ class CreateComponentInput(
 
     override fun validate() {
         super.validate()
-        templatedFields.ensureNoDuplicates()
+        templatedFields.validateAndEnsureNoDuplicates()
         interfaceSpecifications.ifPresent {
             it.forEach(Input::validate)
         }

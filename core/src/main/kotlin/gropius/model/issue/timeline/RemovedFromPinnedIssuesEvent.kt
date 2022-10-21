@@ -7,10 +7,14 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an Issue was unpinned on a Trackable.")
+@GraphQLDescription(
+    """Event representing that an Issue was unpinned on a Trackable.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class RemovedFromPinnedIssuesEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val UNPINNED_ON = "UNPINNED_ON"

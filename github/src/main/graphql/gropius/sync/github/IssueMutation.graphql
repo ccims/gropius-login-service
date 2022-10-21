@@ -11,7 +11,7 @@ mutation MutateCloseIssue($id: ID!) {
     }
 }
 mutation MutateReopenIssue($id: ID!) {
-    closeIssue(input:{issueId:$id}){
+    reopenIssue(input:{issueId:$id}){
         issue {
             timelineItems(itemTypes: [REOPENED_EVENT], last: 1) {
                 nodes {
@@ -62,8 +62,15 @@ mutation MutateCreateComment($id: ID!, $body: String!) {
     addComment(input: {body: $body, subjectId: $id}) {
         commentEdge {
             node {
-                ...IssueCommentData
+                ...TimelineItemData
             }
+        }
+    }
+}
+mutation MutateCreateIssue($id: ID!, $title: String!, $body: String!) {
+    createIssue(input: {repositoryId: $id, title: $title, body: $body}) {
+        issue {
+            ...IssueDataExtensive
         }
     }
 }

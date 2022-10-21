@@ -4,7 +4,6 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.architecture.AffectedByIssue
 import gropius.model.architecture.IMSIssue
-import gropius.model.architecture.IMSProject
 import gropius.model.architecture.Trackable
 import gropius.model.common.AuditedNode
 import gropius.model.issue.timeline.*
@@ -25,11 +24,12 @@ import java.time.OffsetDateTime
     Issues are synced to all IMSProjects of Trackables they are part of.
     All changes to the Issue are reflected by the timeline.
     READ is granted if READ is granted on any Trackable in `trackables`.
+    Caution: due to confidentiality reasons, updates to `incomingRelations` do not cause updates on `lastModifiedBy`
+    and `participants`, however, `lastModifiedAt` and `lastUpdatedAt` is still changed.
+    The same applies to RelatedByIssueEvent, RemovedIncomingRelationEvent and IncomingRelationTypeChangedEvent.
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["trackables"])
-@Authorization(TrackablePermission.LINK_TO_ISSUES, allowFromRelated = ["trackables"])
-@Authorization(TrackablePermission.LINK_FROM_ISSUES, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.MODERATOR, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.COMMENT, allowFromRelated = ["trackables"])
 @Authorization(TrackablePermission.MANAGE_ISSUES, allowFromRelated = ["trackables"])
@@ -182,16 +182,6 @@ class Issue(
     @FilterProperty
     @delegate:Transient
     val pinnedOn by NodeSetProperty<Trackable>()
-
-    @NodeRelationship(IMSProject.PARTIALLY_SYNCED_ISSUES, Direction.INCOMING)
-    @GraphQLDescription(
-        """IMSProjects with which this Issue is currently partially synced,
-        meaning that a sync is in progress, but not completed yet.
-        """
-    )
-    @FilterProperty
-    @delegate:Transient
-    val partiallySyncedWith by NodeSetProperty<IMSProject>()
 
     @NodeRelationship(IMSIssue.ISSUE, Direction.INCOMING)
     @GraphQLDescription(

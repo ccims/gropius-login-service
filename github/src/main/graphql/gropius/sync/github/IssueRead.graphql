@@ -21,3 +21,9 @@ query IssueRead($repoOwner: String!, $repoName: String!, $since: DateTime, $issu
         }
     }
 }
+query RepositoryID($repoOwner: String!, $repoName: String!) {
+    ...MetaData
+    repository(owner: $repoOwner, name: $repoName) {
+        id
+    }
+}

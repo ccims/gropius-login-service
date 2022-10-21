@@ -7,7 +7,11 @@ import java.time.Duration
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the estimated time of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the estimated time of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class EstimatedTimeChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
@@ -17,4 +21,4 @@ class EstimatedTimeChangedEvent(
     @property:GraphQLDescription("The new estimated time of the Issue.")
     @FilterProperty
     val newEstimatedTime: Duration?
-) : TimelineItem(createdAt, lastModifiedAt) {}
+) : PublicTimelineItem(createdAt, lastModifiedAt)

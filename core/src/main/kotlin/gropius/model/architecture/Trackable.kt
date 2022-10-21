@@ -31,14 +31,6 @@ import java.net.URI
     )]
 )
 @Authorization(
-    TrackablePermission.LINK_TO_ISSUES,
-    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
-)
-@Authorization(
-    TrackablePermission.LINK_FROM_ISSUES,
-    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
-)
-@Authorization(
     TrackablePermission.MODERATOR, allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 @Authorization(
@@ -62,6 +54,10 @@ import java.net.URI
 )
 @Authorization(
     TrackablePermission.EXPORT_LABELS, allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
+)
+@Authorization(
+    TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES,
+    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 abstract class Trackable(
     name: String,

@@ -7,10 +7,14 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an Artefact was removed from an Issue.")
+@GraphQLDescription(
+    """Event representing that an Artefact was removed from an Issue.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class RemovedArtefactEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val REMOVED_ARTEFACT = "REMOVED_ARTEFACT"

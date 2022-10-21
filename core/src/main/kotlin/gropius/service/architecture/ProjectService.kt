@@ -146,7 +146,7 @@ class ProjectService(
             "remove ComponentVersions from the Project"
         )
         val componentVersion = componentVersionRepository.findById(input.componentVersion)
-        project.components() += componentVersion
+        project.components() -= componentVersion
         return repository.save(project).awaitSingle()
     }
 

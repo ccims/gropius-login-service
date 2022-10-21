@@ -7,10 +7,14 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an entity is affected by an Issue")
+@GraphQLDescription(
+    """Event representing that an entity is affected by an Issue.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class AddedAffectedEntityEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val ADDED_AFFECTED = "ADDED_AFFECTED"

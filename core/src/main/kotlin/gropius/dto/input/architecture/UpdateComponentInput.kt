@@ -4,7 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.ensureNoDuplicates
+import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.UpdateTemplatedNodeInput
 
@@ -32,10 +32,10 @@ class UpdateComponentInput(
     override fun validate() {
         super.validate()
         templatedFields.ifPresent {
-            it.ensureNoDuplicates()
+            it.validateAndEnsureNoDuplicates()
         }
         componentVersionTemplatedFields.ifPresent {
-            it.ensureNoDuplicates()
+            it.validateAndEnsureNoDuplicates()
         }
     }
 }

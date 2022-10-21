@@ -29,14 +29,27 @@ abstract class AuditedNodeService<T : AuditedNode, R : GropiusRepository<T, Stri
      * @param lastModifiedAt the time when the node was last modified, defaults to `now()`
      */
     suspend fun updateAuditedNode(
-        node: AuditedNode,
-        input: UpdateExtensibleNodeInput,
-        lastModifiedBy: User,
-        lastModifiedAt: OffsetDateTime = OffsetDateTime.now()
+        node: AuditedNode, input: UpdateExtensibleNodeInput, lastModifiedBy: User, lastModifiedAt: OffsetDateTime
     ) {
         updateExtensibleNode(node, input)
-        node.lastModifiedBy().value = lastModifiedBy
-        node.lastModifiedAt = lastModifiedAt
+        updateAuditedNode(node, lastModifiedBy, lastModifiedAt)
+    }
+
+    /**
+     * Updates [node] after it was updated without an [UpdateExtensibleNodeInput]
+     * Sets [AuditedNode.lastModifiedBy] and [AuditedNode.lastModifiedAt]
+     *
+     * @param node the node to update
+     * @param lastModifiedBy the user who last modified the node
+     * @param lastModifiedAt the time when the node was last modified, defaults to `now()`
+     */
+    suspend fun updateAuditedNode(
+        node: AuditedNode, lastModifiedBy: User, lastModifiedAt: OffsetDateTime
+    ) {
+        if (node.lastModifiedAt <= lastModifiedAt) {
+            node.lastModifiedBy().value = lastModifiedBy
+            node.lastModifiedAt = lastModifiedAt
+        }
     }
 
     /**
@@ -51,6 +64,19 @@ abstract class AuditedNodeService<T : AuditedNode, R : GropiusRepository<T, Stri
      */
     suspend fun createdAuditedNode(node: AuditedNode, input: CreateExtensibleNodeInput, createdBy: User) {
         createdExtensibleNode(node, input)
+        createdAuditedNode(node, createdBy)
+    }
+
+    /**
+     * Updates [node] after it was created without an [CreateExtensibleNodeInput]
+     * Should be called after the node was constructed
+     * Calls [createdExtensibleNode]
+     * Sets [AuditedNode.createdBy] and [AuditedNode.lastModifiedBy]
+     *
+     * @param node the node to update
+     * @param createdBy the user who created the node
+     */
+    suspend fun createdAuditedNode(node: AuditedNode, createdBy: User) {
         node.createdBy().value = createdBy
         node.lastModifiedBy().value = createdBy
     }

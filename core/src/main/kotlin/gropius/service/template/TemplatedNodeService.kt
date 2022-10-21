@@ -38,15 +38,13 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      * @throws IllegalArgumentException if the new/old value for a templated field is invalid
      */
     suspend fun updateTemplatedFields(
-        node: TemplatedNode,
-        input: UpdateTemplatedNodeInput,
-        templateWasUpdated: Boolean = false
+        node: TemplatedNode, input: UpdateTemplatedNodeInput, templateWasUpdated: Boolean = false
     ) {
         updateTemplatedFields(node, input.templatedFields, templateWasUpdated)
     }
 
     /**
-     * Updates the [TemplatedNode.templatedFields] of a [TemplatedNode] based on the [input]
+     * Updates the [TemplatedNode.templatedFields] of a [TemplatedNode] based on the [templatedFields]
      * Does not check authorization permissions, and does not save the provided [node] afterwards
      * Validates the new value of the fields
      * If [templateWasUpdated], validates all fields. Requires that the new template is already set
@@ -55,25 +53,38 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      * @param templatedFields values to update the templatedFields
      * @param templateWasUpdated if true, no longer existing templatedFields are removed, and all existing fields
      *   are validated
-     * @throws IllegalArgumentException if the new/old value for a templated field is invalid
+     * @throws IllegalArgumentException if the new/old value for a templated field is invalid, or a field does not exist
      */
     suspend fun updateTemplatedFields(
-        node: TemplatedNode,
-        templatedFields: OptionalInput<List<JSONFieldInput>>,
-        templateWasUpdated: Boolean
+        node: TemplatedNode, templatedFields: OptionalInput<List<JSONFieldInput>>, templateWasUpdated: Boolean
     ) {
         templatedFields.ifPresent { fields ->
             val template = node.template().value
             ensureTemplatedFieldsExist(template, fields.map { it.name })
             for (field in fields) {
-                validateField(field.value as JsonNode, template.templateFieldSpecifications[field.name]!!, field.name)
-                node.templatedFields[field.name] = jsonNodeMapper.jsonNodeToDeterministicString(field.value)
+                updateTemplatedField(node, field)
             }
         }
         if (templateWasUpdated) {
             validateTemplatedFieldsAfterTemplateUpdate(node, templatedFields)
         }
 
+    }
+
+    /**
+     * Updates the [TemplatedNode.templatedFields] of a [TemplatedNode] based on [field]
+     * Does not check authorization permissions, and does not save the provided [node] afterwards.
+     * Validates the new value of the updated field.
+     *
+     * @param node the node to update the templated field of
+     * @param field the name and new value of the field to update
+     * @throws IllegalArgumentException if the new value for the field is invalid, or the field does not exist
+     */
+    suspend fun updateTemplatedField(node: TemplatedNode, field: JSONFieldInput) {
+        val template = node.template().value
+        ensureTemplatedFieldExist(template, field.name)
+        validateField(field.value as JsonNode, template.templateFieldSpecifications[field.name]!!, field.name)
+        node.templatedFields[field.name] = jsonNodeMapper.jsonNodeToDeterministicString(field.value)
     }
 
     /**
@@ -84,8 +95,7 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      * @throws IllegalArgumentException if the old value for a templated field is invalid
      */
     private suspend fun validateTemplatedFieldsAfterTemplateUpdate(
-        node: TemplatedNode,
-        templatedFields: OptionalInput<List<JSONFieldInput>>
+        node: TemplatedNode, templatedFields: OptionalInput<List<JSONFieldInput>>
     ) {
         val template = node.template().value
         val changedFields = templatedFields.orElse(emptyList()).map { it.name }
@@ -99,6 +109,7 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
                 validateField(objectMapper.readTree(value), template.templateFieldSpecifications[name]!!, name)
             }
         }
+        node.templatedFields -= fieldsToRemove.toSet()
     }
 
     /**
@@ -111,16 +122,51 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      * @throws IllegalArgumentException if the value for a templated field is not compatible with its schema
      */
     suspend fun validateInitialTemplatedFields(
-        template: BaseTemplate<*, *>,
-        input: CreateTemplatedNodeInput
+        template: BaseTemplate<*, *>, input: CreateTemplatedNodeInput
     ): MutableMap<String, String> {
-        ensureTemplatedFieldsExist(template, input.templatedFields.map { it.name })
-        val fieldLookup = input.templatedFields.associateBy { it.name }
+        return validateInitialTemplatedFields(template, input.templatedFields)
+    }
+
+    /**
+     * Validates the initial input for [TemplatedNode.templatedFields]
+     * If no input is provided for a field, `null` is assigned as default value
+     *
+     * @param template the initial associated template for the node to create
+     * @param fields initial templated fields
+     * @return the initial value for [TemplatedNode.templatedFields]
+     * @throws IllegalArgumentException if the value for a templated field is not compatible with its schema
+     */
+    suspend fun validateInitialTemplatedFields(
+        template: BaseTemplate<*, *>, fields: List<JSONFieldInput>
+    ): MutableMap<String, String> {
+        ensureTemplatedFieldsExist(template, fields.map { it.name })
+        val fieldLookup = fields.associateBy { it.name }
         return template.templateFieldSpecifications.mapValues {
             val value: JsonNode = fieldLookup[it.key]?.value as JsonNode? ?: JsonNodeFactory.instance.nullNode()
             validateField(value, it.value, it.key)
             jsonNodeMapper.jsonNodeToDeterministicString(value)
         }.toMutableMap()
+    }
+
+    /**
+     * Validates a value of a templated field
+     *
+     * @param templatedNode the [TemplatedNode] of which a field should be validated
+     * @param field the name of the templated field to validate
+     * @return `true` if the current value of the templated field is compatible with the template
+     */
+    suspend fun validateTemplatedField(templatedNode: TemplatedNode, field: String): Boolean {
+        val unparsedValue = templatedNode.templatedFields[field]
+        return if (unparsedValue != null) {
+            val schema = templatedNode.template().value.templateFieldSpecifications[field]!!
+            val parsedSchema = objectMapper.readTree(schema)
+            val validator =
+                JsonSchemaFactory.getInstance(SpecVersionDetector.detect(parsedSchema)).getSchema(parsedSchema)
+            val validationResult = validator.validate(objectMapper.readTree(unparsedValue))
+            return validationResult.isEmpty()
+        } else {
+            false
+        }
     }
 
     /**
@@ -149,9 +195,20 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      */
     private fun ensureTemplatedFieldsExist(template: BaseTemplate<*, *>, fields: Collection<String>) {
         for (field in fields) {
-            if (field !in template.templateFieldSpecifications) {
-                throw IllegalArgumentException("Unknown templated field $field")
-            }
+            ensureTemplatedFieldExist(template, field)
+        }
+    }
+
+    /**
+     * Ensures that [field] is defined by [template]
+     *
+     * @param template the Template of the [TemplatedNode] where [field] should be used
+     * @param field a list of templated field names to check for existence
+     * @throws IllegalArgumentException if any field is not defined by [template]
+     */
+    fun ensureTemplatedFieldExist(template: BaseTemplate<*, *>, field: String) {
+        if (field !in template.templateFieldSpecifications) {
+            throw IllegalArgumentException("Unknown templated field $field")
         }
     }
 }

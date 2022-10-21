@@ -10,11 +10,15 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that the priority of an Issue changed.")
+@GraphQLDescription(
+    """Event representing that the priority of an Issue changed.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class PriorityChangedEvent(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val OLD_PRIORITY = "OLD_PRIORITY"

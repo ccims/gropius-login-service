@@ -17,7 +17,7 @@ abstract class UpdateExtensibleNodeInput : UpdateNodeInput() {
     override fun validate() {
         super.validate()
         extensionFields.ifPresent {
-            it.ensureNoDuplicates()
+            it.validateAndEnsureNoDuplicates()
         }
     }
 }

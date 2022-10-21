@@ -7,10 +7,14 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an Artefact was added to an Issue.")
+@GraphQLDescription(
+    """Event representing that an Artefact was added to an Issue.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class AddedArtefactEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val ADDED_ARTEFACT = "ADDED_ARTEFACT"

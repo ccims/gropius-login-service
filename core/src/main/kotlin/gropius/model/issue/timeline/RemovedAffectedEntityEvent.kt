@@ -7,10 +7,14 @@ import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
-@GraphQLDescription("Event representing that an entity is no longer affected by an Issue.")
+@GraphQLDescription(
+    """Event representing that an entity is no longer affected by an Issue.
+    READ is granted if READ is granted on `issue`.
+    """
+)
 class RemovedAffectedEntityEvent(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
-) : TimelineItem(createdAt, lastModifiedAt) {
+) : PublicTimelineItem(createdAt, lastModifiedAt) {
 
     companion object {
         const val REMOVED_AFFECTED = "REMOVED_AFFECTED"
