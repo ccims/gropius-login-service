@@ -28,6 +28,7 @@ jobs:
       - name: Install login-service dependencies
         run: ./gradlew login-service:npm_ci
       - name: Validate generated code
+        shell: bash {0}
         run: |
           ./gradlew api-internal:bootRun --args="--server.port=8081" --no-daemon &
           gradlew_pid=$!
