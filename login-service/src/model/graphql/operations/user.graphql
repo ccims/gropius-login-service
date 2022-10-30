@@ -39,11 +39,6 @@ mutation setImsUserLink($gropiusUserId: ID!, $imsUserId: ID!) {
     }
 }
 
-fragment OnlyId on Node {
-    __typename
-    id
-}
-
 fragment UserData on GropiusUser {
     __typename
     id
