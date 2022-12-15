@@ -8,6 +8,7 @@ import graphql.schema.DataFetchingEnvironment
 import gropius.authorization.gropiusAuthorizationContext
 import gropius.dto.input.architecture.*
 import gropius.dto.input.common.DeleteNodeInput
+import gropius.dto.payload.DeleteNodePayload
 import gropius.graphql.AutoPayloadType
 import gropius.model.architecture.*
 import gropius.service.architecture.*
@@ -66,13 +67,12 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription("Deletes the specified Component, requires ADMIN on the component to delete")
-    @AutoPayloadType("The id of the deleted Component")
     suspend fun deleteComponent(
         @GraphQLDescription("Defines which Component to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         componentService.deleteComponent(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -98,13 +98,12 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription("Deletes the specified Project, requires ADMIN on the project to delete")
-    @AutoPayloadType("The id of the deleted Project")
     suspend fun deleteProject(
         @GraphQLDescription("Defines which Project to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         projectService.deleteProject(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription("Creates a new InterfaceSpecification, requires ADMIN on the Component.")
@@ -126,13 +125,12 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription("Deletes the specified InterfaceSpecification, requires ADMIN on the Component of the InterfaceSpecification to delete")
-    @AutoPayloadType("The id of the deleted InterfaceSpecification")
     suspend fun deleteInterfaceSpecification(
         @GraphQLDescription("Defines which InterfaceSpecification to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         interfaceSpecificationService.deleteInterfaceSpecification(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription("Creates a new InterfaceSpecificationVersion, requires ADMIN on the Component of the InterfaceSpecification.")
@@ -166,13 +164,12 @@ class ArchitectureMutations(
         requires ADMIN on the Component of the InterfaceSpecification of the InterfaceSpecificationVersion to delete
         """
     )
-    @AutoPayloadType("The id of the deleted InterfaceSpecificationVersion")
     suspend fun deleteInterfaceSpecificationVersion(
         @GraphQLDescription("Defines which InterfaceSpecificationVersion to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         interfaceSpecificationVersionService.deleteInterfaceSpecificationVersion(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription("Creates a new InterfacePart, requires ADMIN on the Component of the InterfaceSpecification.")
@@ -201,13 +198,12 @@ class ArchitectureMutations(
         """Deletes the specified InterfacePart,
         requires ADMIN on the Component of the InterfaceSpecification of the InterfacePart to delete"""
     )
-    @AutoPayloadType("The id of the deleted InterfacePart")
     suspend fun deleteInterfacePart(
         @GraphQLDescription("Defines which InterfacePart to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         interfacePartService.deleteInterfacePart(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -297,13 +293,12 @@ class ArchitectureMutations(
     }
 
     @GraphQLDescription("Deletes the specified ComponentVersion, requires ADMIN on the Component of the ComponentVersion to delete")
-    @AutoPayloadType("The id of the deleted ComponentVersion")
     suspend fun deleteComponentVersion(
         @GraphQLDescription("Defines which ComponentVersion to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         componentVersionService.deleteComponentVersion(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -338,13 +333,12 @@ class ArchitectureMutations(
         """Deletes the specified Relation, requires RELATE_FROM_COMPONENT on the Component associated with start.
         """
     )
-    @AutoPayloadType("The id of the deleted Relation")
     suspend fun deleteRelation(
         @GraphQLDescription("Defines which Relation to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         relationService.deleteRelation(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -405,13 +399,12 @@ class ArchitectureMutations(
         Also deletes all associated IMSProjects
         """
     )
-    @AutoPayloadType("The id of the deleted IMS")
     suspend fun deleteIMS(
         @GraphQLDescription("Defines which IMS to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         imsService.deleteIMS(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -451,13 +444,12 @@ class ArchitectureMutations(
         IMSProject.
         """
     )
-    @AutoPayloadType("The id of the deleted IMSProject")
     suspend fun deleteIMSProject(
         @GraphQLDescription("Defines which IMSProject to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         imsProjectService.deleteIMSProject(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -493,15 +485,14 @@ class ArchitectureMutations(
         """Deletes the specified IntraComponentDependencySpecification, requires ADMIN on the Component associated with the 
         IntraComponentDependencySpecification to delete."""
     )
-    @AutoPayloadType("The id of the deleted IntraComponentDependencySpecification")
     suspend fun deleteIntraComponentDependencySpecification(
         @GraphQLDescription("Defines which IntraComponentDependencySpecification to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         intraComponentDependencySpecificationService.deleteIntraComponentDependencySpecification(
             dfe.gropiusAuthorizationContext, input
         )
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
 }

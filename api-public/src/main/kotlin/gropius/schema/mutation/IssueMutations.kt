@@ -7,6 +7,7 @@ import graphql.schema.DataFetchingEnvironment
 import gropius.authorization.gropiusAuthorizationContext
 import gropius.dto.input.common.DeleteNodeInput
 import gropius.dto.input.issue.*
+import gropius.dto.payload.DeleteNodePayload
 import gropius.graphql.AutoPayloadType
 import gropius.model.architecture.Trackable
 import gropius.model.issue.Artefact
@@ -49,13 +50,12 @@ class IssueMutations(
     }
 
     @GraphQLDescription("Deletes the specified Issue, requires MODERATOR on all of the Trackables the Issue is on.")
-    @AutoPayloadType("The id of the deleted Issue")
     suspend fun deleteIssue(
         @GraphQLDescription("Defines which Issue to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         issueService.deleteIssue(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -130,13 +130,12 @@ class IssueMutations(
         Removes it from all Issues. Note that the Label will still be visible in the timeline of Issues.
         """
     )
-    @AutoPayloadType("The id of the deleted Label")
     suspend fun deleteLabel(
         @GraphQLDescription("Defines which Label to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         labelService.deleteLabel(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription("Creates a new Artefact on a Trackable. Requires MANAGE_ARTEFACTS on the provided Trackable.")
@@ -164,13 +163,12 @@ class IssueMutations(
         """Deletes the Artefact, requires MANAGE_ARTEFACTS on the Trackable it is part of. Removes it from all Issues.
         """
     )
-    @AutoPayloadType("The id of the deleted Artefact")
     suspend fun deleteArtefact(
         @GraphQLDescription("Defines which Artefact to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         artefactService.deleteArtefact(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(

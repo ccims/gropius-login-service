@@ -9,6 +9,7 @@ import gropius.authorization.gropiusAuthorizationContext
 import gropius.dto.input.common.DeleteNodeInput
 import gropius.dto.input.user.UpdateGropiusUserInput
 import gropius.dto.input.user.permission.*
+import gropius.dto.payload.DeleteNodePayload
 import gropius.graphql.AutoPayloadType
 import gropius.model.user.GropiusUser
 import gropius.model.user.permission.ComponentPermission
@@ -89,13 +90,12 @@ class UserMutations(
         grants ADMIN to at least one user.
         """
     )
-    @AutoPayloadType("The id of the deleted ComponentPermission")
     suspend fun deleteComponentPermission(
         @GraphQLDescription("Defines which ComponentPermission to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         componentPermissionService.deleteNodePermission(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -131,13 +131,12 @@ class UserMutations(
         grants ADMIN to at least one user.
         """
     )
-    @AutoPayloadType("The id of the deleted ProjectPermission")
     suspend fun deleteProjectPermission(
         @GraphQLDescription("Defines which ProjectPermission to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         projectPermissionService.deleteNodePermission(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription(
@@ -173,13 +172,12 @@ class UserMutations(
         grants ADMIN to at least one user.
         """
     )
-    @AutoPayloadType("The id of the deleted IMSPermission")
     suspend fun deleteIMSPermission(
         @GraphQLDescription("Defines which IMSPermission to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         imsPermissionService.deleteNodePermission(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
     @GraphQLDescription("Creates a new GlobalPermission, requires that the user is an admin")
@@ -201,13 +199,12 @@ class UserMutations(
     }
 
     @GraphQLDescription("Deletes a GlobalPermission, requires that the user is an admin")
-    @AutoPayloadType("The id of the deleted GlobalPermission")
     suspend fun deleteGlobalPermission(
         @GraphQLDescription("Defines which GlobalPermission to delete")
         input: DeleteNodeInput, dfe: DataFetchingEnvironment
-    ): ID {
+    ): DeleteNodePayload {
         globalPermissionService.deleteGlobalPermission(dfe.gropiusAuthorizationContext, input)
-        return input.id
+        return DeleteNodePayload(input.id)
     }
 
 }
