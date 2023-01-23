@@ -27,19 +27,16 @@ class IntraComponentDependencySpecification(name: String, description: String) :
     @NodeRelationship(ComponentVersion.INTRA_COMPONENT_DEPENDENCY_SPECIFICATION, Direction.INCOMING)
     @GraphQLDescription("The ComponentVersion this is part of")
     @FilterProperty
-    @delegate:Transient
     val componentVersion by NodeProperty<ComponentVersion>()
 
     @NodeRelationship(INCOMING_PARTICIPANT, Direction.OUTGOING)
     @GraphQLDescription("The incoming Interfaces of this ServiceEffectSpecification.")
     @FilterProperty
-    @delegate:Transient
     val incomingParticipants by NodeSetProperty<IntraComponentDependencyParticipant>()
 
     @NodeRelationship(OUTGOING_PARTICIPANT, Direction.OUTGOING)
     @GraphQLDescription("The outgoing Interfaces of this ServiceEffectSpecification.")
     @FilterProperty
-    @delegate:Transient
     val outgoingParticipants by NodeSetProperty<IntraComponentDependencyParticipant>()
 
 }

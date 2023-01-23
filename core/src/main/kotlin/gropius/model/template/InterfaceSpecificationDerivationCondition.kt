@@ -43,12 +43,10 @@ class InterfaceSpecificationDerivationCondition(
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @GraphQLDescription("The RelationCondition this is part of.")
     @FilterProperty
-    @delegate:Transient
     val partOf by NodeProperty<RelationCondition>()
 
     @NodeRelationship(DERIVABLE_INTERFACE_SPECIFICATION, Direction.OUTGOING)
     @GraphQLDescription("Templates of InterfaceSpecifications which are derived.")
     @FilterProperty
-    @delegate:Transient
     val derivableInterfaceSpecifications by NodeSetProperty<InterfaceSpecificationTemplate>()
 }

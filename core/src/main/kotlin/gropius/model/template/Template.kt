@@ -27,12 +27,10 @@ abstract class Template<T, S : Template<T, S>>(
     @NodeRelationship(EXTENDS, Direction.OUTGOING)
     @GraphQLDescription("Template this template extends.")
     @FilterProperty
-    @delegate:Transient
     val extends by NodeSetProperty<S>()
 
     @NodeRelationship(EXTENDS, Direction.INCOMING)
     @GraphQLDescription("Templates that extend this template.")
     @FilterProperty
-    @delegate:Transient
     val extendedBy by NodeSetProperty<S>()
 }

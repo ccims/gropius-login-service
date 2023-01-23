@@ -17,13 +17,11 @@ abstract class TimelineItem(
     @GraphQLDescription("The Issue this TimelineItem is part of.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val issue by NodeProperty<Issue>()
 
     @NodeRelationship(ParentTimelineItem.CHILD_ITEMS, Direction.INCOMING)
     @GraphQLDescription("If existing, the parent TimelineItem")
     @FilterProperty
-    @delegate:Transient
     val parentItem by NodeProperty<ParentTimelineItem?>()
 
 }

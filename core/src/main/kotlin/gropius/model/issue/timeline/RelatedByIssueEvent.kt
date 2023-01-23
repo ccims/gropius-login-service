@@ -27,7 +27,6 @@ class RelatedByIssueEvent(
     @GraphQLDescription("The IssueRelation the Issue is related at.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val relation by NodeProperty<IssueRelation>()
 
 }

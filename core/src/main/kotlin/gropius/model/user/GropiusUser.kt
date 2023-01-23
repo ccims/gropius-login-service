@@ -41,12 +41,10 @@ class GropiusUser(
     @NodeRelationship(IMSUser.GROPIUS_USER, Direction.INCOMING)
     @GraphQLDescription("The IMSUsers linked to this GropiusUser.")
     @FilterProperty
-    @delegate:Transient
     val imsUsers by NodeSetProperty<IMSUser>()
 
     @NodeRelationship(PERMISSION, Direction.OUTGOING)
     @GraphQLDescription("Permissions the user has.")
     @FilterProperty
-    @delegate:Transient
     val permissions by NodeSetProperty<BasePermission>()
 }

@@ -53,19 +53,16 @@ class InterfaceDefinition(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this InterfaceDefinition.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<InterfaceDefinitionTemplate>()
 
     @NodeRelationship(INTERFACE_SPECIFICATION_VERSION, Direction.OUTGOING)
     @GraphQLDescription("The InterfaceSpecificationVersion present on the ComponentVersion")
     @FilterProperty
-    @delegate:Transient
     val interfaceSpecificationVersion by NodeProperty<InterfaceSpecificationVersion>()
 
     @NodeRelationship(COMPONENT_VERSION, Direction.OUTGOING)
     @GraphQLDescription("The ComponentVersion using the InterfaceSpecificationVersion")
     @FilterProperty
-    @delegate:Transient
     val componentVersion by NodeProperty<ComponentVersion>()
 
     @NodeRelationship(VISIBLE_DERIVED_BY, Direction.OUTGOING)
@@ -73,7 +70,6 @@ class InterfaceDefinition(
         """Relations because of which `interfaceSpecificationVersion` is visible derived on `componentVersion`"""
     )
     @FilterProperty
-    @delegate:Transient
     val visibleDerivedBy by NodeSetProperty<Relation>()
 
     @NodeRelationship(INVISIBLE_DERIVED_BY, Direction.OUTGOING)
@@ -81,12 +77,10 @@ class InterfaceDefinition(
         """Relations because of which `interfaceSpecificationVersion` is invisible derived on `componentVersion`"""
     )
     @FilterProperty
-    @delegate:Transient
     val invisibleDerivedBy by NodeSetProperty<Relation>()
 
     @NodeRelationship(Interface.DEFINITION, Direction.INCOMING)
     @GraphQLDescription("If visible, the created Interface")
     @FilterProperty
-    @delegate:Transient
     val visibleInterface by NodeProperty<Interface?>()
 }

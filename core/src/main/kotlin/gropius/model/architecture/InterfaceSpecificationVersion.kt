@@ -47,7 +47,6 @@ class InterfaceSpecificationVersion(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this InterfaceSpecificationVersion")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<InterfaceSpecificationVersionTemplate>()
 
     @NodeRelationship(ACTIVE_PART, Direction.OUTGOING)
@@ -58,13 +57,11 @@ class InterfaceSpecificationVersion(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val activeParts by NodeSetProperty<InterfacePart>()
 
     @NodeRelationship(InterfaceSpecification.VERSION, Direction.INCOMING)
     @GraphQLDescription("The InterfaceSpecification this is part of.")
     @FilterProperty
-    @delegate:Transient
     val interfaceSpecification by NodeProperty<InterfaceSpecification>()
 
     @NodeRelationship(
@@ -73,7 +70,6 @@ class InterfaceSpecificationVersion(
     )
     @GraphQLDescription("Defines on which ComponentVersions this InterfaceSpecificationVersion is used")
     @FilterProperty
-    @delegate:Transient
     val interfaceDefinitions by NodeSetProperty<InterfaceDefinition>()
 
 }

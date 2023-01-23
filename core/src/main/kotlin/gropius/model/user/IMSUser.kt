@@ -42,18 +42,15 @@ class IMSUser(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this IMSUser")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<IMSUserTemplate>()
 
     @NodeRelationship(GROPIUS_USER, Direction.OUTGOING)
     @GraphQLDescription("The GropiusUser this IMSUser is linked to. An IMSUser might be linked to no GropiusUser.")
     @FilterProperty
-    @delegate:Transient
     val gropiusUser by NodeProperty<GropiusUser?>()
 
     @NodeRelationship(IMS.USER, Direction.INCOMING)
     @GraphQLDescription("The IMS this user is part of.")
     @FilterProperty
-    @delegate:Transient
     val ims by NodeProperty<IMS>()
 }

@@ -30,13 +30,11 @@ class IssueState(
     @NodeRelationship(Issue.STATE, Direction.INCOMING)
     @GraphQLDescription("Issues with this state.")
     @FilterProperty
-    @delegate:Transient
     val issuesWithState by NodeSetProperty<Issue>()
 
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @GraphQLDescription("IssueTemplates this is a part of.")
     @FilterProperty
-    @delegate:Transient
     val partOf by NodeSetProperty<IssueTemplate>()
 
 }

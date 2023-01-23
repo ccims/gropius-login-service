@@ -23,7 +23,6 @@ class RelationTemplate(
     @NodeRelationship(RelationCondition.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Defines which Relations can use this template, at least one RelationCondition has to match")
     @FilterProperty
-    @delegate:Transient
     val relationConditions by NodeSetProperty<RelationCondition>()
 
 }

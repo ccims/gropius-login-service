@@ -20,7 +20,6 @@ abstract class AffectedByIssue(name: String, description: String) : NamedNode(na
     @NodeRelationship(Issue.AFFECTS, Direction.INCOMING)
     @GraphQLDescription("The issues which affect this entity")
     @FilterProperty
-    @delegate:Transient
     val affectingIssues by NodeSetProperty<Issue>()
 
 }

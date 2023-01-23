@@ -34,18 +34,15 @@ class IMSIssue(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Component.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<IMSIssueTemplate>()
 
     @NodeRelationship(PROJECT, Direction.OUTGOING)
     @GraphQLDescription("The IMSProject the issue is synced with.")
     @FilterProperty
-    @delegate:Transient
     val imsProject by NodeProperty<IMSProject>()
 
     @NodeRelationship(ISSUE, Direction.OUTGOING)
     @GraphQLDescription("The Issue that is synced by the IMSProject")
     @FilterProperty
-    @delegate:Transient
     val issue by NodeProperty<Issue>()
 }

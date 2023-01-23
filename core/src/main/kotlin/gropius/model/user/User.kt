@@ -45,18 +45,15 @@ abstract class User(
     @NodeRelationship(AuditedNode.CREATED_BY, Direction.INCOMING)
     @GraphQLDescription("AuditedNodes the user created.")
     @FilterProperty
-    @delegate:Transient
     val createdNodes by NodeSetProperty<AuditedNode>()
 
     @NodeRelationship(Issue.PARTICIPANT, Direction.INCOMING)
     @GraphQLDescription("Issues the user participated in.")
     @FilterProperty
-    @delegate:Transient
     val participatedIssues by NodeSetProperty<Issue>()
 
     @NodeRelationship(Assignment.USER, Direction.INCOMING)
     @GraphQLDescription("Assignments the user is part of, this includes assignments which aren't active.")
     @FilterProperty
-    @delegate:Transient
     val assignments by NodeSetProperty<Assignment>()
 }

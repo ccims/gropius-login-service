@@ -27,12 +27,10 @@ class StateChangedEvent(
     @NodeRelationship(OLD_STATE, Direction.OUTGOING)
     @GraphQLDescription("The old state.")
     @FilterProperty
-    @delegate:Transient
     val oldState by NodeProperty<IssueState>()
 
     @NodeRelationship(NEW_STATE, Direction.OUTGOING)
     @GraphQLDescription("The new state.")
     @FilterProperty
-    @delegate:Transient
     val newState by NodeProperty<IssueState>()
 }

@@ -23,13 +23,11 @@ abstract class RelationPartner(name: String, description: String) : AffectedByIs
     @NodeRelationship(INCOMING_RELATION, Direction.OUTGOING)
     @GraphQLDescription("Relations which use this as the end of the Relation.")
     @FilterProperty
-    @delegate:Transient
     val incomingRelations by NodeSetProperty<Relation>()
 
     @NodeRelationship(OUTGOING_RELATION, Direction.OUTGOING)
     @GraphQLDescription("Relations which use this as the start of the Relation.")
     @FilterProperty
-    @delegate:Transient
     val outgoingRelations by NodeSetProperty<Relation>()
 
     /**

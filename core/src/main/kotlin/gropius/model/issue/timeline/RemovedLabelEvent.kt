@@ -24,7 +24,6 @@ class RemovedLabelEvent(
     @GraphQLDescription("The Label removed from the Issue.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val removedLabel by NodeProperty<Label>()
 
 }

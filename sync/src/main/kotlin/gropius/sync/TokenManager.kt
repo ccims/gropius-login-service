@@ -10,14 +10,11 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findById
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json
 import org.springframework.stereotype.Component
 import java.net.URI
 import io.ktor.serialization.kotlinx.json.*
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 
 /**
  * Configuration properties for the GitHub API
@@ -25,7 +22,6 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
  * @param loginServiceBase Base url for login service
  * @param apiSecret API Secret for login service
  */
-@ConstructorBinding
 @ConfigurationProperties("gropius.sync")
 data class SyncConfigurationProperties(val loginServiceBase: URI, val apiSecret: String)
 

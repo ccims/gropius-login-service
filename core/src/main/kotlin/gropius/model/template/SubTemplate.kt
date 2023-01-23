@@ -24,7 +24,6 @@ abstract class SubTemplate<T, P : Template<*, *>, S : SubTemplate<T, P, S>>(
 
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @GraphQLDescription("The Template this SubTemplate is part of")
-    @delegate:Transient
     val partOf by NodeProperty<P>()
 
 }

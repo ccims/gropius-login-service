@@ -24,7 +24,6 @@ class RemovedFromTrackableEvent(
     @GraphQLDescription("The Trackable the Issue was removed from.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val removedFromTrackable by NodeProperty<Trackable>()
 
 }

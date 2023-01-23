@@ -28,25 +28,21 @@ class RelationCondition : ExtensibleNode() {
     @NodeRelationship(InterfaceSpecificationDerivationCondition.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Defines which InterfaceSpecifications are derived via the Relation.")
     @FilterProperty
-    @delegate:Transient
     val interfaceSpecificationDerivationConditions by NodeSetProperty<InterfaceSpecificationDerivationCondition>()
 
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @GraphQLDescription("The RelationTemplates this is part of.")
     @FilterProperty
-    @delegate:Transient
     val partOf by NodeSetProperty<RelationTemplate>()
 
     @NodeRelationship(FROM, Direction.OUTGOING)
     @GraphQLDescription("Templates of allowed start RelationPartners")
     @FilterProperty
-    @delegate:Transient
     val from by NodeSetProperty<RelationPartnerTemplate<*, *>>()
 
     @NodeRelationship(TO, Direction.OUTGOING)
     @GraphQLDescription("Templates of allowed end RelationPartners")
     @FilterProperty
-    @delegate:Transient
     val to by NodeSetProperty<RelationPartnerTemplate<*, *>>()
 
 }

@@ -25,7 +25,6 @@ abstract class RemovedRelationEvent(
     @NodeRelationship(REMOVED_RELATION, Direction.OUTGOING)
     @GraphQLDescription("The removed IssueRelation.")
     @FilterProperty
-    @delegate:Transient
     val removedRelation by NodeProperty<IssueRelation>()
 
 }

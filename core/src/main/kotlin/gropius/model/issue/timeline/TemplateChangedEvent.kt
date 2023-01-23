@@ -27,13 +27,11 @@ class TemplateChangedEvent(
     @NodeRelationship(OLD_TEMPLATE, Direction.OUTGOING)
     @GraphQLDescription("The old template.")
     @FilterProperty
-    @delegate:Transient
     val oldTemplate by NodeProperty<IssueTemplate>()
 
     @NodeRelationship(NEW_TEMPLATE, Direction.OUTGOING)
     @GraphQLDescription("The new template.")
     @FilterProperty
-    @delegate:Transient
     val newTemplate by NodeProperty<IssueTemplate>()
 
 }

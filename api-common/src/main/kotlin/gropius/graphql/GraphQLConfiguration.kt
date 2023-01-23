@@ -179,7 +179,7 @@ class GraphQLConfiguration {
                 GraphQLResponse<Any?>(
                     errors = listOf(
                         GraphQLServerError(
-                            e.reason ?: "No error message provided", extensions = mapOf("status" to e.status.value())
+                            e.reason ?: "No error message provided", extensions = mapOf("status" to e.statusCode.value())
                         )
                     )
                 )

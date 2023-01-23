@@ -24,7 +24,6 @@ class IntraComponentDependencyParticipant : ExtensibleNode() {
     @NodeRelationship(INTERFACE, Direction.OUTGOING)
     @GraphQLDescription("The Interface this IntraComponentDependencyParticipant refers to")
     @FilterProperty
-    @delegate:Transient
     val `interface` by NodeProperty<Interface>()
 
     @NodeRelationship(INCLUDED_PART, Direction.OUTGOING)
@@ -35,19 +34,16 @@ class IntraComponentDependencyParticipant : ExtensibleNode() {
         """
     )
     @FilterProperty
-    @delegate:Transient
     val includedParts by NodeSetProperty<InterfacePart>()
 
     @NodeRelationship(IntraComponentDependencySpecification.INCOMING_PARTICIPANT, Direction.INCOMING)
     @GraphQLDescription("If this is used as incoming, the IntraComponentDependencySpecification where it is used")
     @FilterProperty
-    @delegate:Transient
     val usedAsIncomingAt by NodeProperty<IntraComponentDependencySpecification?>()
 
     @NodeRelationship(IntraComponentDependencySpecification.OUTGOING_PARTICIPANT, Direction.INCOMING)
     @GraphQLDescription("If this is used as outgoing, the IntraComponentDependencySpecification where it is used")
     @FilterProperty
-    @delegate:Transient
     val usedAsOutgoingAt by NodeProperty<IntraComponentDependencySpecification?>()
 
 }

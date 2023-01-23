@@ -25,7 +25,6 @@ abstract class ParentTimelineItem(
     @NodeRelationship(CHILD_ITEMS, Direction.OUTGOING)
     @GraphQLDescription("Child TimelineItems. These are still part of the main timeline.")
     @FilterProperty
-    @delegate:Transient
     val childItems by NodeSetProperty<TimelineItem>()
 
 

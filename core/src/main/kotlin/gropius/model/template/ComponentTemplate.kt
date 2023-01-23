@@ -29,18 +29,15 @@ class ComponentTemplate(
     @NodeRelationship(VISIBLE_INTERFACE_SPECIFICATION, Direction.OUTGOING)
     @GraphQLDescription("Templates of InterfaceSpecifications which can be visible on Components with this Template.")
     @FilterProperty
-    @delegate:Transient
     val possibleVisibleInterfaceSpecifications by NodeSetProperty<InterfaceSpecificationTemplate>()
 
     @NodeRelationship(INVISIBLE_INTERFACE_SPECIFICATION, Direction.OUTGOING)
     @GraphQLDescription("Templates of InterfaceSpecifications which can be invisible on Components with this Template.")
     @FilterProperty
-    @delegate:Transient
     val possibleInvisibleInterfaceSpecifications by NodeSetProperty<InterfaceSpecificationTemplate>()
 
     @NodeRelationship(SubTemplate.PART_OF, Direction.INCOMING)
     @GraphQLDescription("SubTemplate applied to all ComponentVersions of Components with this Template")
-    @delegate:Transient
     val componentVersionTemplate by NodeProperty<ComponentVersionTemplate>()
 
 }

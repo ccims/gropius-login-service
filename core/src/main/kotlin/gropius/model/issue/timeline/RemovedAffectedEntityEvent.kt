@@ -24,7 +24,6 @@ class RemovedAffectedEntityEvent(
     @GraphQLDescription("The entity which is no longer affected by the Issue.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val removedAffectedEntity by NodeProperty<AffectedByIssue>()
 
 }
