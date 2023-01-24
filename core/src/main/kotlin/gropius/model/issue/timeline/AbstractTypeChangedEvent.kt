@@ -25,13 +25,11 @@ abstract class AbstractTypeChangedEvent<T : Node?>(
     @NodeRelationship(OLD_TYPE, Direction.OUTGOING)
     @GraphQLDescription("The old type.")
     @FilterProperty
-    @delegate:Transient
     val oldType by NodeProperty<T>()
 
     @NodeRelationship(NEW_TYPE, Direction.OUTGOING)
     @GraphQLDescription("The new type.")
     @FilterProperty
-    @delegate:Transient
     val newType by NodeProperty<T>()
 
 }

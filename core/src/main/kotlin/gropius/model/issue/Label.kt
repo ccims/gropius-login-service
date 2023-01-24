@@ -39,23 +39,19 @@ class Label(
     @NodeRelationship(Trackable.LABEL, Direction.INCOMING)
     @GraphQLDescription("Trackables this Label is part of.")
     @FilterProperty
-    @delegate:Transient
     val trackables by NodeSetProperty<Trackable>()
 
     @NodeRelationship(Issue.LABEL, Direction.INCOMING)
     @GraphQLDescription("Issues which currently have this Label.")
     @FilterProperty
-    @delegate:Transient
     val issues by NodeSetProperty<Issue>()
 
     @NodeRelationship(AddedLabelEvent.ADDED_LABEL, Direction.INCOMING)
     @GraphQLIgnore
-    @delegate:Transient
     val addedEvents by NodeSetProperty<AddedLabelEvent>()
 
     @NodeRelationship(RemovedLabelEvent.REMOVED_LABEL, Direction.INCOMING)
     @GraphQLIgnore
-    @delegate:Transient
     val removedEvents by NodeSetProperty<RemovedLabelEvent>()
 
 }

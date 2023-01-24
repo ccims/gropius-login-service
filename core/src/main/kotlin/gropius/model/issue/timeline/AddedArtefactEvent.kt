@@ -24,7 +24,6 @@ class AddedArtefactEvent(
     @GraphQLDescription("The Artefact added to the Issue.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val addedArtefact by NodeProperty<Artefact>()
 
 }

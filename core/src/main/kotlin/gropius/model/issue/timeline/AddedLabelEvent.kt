@@ -24,7 +24,6 @@ class AddedLabelEvent(
     @GraphQLDescription("The Label added to the Issue.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val addedLabel by NodeProperty<Label>()
 
 }

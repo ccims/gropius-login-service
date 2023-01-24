@@ -86,43 +86,36 @@ class Issue(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Issue.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<IssueTemplate>()
 
     @NodeRelationship(AFFECTS, Direction.OUTGOING)
     @GraphQLDescription("Entities which are in some regard affected by this Issue.")
     @FilterProperty
-    @delegate:Transient
     val affects by NodeSetProperty<AffectedByIssue>()
 
     @NodeRelationship(Trackable.ISSUE, Direction.INCOMING)
     @GraphQLDescription("Trackables this Issue is part of.")
     @FilterProperty
-    @delegate:Transient
     val trackables by NodeSetProperty<Trackable>()
 
     @NodeRelationship(TIMELINE, Direction.OUTGOING)
     @GraphQLDescription("Timeline of the Issue, shows how the Issue changed over time.")
     @FilterProperty
-    @delegate:Transient
     val timelineItems by NodeSetProperty<TimelineItem>()
 
     @NodeRelationship(ISSUE_COMMENT, Direction.OUTGOING)
     @GraphQLDescription("Comments on the Issue, subset of the timeline.")
     @FilterProperty
-    @delegate:Transient
     val issueComments by NodeSetProperty<IssueComment>()
 
     @NodeRelationship(BODY, Direction.OUTGOING)
     @GraphQLDescription("The Body of the Issue, a Comment directly associated with the Issue.")
     @FilterProperty
-    @delegate:Transient
     val body by NodeProperty<Body>()
 
     @NodeRelationship(TYPE, Direction.OUTGOING)
     @GraphQLDescription("The type of the Issue, e.g. BUG. Allowed IssueTypes are defined by the template.")
     @FilterProperty
-    @delegate:Transient
     val type by NodeProperty<IssueType>()
 
     @NodeRelationship(STATE, Direction.OUTGOING)
@@ -132,55 +125,46 @@ class Issue(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val state by NodeProperty<IssueState>()
 
     @NodeRelationship(PRIORITY, Direction.OUTGOING)
     @GraphQLDescription("The priority of the Issue, e.g. HIGH. Allowed IssuePriorities are defined by the template.")
     @FilterProperty
-    @delegate:Transient
     val priority by NodeProperty<IssuePriority?>()
 
     @NodeRelationship(LABEL, Direction.OUTGOING)
     @GraphQLDescription("Labels currently assigned to the Issue. For the history, see timelineItems.")
     @FilterProperty
-    @delegate:Transient
     val labels by NodeSetProperty<Label>()
 
     @NodeRelationship(ARTEFACT, Direction.OUTGOING)
     @GraphQLDescription("Artefacts currently assigned to the Issue. For the history, see timelineItems.")
     @FilterProperty
-    @delegate:Transient
     val artefacts by NodeSetProperty<Artefact>()
 
     @NodeRelationship(PARTICIPANT, Direction.OUTGOING)
     @GraphQLDescription("Users who participated on the Issue, e.g. commented, added Labels, ...")
     @FilterProperty
-    @delegate:Transient
     val participants by NodeSetProperty<User>()
 
     @NodeRelationship(INCOMING_RELATION, Direction.OUTGOING)
     @GraphQLDescription("Current IssueRelations which have this Issue as end point.")
     @FilterProperty
-    @delegate:Transient
     val incomingRelations by NodeSetProperty<IssueRelation>()
 
     @NodeRelationship(OUTGOING_RELATION, Direction.OUTGOING)
     @GraphQLDescription("Current IssueRelations which have this Issue as start point.")
     @FilterProperty
-    @delegate:Transient
     val outgoingRelations by NodeSetProperty<IssueRelation>()
 
     @NodeRelationship(ASSIGNMENT, Direction.OUTGOING)
     @GraphQLDescription("Current Assignments to this Issue. For the history, see timelineItems.")
     @FilterProperty
-    @delegate:Transient
     val assignments by NodeSetProperty<Assignment>()
 
     @NodeRelationship(PINNED_ON, Direction.OUTGOING)
     @GraphQLDescription("Trackables this Issue is currently pinned on. For the history, see timelineItems.")
     @FilterProperty
-    @delegate:Transient
     val pinnedOn by NodeSetProperty<Trackable>()
 
     @NodeRelationship(IMSIssue.ISSUE, Direction.INCOMING)
@@ -189,6 +173,5 @@ class Issue(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val imsIssues by NodeSetProperty<IMSIssue>()
 }

@@ -25,31 +25,26 @@ class IssueTemplate(
     @NodeRelationship(IssueType.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Set of all types Issues with this Template can have.")
     @FilterProperty
-    @delegate:Transient
     val issueTypes by NodeSetProperty<IssueType>()
 
     @NodeRelationship(IssueState.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Set of all states Issues with this Template can have.")
     @FilterProperty
-    @delegate:Transient
     val issueStates by NodeSetProperty<IssueState>()
 
     @NodeRelationship(AssignmentType.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Set of all types Assignments to Issues with this Template can have.")
     @FilterProperty
-    @delegate:Transient
     val assignmentTypes by NodeSetProperty<AssignmentType>()
 
     @NodeRelationship(IssuePriority.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Set of all priorities Issues with this Template can have.")
     @FilterProperty
-    @delegate:Transient
     val issuePriorities by NodeSetProperty<IssuePriority>()
 
     @NodeRelationship(IssueRelationType.PART_OF, Direction.INCOMING)
     @GraphQLDescription("Set of all types outgoing IssueRelations of Issues with this Template can have")
     @FilterProperty
-    @delegate:Transient
     val relationTypes by NodeSetProperty<IssueRelationType>()
 
 }

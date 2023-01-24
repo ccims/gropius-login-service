@@ -26,7 +26,6 @@ class AssignmentTypeChangedEvent(
     @NodeRelationship(ASSIGNMENT, Direction.OUTGOING)
     @GraphQLDescription("The Assignment of which the type was changed")
     @FilterProperty
-    @delegate:Transient
     val assignment by NodeProperty<Assignment>()
 
 }

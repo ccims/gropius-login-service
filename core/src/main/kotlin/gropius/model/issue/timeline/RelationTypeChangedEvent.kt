@@ -22,7 +22,6 @@ abstract class RelationTypeChangedEvent(
     @NodeRelationship(ISSUE_RELATION, Direction.OUTGOING)
     @GraphQLDescription("The IssueRelation of which the type was changed")
     @FilterProperty
-    @delegate:Transient
     val issueRelation by NodeProperty<IssueRelation>()
 
 }

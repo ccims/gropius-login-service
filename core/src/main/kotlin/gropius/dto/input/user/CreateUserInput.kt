@@ -14,6 +14,6 @@ abstract class CreateUserInput : CreateExtensibleNodeInput() {
     var displayName: String by Delegates.notNull()
 
     @GraphQLDescription("The email of the created User if present")
-    val email: String? = null
+    var email: String? = null
 
 }

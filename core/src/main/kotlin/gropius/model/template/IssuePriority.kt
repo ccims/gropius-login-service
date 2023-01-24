@@ -29,11 +29,9 @@ class IssuePriority(
 
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @FilterProperty
-    @delegate:Transient
     val partOf by NodeSetProperty<IssueTemplate>()
 
     @NodeRelationship(Issue.PRIORITY, Direction.INCOMING)
     @FilterProperty
-    @delegate:Transient
     val prioritizedIssues by NodeSetProperty<Issue>()
 }

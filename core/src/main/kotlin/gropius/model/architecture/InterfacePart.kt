@@ -39,37 +39,31 @@ class InterfacePart(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this InterfacePart")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<InterfacePartTemplate>()
 
     @NodeRelationship(Relation.START_PART, Direction.INCOMING)
     @GraphQLDescription("Relations which include this InterfacePart at the start of the Relation")
     @FilterProperty
-    @delegate:Transient
     val includingOutgoingRelations by NodeSetProperty<Relation>()
 
     @NodeRelationship(Relation.END_PART, Direction.INCOMING)
     @GraphQLDescription("Relations which include this InterfacePart at the end of the Relation")
     @FilterProperty
-    @delegate:Transient
     val includingIncomingRelations by NodeSetProperty<Relation>()
 
     @NodeRelationship(IntraComponentDependencyParticipant.INTERFACE, Direction.INCOMING)
     @GraphQLDescription("Participants of IntraComponentDependencySpecifications where this is used as included part.")
     @FilterProperty
-    @delegate:Transient
     val includingIntraComponentDependencyParticipants by NodeSetProperty<IntraComponentDependencyParticipant>()
 
     @NodeRelationship(InterfaceSpecificationVersion.ACTIVE_PART, Direction.INCOMING)
     @GraphQLDescription("InterfaceSpecificationVersions where this InterfacePart is active.")
     @FilterProperty
-    @delegate:Transient
     val activeOn by NodeSetProperty<InterfaceSpecificationVersion>()
 
     @NodeRelationship(DEFINED_ON, Direction.OUTGOING)
     @GraphQLDescription("InterfaceSpecification which defines this InterfacePart")
     @FilterProperty
-    @delegate:Transient
     val definedOn by NodeProperty<InterfaceSpecification>()
 
 }

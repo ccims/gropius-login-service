@@ -38,19 +38,16 @@ class Interface(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Interface.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<InterfaceTemplate>()
 
     @NodeRelationship(DEFINITION, Direction.OUTGOING)
     @GraphQLDescription("The definition of this interface.")
     @FilterProperty
-    @delegate:Transient
     val interfaceDefinition by NodeProperty<InterfaceDefinition>()
 
     @NodeRelationship(IntraComponentDependencyParticipant.INCLUDED_PART, Direction.INCOMING)
     @GraphQLDescription("Participants of IntraComponentDependencySpecifications where this is used.")
     @FilterProperty
-    @delegate:Transient
     val intraComponentDependencyParticipants by NodeSetProperty<IntraComponentDependencyParticipant>()
 
     @GraphQLIgnore

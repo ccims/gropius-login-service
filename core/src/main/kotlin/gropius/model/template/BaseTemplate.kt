@@ -38,7 +38,6 @@ abstract class BaseTemplate<T, S : BaseTemplate<T, S>> (
 
     @NodeRelationship(USED_IN, Direction.OUTGOING)
     @GraphQLDescription("Entities which use this template.")
-    @delegate:Transient
     val usedIn by NodeSetProperty<T>()
 
     @GraphQLDescription("Schema of a template field by name of the template field. Error if the field does not exist.")

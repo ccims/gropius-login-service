@@ -1,4 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "A Cross-Component Issue Management System for Component-based Architectures"
 
@@ -8,8 +9,17 @@ plugins {
 }
 
 allprojects {
+    val javaVersion: String by project
+
     repositories {
         mavenCentral()
+    }
+    tasks.withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = javaVersion
+    }
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
 }
 

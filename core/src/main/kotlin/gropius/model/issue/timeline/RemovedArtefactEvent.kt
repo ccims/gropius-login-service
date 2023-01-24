@@ -24,7 +24,6 @@ class RemovedArtefactEvent(
     @GraphQLDescription("The Artefact which was removed from the Issue.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val removedArtefact by NodeProperty<Artefact>()
 
 }

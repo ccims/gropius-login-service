@@ -48,7 +48,6 @@ abstract class NodePermission<T : Node>(
     @NodeRelationship(NODE, Direction.OUTGOING)
     @GraphQLDescription("Nodes on which the Permission is granted.")
     @FilterProperty
-    @delegate:Transient
     val nodesWithPermission by NodeSetProperty<T>()
 
 }

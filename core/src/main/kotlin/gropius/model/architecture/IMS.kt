@@ -42,25 +42,21 @@ class IMS(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Component.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<IMSTemplate>()
 
     @NodeRelationship(PROJECT, Direction.OUTGOING)
     @GraphQLDescription("Projects which are synced to this IMS.")
     @FilterProperty
-    @delegate:Transient
     val projects by NodeSetProperty<IMSProject>()
 
     @NodeRelationship(USER, Direction.OUTGOING)
     @GraphQLDescription("Users of this IMS.")
     @FilterProperty
-    @delegate:Transient
     val users by NodeSetProperty<IMSUser>()
 
     @NodeRelationship(NodePermission.NODE, Direction.INCOMING)
     @GraphQLDescription("Permissions for this IMS.")
     @FilterProperty
-    @delegate:Transient
     override val permissions by NodeSetProperty<IMSPermission>()
 
 }

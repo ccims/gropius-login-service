@@ -39,7 +39,6 @@ abstract class BasePermission(
     @NodeRelationship(GropiusUser.PERMISSION, Direction.INCOMING)
     @GraphQLDescription("GropiusUsers granted this Permission")
     @FilterProperty
-    @delegate:Transient
     val users by NodeSetProperty<GropiusUser>()
 
 }

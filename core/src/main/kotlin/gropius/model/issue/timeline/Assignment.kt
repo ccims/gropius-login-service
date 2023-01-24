@@ -27,13 +27,11 @@ class Assignment(createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime) : Pu
     @NodeRelationship(TYPE, Direction.OUTGOING)
     @GraphQLDescription("The type of Assignment, e.g. REVIEWER. Allowed types are defined by the IssueTemplate.")
     @FilterProperty
-    @delegate:Transient
     val type by NodeProperty<AssignmentType?>()
 
     @NodeRelationship(USER, Direction.OUTGOING)
     @GraphQLDescription("The User assigned to the Issue.")
     @FilterProperty
-    @delegate:Transient
     val user by NodeProperty<User>()
 
 }

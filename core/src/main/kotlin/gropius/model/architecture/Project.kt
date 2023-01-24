@@ -33,12 +33,10 @@ class Project(
     @NodeRelationship(COMPONENT, Direction.OUTGOING)
     @GraphQLDescription("The ComponentVersions this consists of.")
     @FilterProperty
-    @delegate:Transient
     val components by NodeSetProperty<ComponentVersion>()
 
     @NodeRelationship(NodePermission.NODE, Direction.INCOMING)
     @GraphQLDescription("Permissions for this Project.")
     @FilterProperty
-    @delegate:Transient
     override val permissions by NodeSetProperty<ProjectPermission>()
 }

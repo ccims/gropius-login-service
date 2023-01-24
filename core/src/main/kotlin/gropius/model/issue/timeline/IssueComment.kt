@@ -59,13 +59,11 @@ class IssueComment(
     @NodeRelationship(ANSWERS, Direction.OUTGOING)
     @GraphQLDescription("The Comment this IssueComment is an answers to.")
     @FilterProperty
-    @delegate:Transient
     val answers by NodeProperty<Comment?>()
 
     @NodeRelationship(REFERENCED_ARTEFACT, Direction.OUTGOING)
     @GraphQLDescription("Referenced Artefacts. Changes to not cause lastEditedAt/lastEditedBy to change.")
     @FilterProperty
-    @delegate:Transient
     val referencedArtefacts by NodeSetProperty<Artefact>()
 
 }

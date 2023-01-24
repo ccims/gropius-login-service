@@ -13,13 +13,11 @@ abstract class RelationPartnerTemplate<T, S : RelationPartnerTemplate<T, S>>(
     @NodeRelationship(RelationCondition.FROM, Direction.INCOMING)
     @GraphQLDescription("RelationConditions which allow this template for the start of the relation.")
     @FilterProperty
-    @delegate:Transient
     val possibleStartOfRelations by NodeSetProperty<RelationCondition>()
 
     @NodeRelationship(RelationCondition.TO, Direction.INCOMING)
     @GraphQLDescription("RelationConditions which allow this template for the end of the relation.")
     @FilterProperty
-    @delegate:Transient
     val possibleEndOfRelations by NodeSetProperty<RelationCondition>()
 
 }

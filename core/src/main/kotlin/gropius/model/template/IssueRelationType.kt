@@ -23,13 +23,11 @@ class IssueRelationType(name: String, description: String) : NamedNode(name, des
     @NodeRelationship(IssueRelation.TYPE, Direction.INCOMING)
     @GraphQLDescription("Relations which use this type.")
     @FilterProperty
-    @delegate:Transient
     val relationsWithType by NodeSetProperty<IssueRelation>()
 
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @GraphQLDescription("IssueTemplates this is part of.")
     @FilterProperty
-    @delegate:Transient
     val partOf by NodeSetProperty<IssueTemplate>()
 
 }

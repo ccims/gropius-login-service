@@ -23,13 +23,11 @@ class AssignmentType(name: String, description: String) : NamedNode(name, descri
     @NodeRelationship(Assignment.TYPE, Direction.INCOMING)
     @GraphQLDescription("Assignments which use this type.")
     @FilterProperty
-    @delegate:Transient
     val assignmentsWithType by NodeSetProperty<Assignment>()
 
     @NodeRelationship(PART_OF, Direction.OUTGOING)
     @GraphQLDescription("IssueTemplates this is part of.")
     @FilterProperty
-    @delegate:Transient
     val partOf by NodeSetProperty<IssueTemplate>()
 
 }

@@ -81,31 +81,26 @@ abstract class Trackable(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val issues by NodeSetProperty<Issue>()
 
     @NodeRelationship(LABEL, Direction.OUTGOING)
     @GraphQLDescription("The set of Labels which can be added to issues of this trackable.")
     @FilterProperty
-    @delegate:Transient
     val labels by NodeSetProperty<Label>()
 
     @NodeRelationship(ARTEFACT, Direction.OUTGOING)
     @GraphQLDescription("Artefacts of this trackable, typically some kind of file.")
     @FilterProperty
-    @delegate:Transient
     val artefacts by NodeSetProperty<Artefact>()
 
     @NodeRelationship(SYNCS_TO, Direction.OUTGOING)
     @GraphQLDescription("IMSProjects this Trackable is synced to and from.")
     @FilterProperty
-    @delegate:Transient
     val syncsTo by NodeSetProperty<IMSProject>()
 
     @NodeRelationship(Issue.PINNED_ON, Direction.INCOMING)
     @GraphQLDescription("Issues which are pinned to this trackable, subset of `issues`.")
     @FilterProperty
-    @delegate:Transient
     val pinnedIssues by NodeSetProperty<Issue>()
 
 }

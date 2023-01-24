@@ -43,7 +43,6 @@ abstract class Comment(
     @NodeRelationship(IssueComment.ANSWERS, Direction.INCOMING)
     @GraphQLDescription("IssueComments which answer this Comment.")
     @FilterProperty
-    @delegate:Transient
     val answeredBy by NodeSetProperty<IssueComment>()
 
     @NodeRelationship(BODY_LAST_EDITED_BY, Direction.OUTGOING)
@@ -53,7 +52,6 @@ abstract class Comment(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val bodyLastEditedBy by NodeProperty<User>()
 
 }

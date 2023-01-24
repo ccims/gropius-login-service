@@ -25,13 +25,11 @@ class InterfaceSpecificationTemplate(
     @NodeRelationship(ComponentTemplate.VISIBLE_INTERFACE_SPECIFICATION, Direction.INCOMING)
     @GraphQLDescription("Templates of Components InterfaceSpecifications with this template can be visible on.")
     @FilterProperty
-    @delegate:Transient
     val canBeVisibleOnComponents by NodeSetProperty<ComponentTemplate>()
 
     @NodeRelationship(ComponentTemplate.INVISIBLE_INTERFACE_SPECIFICATION, Direction.INCOMING)
     @GraphQLDescription("Templates of Components InterfaceSpecifications with this template can be invisible on.")
     @FilterProperty
-    @delegate:Transient
     val canBeInvisibleOnComponents by NodeSetProperty<ComponentTemplate>()
 
     @NodeRelationship(
@@ -42,7 +40,6 @@ class InterfaceSpecificationTemplate(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val derivableBy by NodeSetProperty<InterfaceSpecificationDerivationCondition>()
 
     @NodeRelationship(SubTemplate.PART_OF, Direction.INCOMING)
@@ -50,7 +47,6 @@ class InterfaceSpecificationTemplate(
         """SubTemplate applied to all InterfaceSpecificationVersions of InterfaceSpecifications with this Template.
         """
     )
-    @delegate:Transient
     val interfaceSpecificationVersionTemplate by NodeProperty<InterfaceSpecificationVersionTemplate>()
 
     @NodeRelationship(SubTemplate.PART_OF, Direction.INCOMING)
@@ -58,7 +54,6 @@ class InterfaceSpecificationTemplate(
         """SubTemplate applied to all InterfaceParts of InterfaceSpecifications with this Template.
         """
     )
-    @delegate:Transient
     val interfacePartTemplate by NodeProperty<InterfacePartTemplate>()
 
     @NodeRelationship(SubTemplate.PART_OF, Direction.INCOMING)
@@ -66,7 +61,6 @@ class InterfaceSpecificationTemplate(
         """SubTemplate applied to all Interfaces of InterfaceSpecifications with this Template.
         """
     )
-    @delegate:Transient
     val interfaceTemplate by NodeProperty<InterfaceTemplate>()
 
     @NodeRelationship(SubTemplate.PART_OF, Direction.INCOMING)
@@ -74,7 +68,6 @@ class InterfaceSpecificationTemplate(
         """SubTemplate applied to all InterfaceDefinitions of InterfaceSpecifications with this Template.
         """
     )
-    @delegate:Transient
     val interfaceDefinitionTemplate by NodeProperty<InterfaceDefinitionTemplate>()
 
 }

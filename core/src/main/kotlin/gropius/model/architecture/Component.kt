@@ -50,7 +50,6 @@ class Component(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Component.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<ComponentTemplate>()
 
     @NodeRelationship(InterfaceSpecification.COMPONENT, Direction.INCOMING)
@@ -60,19 +59,16 @@ class Component(
         """
     )
     @FilterProperty
-    @delegate:Transient
     val interfaceSpecifications by NodeSetProperty<InterfaceSpecification>()
 
     @NodeRelationship(VERSION, Direction.OUTGOING)
     @GraphQLDescription("Versions of this components.")
     @FilterProperty
-    @delegate:Transient
     val versions by NodeSetProperty<ComponentVersion>()
 
     @NodeRelationship(NodePermission.NODE, Direction.INCOMING)
     @GraphQLDescription("Permissions for this Component.")
     @FilterProperty
-    @delegate:Transient
     override val permissions by NodeSetProperty<ComponentPermission>()
 
 }

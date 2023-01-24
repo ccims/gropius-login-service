@@ -24,7 +24,6 @@ class RemovedFromPinnedIssuesEvent(
     @GraphQLDescription("The Trackable the Issue is no longer pinned on.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val unpinnedOn by NodeProperty<Trackable>()
 
 }

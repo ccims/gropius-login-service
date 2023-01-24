@@ -19,12 +19,14 @@ dependencies {
 
 
 apollo {
-    packageName.set("gropius.sync.github.generated")
-    introspection {
-        endpointUrl.set("https://api.github.com/graphql")
-        schemaFile.set(file("src/main/graphql/gropius/sync/github/schema.graphqls"))
-        mapScalar("DateTime", "java.time.OffsetDateTime", "com.apollographql.apollo3.adapter.JavaOffsetDateTimeAdapter")
+    service("github") {
+        packageName.set("gropius.sync.github.generated")
+        introspection {
+            endpointUrl.set("https://api.github.com/graphql")
+            schemaFile.set(file("src/main/graphql/gropius/sync/github/schema.graphqls"))
+            mapScalar("DateTime", "java.time.OffsetDateTime", "com.apollographql.apollo3.adapter.JavaOffsetDateTimeAdapter")
+        }
+        generateOptionalOperationVariables.set(false)
+        codegenModels.set("responseBased")
     }
-    generateOptionalOperationVariables.set(false)
-    codegenModels.set("responseBased")
 }

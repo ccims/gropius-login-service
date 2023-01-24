@@ -38,44 +38,37 @@ class Relation(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Relation.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<RelationTemplate>()
 
     @NodeRelationship(RelationPartner.INCOMING_RELATION, Direction.INCOMING)
     @GraphQLDescription("The end of this Relation.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val end by NodeProperty<RelationPartner>()
 
     @NodeRelationship(RelationPartner.OUTGOING_RELATION, Direction.INCOMING)
     @GraphQLDescription("The start of this Relation.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val start by NodeProperty<RelationPartner>()
 
     @NodeRelationship(START_PART, Direction.OUTGOING)
     @GraphQLDescription("If the start is an Interface, the parts of that Interface this Relation includes.")
     @FilterProperty
-    @delegate:Transient
     val startParts by NodeSetProperty<InterfacePart>()
 
     @NodeRelationship(END_PART, Direction.OUTGOING)
     @GraphQLDescription("If the end is an Interface, the parts of that Interface this Relation includes.")
     @FilterProperty
-    @delegate:Transient
     val endParts by NodeSetProperty<InterfacePart>()
 
     @NodeRelationship(InterfaceDefinition.VISIBLE_DERIVED_BY, Direction.INCOMING)
     @GraphQLDescription("InterfaceDefinition this Relation derives visible")
     @FilterProperty
-    @delegate:Transient
     val derivesVisible by NodeSetProperty<InterfaceDefinition>()
 
     @NodeRelationship(InterfaceDefinition.INVISIBLE_DERIVED_BY, Direction.INCOMING)
     @GraphQLDescription("InterfaceDefinition this Relation derives invisible")
     @FilterProperty
-    @delegate:Transient
     val derivesInvisible by NodeSetProperty<InterfaceDefinition>()
 }

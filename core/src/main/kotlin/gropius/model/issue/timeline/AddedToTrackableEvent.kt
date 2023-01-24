@@ -24,7 +24,6 @@ class AddedToTrackableEvent(
     @GraphQLDescription("The Trackable the Issue was added to.")
     @GraphQLNullable
     @FilterProperty
-    @delegate:Transient
     val addedToTrackable by NodeProperty<Trackable>()
 
 }

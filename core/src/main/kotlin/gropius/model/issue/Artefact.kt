@@ -55,25 +55,21 @@ class Artefact(
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Artefact.")
     @FilterProperty
-    @delegate:Transient
     override val template by NodeProperty<ArtefactTemplate>()
 
     @NodeRelationship(Trackable.ARTEFACT, Direction.INCOMING)
     @GraphQLDescription("The Trackable this Artefact is part of.")
     @FilterProperty
-    @delegate:Transient
     val trackable by NodeProperty<Trackable>()
 
     @NodeRelationship(Issue.ARTEFACT, Direction.INCOMING)
     @GraphQLDescription("Issues which currently have this Artefact.")
     @FilterProperty
-    @delegate:Transient
     val issues by NodeSetProperty<Issue>()
 
     @NodeRelationship(IssueComment.REFERENCED_ARTEFACT, Direction.INCOMING)
     @GraphQLDescription("IssueComments which currently reference this Artefact.")
     @FilterProperty
-    @delegate:Transient
     val referencingComments by NodeSetProperty<IssueComment>()
 
 }
