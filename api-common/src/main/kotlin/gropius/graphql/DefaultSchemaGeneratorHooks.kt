@@ -71,7 +71,7 @@ object DefaultSchemaGeneratorHooks : SchemaGeneratorHooks {
     private val GraphQLOutputType.asFieldName: String
         get() {
             val unwrappedName = unwrapType().deepName
-            val pattern = "^[A-Z]+".toRegex()
+            val pattern = "^(([A-Z](?=[a-z]))|([A-Z]+(?=[A-Z][a-z]))|([A-Z]+$))".toRegex()
             return pattern.replace(unwrappedName) {
                 it.value.map(Char::lowercase).joinToString("")
             }
