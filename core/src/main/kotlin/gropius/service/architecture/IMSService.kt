@@ -16,6 +16,7 @@ import gropius.service.template.TemplatedNodeService
 import gropius.service.user.permission.IMSPermissionService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.stereotype.Service
 
 /**
@@ -98,7 +99,7 @@ class IMSService(
         checkPermission(
             ims, Permission(NodePermission.ADMIN, authorizationContext), "delete the IMS"
         )
-        repository.delete(ims).awaitSingle()
+        repository.delete(ims).awaitSingleOrNull()
     }
 
 }
