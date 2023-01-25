@@ -57,6 +57,7 @@ class TimelineItemHandler(
             nodeSourcerer.ensureUser(imsProjectConfig, event.editor ?: event.author!!)
         commentEvent.lastModifiedAt = event.updatedAt
         commentEvent.lastModifiedBy().value = nodeSourcerer.ensureUser(imsProjectConfig, event.editor ?: event.author!!)
+        commentEvent.issue().value.issueComments() += commentEvent
         commentEvent = neoOperations.save(commentEvent).awaitSingle()
         return Pair(commentEvent.rawId, event.updatedAt)
     }

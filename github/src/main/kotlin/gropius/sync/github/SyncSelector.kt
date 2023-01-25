@@ -68,8 +68,10 @@ class SyncSelector(
         logger.info("Sync started")
         imsConfigManager.findTemplates()
         for (imsTemplate in imsConfigManager.findTemplates()) {
+            logger.trace("Iterating IMSTemplate ${imsTemplate.rawId}")
             for (ims in imsTemplate.usedIn()) {
                 try {
+                    logger.trace("Configuring IMS ${ims.rawId}")
                     val imsConfig = IMSConfig(helper, ims, imsTemplate)
                     syncIMS(imsConfig)
                 } catch (e: SyncNotificator.NotificatedError) {
@@ -89,11 +91,13 @@ class SyncSelector(
      * @param imsConfig the config of the IMS
      */
     private suspend fun syncIMS(imsConfig: IMSConfig) {
+        logger.trace("Iterating IMS ${imsConfig.ims.rawId}")
         val token = tokenManager.getTokenForIMSUser(imsConfig.ims, imsConfig.readUser, null)
         val apolloClient = ApolloClient.Builder().serverUrl(imsConfig.graphQLUrl.toString())
             .addHttpHeader("Authorization", "bearer $token").build()
         for (project in imsConfig.ims.projects()) {
             try {
+                logger.trace("Configuring IMSProject ${project.rawId}")
                 val imsProjectConfig = IMSProjectConfig(helper, imsConfig, project)
                 syncProject(imsProjectConfig, apolloClient)
             } catch (e: SyncNotificator.NotificatedError) {
@@ -122,6 +126,7 @@ class SyncSelector(
      * @param apolloClient the client to use4 for grpahql queries
      */
     private suspend fun syncProject(imsProjectConfig: IMSProjectConfig, apolloClient: ApolloClient) {
+        logger.trace("Iterating IMSProject ${imsProjectConfig.imsProject.rawId}")
         syncIssues(imsProjectConfig, apolloClient)
     }
 }

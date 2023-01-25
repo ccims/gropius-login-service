@@ -62,7 +62,7 @@ class IMSConfigManager(
             "\$schema" to SCHEMA
             "type" to arr["null", obj {
                 "type" to "string"
-                "gropius-node" to "GropiusUser"
+                "gropius-node" to "IMSUser"
                 "gropius-type" to "github-user"
             }]
         }.toString(), "graphql-url" to obj {
