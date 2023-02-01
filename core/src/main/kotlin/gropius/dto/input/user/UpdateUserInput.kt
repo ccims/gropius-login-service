@@ -12,9 +12,9 @@ import kotlin.properties.Delegates
 abstract class UpdateUserInput : UpdateExtensibleNodeInput() {
 
     @GraphQLDescription("The new displayName of the User to update")
-    val displayName: OptionalInput<String> by Delegates.notNull()
+    var displayName: OptionalInput<String> by Delegates.notNull()
 
     @GraphQLDescription("The new email of the User to update")
-    val email: OptionalInput<String?> by Delegates.notNull()
+    var email: OptionalInput<String?> by Delegates.notNull()
 
 }
