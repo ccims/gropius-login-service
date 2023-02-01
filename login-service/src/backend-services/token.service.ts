@@ -60,7 +60,7 @@ export class TokenService {
         const payload = await this.backendJwtService.verifyAsync(token, {
             audience: [TokenScope.LOGIN_SERVICE],
         });
-        const audience: TokenScope[] = (payload.aud as string[]).map((scope) => TokenScope[scope]);
+        const audience: string[] = payload.aud as string[];
         let user: LoginUser | null = null;
         if (audience.includes(TokenScope.BACKEND)) {
             user = await this.loginUserService.findOneBy({
