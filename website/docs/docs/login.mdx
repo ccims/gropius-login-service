@@ -28,7 +28,7 @@ Strategies are defined as service classes (which can be part of the main code ba
 One strategy corresponds to one _type_ of authentication (e.g. GitHub OAuth, OpenID connect). Of this type _"strategy instances"_ ca be created that represent one actual authentication provider (e.g. a specific GitHub Enterprise instance, Microsoft Azure OpenID connect).
 Instances can be created at runtime by instanciating one defined strategy and providing all required configuration (e.g. for GitHub OAuth the OAuth Endpoints and client credentials).
 
-One a user authenticates using a strategy instance, this authentication creates _"login data"_, representing the association of the authenticated gropius-user and the strategy instance. It contains all data required to "recognize" a user on following authentications.
+Once a user authenticates using a strategy instance, this authentication creates _"login data"_, representing the association of the authenticated gropius-user and the strategy instance. It contains all data required to "recognize" a user on following authentications.
 A single login/authentication event for one login data is called a _"active login"_
 
 The currently available strategies are all based on [passportjs](https://www.passportjs.org/) to handle the retrieval of credentials. This reduces the needed code for each strategy even further.
