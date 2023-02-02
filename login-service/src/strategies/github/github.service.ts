@@ -105,14 +105,12 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
-            username: loginData.data["username"],
             github_id: loginData.data["github_id"],
         };
     }
 
     override getLoginDataDataForImsUserTemplatedFields(imsUser: object): object | Promise<object> {
         return {
-            username: imsUser["username"],
             github_id: imsUser["github_id"],
         };
     }
