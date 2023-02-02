@@ -3117,7 +3117,7 @@ export type CreateNewImsUserInImsMutationVariables = Exact<{
 }>;
 
 
-export type CreateNewImsUserInImsMutation = { __typename?: 'Mutation', createIMSUser?: { __typename: 'CreateIMSUserPayload', imsuser?: { __typename: 'IMSUser', id: string } | null } | null };
+export type CreateNewImsUserInImsMutation = { __typename?: 'Mutation', createIMSUser?: { __typename: 'CreateIMSUserPayload', imsUser?: { __typename: 'IMSUser', id: string } | null } | null };
 
 export type GetBasicGropiusUserDataQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3153,7 +3153,7 @@ export type SetImsUserLinkMutationVariables = Exact<{
 }>;
 
 
-export type SetImsUserLinkMutation = { __typename?: 'Mutation', updateIMSUser?: { __typename: 'UpdateIMSUserPayload', imsuser?: { __typename: 'IMSUser', id: string } | null } | null };
+export type SetImsUserLinkMutation = { __typename?: 'Mutation', updateIMSUser?: { __typename: 'UpdateIMSUserPayload', imsUser?: { __typename: 'IMSUser', id: string } | null } | null };
 
 export type UserDataFragment = { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null };
 
@@ -3220,7 +3220,7 @@ export const CreateNewImsUserInImsDocument = gql`
     mutation createNewImsUserInIms($input: CreateIMSUserInput!) {
   createIMSUser(input: $input) {
     __typename
-    imsuser {
+    imsUser {
       __typename
       id
     }
@@ -3266,7 +3266,7 @@ export const SetImsUserLinkDocument = gql`
     mutation setImsUserLink($gropiusUserId: ID!, $imsUserId: ID!) {
   updateIMSUser(input: {id: $imsUserId, gropiusUser: $gropiusUserId}) {
     __typename
-    imsuser {
+    imsUser {
       __typename
       id
     }
