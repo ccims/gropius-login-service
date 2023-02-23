@@ -12,7 +12,7 @@ import { Strategy } from "./Strategy";
 
 /**
  * Contains the logic how the system is supposed to create and link
- * login data ans active logins when users authenticate.
+ * login data and active logins when users authenticate.
  * Defines how the sign up and sign in prcess work from the point
  * when passport has processed the request and returned information about the credentials
  */

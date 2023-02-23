@@ -159,7 +159,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
             github_id: profile.id,
         });
         if (loginDataCandidates.length != 1) {
-            this.loggerGithub.debug("Oauth login didn's find unique login data", loginDataCandidates);
+            this.loggerGithub.debug("Oauth login didn't find unique login data", loginDataCandidates);
             done(null, { dataActiveLogin, dataUserLoginData, mayRegister: true }, { message: "No unique user found" });
         } else {
             const loginData = loginDataCandidates[0];
