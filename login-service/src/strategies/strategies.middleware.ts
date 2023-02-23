@@ -87,6 +87,7 @@ export class StrategiesMiddleware implements NestMiddleware {
             (res.locals.state as AuthStateData).authErrorMessage =
                 result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfull";
         }
+        this.logger.debug("Strategy Middleware completed. Calling next");
         next();
     }
 }
