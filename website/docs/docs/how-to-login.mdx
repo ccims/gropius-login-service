@@ -5,7 +5,10 @@ slug: /how-to-login
 
 # How-To Login-Service (or rather Hot-To use the Gropius Backend at all)
 This How-To will the essential steps to get a Gropius installation going including a fully functional login-service. It will use the production docker-compose file, as the development docker-compose file uses the dev login service which is intended to easily provide access tokens but does not include the full login service functionality.
-> _Note_: Some steps taken in this how to might however NOT be appropriate for a production setup!
+
+:::caution
+Some steps taken in this how to might however NOT be appropriate for a production setup!
+:::
 
 ## Configuration
 The login service (as well as most of the Gropius services) is configured using environment variables. These can (depending on the way of deploying) be set in actual the console/system environment, the docker-compose file or an environment file. For a docker-compose based installation, using the docker-compose file is recommended. When deploying (the login-service) outside docker, configure your setup in a `gropius-backend/login-service/.env.[dev/production].local` file.
@@ -19,15 +22,38 @@ The docker compose file sets this to 10 minutes by default. For development, you
 
 ### Initial user creation
 To be able to interact with the system and access it, you need a user account. You can specify config options that will cause the login service to ensure that the needed entities are present on startup.
-You will need to create a strategy instance (specifying the way you will login with the created user) and the user itself.
+You will need to create a strategy instance (specifying the way you will login with the created user), an auth client and the user itself.
 
-> _Note_: It is recommended, you only specify these configuration options on the initial launch and remove them once the system is set up. You can always add them if you lost access etc.
+:::info
+It is recommended, you only specify these configuration options on the initial launch and remove them once the system is set up. You can always add them if you lost access etc.
+:::
 
 #### Strategy instance creation
-Creating an instance of the `userpass` strategy will be the most usefull, as you will then be able to log in using a username and password.
+Creating an instance of the `userpass` strategy will be the most useful, as you will then be able to log in using a username and password.
 Needed configuration variables:
 - `GROPIUS_DEFAULT_STRATEGY_INSTANCE_TYPE`: The Strategy to instance. `userpass` is recommended.
 - `GROPIUS_DEFAULT_STRATEGY_INSTANCE_CONFIG`: The configuration for the strategy instance. The userpass strategy does not require any configuration. Set this to `{}`
 - `GROPIUS_DEFAULT_STRATEGY_INSTANCE_NAME`: The name for the strategy instance to create. The instance will only be created, if no login strategy instance with this name exists yet. Else creation will be skipped.
 
 #### Initial admin user creation
+You can create a user that you can log in with to access the system.
+
+:::info
+Any users created using the configuration options will be created as admin users.
+:::
+
+Needed configuration variables:
+- `GROPIUS_DEFAULT_USER_USERNAME`: The username of the new user to create. Must be unique. If a user with the specified username already exists, no new user will be created.
+- `GROPIUS_DEFAULT_USER_DISPLAYNAME`: The clear text display name of the user to be created.
+- `GROPIUS_DEFAULT_USER_STRATEGY_INSTANCE_NAME`: The name of the strategy instance with which to register the new user. This can be the name set in `GROPIUS_DEFAULT_STRATEGY_INSTANCE_NAME`.
+- `GROPIUS_DEFAULT_USER_POST_DATA`: The variables to "send" to the user registration process. The exact structure depends on the chosen strategy instance. For an instance of userpass the post data should look like `{"password": "PASSWORD_OF_THE_NEW_USER"}`
+
+#### Auth client creation
+As every active login of a user must be bound to an auth client (a software that required the user to authenticate) you need to create one as well.
+
+:::caution
+The auth client will be created WITHOUT requiring a client secret. This means EVERYBODY who knows the id of the client can simply initiate a user login as this client. It is recommended, you add at least a client secret immediately after setup. Especially if the service is accessible for others.
+:::
+
+Needed configuration variables:
+- `GROPIUS_DEFAULT_AUTH_CLIENT_NAME`: The name of the auth client to create. If an auth client with this name already exists 
