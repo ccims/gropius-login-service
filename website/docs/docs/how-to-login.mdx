@@ -1,0 +1,33 @@
+---
+sidebar_position: 4
+slug: /how-to-login
+---
+
+# How-To Login-Service (or rather Hot-To use the Gropius Backend at all)
+This How-To will the essential steps to get a Gropius installation going including a fully functional login-service. It will use the production docker-compose file, as the development docker-compose file uses the dev login service which is intended to easily provide access tokens but does not include the full login service functionality.
+> _Note_: Some steps taken in this how to might however NOT be appropriate for a production setup!
+
+## Configuration
+The login service (as well as most of the Gropius services) is configured using environment variables. These can (depending on the way of deploying) be set in actual the console/system environment, the docker-compose file or an environment file. For a docker-compose based installation, using the docker-compose file is recommended. When deploying (the login-service) outside docker, configure your setup in a `gropius-backend/login-service/.env.[dev/production].local` file.
+Variables on the environment (either set in the docker-compose file or the console environment will take precedence over variables set in a `.env` file).
+
+The following sections will describe the most important config settings needed to get running. Especially a production environment you want to consider all configuration for all services.
+
+### Access token expiration
+The setting `GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS` takes a number of milliseconds after which issued access tokens (no matter the scope) will expire. 
+The docker compose file sets this to 10 minutes by default. For development, you might want to consider increasing this time, so you don't need to refresh your token every 10 minutes. For a production setup you can still increase this a bit but revoking currently valid access tokens isn't trivial.
+
+### Initial user creation
+To be able to interact with the system and access it, you need a user account. You can specify config options that will cause the login service to ensure that the needed entities are present on startup.
+You will need to create a strategy instance (specifying the way you will login with the created user) and the user itself.
+
+> _Note_: It is recommended, you only specify these configuration options on the initial launch and remove them once the system is set up. You can always add them if you lost access etc.
+
+#### Strategy instance creation
+Creating an instance of the `userpass` strategy will be the most usefull, as you will then be able to log in using a username and password.
+Needed configuration variables:
+- `GROPIUS_DEFAULT_STRATEGY_INSTANCE_TYPE`: The Strategy to instance. `userpass` is recommended.
+- `GROPIUS_DEFAULT_STRATEGY_INSTANCE_CONFIG`: The configuration for the strategy instance. The userpass strategy does not require any configuration. Set this to `{}`
+- `GROPIUS_DEFAULT_STRATEGY_INSTANCE_NAME`: The name for the strategy instance to create. The instance will only be created, if no login strategy instance with this name exists yet. Else creation will be skipped.
+
+#### Initial admin user creation
