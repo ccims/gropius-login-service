@@ -35,6 +35,7 @@ import { InitializationModule } from "./initialization/initialization.module";
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE,
                         synchronize: process.env.NODE_ENV !== "production",
                         autoLoadEntities: true,
+                        migrations: ["./dist/database-migrations/*.js"],
                     };
                 } else if (driver == "sqlite") {
                     return {

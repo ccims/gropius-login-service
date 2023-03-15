@@ -19,7 +19,9 @@
         "test:cov": "jest --coverage",
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
         "test:e2e": "jest --config ./test/jest-e2e.json",
-        "generate-model": "graphql-codegen --config codegen.yml"
+        "generate-model": "graphql-codegen --config codegen.yml",
+        "generate-migration": "npm run build && npx typeorm migration:generate -d ./dist/migrationDataSource.config.js ./src/database-migrations/migration",
+        "init-database": "npm run build && npx typeorm migration:run -d ./dist/migrationDataSource.config.js"
     },
     "repository": {
         "type": "git",
@@ -40,6 +42,7 @@
         "@nestjs/typeorm": "^9.0.1",
         "@types/passport": "^1.0.10",
         "bcrypt": "^5.0.1",
+        "dotenv": "^16.0.3",
         "fast-equals": "^4.0.3",
         "graphql": "^16.6.0",
         "graphql-request": "^5.0.0",
