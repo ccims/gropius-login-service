@@ -26,7 +26,9 @@ $ npm run start
 $ npm run start:dev
 
 # production mode
-$ npm run start:prod
+$ npm run build  # Build the sources
+$ npm run init-database  # Run all database migrations to get database to current version
+$ npm run start:prod  # Start the production version of the app
 ```
 
 ## Test
