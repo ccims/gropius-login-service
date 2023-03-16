@@ -41,4 +41,5 @@ export const validationSchema = Joi.object({
     GROPIUS_DEFAULT_USER_PASSWORD: Joi.string().optional(),
     GROPIUS_DEFAULT_USER_STRATEGY_INSTANCE_NAME: Joi.string(),
     GROPIUS_DEFAULT_AUTH_CLIENT_NAME: Joi.string().optional(),
+    GROPIUS_DEFAULT_AUTH_CLIENT_REDIRECT: Joi.string().optional(),
 });
