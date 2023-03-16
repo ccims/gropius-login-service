@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gropius-Login-Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        h4 {
+            margin-block-end: 0;
+        }
+
+        pre,
+        .body {
+            font-family: 'Cascadia Mono', 'Consolas', 'Courier New', Courier, monospace;
+            margin: 0;
+            white-space: nowrap;
+        }
+    </style>
+    <script>
+        let loginUrl;
+        let logType = "console";
+        let accessToken = undefined;
+
+        function log(...data) {
+            switch (logType) {
+                case "console":
+                case "console+alert":
+                    console.log(...(data.map(d => typeof d == "string" ? (d + "\n") : d)));
+                    if (logType != "console+alert") {
+                        break;
+                    }
+                case "alert":
+                    alert(data.map(d => typeof d == "object" ? JSON.stringify(d, undefined, 4) : d).join("\n"));
+                    break;
+                case "textarea":
+                    document.getElementById("logArea").value += data.map(d => typeof d == "object" ? JSON.stringify(d, undefined, 4) : d).join("\n") + "\n\n";
+                    break;
+            }
+        }
+
+        async function request(url, method = "GET", body = undefined, token = accessToken) {
+            let headers = {};
+            if (body) {
+                headers = { ...headers, "content-type": "application/json" }
+            }
+            if (token) {
+                headers = { ...headers, authorization: "Bearer " + token }
+            }
+            const res = await fetch(loginUrl + url, {
+                headers,
+                method: method,
+                body: JSON.stringify(body)
+            });
+            if (res.status <= 299 || res.status >= 200) {
+                if (res.headers.get("content-type").startsWith("application/json")) {
+                    const json = await res.json();
+                    log(`${method} ${loginUrl}${url}`, json);
+                    return json;
+                } else {
+                    log(`${method} ${loginUrl}${url} did not return JSON?!`);
+                    throw new Error();
+                }
+            } else {
+                if (res.headers.get("content-type").startsWith("application/json")) {
+                    log(`${method} ${loginUrl}${url} failed with code ${res.status}`, await res.json());
+                    throw new Error();
+                } else {
+                    log(`${method} ${loginUrl}${url} failed with code ${res.status}`, res.statusText);
+                    throw new Error();
+                }
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Gropius-Login-Tester</h1>
+    <h3>Settings:</h3>
+    <table>
+        <tbody>
+            <tr>
+                <td>Gropius system hostname (no port):</td>
+                <td><input id="hostname"></td>
+            </tr>
+            <tr>
+                <td>Access token:</td>
+                <td><input id="accessToken"></td>
+            </tr>
+            <tr>
+                <td>Output responses to:</td>
+                <td>
+                    <select id="outputLocation">
+                        <option value="console" selected>Dev-Console</option>
+                        <option value="alert">Popup</option>
+                        <option value="textarea">Textbox at bottom</option>
+                        <option value="console+alert">Console + Popup</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Requests</h3>
+
+    <h4>Show all existing
+        <select class="inField" id="showInstanceType" value="userpass">
+            <option value="userpass" selected>userpass</option>
+            <option value="github">github</option>
+        </select>
+        strategy instances
+    </h4>
+    <ul>
+        <li>GET <span class="url"></span>login/strategy/<span class="showInstanceTypeOut"></span>/instance</li>
+        <li><button
+                onclick="request(`login/strategy/${val('showInstanceType')}/instance`).then(r => setVal('userpassLoginInstanceId', r[0].id))">Request</button>
+        </li>
+    </ul>
+
+    <h4>Log in using username and password</h4>
+    <ul>
+        <li>Use strategy instance of type userpass with id <input id="userpassLoginInstanceId" class="inField"> (request
+            above)</li>
+        <li>Username: <input id="userpassLoginUsername" class="inField" value=""> Password: <input
+                id="userpassLoginPassword" class="inField" value=""></li>
+        <li>POST <span class="url"></span>authenticate/oauth/<span class="userpassLoginInstanceIdOut"></span>/token</li>
+        <li class="body">{
+            "grant_type": "password",
+            "username": "<span class="userpassLoginUsernameOut"></span>",
+            "password": "<span class="userpassLoginPasswordOut"></span>"
+            }
+        </li>
+        <li><button onclick="
+                    request(`authenticate/oauth/${val('userpassLoginInstanceId')}/token`, 'POST', {grant_type: 'password', username: val('userpassLoginUsername'), password: val('userpassLoginPassword')})
+                    .then(r => {setVal('accessToken', r.access_token); setVal('refreshTokenValue', r.refresh_token)})
+                    ">Request</button>
+        </li>
+        </li>
+    </ul>
+
+    <h4>Refresh token</h4>
+    <ul>
+        <li>Refresh token: <input id="refreshTokenValue" class="inField"></li>
+        <li>POST <span class="url"></span>authenticate/oauth/this-does-not-matter/token</li>
+        <li class="body">{
+            "grant_type": "refresh_token",
+            "refresh_token": "<span class="refreshTokenValueOut"></span>"
+            }
+        </li>
+        <li><button onclick="
+                    request(`authenticate/oauth/a/token`, 'POST', {grant_type: 'refresh_token', refresh_token: val('refreshTokenValue')})
+                    .then(r => {setVal('accessToken', r.access_token); setVal('refreshTokenValue', r.refresh_token)})
+                    ">Request</button>
+        </li>
+        </li>
+    </ul>
+
+    <h4>List all gropius users (Check if you have admin access)
+    </h4>
+    <ul>
+        <li>GET <span class="url"></span>login/user</li>
+        <li><button onclick="request(`login/user`)">Request</button>
+        </li>
+    </ul>
+
+    <h4>
+        <select id="createGithubInstanceMethod" class="inField" oninput="githubCreationTypeChange(event)">
+            <option value="POST">Create new</option>
+            <option value="PUT">Edit existing</option>
+        </select> github strategy instance
+    </h4>
+    <ul>
+        <li id="createGithubInstanceIdText" style="display: none;">Id of instance to edit: <input
+                id="createGithubInstanceEditId" class="inField"></li>
+        <li>GitHub OAuth App Settings: Client id: <input id="createGithubInstanceClientId" class="inField"> Client
+            secret: <input id="createGithubInstanceClientSecret" class="inField"></li>
+        <li>Settings for this instance:
+            <input type="checkbox" id="createGithubInstanceIsLoginActive" class="inField">Enable login;
+            <input type="checkbox" id="createGithubInstanceIsSelfRegisterActive" class="inField">Enable self
+            registration;
+            <input type="checkbox" id="createGithubInstanceIsSyncActive" class="inField">Enable sync;
+            <input type="checkbox" id="createGithubInstanceDoesImplicitRegister" class="inField">Allow implicit
+            register;
+        </li>
+        <li><span class="createGithubInstanceMethodOut"></span> <span
+                class="url"></span>login/strategy/github/instance/<span class="createGithubInstanceEditIdOut"
+                style="display: none;"></span>
+        </li>
+        <li class="body">{ <br>
+            "instanceConfig": {
+            "clientId": "<span class="createGithubInstanceClientIdOut"></span>",
+            "clientSecret": "<span class="createGithubInstanceClientSecretOut"></span>"
+            },<br>
+            "isLoginActive": <span class="createGithubInstanceIsLoginActiveOut"></span>, "isSelfRegisterActive": <span
+                class="createGithubInstanceIsSelfRegisterActiveOut"></span>,<br>
+            "isSyncActive": <span class="createGithubInstanceIsSyncActiveOut"></span>, "doesImplicitRegister": <span
+                class="createGithubInstanceDoesImplicitRegisterOut"></span><br>
+            }
+        </li>
+        <li><button onclick="
+                    request(
+                        `login/strategy/github/instance${val('createGithubInstanceMethod') == 'PUT' ? ('/'+val('createGithubInstanceEditId')) : ''}`, 
+                        val('createGithubInstanceMethod'), {
+                            'instanceConfig': {'clientId': val('createGithubInstanceClientId'), 'clientSecret': val('createGithubInstanceClientSecret')},
+                            'isLoginActive': val('createGithubInstanceIsLoginActive'), 'isSelfRegisterActive': val('createGithubInstanceIsSelfRegisterActive'),
+                            'isSyncActive': val('createGithubInstanceIsSyncActive'), 'doesImplicitRegister': val('createGithubInstanceDoesImplicitRegister')
+                        })
+                    .then(r => {setVal('createGithubInstanceEditId', r.id);})
+                    ">Request</button>
+        </li>
+        </li>
+    </ul>
+
+    <h3>Log (if enabled)</h3>
+    <textarea
+        style="font-family: 'Cascadia Mono', 'Consolas', 'Courier New', Courier, monospace; width: 100%; height: 20em;"
+        id="logArea"></textarea>
+
+    <script>
+        const hostname = document.getElementById("hostname");
+        const urlFields = document.getElementsByClassName("url");
+        const inField = document.getElementsByClassName("inField");
+        const accessTokenField = document.getElementById("accessToken");
+        const refreshTokenField = document.getElementById("refreshTokenValue");
+
+        function storeToStorage() {
+            localStorage.setItem("gropius-login-debug", JSON.stringify({ host: hostname.value, accessToken: accessToken || "", refreshToken: refreshTokenField.value }));
+        }
+
+        function loadFromStorage() {
+            const stored = JSON.parse(localStorage.getItem("gropius-login-debug") || "{}")
+            hostname.value = stored.host || "http://localhost";
+            accessTokenField.value = stored.accessToken || "";
+            refreshTokenField.value = stored.refreshToken || "";
+            onAccessTokenChange(false);
+            onHostnameChange(false);
+        }
+
+        function onHostnameChange(store = true) {
+            loginUrl = hostname.value + ":3000/";
+            for (let f of urlFields) {
+                f.innerText = loginUrl;
+            }
+            if (store) {
+                storeToStorage();
+            }
+        }
+
+        function onAccessTokenChange(store = true) {
+            if (!accessTokenField.value || accessTokenField.value.trim().length == 0) {
+                accessToken = undefined;
+            } else {
+                accessToken = accessTokenField.value;
+            }
+            if (store) {
+                storeToStorage();
+            }
+        }
+
+        function onDataInput(e) {
+            const outFields = document.getElementsByClassName(e.target.id + "Out");
+            let value = e.target.value
+            if (e.target.type == "checkbox") {
+                value = e.target.checked ? "true" : "false";
+            }
+            for (const f of outFields) {
+                f.innerText = value;
+            }
+            if (e.target == hostname) {
+                onHostnameChange();
+            } else if (e.target == accessTokenField) {
+                onAccessTokenChange();
+            } else if (e.target == refreshTokenField) {
+                storeToStorage();
+            }
+        }
+
+        function setVal(id, value) {
+            const element = document.getElementById(id);
+            element.value = value;
+            onDataInput({ target: element });
+        }
+
+        function val(id) {
+            const element = document.getElementById(id);
+            if (element.type == "checkbox") {
+                return element.checked ? "true" : "false";
+            }
+            return element.value;
+        }
+
+        function githubCreationTypeChange(e) {
+            document.getElementById('createGithubInstanceIdText').style.display = e.target.value == 'PUT' ? '' : 'none';
+            const fields = document.getElementsByClassName('createGithubInstanceEditIdOut')
+            for (const f of fields) {
+                f.style.display = e.target.value == 'PUT' ? '' : 'none';
+            }
+        }
+
+        loadFromStorage();
+
+        hostname.addEventListener("input", onHostnameChange);
+        accessTokenField.addEventListener("input", onAccessTokenChange);
+        for (const f of inField) {
+            f.addEventListener("input", onDataInput);
+            onDataInput({ target: f });
+        }
+
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("code")) {
+            console.error("Called with code " + url.searchParams.get("code"));
+            url.searchParams.delete("code");
+            window.history.replaceState(history.state, document.title, url);
+        }
+    </script>
+</body>
+
+</html>
