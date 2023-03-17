@@ -58,7 +58,8 @@
         "rimraf": "^3.0.2",
         "rxjs": "^7.2.0",
         "sqlite3": "^5.1.1",
-        "typeorm": "^0.3.9"
+        "typeorm": "^0.3.9",
+        "vue": "^3.2.47"
     },
     "devDependencies": {
         "@graphql-codegen/cli": "^2.12.0",

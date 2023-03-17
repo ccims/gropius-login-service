@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gropius-Login-Tester</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        h4 {
+            margin-block-end: 0;
+        }
+
+        pre,
+        .body {
+            font-family: 'Cascadia Mono', 'Consolas', 'Courier New', Courier, monospace;
+            margin: 0;
+            white-space: nowrap;
+        }
+    </style>
+    <script src="/vue/dist/vue.global.prod.js"></script>
+</head>
+
+<body>
+    <main id="app">
+        <h1>Gropius-Login-Tester</h1>
+        <h3>Settings:</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Gropius system hostname (no port):</td>
+                    <td><input v-model="hostname"></td>
+                </tr>
+                <tr>
+                    <td>Access token:</td>
+                    <td><input v-model="accessToken"></td>
+                </tr>
+                <tr>
+                    <td>Output responses to:</td>
+                    <td>
+                        <select v-model="outputLocation">
+                            <option value="console">Dev-Console</option>
+                            <option value="alert">Popup</option>
+                            <option value="textarea">Textbox at bottom</option>
+                            <option value="console+alert">Console + Popup</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Requests</h3>
+
+        <h4>Show all existing
+            <select v-model="showInstanceType">
+                <option value="userpass">userpass</option>
+                <option value="github">github</option>
+            </select>
+            strategy instances
+        </h4>
+        <ul>
+            <li>GET {{ loginUrl }}login/strategy/{{ showInstanceType }}/instance</li>
+            <li><button @click="runShowInstance">Request</button></li>
+        </ul>
+
+        <h4>Log in using username and password</h4>
+        <ul>
+            <li>Use strategy instance of type userpass with id <input v-model="userpassLoginInstanceId">
+                (request above)</li>
+            <li>Username: <input v-model="userpassLoginUsername"> Password: <input v-model="userpassLoginPassword"></li>
+            <li>POST {{ loginUrl }}authenticate/oauth/{{ userpassLoginInstanceId }}</span>/token
+            </li>
+            <li class="body">{
+                "grant_type": "password",
+                "username": "{{ userpassLoginUsername }}",
+                "password": "{{ userpassLoginPassword }}"
+                }
+            </li>
+            <li><button @click="runUserpassLogin">Request</button></li>
+        </ul>
+
+        <h4>Refresh token</h4>
+        <ul>
+            <li>Refresh token: <input v-model="refreshToken"></li>
+            <li>POST {{ loginUrl }}authenticate/oauth/this-does-not-matter/token</li>
+            <li class="body">{
+                "grant_type": "refresh_token",
+                "refresh_token": "{{ refreshToken }}"
+                }
+            </li>
+            <li><button @click="runRefreshToken">Request</button></li>
+        </ul>
+
+        <h4>List all gropius users (Check if you have admin access)
+        </h4>
+        <ul>
+            <li>GET {{ loginUrl }}login/user</li>
+            <li><button @click="runListAllUsers">Request</button></li>
+        </ul>
+
+        <h4>
+            <select v-model="createGithubInstanceMethod">
+                <option value="POST">Create new</option>
+                <option value="PUT">Edit existing</option>
+            </select> github strategy instance
+        </h4>
+        <ul>
+            <li v-if="createGithubInstanceMethod == 'PUT'">
+                Id of instance to edit: <input v-model="createGithubInstanceEditId">
+            </li>
+            <li>GitHub OAuth App Settings: Client id: <input v-model="createGithubInstanceClientId"><br>
+                Client secret: <input v-model="createGithubInstanceClientSecret"></li>
+            <li>Settings for this instance:
+                <label><input type="checkbox" v-model="createGithubInstanceIsLoginActive">Enable login</label>;
+                <label><input type="checkbox" v-model="createGithubInstanceIsSelfRegisterActive">Enable self
+                    registration</label>;
+                <label><input type="checkbox" v-model="createGithubInstanceIsSyncActive">Enable sync</label>;
+                <label><input type="checkbox" v-model="createGithubInstanceDoesImplicitRegister">Allow implicit
+                    register</label>
+            </li>
+            <li>{{ createGithubInstanceMethod }} {{ loginUrl }}login/strategy/github/instance<span
+                    v-if="createGithubInstanceMethod == 'PUT'">/{{ createGithubInstanceEditId }}</span>
+            </li>
+            <li class="body">{ <br>
+                "instanceConfig": {
+                "clientId": "{{ createGithubInstanceClientId }}",
+                "clientSecret": "{{ createGithubInstanceClientSecret }}"
+                },<br>
+                "isLoginActive": {{ createGithubInstanceIsLoginActive }}, "isSelfRegisterActive": {{
+                createGithubInstanceIsSelfRegisterActive }},<br>
+                "isSyncActive": {{ createGithubInstanceIsSyncActive }}, "doesImplicitRegister": {{
+                createGithubInstanceDoesImplicitRegister }}<br>
+                }
+            </li>
+            <li><button @click="runcreateGithubInstance">Request</button></li>
+        </ul>
+
+        <h4>List all OAuth clients (Needs admin)
+        </h4>
+        <ul>
+            <li>GET {{ loginUrl }}login/client</li>
+            <li><button @click="runListAllClients">Request</button>
+            </li>
+        </ul>
+
+        <h4>
+            <select v-model="createClientMethod">
+                <option value="POST">Create new</option>
+                <option value="PUT">Edit existing</option>
+            </select> OAuth Client
+        </h4>
+        <ul>
+            <li v-if="createClientMethod == 'PUT'">Id of OAuth client to edit: <input v-model="createClientEditId"></li>
+            <li>Valid redirect URLs (separated by &quot;;&quot;) <input @input="createClientUrlsInput"
+                    :value="createClientUrls.join(';')"></li>
+            <li>Settings for this client:
+                <label><input type="checkbox" v-model="createClientIsValid">Enable client</label>;
+                <label><input type="checkbox" v-model="createClientRequiresSecret">Require client secret</label>
+            </li>
+            <li>{{ createClientMethod }} {{ loginUrl }}login/client/{{ createClientEditId }}
+            </li>
+            <li class="body">{ <br>
+                "redirectUrls": {{ '[' + createClientUrls.filter(url => url.length > 0).map(url => "\"" + url +
+                "\"").join(', ') + ']' }},<br>
+                "isValid": {{ createClientIsValid }}, "requiresSecret": {{ createClientRequiresSecret }}<br>
+                }
+            </li>
+            <li><button @click="runCreateClient">Request</button></li>
+        </ul>
+
+        <h4>Run OAuth flow</h4>
+        <ul>
+            <li>Github-Strategy instance id to use: <input v-model="oauthFlowInstanceId"> (request at the
+                top)
+            </li>
+            <li>Id of the client to initiate: <input v-model="oauthFlowClientId"> (request above)</li>
+            <li>Start flow by choosing a mode and clicking initiate (opens in new tab; DON'T close that tab):
+                <ul>
+                    <li>Mode:
+                        <select v-model="oauthFlowMode">
+                            <option value="login">Login with GitHub (requires being registered or registeres if implicit
+                                registration is active)</option>
+                            <option value="register">Register with GitHub (Don't allow sync)</option>
+                            <option value="register-sync">Register with GitHub (Allow sync)</option>
+                        </select>
+                    </li>
+                    <li>Redirect user to: GET {{ loginUrl }}authenticate/oauth/{{ oauthFlowInstanceId }}/authorize/{{
+                        oauthFlowMode }}?client_id={{ oauthFlowClientId }}</li>
+                    <li><button @click="oauthFlowInitiate">Initiate</button></li>
+                </ul>
+            </li>
+            <li>
+                Request an access token using the retrieved code:<ul>
+                    <li>Code: <input v-model="oauthFlowAuthorizationCode"></li>
+                    <li>POST {{ loginUrl }}authenticate/oauth/{{ oauthFlowInstanceId }}/token
+                    </li>
+                    <li class="body">{
+                        grant_type: "authorization_code",
+                        code: "{{ oauthFlowAuthorizationCode }}"
+                        }</li>
+                    <li><button @click="oauthFlowGetToken">Request</button></li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>
+            <select v-model="registerType">
+                <option value="self-register">Register new</option>
+                <option value="self-link">Link to logged in</option>
+                <option value="admin-link">Link to any existing</option>
+            </select>
+            user with authentication
+        </h4>
+        <ul>
+            <li>Registration token: <input v-model="registerTokenValue"></li>
+            <li v-if="registerType == 'self-register'">Data for new user: Username:
+                <input v-model="registerNewUsername"> Display name: <input v-model="registerNewDisplayName">
+                Email: <input v-model="registerNewEmail">
+            </li>
+            <li v-if="registerType == 'admin-link'">
+                Id of gropius user to link to: <input v-model="registerAdminLinkUserId">
+            </li>
+            <li>POST {{ loginUrl }}login/registration/{{ registerType }}</li>
+            <li class="body">{
+                "grant_type": "refresh_token",
+                "refresh_token": "{{ refreshTokenValue }}"
+                }
+            </li>
+            <li><button @click="runRegister">Request</button></li>
+        </ul>
+
+        <template v-if="outputLocation.includes('textarea')">
+            <h3>Log</h3>
+            <textarea
+                style="font-family: 'Cascadia Mono', 'Consolas', 'Courier New', Courier, monospace; width: 100%; height: 20em;"
+                v-model="logData"></textarea>
+        </template>
+    </main>
+
+    <script type="module">
+        import MainModule from "./login-debug.js";
+        Vue.createApp(MainModule).mount("#app");
+    </script>
+</body>
+
+</html>
