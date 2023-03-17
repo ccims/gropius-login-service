@@ -23,25 +23,25 @@
         }
     </style>
     <script>
-        const url = new URL(window.location.href);
+        const currentUrl = new URL(window.location.href);
         let oauthCode = undefined;
-        if (url.searchParams.has("code")) {
-            oauthCode = url.searchParams.get("code");
-            console.error("Called with code " + url.searchParams.get("code"));
-            url.searchParams.delete("code");
+        if (currentUrl.searchParams.has("code")) {
+            oauthCode = currentUrl.searchParams.get("code");
+            console.error("Called with code " + currentUrl.searchParams.get("code"));
+            currentUrl.searchParams.delete("code");
             if (window.opener) {
                 window.postMessage(oauthCode);
                 oauthCode = undefined;
                 this.close();
-                alert("Blub");
             } else {
-                window.history.replaceState(history.state, document.title, url);
+                window.history.replaceState(history.state, document.title, currentUrl);
             }
         }
 
         let loginUrl;
         let logType = "console";
         let accessToken = undefined;
+        let createClientRedirectUrls = "[]";
 
         function log(...data) {
             switch (logType) {
@@ -136,10 +136,18 @@
         <li><button onclick="
                     request(`login/strategy/${val('showInstanceType')}/instance`)
                     .then(r => {
+                        if (r.length <= 0) {
+                            return;
+                        }
                         if (r[0].type == 'userpass') {
                             setVal('userpassLoginInstanceId', r[0].id)
                         } else if (r[0].type =='github') {
-                            setVal('createGithubInstanceClientId', r[0].id);
+                            setVal('createGithubInstanceEditId', r[0].id);
+                            setVal('oauthFlowInstanceId', r[0].id);
+                            setVal('createGithubInstanceIsLoginActive', r[0].isLoginActive);
+                            setVal('createGithubInstanceIsSelfRegisterActive', r[0].isSelfRegisterActive);
+                            setVal('createGithubInstanceIsSyncActive', r[0].isSyncActive);
+                            setVal('createGithubInstanceDoesImplicitRegister', r[0].doesImplicitRegister);
                         }
                         })">Request</button>
         </li>
@@ -192,7 +200,7 @@
     </ul>
 
     <h4>
-        <select id="createGithubInstanceMethod" class="inField" oninput="githubCreationTypeChange(event)">
+        <select id="createGithubInstanceMethod" class="inField" oninput="methodTypeChange(event)">
             <option value="POST">Create new</option>
             <option value="PUT">Edit existing</option>
         </select> github strategy instance
@@ -200,15 +208,19 @@
     <ul>
         <li id="createGithubInstanceIdText" style="display: none;">Id of instance to edit: <input
                 id="createGithubInstanceEditId" class="inField"></li>
-        <li>GitHub OAuth App Settings: Client id: <input id="createGithubInstanceClientId" class="inField"> Client
-            secret: <input id="createGithubInstanceClientSecret" class="inField"></li>
+        <li>GitHub OAuth App Settings: Client id: <input id="createGithubInstanceClientId" class="inField"><br>
+            Client secret: <input id="createGithubInstanceClientSecret" class="inField"></li>
         <li>Settings for this instance:
-            <input type="checkbox" id="createGithubInstanceIsLoginActive" class="inField">Enable login;
-            <input type="checkbox" id="createGithubInstanceIsSelfRegisterActive" class="inField">Enable self
-            registration;
-            <input type="checkbox" id="createGithubInstanceIsSyncActive" class="inField">Enable sync;
-            <input type="checkbox" id="createGithubInstanceDoesImplicitRegister" class="inField">Allow implicit
-            register;
+            <input type="checkbox" id="createGithubInstanceIsLoginActive" class="inField"><label
+                for="createGithubInstanceIsLoginActive">Enable login</label>;
+            <input type="checkbox" id="createGithubInstanceIsSelfRegisterActive" class="inField"><label
+                for="createGithubInstanceIsSelfRegisterActive">Enable self
+                registration</label>;
+            <input type="checkbox" id="createGithubInstanceIsSyncActive" class="inField"><label
+                for="createGithubInstanceIsSyncActive">Enable sync</label>;
+            <input type="checkbox" id="createGithubInstanceDoesImplicitRegister" class="inField"><label
+                for="createGithubInstanceDoesImplicitRegister">Allow implicit
+                register</label>
         </li>
         <li><span class="createGithubInstanceMethodOut"></span> <span
                 class="url"></span>login/strategy/github/instance/<span class="createGithubInstanceEditIdOut"
@@ -233,7 +245,10 @@
                             'isLoginActive': val('createGithubInstanceIsLoginActive'), 'isSelfRegisterActive': val('createGithubInstanceIsSelfRegisterActive'),
                             'isSyncActive': val('createGithubInstanceIsSyncActive'), 'doesImplicitRegister': val('createGithubInstanceDoesImplicitRegister')
                         })
-                    .then(r => {setVal('createGithubInstanceEditId', r.id);})
+                    .then(r => {
+                        setVal('createGithubInstanceEditId', r.id);
+                        setVal('oauthFlowInstanceId', r.id);
+                    })
                     ">Request</button>
         </li>
         </li>
@@ -245,8 +260,55 @@
         <li>GET <span class="url"></span>login/client</li>
         <li><button onclick="
         request(`login/client`)
-        .then(r => setVal('oauthFlowClientId', ((r.filter(c => !c.requiresSecret))[0] || r[0]).id))
+        .then(r => {
+            const client = ((r.filter(c => !c.requiresSecret))[0] || r[0])
+            setVal('oauthFlowClientId', client.id);
+            setVal('createClientEditId', client.id);
+            setVal('createClientRedirectUrls', client.redirectUrls.join(';'));
+            setVal('createClientIsValid', client.isValid);
+            setVal('createClientRequiresSecret', client.requiresSecret);
+        })
         ">Request</button>
+        </li>
+    </ul>
+
+    <h4>
+        <select id="createClientMethod" class="inField" oninput="methodTypeChange(event)">
+            <option value="POST">Create new</option>
+            <option value="PUT" selected>Edit existing</option>
+        </select> OAuth Client
+    </h4>
+    <ul>
+        <li id="createClientIdText">Id of OAuth client to edit: <input id="createClientEditId" class="inField"></li>
+        <li>Valid redirect URLs (separated by &quot;;&quot;) <input id="createClientRedirectUrls"></li>
+        <li>Settings for this client:
+            <input type="checkbox" id="createClientIsValid" class="inField" checked><label
+                for="createClientIsValid">Enable client</label>;
+            <input type="checkbox" id="createClientRequiresSecret" class="inField"><label
+                for="createClientRequiresSecret">Require client secret</label>
+        </li>
+        <li><span class="createClientMethodOut"></span> <span class="url"></span>login/client/<span
+                class="createClientEditIdOut"></span>
+        </li>
+        <li class="body">{ <br>
+            "redirectUrls": <span class="createClientRedirectUrlsOut"></span>,<br>
+            "isValid": <span class="createClientIsValidOut"></span>, "requiresSecret": <span
+                class="createClientRequiresSecretOut"></span>,<br>
+            }
+        </li>
+        <li><button onclick="
+                    request(
+                        `login/client${val('createClientMethod') == 'PUT' ? ('/'+val('createClientEditId')) : ''}`, 
+                        val('createClientMethod'), {
+                            redirectUrls: createClientRedirectUrls,
+                            isValid: val('createClientIsValid'), requiresSecret: val('createClientRequiresSecret'),
+                        })
+                    .then(r => {
+                        setVal('createClientEditId', r.id);
+                        setVal('oauthFlowClientId', r.id);
+                    })
+                    ">Request</button>
+        </li>
         </li>
     </ul>
 
@@ -265,7 +327,7 @@
                         <option value="register-sync">Register with GitHub (Allow sync)</option>
                     </select>
                 </li>
-                <li>GET <span class="url"></span>authenticate/oauth/<span
+                <li>Redirect user to: GET <span class="url"></span>authenticate/oauth/<span
                         class="oauthFlowInstanceIdOut"></span>/authorize/<span
                         class="oauthFlowModeOut"></span>?client_id=<span class="oauthFlowClientIdOut"></span></li>
                 <li><button onclick="oauthFlowInitiate()">Initiate</button></li>
@@ -297,6 +359,8 @@
         const inField = document.getElementsByClassName("inField");
         const accessTokenField = document.getElementById("accessToken");
         const refreshTokenField = document.getElementById("refreshTokenValue");
+        const createClientRedirectUrlsField = document.getElementById("createClientRedirectUrls");
+        const openedWindows = [];
 
         function storeToStorage() {
             localStorage.setItem("gropius-login-debug", JSON.stringify({ host: hostname.value, accessToken: accessToken || "", refreshToken: refreshTokenField.value }));
@@ -347,35 +411,63 @@
                 onAccessTokenChange();
             } else if (e.target == refreshTokenField) {
                 storeToStorage();
+            } else if (e.target == createClientRedirectUrlsField) {
+                redirectUrlsChanged(e);
             }
         }
 
         function setVal(id, value) {
             const element = document.getElementById(id);
-            element.value = value;
+            if (element.type == "checkbox") {
+                element.checked = value ? true : false;
+            } else {
+                element.value = value;
+            }
             onDataInput({ target: element });
         }
 
         function val(id) {
             const element = document.getElementById(id);
             if (element.type == "checkbox") {
-                return element.checked ? "true" : "false";
+                return element.checked ? true : false;
             }
             return element.value;
         }
 
-        function githubCreationTypeChange(e) {
-            document.getElementById('createGithubInstanceIdText').style.display = e.target.value == 'PUT' ? '' : 'none';
-            const fields = document.getElementsByClassName('createGithubInstanceEditIdOut')
+        function methodTypeChange(e) {
+            const idPrefix = e.target.id.replace(/Method$/, "");
+            document.getElementById(idPrefix + "IdText").style.display = e.target.value == "PUT" ? "" : "none";
+            const fields = document.getElementsByClassName(idPrefix + "EditIdOut")
             for (const f of fields) {
-                f.style.display = e.target.value == 'PUT' ? '' : 'none';
+                f.style.display = e.target.value == "PUT" ? "" : "none";
             }
         }
 
+        function redirectUrlsChanged(e) {
+            const outFields = document.getElementsByClassName(e.target.id + "Out");
+            createClientRedirectUrls = (e.target.value || "").split(";").map(url => url.trim()).filter(url => url.length > 0);
+            const strUrls = "[" + createClientRedirectUrls.map(url => "\"" + url + "\"").join(", ") + "]";
+            for (const f of outFields) {
+                f.innerText = strUrls;
+            }
+        }
+
+        function oauthFlow404(window, e) {
+            console.log(e);
+            debugger;
+        }
+
         function oauthFlowInitiate() {
-            //const oauthTab = window.open(loginUrl + url, "_blank");
-            window.open(location.href, "_blank");
-            window.addEventListener("message", oauthFlowReturn)
+            for (const tab of openedWindows) {
+                if (!tab.closed) {
+                    tab.close();
+                }
+            }
+            openedWindows.splice(0, openedWindows.length);
+            //const oauthTab = window.open(`${loginUrl}authenticate/oauth/${val("oauthFlowInstanceId")}/authorize/${val("oauthFlowMode")}?client_id=${val("oauthFlowClientId")}`, "_blank");
+            const oauthTab = window.open(`http://example.com/test`, "_blank");
+            oauthTab.onerror = oauthFlow404.bind(oauthTab);
+            openedWindows.push(oauthTab);
         }
 
         function oauthFlowReturn(e) {
@@ -388,11 +480,14 @@
 
         hostname.addEventListener("input", onHostnameChange);
         accessTokenField.addEventListener("input", onAccessTokenChange);
+        createClientRedirectUrlsField.addEventListener("input", redirectUrlsChanged);
+        redirectUrlsChanged({ target: createClientRedirectUrlsField });
         for (const f of inField) {
             f.addEventListener("input", onDataInput);
             onDataInput({ target: f });
         }
 
+        window.addEventListener("message", oauthFlowReturn);
         if (oauthCode) {
             oauthFlowReturn(oauthCode);
         }

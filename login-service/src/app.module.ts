@@ -11,6 +11,8 @@ import { validationSchema } from "./configuration-validator";
 import { OauthServerModule } from "./oauth-server/oauth-server.module";
 import { DefaultReturn } from "./default-return.dto";
 import { InitializationModule } from "./initialization/initialization.module";
+import * as path from "path";
+import { ServeStaticModule } from "@nestjs/serve-static";
 
 @Module({
     imports: [
@@ -35,7 +37,7 @@ import { InitializationModule } from "./initialization/initialization.module";
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE,
                         synchronize: process.env.NODE_ENV !== "production",
                         autoLoadEntities: true,
-                        migrations: ["./dist/database-migrations/*.js"],
+                        migrations: [path.join(__dirname, "..", "dist", "database-migrations", "*.js")],
                     };
                 } else if (driver == "sqlite") {
                     return {
@@ -46,6 +48,9 @@ import { InitializationModule } from "./initialization/initialization.module";
                     return {};
                 }
             },
+        }),
+        ServeStaticModule.forRoot({
+            rootPath: path.join(__dirname, "..", "static"),
         }),
         ModelModule,
         ApiLoginModule,
