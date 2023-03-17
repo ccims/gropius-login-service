@@ -226,8 +226,15 @@
             </li>
             <li>POST {{ loginUrl }}login/registration/{{ registerType }}</li>
             <li class="body">{
-                "grant_type": "refresh_token",
-                "refresh_token": "{{ refreshTokenValue }}"
+                <span v-if="registerType == 'self-register'">
+                    username: "{{ registerNewUsername }}",
+                    displayName: "{{ registerNewDisplayName }}",
+                    email: "{{ registerNewEmail }}",<br>
+                </span>
+                <span v-if="registerType == 'admin-link'">
+                    userIdToLink: "{{ registerAdminLinkUserId }}",
+                </span>
+                register_token: "{{ registerTokenValue }}"
                 }
             </li>
             <li><button @click="runRegister">Request</button></li>
@@ -243,6 +250,7 @@
 
     <script type="module">
         import MainModule from "./login-debug.js";
+
         Vue.createApp(MainModule).mount("#app");
     </script>
 </body>

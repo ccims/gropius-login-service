@@ -28,10 +28,27 @@ export default {
         },
     },
     created() {
+        const currentUrl = new URL(window.location.href);
+        if (currentUrl.searchParams.has("code")) {
+            const oauthCode = currentUrl.searchParams.get("code");
+            currentUrl.searchParams.delete("code");
+            if (window.opener) {
+                window.opener.postMessage(oauthCode);
+                window.close();
+                return;
+            } else {
+                oauthFlowAuthorizationCode = oauthCode;
+                window.history.replaceState(history.state, document.title, currentUrl);
+            }
+        }
+
         const stored = JSON.parse(localStorage.getItem("gropius-login-debug") || "{}");
         this.hostname = stored.host || "http://localhost";
         this.accessToken = stored.accessToken || "";
         this.refreshToken = stored.refreshToken || "";
+    },
+    mounted() {
+        window.addEventListener("message", this.onMessageReceived);
     },
     methods: {
         ...allMethods,
@@ -53,10 +70,14 @@ export default {
             }
         },
 
+        jwtBodyParse(json) {
+            return JSON.parse(atob(json.access_token.split(".")[1]));
+        },
+
         getAccessTokenStrInfo(json) {
             if (json.access_token) {
                 try {
-                    const decoded = JSON.parse(atob(json.access_token.split(".")[1]));
+                    const decoded = this.jwtBodyParse(json);
                     return `Returned access token scope ${decoded.aud.join(",")} valid until ${new Date(
                         decoded.exp * 1000,
                     ).toISOString()}`;
@@ -132,8 +153,9 @@ export default {
 
             oauthFlowInstanceId: "",
             oauthFlowClientId: "",
-            oauthFlowMode: "register",
+            oauthFlowMode: "login",
             oauthFlowAuthorizationCode: "",
+            openedWindows: [],
 
             registerType: "self-link",
             registerTokenValue: "",

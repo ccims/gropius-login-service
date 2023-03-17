@@ -22,16 +22,16 @@ export async function runUserpassLogin() {
         password: this.userpassLoginPassword,
     });
     this.accessToken = r.access_token;
-    this.refreshTokenValue = r.refresh_token;
+    this.refreshToken = r.refresh_token;
 }
 
 export async function runRefreshToken() {
     const r = await this.request(`authenticate/oauth/a/token`, "POST", {
         grant_type: "refresh_token",
-        refresh_token: this.refreshTokenValue,
+        refresh_token: this.refreshToken,
     });
     this.accessToken = r.access_token;
-    this.refreshTokenValue = r.refresh_token;
+    this.refreshToken = r.refresh_token;
 }
 
 export async function runListAllUsers() {
@@ -64,7 +64,7 @@ export async function runListAllClients() {
     const client = r.filter((c) => !c.requiresSecret)[0] || r[0];
     this.oauthFlowClientId = client.id;
     this.createClientEditId = client.id;
-    this.createClientRedirectUrls = client.redirectUrls.join(";");
+    this.createClientUrls = client.redirectUrls;
     this.createClientIsValid = client.isValid;
     this.createClientRequiresSecret = client.requiresSecret;
 }
@@ -74,7 +74,7 @@ export async function runCreateClient() {
         `login/client${this.createClientMethod == "PUT" ? "/" + this.createClientEditId : ""}`,
         this.createClientMethod,
         {
-            redirectUrls: createClientRedirectUrls,
+            redirectUrls: this.createClientUrls,
             isValid: this.createClientIsValid,
             requiresSecret: this.createClientRequiresSecret,
         },
@@ -83,23 +83,60 @@ export async function runCreateClient() {
     this.oauthFlowClientId = r.id;
 }
 
+export async function oauthFlowInitiate() {
+    for (const tab of this.openedWindows) {
+        if (!tab.closed) {
+            tab.close();
+        }
+    }
+    this.openedWindows.splice(0, this.openedWindows.length);
+    const oauthTab = window.open(
+        //eslint-disable-next-line max-len
+        `${this.loginUrl}authenticate/oauth/${this.oauthFlowInstanceId}/authorize/${this.oauthFlowMode}?client_id=${this.oauthFlowClientId}`,
+        "_blank",
+    );
+    this.openedWindows.push(oauthTab);
+}
+
+export function onMessageReceived(e) {
+    const code = e.data;
+    if (typeof code != "string" || code.split(".").length != 3) {
+        return;
+    }
+    this.log(`Received code from OAuth flow:`, e.data);
+    this.oauthFlowAuthorizationCode = e.data;
+}
+
 export async function oauthFlowGetToken() {
     const r = await this.request(`authenticate/oauth/${this.oauthFlowClientId}/token`, "POST", {
         grant_type: "authorization_code",
         code: this.oauthFlowAuthorizationCode,
     });
-    if (r.access_token && r.scope.includes("login-register")) {
-        this.registerTokenValue = r.access_token;
+    if (r.access_token) {
+        const token = this.jwtBodyParse(r);
+        if (token.aud.includes("login-register")) {
+            this.registerTokenValue = r.access_token;
+        }
+        if (token.aud.includes("login")) {
+            this.accessToken = r.access_token;
+            this.refreshToken = r.refresh_token;
+            this.log("Successfully logged in using OAuth.");
+        }
     }
 }
 
 export async function runRegister() {
-    const r = await this.request(`authenticate/oauth/a/token`, "POST", {
-        grant_type: "refresh_token",
-        refresh_token: this.refreshTokenValue,
-    });
-    this.accessToken = r.access_token;
-    this.refreshTokenValue = r.refresh_token;
+    let body = {
+        register_token: this.registerTokenValue,
+    };
+    if (this.registerType == "self-register") {
+        body.username = this.registerNewUsername;
+        body.displayName = this.registerNewDisplayName;
+        body.email = this.registerNewEmail;
+    } else if (this.registerType == "admin-link") {
+        body.userIdToLink = this.registerAdminLinkUserId;
+    }
+    await this.request(`login/registration/${this.registerType}`, "POST", body);
 }
 
 export function storeToStorage() {
@@ -121,6 +158,8 @@ export const allMethods = {
     runCreateGithubInstance,
     runListAllClients,
     runCreateClient,
+    oauthFlowInitiate,
+    onMessageReceived,
     oauthFlowGetToken,
     runRegister,
     storeToStorage,
