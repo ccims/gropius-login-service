@@ -121,6 +121,8 @@ export class PerformAuthFunctionService {
         instance: StrategyInstance,
         strategy: Strategy,
     ): Promise<AuthStateData> {
+        const wantsToDoImplicitRegister =
+            strategy.allowsImplicitSignup && instance.doesImplicitRegister && state.function == AuthFunction.LOGIN;
         if (authResult.loginData) {
             // sucessfully found login data matching the authentication
             if (authResult.loginData.expires != null && authResult.loginData.expires <= new Date()) {
@@ -133,7 +135,11 @@ export class PerformAuthFunctionService {
                         "If this error happens again, something internally went wrong.",
                 };
             }
-            if (state.function == AuthFunction.REGISTER || state.function == AuthFunction.REGISTER_WITH_SYNC) {
+            if (
+                state.function == AuthFunction.REGISTER ||
+                state.function == AuthFunction.REGISTER_WITH_SYNC ||
+                wantsToDoImplicitRegister
+            ) {
                 return this.continueExistingRegistration(
                     authResult,
                     instance,
@@ -158,8 +164,6 @@ export class PerformAuthFunctionService {
                 }
             }
         } else {
-            const wantsToDoImplicitRegister =
-                strategy.allowsImplicitSignup && instance.doesImplicitRegister && state.function == AuthFunction.LOGIN;
             if (
                 state.function == AuthFunction.REGISTER ||
                 state.function == AuthFunction.REGISTER_WITH_SYNC ||
