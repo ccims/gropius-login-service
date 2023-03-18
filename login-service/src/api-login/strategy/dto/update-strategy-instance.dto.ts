@@ -73,7 +73,7 @@ export class UpdateStrategyInstanceInput {
             }
         }
         if (input.name != undefined) {
-            if (!input.name.match(/[^a-zA-Z0-9+/\-_= ]/g)) {
+            if (input.name.match(/[^a-zA-Z0-9+/\-_= ]/g)) {
                 throw new HttpException(
                     "Name of strategy instance may only contain alphanumeric characters, -, _, +, /, = and space",
                     HttpStatus.BAD_REQUEST,
