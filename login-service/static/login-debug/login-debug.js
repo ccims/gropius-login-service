@@ -90,6 +90,9 @@ export default {
         },
 
         async request(url, method = "GET", body = undefined, token = this.accessToken) {
+            if (url.startsWith("/")) {
+                url = url.substring(1);
+            }
             let headers = {};
             if (body) {
                 headers = { ...headers, "content-type": "application/json" };
@@ -145,12 +148,14 @@ export default {
             createGithubInstanceIsSelfRegisterActive: false,
             createGithubInstanceIsSyncActive: false,
             createGithubInstanceDoesImplicitRegister: false,
+            createGithubInstanceName: "",
 
             createClientMethod: "PUT",
             createClientEditId: "",
             createClientUrls: [],
             createClientIsValid: true,
             createClientRequiresSecret: false,
+            createClientName: "",
 
             oauthFlowInstanceId: "",
             oauthFlowClientId: "",

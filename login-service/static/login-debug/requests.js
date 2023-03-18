@@ -53,6 +53,7 @@ export async function runCreateGithubInstance() {
             isSelfRegisterActive: this.createGithubInstanceIsSelfRegisterActive,
             isSyncActive: this.createGithubInstanceIsSyncActive,
             doesImplicitRegister: this.createGithubInstanceDoesImplicitRegister,
+            name: this.createGithubInstanceName || undefined,
         },
     );
     this.createGithubInstanceEditId = r.id;
@@ -77,6 +78,7 @@ export async function runCreateClient() {
             redirectUrls: this.createClientUrls,
             isValid: this.createClientIsValid,
             requiresSecret: this.createClientRequiresSecret,
+            name: this.createClientName || undefined,
         },
     );
     this.createClientEditId = r.id;
