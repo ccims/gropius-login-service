@@ -219,6 +219,20 @@ export abstract class Strategy {
         return null;
     }
 
+    /**
+     * For a given login data return data that has been retrieved from the authentication source
+     * with which to prefill the input fields for the user registration
+     *
+     * **WARNING**: Does not check wether the returned data is valid or e.g. a username is unique.
+     * This is purely a data mapper.
+     *
+     * @param loginData The login data of the authentication for which to retrieve the data
+     * @returns Suggestions for the user data based on the login data. NOT checked!
+     */
+    getUserDataSuggestion(loginData: UserLoginData): { username?: string; displayName?: string; email?: string } {
+        return {};
+    }
+
     abstract performAuth(
         strategyInstance: StrategyInstance,
         authStateData: AuthStateData | object,

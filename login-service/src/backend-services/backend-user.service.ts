@@ -35,7 +35,7 @@ export class BackendUserService {
             throw new Error(`Backend did not know neo4jid ${user.neo4jId} that it previously returned`);
         }
         if (loadedUser?.node?.__typename == "GropiusUser") {
-            if (loadedUser.node.isAdmin) {
+            if (loadedUser.node.isAdmin === true) {
                 return true;
             }
         }

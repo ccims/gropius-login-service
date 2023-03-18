@@ -115,6 +115,18 @@ export class GithubStrategyService extends StrategyUsingPassport {
         };
     }
 
+    override getUserDataSuggestion(loginData: UserLoginData): {
+        username?: string;
+        displayName?: string;
+        email?: string;
+    } {
+        return {
+            username: loginData.data?.username || undefined,
+            displayName: loginData.data?.username || undefined,
+            email: loginData.data?.email || undefined,
+        };
+    }
+
     protected override getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
         authStateData: object | AuthStateData,
