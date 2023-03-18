@@ -49,6 +49,7 @@ export default {
     },
     mounted() {
         window.addEventListener("message", this.onMessageReceived);
+        window.request = this.request.bind(this);
     },
     methods: {
         ...allMethods,
@@ -157,7 +158,7 @@ export default {
             oauthFlowAuthorizationCode: "",
             openedWindows: [],
 
-            registerType: "self-link",
+            registerType: "self-register",
             registerTokenValue: "",
             registerNewUsername: "",
             registerNewDisplayName: "",

@@ -125,6 +125,15 @@ export async function oauthFlowGetToken() {
     }
 }
 
+export async function runRegisterDataSuggestion() {
+    const r = await this.request(`login/registration/data-suggestion`, "POST", {
+        register_token: this.registerTokenValue,
+    });
+    this.registerNewUsername = r.username || "";
+    this.registerNewDisplayName = r.displayName || "";
+    this.registerNewEmail = r.email || "";
+}
+
 export async function runRegister() {
     let body = {
         register_token: this.registerTokenValue,
@@ -161,6 +170,7 @@ export const allMethods = {
     oauthFlowInitiate,
     onMessageReceived,
     oauthFlowGetToken,
+    runRegisterDataSuggestion,
     runRegister,
     storeToStorage,
 };

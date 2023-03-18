@@ -136,7 +136,7 @@
                 createGithubInstanceDoesImplicitRegister }}<br>
                 }
             </li>
-            <li><button @click="runcreateGithubInstance">Request</button></li>
+            <li><button @click="runCreateGithubInstance">Request</button></li>
         </ul>
 
         <h4>List all OAuth clients (Needs admin)
@@ -217,9 +217,18 @@
         </h4>
         <ul>
             <li>Registration token: <input v-model="registerTokenValue"></li>
-            <li v-if="registerType == 'self-register'">Data for new user: Username:
-                <input v-model="registerNewUsername"> Display name: <input v-model="registerNewDisplayName">
-                Email: <input v-model="registerNewEmail">
+            <li v-if="registerType == 'self-register'">Data for new user:
+                <ul>
+                    <li>
+                        Username:
+                        <input v-model="registerNewUsername"> Display name: <input v-model="registerNewDisplayName">
+                        Email: <input v-model="registerNewEmail">
+                    </li>
+                    <li>Request suggested user data and prefill fields above:</li>
+                    <li>GET {{ loginUrl }}login/registration/data-suggestion</li>
+                    <li class="body">{ "register_token": "{{ registerTokenValue }}" }</li>
+                    <li><button @click="runRegisterDataSuggestion">Request</button></li>
+                </ul>
             </li>
             <li v-if="registerType == 'admin-link'">
                 Id of gropius user to link to: <input v-model="registerAdminLinkUserId">
