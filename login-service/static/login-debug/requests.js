@@ -30,8 +30,8 @@ export async function runRefreshToken() {
         grant_type: "refresh_token",
         refresh_token: this.refreshToken,
     });
-    this.accessToken = this.replacePrefilled ? r.access_token : this.accessToken || r.access_token;
-    this.refreshToken = this.replacePrefilled ? r.refresh_token : this.refreshToken || r.refresh_token;
+    this.accessToken = r.access_token;
+    this.refreshToken = r.refresh_token;
 }
 
 export async function runListAllUsers() {

@@ -36,7 +36,7 @@
         <table>
             <tbody>
                 <tr>
-                    <td>Gropius system hostname (no port):</td>
+                    <td>Gropius system hostname:</td>
                     <td><input v-model="hostname"></td>
                 </tr>
                 <tr>
@@ -114,7 +114,7 @@
             <select v-model="createGithubInstanceMethod">
                 <option value="POST">Create new</option>
                 <option value="PUT">Edit existing</option>
-            </select> github strategy instance
+            </select> github strategy instance (Nedees admin)
         </h4>
         <ul>
             <li v-if="createGithubInstanceMethod == 'PUT'">
@@ -161,7 +161,7 @@
             <select v-model="createClientMethod">
                 <option value="POST">Create new</option>
                 <option value="PUT">Edit existing</option>
-            </select> OAuth Client
+            </select> OAuth Client (Needs admin)
         </h4>
         <ul>
             <li v-if="createClientMethod == 'PUT'">Id of OAuth client to edit: <input v-model="createClientEditId"></li>

@@ -5,8 +5,8 @@ export default {
     watch: {
         hostname: {
             handler(newVal, oldVal) {
-                this.loginUrl = this.hostname + ":3000/";
-                if (newVal != "http://localhost") {
+                this.loginUrl = this.hostname + "/";
+                if (newVal != oldVal && newVal != window.location.origin) {
                     this.storeToStorage();
                 }
             },
@@ -43,7 +43,7 @@ export default {
         }
 
         const stored = JSON.parse(localStorage.getItem("gropius-login-debug") || "{}");
-        this.hostname = stored.host || "http://localhost";
+        this.hostname = stored.host || this.hostname;
         this.accessToken = stored.accessToken || "";
         this.refreshToken = stored.refreshToken || "";
     },
@@ -127,7 +127,7 @@ export default {
     },
     data() {
         return {
-            hostname: "http://localhost",
+            hostname: window.location.origin,
             loginUrl: "",
             replacePrefilled: true,
             accessToken: "",
@@ -153,7 +153,7 @@ export default {
 
             createClientMethod: "PUT",
             createClientEditId: "",
-            createClientUrls: [],
+            createClientUrls: [window.location.href],
             createClientIsValid: true,
             createClientRequiresSecret: false,
             createClientName: "",
