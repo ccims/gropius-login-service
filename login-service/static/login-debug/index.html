@@ -40,6 +40,10 @@
                     <td><input v-model="hostname"></td>
                 </tr>
                 <tr>
+                    <td>Replace filled token fields</td>
+                    <td><input type="checkbox" v-model="replacePrefilled"></td>
+                </tr>
+                <tr>
                     <td>Access token:</td>
                     <td><input v-model="accessToken"></td>
                 </tr>
@@ -234,7 +238,7 @@
                         Email: <input v-model="registerNewEmail">
                     </li>
                     <li>Request suggested user data and prefill fields above:</li>
-                    <li>GET {{ loginUrl }}login/registration/data-suggestion</li>
+                    <li>POST {{ loginUrl }}login/registration/data-suggestion</li>
                     <li class="body">{ "register_token": "{{ registerTokenValue }}" }</li>
                     <li><button @click="runRegisterDataSuggestion">Request</button></li>
                 </ul>

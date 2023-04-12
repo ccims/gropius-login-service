@@ -129,6 +129,7 @@ export default {
         return {
             hostname: "http://localhost",
             loginUrl: "",
+            replacePrefilled: true,
             accessToken: "",
             refreshToken: "",
             outputLocation: "console",
