@@ -17,10 +17,9 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 @Module({
     imports: [
         ConfigModule.forRoot({
-            envFilePath:
-                process.env.NODE_ENV === "development" || process.env.NODE_ENV === "testing"
-                    ? [".env.dev.local", ".env.dev"]
-                    : [".env.prod.local", ".env.prod"],
+            envFilePath: ["development", "testing"].includes(process.env.NODE_ENV)
+                ? [".env.dev.local", ".env.dev"]
+                : [".env.prod.local", ".env.prod"],
             validationSchema,
         }),
         TypeOrmModule.forRootAsync({

@@ -1,6 +1,7 @@
 #/bin/bash
 
 mkdir -p ./website/schemas
+export NODE_ENV="development"
 export GROPIUS_INTERNAL_BACKEND_JWT_SECRET="SecretToGetGraphQLSchemaDoNotUseInProduction"
 export GROPIUS_LOGIN_SPECIFIC_JWT_SECRET="LoginSpecificSecretdoNotUseInProduction"
 export GROPIUS_LOGIN_DATABASE_DRIVER="sqlite"

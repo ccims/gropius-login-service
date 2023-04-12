@@ -4,9 +4,17 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { TokenScope } from "./backend-services/token.service";
 import { OpenApiTag } from "./openapi-tag";
 import { ConfigModule } from "@nestjs/config";
+import { LogLevel } from "@nestjs/common";
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const logLevels = ["log", "error", "warn"];
+    if (["development", "testing"].includes(process.env.NODE_ENV)) {
+        logLevels.push("debug", "verbose");
+    }
+
+    const app = await NestFactory.create(AppModule, {
+        logger: logLevels as LogLevel[],
+    });
 
     await ConfigModule.envVariablesLoaded;
 
