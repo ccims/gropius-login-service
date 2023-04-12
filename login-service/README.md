@@ -31,6 +31,11 @@ $ npm run init-database  # Run all database migrations to get database to curren
 $ npm run start:prod  # Start the production version of the app
 ```
 
+## Debug/Try out
+The login service deploys a swagger UI on `http://HOSTNAME:3000/login-api-doc#/` which has some ability to interact with the API
+
+Additionally, for easier and more intuitive debugging and testing of the login API and especially of the OAuth flow etc., an interactive UI is deployed on `http://HOSTNAME:3000/login-debug/`
+
 ## Test
 
 ```bash
