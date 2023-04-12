@@ -126,7 +126,6 @@ Every request has the following components:
 On the top of the debug page, you can set a few preferences. They are saved in your browsers local storage, meaning they will persist across reloads/restarts as long as you don't clear it manually or the URL of the page changes.
 - `Gropius system hostname`: 
     - The URL where the gropius backend (and especially the login-service) is running
-    - This should not include a port
     - It is automatically populated with the URL you used to access the debug page.
 - `Replace filled token fields`:
     - If this is checked, the fields for access and refresh token will be overwritten if any requests that returns new tokens is executed
@@ -192,4 +191,62 @@ If you created an OAuth client using the initialization config described above, 
 
 If a valid client which requires no secret is found, its id will be autofilled in the edit OAuth client and run OAuth flow sections.
 
-#### 
+#### Edit existing/Create new OAuth Client
+To successfully run a redirect OAuth flow, the client needs a redirect URL. This is the URL the OAuth code will be sent to for request ing a token.
+
+To update the existing client (created during initialization) with the debug page used as redirect url:
+1. List all OAuth clients
+    - This will automatically populate the inputs for editing the client with the current values
+1. Set the correct redirect URL
+    - To use the debug page as client, add its URL to the redirect urls
+1. Enable the client and disable client secrets (NEVER have an enabled client with no secrets in an production environment)
+
+### The `github` strategy instance
+:::info
+To be able to log in using the github strategy, you need to [create a GitHub OAuth app](https://github.com/settings/applications/new).
+
+The `Authorization callback URL` will need to be set to the appropirate URL on the login API. The callback URL needs to have the following format:
+`http://HOST_OF_YOUR_LOGIN_API:3000/authenticate/oauth/ID_OF_THE_GITHUB_STRATEGY_INSTANCE/callback`
+Where you need the id of the created github strategy instance. So to be able to retrieve the client id and client secret needed for creation of the instance, prefill this field with the url above where you only replace the `HOST_OF_YOUR_LOGIN_API` with the appropriate hostname (e.g. localhost).
+
+You will need the created client id and the client secret while creating an instance of the github strategy.
+:::
+
+#### Show all existing github strategy instances
+If you list all github strategy instances and one or more already exist, the input fields for editing/creating a github strategy instance will be prepopulated with the current values
+
+#### Create new/Edit existing github strategy instance
+Create a new gitub strategy instance or edit an existing one:
+
+1. [Create a GitHub OAuth App](https://github.com/settings/applications/new) (see above)
+1. Fill in your GitHub-OAuth-App client id and client secret
+1. Set the flags according to your preferences (Reccomended: All flags enabled)
+    - Enable login: Allows users to use this instance to retrieve a full access token to the gropius backend
+    - Enable self registration: Allows users to create an account **themselves** based on an authentication with this instance. Administrators will always be able to register using an instance
+    - Enable sync: If users decide to grant sync permission, this strategy will be used to perform the actions the users perform in gropius as that user on GitHub instead of as a dummy user
+    - Allow implicit register: If a user tries to log in that isn't registered, this will automatically start the registration process. Otherwise users need to explicitly choose to register.
+1. Execute the creation/edit
+1. [Update the GitHub OAuth App](https://github.com/settings/developers) `Authorization callback URL`
+    - Retrieve the id of the created/edited instance from the response of the execution or by listing all existing github strategy instances
+    - Set the `Authorization callback URL` to the pattern: `http://HOST_OF_YOUR_LOGIN_API:3000/authenticate/oauth/ID_OF_THE_GITHUB_STRATEGY_INSTANCE/callback`
+    - Replace `HOST_OF_YOUR_LOGIN_API` in the pattern with the hostname where you access the login api (e.g. localhost)
+    - Replace `ID_OF_THE_GITHUB_STRATEGY_INSTANCE` in the pattern with the id retrieved
+
+### Running the OAuth redirect flow
+To run a redirect flow you need the id of an OAuth client and the id of the strategy instance (see above).
+
+1. Choose the mode of the flow
+    - login: Get access token if already registered and linked to account or register (without sync) if the instance has implicit registration turned on
+    - register: Register a new authentication (either to create a new user or to link to an existing user). Will return a registration token instead of a full access token. If already registered, this is equivalent to login
+    - register-sync: Register a new authentication (either to create a new user or to link to an existing user). This will however request sync (repository edit) permissions from the user. If already registered, this will "upgrade" the registration to a registration with sync.
+1. Initiate the flow by redirecting the user to the appropriate authorize URL
+1. Authorize using the third-party where you are redirected to (e.g. GitHub)
+1. Finally, the login API will redirect back to the specified redirect-url (see "Edit existing/Create new OAuth Client")
+    - The redirect will contain the "code" in the query parameters needed to retrieve the actual token
+    - If this is set to the debug page, the input field for the code below "Request an access token using the retrieved code" will automatically be prefilled
+    - If the OAuth client you used to initiate the flow requires a secret, enter it in the field, otherwise leave it empty
+1. Executing the token request will return an access and a refresh token
+    - The token will either have full API access (scope: backend login)
+    - Or it will be a registration token (scope: login-register). This token will be autofilled in the registration/linking form 
+
+## Register new/Link existing user with authentication
