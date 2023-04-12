@@ -52,11 +52,13 @@ import { ServeStaticModule } from "@nestjs/serve-static";
         ServeStaticModule.forRoot({
             rootPath: path.join(__dirname, "..", "static"),
             renderPath: "a",
+            exclude: ["/login", "/syncApi", "/authenticate"],
         }),
         ServeStaticModule.forRoot({
             rootPath: path.join(__dirname, "..", "node_modules", "vue"),
             serveRoot: "/vue",
             renderPath: "a",
+            exclude: ["/login", "/syncApi", "/authenticate"],
         }),
         ModelModule,
         ApiLoginModule,
