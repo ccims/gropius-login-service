@@ -10,6 +10,28 @@ This How-To will the essential steps to get a Gropius installation going includi
 Some steps taken in this how to might however NOT be appropriate for a production setup!
 :::
 
+## Tldr (Steps-Summary; see below for details)
+1. Clone the repository
+1. Configure everything
+    a. Set the service configurations
+    b. If desired - create default/initial strategy instance, admin-user, and OAuth client using the config
+1. Run the services and - if desired - access the `/login-debug` page
+1. Get an access token for the default user by logging in using the userpass strategy
+1. Configure/Create one (or more) OAuth clients with the desired redirect URL and - if desired - client secrets
+1. [Create a GitHub OAuth App](https://github.com/settings/applications/new) and retrieve the client id and client secret
+1. Create/Configure a github-strategy instance with the client id and secret (enable login, sync and if desired self & implicit registration)
+1. Run the redirect OAuth flowusing the github-strategy instance and an OAuth client
+    a. Choose between login(/implicit-register), register or register with sync
+1. Request an access token after returning from GitHub
+    a. Will be a registration token if (implicitly or explicitly) registering
+    b. Will be a full access token if loggin in
+1. If registering: Link the OAuth authentication to a user
+    a. Create a new user using the registration token and additional user data
+    b. Link as new authentication for an existing user using the registration token and an access token for that user
+1. If registering new: Convert the registration token to a full access token by refreshing it
+1. Use the graphql API using a full access token retrieved by any means (userpass, github, refreshing, ...)
+1. If expired or even before expiry: Refresh your access token to get a new one
+
 ## Cloning
 To use the Gropius backend, you have to clone all required sources. The easiest way is to use the [Gropius](https://github.com/ccims/gropius) repository.
 Run the following commands to clone the repository into your current workdir:
@@ -88,10 +110,10 @@ http://[HOST_OF_DOCKER_MACHINE]:3000/login-api-doc
 The following section describes the basic functionality of the login API and the steps to take to interact with the backend after the initialization described above.
 The login service acts as [OAuth2.0 server according to the specification](https://www.rfc-editor.org/rfc/rfc6749) so you can also send requests directly (using e.g. postman).
 
-### The debug page
+## The debug page
 The debug page is deployed at `/login-debug` and shows all request details for all steps. It was created for more conveniently interacting with the login API without requiring to manually put together http-requests while still showing how the requets are structured.
 
-#### Functionality
+### Functionality
 The debug page lists the most important queries for interacting with the login service and makes it easy to execute them.
 Every request has the following components:
 - Headline: Describes what the request does
@@ -100,7 +122,7 @@ Every request has the following components:
 - Request body (if needed): If the request requires sending data in the body, the body (assembled from the input) is shown below the URL
 - "Request"-Button: Sends the request as shown with the method, URL and body and displays the result as specified in the settings.
 
-#### Settings
+### Settings
 On the top of the debug page, you can set a few preferences. They are saved in your browsers local storage, meaning they will persist across reloads/restarts as long as you don't clear it manually or the URL of the page changes.
 - `Gropius system hostname`: 
     - The URL where the gropius backend (and especially the login-service) is running
@@ -122,7 +144,7 @@ On the top of the debug page, you can set a few preferences. They are saved in y
 
 The following step-by-step guide will assume you are using the debug page.
 
-#### Custom/Manual requests
+### Custom/Manual requests
 The debug page allows sending custom requests with the convenience of automatically completing the URL and adding the credentials.
 To use this, the function `request(...)` is provided in the developent console (F12 in most browsers).
 
@@ -131,5 +153,43 @@ Method signature: `async request(url, method = "GET", body = undefined, token = 
 Example usage to request the registration data suggestion: `request("login/registration/data-suggestion", "POST", 
 {"register_token": "token"})`
 
-### Retrieving an access token using the `userpass` strategy
-Once initialized with a default user as described above, you likely want to 
+## Retrieving an access token using the `userpass` strategy
+Once initialized with a default admin user as described above, you likely want to log in and retrieve a token for this user.
+
+1. Show all existing userpass strategy instances
+    - Every set of credentials is bound to one specific strategy instance
+    - To log in using a strategy instance, you neet its id
+    - If you followed the setup above, one userpass instance should have been created
+1. Log in using username and password
+    - The ID of the userpass instance was autofilled from the previuos step
+    - Fill in username and password that you specified in the configuration
+1. Access and refresh token
+    - The fields for access and refresh token should now be filled
+    - If you ran the requests manually, make sure to save both tokens as the access token will expire after the set period of time and you will neet to refresh it
+
+### Refresh token
+- If you request a token refresh, your old access AND refresh token will become invalid.
+- The access and refresh token fields on the debg page will automatically be filled with the new tokens (idependant of the settings)
+
+:::caution
+If a refresh token is used twice, the whole chain of tokens including the valid ones will be inalidated for security reasons.
+:::
+
+## Using the GitHub strategy
+### OAuth clients
+For any strategy that requires redirecting (e.g. github) and doesn't simply accept credentials posted to the token-endpoint (e.g. userpass), the client-software needs to authenticate against the login API as an OAuth client according to the specification.
+
+:::info
+From the [OAuth2.0 specification](https://www.rfc-editor.org/rfc/rfc6749):
+
+In OAuth, the client requests access to resources controlled by the resource owner and hosted by the resource server, and is issued a different set of credentials than those of the resource owner.
+[...]
+For example, an end-user (resource owner) can grant a printing service (client) access to her protected photos stored at a photo-sharing service (resource server)
+:::
+
+#### List all OAuth clients
+If you created an OAuth client using the initialization config described above, you can retrieve its id using this request.
+
+If a valid client which requires no secret is found, its id will be autofilled in the edit OAuth client and run OAuth flow sections.
+
+#### 
