@@ -18,9 +18,9 @@ import { ServeStaticModule } from "@nestjs/serve-static";
     imports: [
         ConfigModule.forRoot({
             envFilePath:
-                process.env.NODE_ENV === "production"
-                    ? [".env.prod.local", ".env.prod"]
-                    : [".env.dev.local", ".env.dev"],
+                process.env.NODE_ENV === "development" || process.env.NODE_ENV === "testing"
+                    ? [".env.dev.local", ".env.dev"]
+                    : [".env.prod.local", ".env.prod"],
             validationSchema,
         }),
         TypeOrmModule.forRootAsync({
@@ -35,7 +35,7 @@ import { ServeStaticModule } from "@nestjs/serve-static";
                         username: process.env.GROPIUS_LOGIN_DATABASE_USER,
                         password: process.env.GROPIUS_LOGIN_DATABASE_PASSWORD,
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE,
-                        synchronize: process.env.NODE_ENV !== "production",
+                        synchronize: process.env.NODE_ENV === "development",
                         autoLoadEntities: true,
                         migrations: [path.join(__dirname, "..", "dist", "database-migrations", "*.js")],
                     };
