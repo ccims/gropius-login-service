@@ -89,6 +89,12 @@ export default {
             return undefined;
         },
 
+        addDebugUrlToRedirect() {
+            if (!this.createClientUrls.includes(window.location.href)) {
+                this.createClientUrls.push(window.location.href);
+            }
+        },
+
         async request(url, method = "GET", body = undefined, token = this.accessToken) {
             if (url.startsWith("/")) {
                 url = url.substring(1);
@@ -162,6 +168,7 @@ export default {
             oauthFlowClientId: "",
             oauthFlowMode: "login",
             oauthFlowAuthorizationCode: "",
+            oauthFlowClientSecret: "",
             openedWindows: [],
 
             registerType: "self-register",

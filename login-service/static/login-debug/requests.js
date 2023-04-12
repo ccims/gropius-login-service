@@ -20,6 +20,8 @@ export async function runUserpassLogin() {
         grant_type: "password",
         username: this.userpassLoginUsername,
         password: this.userpassLoginPassword,
+        client_id: this.oauthFlowClientId || undefined,
+        client_secret: this.oauthFlowClientSecret || undefined,
     });
     this.accessToken = this.replacePrefilled ? r.access_token : this.accessToken || r.access_token;
     this.refreshToken = this.replacePrefilled ? r.refresh_token : this.refreshToken || r.refresh_token;
@@ -113,6 +115,8 @@ export async function oauthFlowGetToken() {
     const r = await this.request(`authenticate/oauth/${this.oauthFlowClientId}/token`, "POST", {
         grant_type: "authorization_code",
         code: this.oauthFlowAuthorizationCode,
+        client_id: this.oauthFlowClientId,
+        client_secret: this.oauthFlowClientSecret || undefined,
     });
     if (r.access_token) {
         const token = this.jwtBodyParse(r);

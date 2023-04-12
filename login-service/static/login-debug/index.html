@@ -80,12 +80,18 @@
             <li>Use strategy instance of type userpass with id <input v-model="userpassLoginInstanceId">
                 (request above)</li>
             <li>Username: <input v-model="userpassLoginUsername"> Password: <input v-model="userpassLoginPassword"></li>
+            <li>Id of the client (leave empty if in dev or testing): <input v-model="oauthFlowClientId">
+            <li>Secret of the client (leave empy if none): <input v-model="oauthFlowClientSecret"></li>
+            </li>
             <li>POST {{ loginUrl }}authenticate/oauth/{{ userpassLoginInstanceId }}</span>/token
             </li>
-            <li class="body">{
+            <li class="body">{<br>
                 "grant_type": "password",
                 "username": "{{ userpassLoginUsername }}",
-                "password": "{{ userpassLoginPassword }}"
+                "password": "{{ userpassLoginPassword }}",<br>
+                <span v-if="!!oauthFlowClientId">"client_id": "{{ oauthFlowClientId }}",
+                    <span v-if="!!oauthFlowClientSecret">"client_secret": "{{ oauthFlowClientSecret
+                        }}",</span><br></span>
                 }
             </li>
             <li><button @click="runUserpassLogin">Request</button></li>
@@ -166,7 +172,8 @@
         <ul>
             <li v-if="createClientMethod == 'PUT'">Id of OAuth client to edit: <input v-model="createClientEditId"></li>
             <li>Valid redirect URLs (separated by &quot;;&quot;) <input @input="createClientUrlsInput"
-                    :value="createClientUrls.join(';')"></li>
+                    :value="createClientUrls.join(';')"> <a href="#" v-on:click.prevent="addDebugUrlToRedirect()">Add
+                    debug page URL</a></li>
             <li>Settings for this client:
                 <label><input type="checkbox" v-model="createClientIsValid">Enable client</label>;
                 <label><input type="checkbox" v-model="createClientRequiresSecret">Require client secret</label>
@@ -209,12 +216,15 @@
             <li>
                 Request an access token using the retrieved code:<ul>
                     <li>Code: <input v-model="oauthFlowAuthorizationCode"></li>
+                    <li>Secret of the client (leave empy if none): <input v-model="oauthFlowClientSecret"></li>
                     <li>POST {{ loginUrl }}authenticate/oauth/{{ oauthFlowInstanceId }}/token
                     </li>
-                    <li class="body">{
-                        grant_type: "authorization_code",
-                        code: "{{ oauthFlowAuthorizationCode }}"
-                        }</li>
+                    <li class="body">{<br>
+                        "grant_type": "authorization_code", "client_id": "{{ oauthFlowClientId }}",
+                        <span v-if="!!oauthFlowClientSecret">"client_secret": "{{ oauthFlowClientSecret }}",</span> <br>
+                        "code": "{{ oauthFlowAuthorizationCode }}"
+                        <br>}
+                    </li>
                     <li><button @click="oauthFlowGetToken">Request</button></li>
                 </ul>
             </li>
