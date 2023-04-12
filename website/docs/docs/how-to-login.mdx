@@ -4,17 +4,27 @@ slug: /how-to-login
 ---
 
 # How-To Login-Service (or rather Hot-To use the Gropius Backend at all)
-This How-To will the essential steps to get a Gropius installation going including a fully functional login-service. It will use the production docker-compose file, as the development docker-compose file uses the dev login service which is intended to easily provide access tokens but does not include the full login service functionality.
+This How-To will the essential steps to get a Gropius installation going including a fully functional login-service. It will use the testing docker-compose file, as the development docker-compose file uses the dev login service which is intended to easily provide access tokens but does not include the full login service functionality.
 
 :::caution
 Some steps taken in this how to might however NOT be appropriate for a production setup!
 :::
 
+## Cloning
+To use the Gropius backend, you have to clone all required sources. The easiest way is to use the [Gropius](https://github.com/ccims/gropius) repository.
+Run the following commands to clone the repository into your current workdir:
+```
+git clone --recursive https://github.com/ccims/gropius.git
+cd gropius
+```
+
 ## Configuration
-The login service (as well as most of the Gropius services) is configured using environment variables. These can (depending on the way of deploying) be set in actual the console/system environment, the docker-compose file or an environment file. For a docker-compose based installation, using the docker-compose file is recommended. When deploying (the login-service) outside docker, configure your setup in a `gropius-backend/login-service/.env.[dev/production].local` file.
+The login service (as well as most of the Gropius services) is configured using environment variables. These can (depending on the way of deploying) be set in actual the console/system environment, the docker-compose file or an environment file. For a docker-compose based installation, using the docker-compose file is recommended. When deploying (the login-service) outside docker, configure your setup in a `gropius-backend/login-service/.env.[dev/prod].local` file.
 Variables on the environment (either set in the docker-compose file or the console environment will take precedence over variables set in a `.env` file).
 
 The following sections will describe the most important config settings needed to get running. Especially a production environment you want to consider all configuration for all services.
+
+We recommend you perform the configuration changes described in the following in the file `docker-compose-testing.yaml`
 
 ### Access token expiration
 The setting `GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS` takes a number of milliseconds after which issued access tokens (no matter the scope) will expire. 
@@ -57,3 +67,69 @@ The auth client will be created WITHOUT requiring a client secret. This means EV
 
 Needed configuration variables:
 - `GROPIUS_DEFAULT_AUTH_CLIENT_NAME`: The name of the auth client to create. If an auth client with this name already exists 
+
+
+## Initial startup
+To start all services (running in testing mode = debugging web interface ports are exposed) run:
+```
+docker compose -f docker-compose-testing.yaml up
+```
+
+:::caution
+This compose file should not be used in production
+:::
+
+To verify, that the login-service is running, using a browser access the following URL (replace `[HOST_OF_DOCKER_MACHINE]` with `localhost` if you are running the browser on the machine you are executing the docker containers on). You should see the Swagger API documentation for the login service.
+```
+http://[HOST_OF_DOCKER_MACHINE]:3000/login-api-doc
+```
+
+## Using the login API
+The following section describes the basic functionality of the login API and the steps to take to interact with the backend after the initialization described above.
+The login service acts as [OAuth2.0 server according to the specification](https://www.rfc-editor.org/rfc/rfc6749) so you can also send requests directly (using e.g. postman).
+
+### The debug page
+The debug page is deployed at `/login-debug` and shows all request details for all steps. It was created for more conveniently interacting with the login API without requiring to manually put together http-requests while still showing how the requets are structured.
+
+#### Functionality
+The debug page lists the most important queries for interacting with the login service and makes it easy to execute them.
+Every request has the following components:
+- Headline: Describes what the request does
+- Input fields: Prompt for all data required for executing the request (sometimes the headline might contain an input field)
+- Request method + URL: The Data from the input fields and settings is assembled into the request URL. The method is shown in front of it.
+- Request body (if needed): If the request requires sending data in the body, the body (assembled from the input) is shown below the URL
+- "Request"-Button: Sends the request as shown with the method, URL and body and displays the result as specified in the settings.
+
+#### Settings
+On the top of the debug page, you can set a few preferences. They are saved in your browsers local storage, meaning they will persist across reloads/restarts as long as you don't clear it manually or the URL of the page changes.
+- `Gropius system hostname`: 
+    - The URL where the gropius backend (and especially the login-service) is running
+    - This should not include a port
+    - It is automatically populated with the URL you used to access the debug page.
+- `Replace filled token fields`:
+    - If this is checked, the fields for access and refresh token will be overwritten if any requests that returns new tokens is executed
+    - If not checked, the fields will only be filled if they are empty
+- `Access token`:
+    - This access token will be used for requests that require authentication
+    - It will initially be empty
+    - It will be automatically populated if you execute a query returning tokens
+- `Output responses to`:
+    - Sets where the http-response-body of the requests should be output to
+    - Dev-Console (default): The browser-develomplent console (in most browsers accessed by pressing F12). Recommended as most browsers provide formatting and advanced exploration tools for JSON output
+    - Popup: On response open a (modal) popup dialog
+    - Textbox at bottom: Append the result to the textarea at the bottom of the page. Recommended if you don't have access to the development console
+    - Console+Popup: Combination of options "Dev-Console" and "Popup"
+
+The following step-by-step guide will assume you are using the debug page.
+
+#### Custom/Manual requests
+The debug page allows sending custom requests with the convenience of automatically completing the URL and adding the credentials.
+To use this, the function `request(...)` is provided in the developent console (F12 in most browsers).
+
+Method signature: `async request(url, method = "GET", body = undefined, token = this.accessToken)`
+
+Example usage to request the registration data suggestion: `request("login/registration/data-suggestion", "POST", 
+{"register_token": "token"})`
+
+### Retrieving an access token using the `userpass` strategy
+Once initialized with a default user as described above, you likely want to 
