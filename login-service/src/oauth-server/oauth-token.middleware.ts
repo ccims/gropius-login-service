@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
 import { TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
@@ -14,6 +14,8 @@ import { OauthHttpException } from "./OauthHttpException";
 
 @Injectable()
 export class OauthTokenMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(OauthTokenMiddleware.name);
+
     constructor(
         private readonly tokenService: TokenService,
         private readonly authClientService: AuthClientService,
@@ -84,6 +86,9 @@ export class OauthTokenMiddleware implements NestMiddleware {
         }
 
         if (findAnyWithoutSecret) {
+            this.logger.log(
+                "Any client password authentication is enabled. Returning any client without client secret",
+            );
             const client = await this.authClientService.findOneBy({
                 requiresSecret: false,
                 isValid: true,
