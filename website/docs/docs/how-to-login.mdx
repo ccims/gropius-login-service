@@ -250,3 +250,94 @@ To run a redirect flow you need the id of an OAuth client and the id of the stra
     - Or it will be a registration token (scope: login-register). This token will be autofilled in the registration/linking form 
 
 ## Register new/Link existing user with authentication
+The following section describes user registration/linking. This only works if the authentication has not yet been linked to a user.
+I.e. the authentication was done using the "register(-link)" modes or using implicit registration, thus a registration token is present for the authentication (token scope: login-register). A already linked authentication can not be re-linked to another user.
+
+### The user concept of the gropius backend
+This section shows and explains the different entities and their relations that are useful to know when dealing with users within the gropius system. 
+
+_Note: The following diagram not necessarily represents classes/relations in code 1:1. It is a simplification for showing the concepts_
+
+```mermaid
+classDiagram
+    class GropiusUser {
+        - Users that have themselves, directly registered with gropius
+        - The user entity that performs actions within gropius
+        - Also only known as "user" or "login user"
+        - Usually created after a authentication is present and this can be linked to it
+    }
+    class IMSUser {
+        - The users in a connected IMS, e.g. GitHub, that performs an action there
+        - Every synced entity related to a user in an IMS is related to that IMSUser in gropius
+        - E.g. a synced issue has the corresponding IMSUser as creator
+    }
+    class UserLoginData {
+        - For one GropiusUser represents a way of authenticating with a certain strategy instance
+        - Also known as "authentication"
+        - E.g. One persons github account
+        - Created as soon as the registration process is stared
+    }
+    class Activelogin {
+        - A specific instance of an authentication
+        - E.g. one specific login with a github account => one specific retrieved access token
+        - Can support sync - i.e. the token of this login allows the needed access
+        - An access/refresh token chain is tied to an ActiveLogin which can be invalidated
+    }
+    class Strategy {
+        - A way of and the logic for authenticating
+        - E.g. github or userpass
+    }
+    class StrategyInstance {
+        - The configuration for one instance of a way to authenticate
+        - E.g. different GitHub Enterprise instances
+    }
+
+    GropiusUser "0..1" -- "0..*" IMSUser
+    GropiusUser "0 (if not linked) .. 1 (once linked to user)" -- "0..*" UserLoginData
+    UserLoginData "1" -- "1..*" Activelogin
+    UserLoginData "0..*" -- "0..*" IMSUser : Linking once a user registers
+    Strategy <|-- StrategyInstance
+    StrategyInstance "1" -- "0..*" UserLoginData
+```
+
+### Register as new user
+If the authentication is for a user not yet present (as GropiusUser; it is possible that an IMSUser representing the same user already exists, this is however irrelevant) in the system, a new user needs to be created:
+
+1. Enter the registration token retrieved during authentication
+    - If e.g. an OAuth flow returns a registration token (insteaf of an access token) the debug page will automatically fill the appropriate field
+1. It is possible to query a for a "data suggestion" for the new user based on the authentication
+    - These should be the values the input fields for the user should be prefilled with
+    - The debug page does this if the data-suggestion is requested
+    - The data suggestion is based on data collected by the authentication (e.g. username and email from GitHub)
+1. Fill the needed new user fields (either via the data-suggestion or manually)
+1. Run the user creation
+
+This will cause the user to be created and the authentication to be linked to the new user. If the authentication is executed again, it will no longer return a registration token but instead a full access token directly.
+
+:::info
+It is not needed to run the authentication again after registration to get a full access token. Using the currently active refresh token returned with the registration token and running the token refresh will return a full access token once registered
+:::
+
+### Link to existing/logged in user
+If the user that authenticated is already present (as GropiusUser) and just wants to add a new authentication to the account (or allow for sync) then no new account should be created but instead the authenticaiton should be linked to the existing user.
+
+1. Access token
+    - Make sure you have an active, valid, full access token (independant of the authenticaiton)
+    - The token should be for the account to link to or an administrator token
+1. Link to other user (not the one logged in with the above token)
+    - If you have an andmin access token you can link a registration to any existing user
+    - Enter the id of the user to link to in the required field
+1. Perform linking
+    - Enter the registration token (autofilled if one is obtained on the debug page)
+    - Execute self or admin linking
+
+If the linking was successfull, the authentication is now linked and represents the user. Like with user creation, it is possible to exchange the registration token for a full access token (this is however likely not needed as for linking a already valid full access token is required).
+
+### Linking of IMSUsers and GropiusUsers
+_Note: This section describes what happens in the background after user linking and is not relevant to using the login API, you can skip it if you want._
+
+After a link between a user and authentication that uses a strategy instance representing an IMS (e.g. a github instance, NOT a userpass instance) has been created, the system matches all IMSUsers on that IMS that represent the user in that authenticaion to that authentication. 
+In the next step all the matched IMSUsers are linked with the GropiusUser that the authentication has been linked to.
+This allows the gropius system to relate actions performed by one person in an IMS (thus by one specific IMSUser) to that persons GropiusUSer (thus their "account" within gropius).
+But the relation is then also possible the other way around, allowing the system to find the IMSUser (and potentially an access token) when the person performs an action within Gropius.
+This information is then used to populate the IMS synced to with the correct user information (and if a token is present even in the name of that person).
