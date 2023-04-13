@@ -135,33 +135,33 @@ export class PerformAuthFunctionService {
                         "If this error happens again, something internally went wrong.",
                 };
             }
-            if (
-                state.function == AuthFunction.REGISTER ||
-                state.function == AuthFunction.REGISTER_WITH_SYNC ||
-                wantsToDoImplicitRegister
-            ) {
-                return this.continueExistingRegistration(
-                    authResult,
-                    instance,
-                    state.function == AuthFunction.REGISTER_WITH_SYNC,
-                );
-            } else if (state.function == AuthFunction.LOGIN) {
-                switch (authResult.loginData.state) {
-                    case LoginState.WAITING_FOR_REGISTER:
+            switch (authResult.loginData.state) {
+                case LoginState.WAITING_FOR_REGISTER:
+                    if (
+                        state.function == AuthFunction.REGISTER ||
+                        state.function == AuthFunction.REGISTER_WITH_SYNC ||
+                        wantsToDoImplicitRegister
+                    ) {
+                        return this.continueExistingRegistration(
+                            authResult,
+                            instance,
+                            state.function == AuthFunction.REGISTER_WITH_SYNC,
+                        );
+                    } else if (state.function == AuthFunction.LOGIN) {
                         return {
                             authErrorMessage:
                                 "For these credentials a registration process is still running. " +
                                 "Complete (or restart) the registration before logging in",
                         };
-                    case LoginState.BLOCKED:
-                        return {
-                            authErrorMessage:
-                                "The login to this account using this specific strategy instance " +
-                                "was blocked by the administrator.",
-                        };
-                    case LoginState.VALID:
-                        return this.loginExistingUser(authResult, instance);
-                }
+                    }
+                case LoginState.BLOCKED:
+                    return {
+                        authErrorMessage:
+                            "The login to this account using this specific strategy instance " +
+                            "was blocked by the administrator.",
+                    };
+                case LoginState.VALID:
+                    return this.loginExistingUser(authResult, instance);
             }
         } else {
             if (
