@@ -166,6 +166,10 @@ Once initialized with a default admin user as described above, you likely want t
     - The fields for access and refresh token should now be filled
     - If you ran the requests manually, make sure to save both tokens as the access token will expire after the set period of time and you will neet to refresh it
 
+:::caution
+If you are in a production environment or set `GROPIUS_ALLOW_PASSWORD_TOKEN_MODE_WITHOUT_OAUTH_CLIENT=false`, then you need to authenticate with an OAuth client for **every** request involving access tokens. See "OAuth clients" below.
+:::
+
 ### Refresh token
 - If you request a token refresh, your old access AND refresh token will become invalid.
 - The access and refresh token fields on the debg page will automatically be filled with the new tokens (idependant of the settings)
@@ -173,6 +177,9 @@ Once initialized with a default admin user as described above, you likely want t
 :::caution
 If a refresh token is used twice, the whole chain of tokens including the valid ones will be inalidated for security reasons.
 :::
+
+### Registering using `userpass`
+If you want to register using username and password or add a new username+password credentials to an account, perform the same steps as for logging in above but with a new username/password. You will receive a registration token. Continue with user linking/creation described below.
 
 ## Using the GitHub strategy
 ### OAuth clients
