@@ -36,7 +36,7 @@
         <table>
             <tbody>
                 <tr>
-                    <td>Gropius system hostname:</td>
+                    <td>Gropius login API endpoint:</td>
                     <td><input v-model="hostname"></td>
                 </tr>
                 <tr>
@@ -80,18 +80,25 @@
             <li>Use strategy instance of type userpass with id <input v-model="userpassLoginInstanceId">
                 (request above)</li>
             <li>Username: <input v-model="userpassLoginUsername"> Password: <input v-model="userpassLoginPassword"></li>
+            <li>Mode:
+                <select v-model="userpassLoginMode">
+                    <option value="login">Login</option>
+                    <option value="register">Register</option>
+                </select>
+            </li>
             <li>Id of the client (leave empty if in dev or testing): <input v-model="oauthFlowClientId">
             <li>Secret of the client (leave empy if none): <input v-model="oauthFlowClientSecret"></li>
             </li>
-            <li>POST {{ loginUrl }}authenticate/oauth/{{ userpassLoginInstanceId }}</span>/token
+            <li>POST {{ loginUrl }}authenticate/oauth/{{ userpassLoginInstanceId }}</span>/token<span
+                    v-if="userpassLoginMode != 'login'">/{{ userpassLoginMode }}</span>
             </li>
             <li class="body">{<br>
                 "grant_type": "password",
                 "username": "{{ userpassLoginUsername }}",
-                "password": "{{ userpassLoginPassword }}",<br>
-                <span v-if="!!oauthFlowClientId">"client_id": "{{ oauthFlowClientId }}",
-                    <span v-if="!!oauthFlowClientSecret">"client_secret": "{{ oauthFlowClientSecret
-                        }}",</span><br></span>
+                "password": "{{ userpassLoginPassword }}"
+                <span v-if="!!oauthFlowClientId">, <br>"client_id": "{{ oauthFlowClientId }}"
+                    <span v-if="!!oauthFlowClientSecret">, "client_secret": "{{ oauthFlowClientSecret
+                        }}"</span></span><br>
                 }
             </li>
             <li><button @click="runUserpassLogin">Request</button></li>
@@ -100,10 +107,15 @@
         <h4>Refresh token</h4>
         <ul>
             <li>Refresh token: <input v-model="refreshToken"></li>
+            <li>Id of the client (leave empty if in dev or testing): <input v-model="oauthFlowClientId">
+            <li>Secret of the client (leave empy if none): <input v-model="oauthFlowClientSecret"></li>
             <li>POST {{ loginUrl }}authenticate/oauth/this-does-not-matter/token</li>
-            <li class="body">{
+            <li class="body">{<br>
                 "grant_type": "refresh_token",
                 "refresh_token": "{{ refreshToken }}"
+                <span v-if="!!oauthFlowClientId">, <br>"client_id": "{{ oauthFlowClientId }}"
+                    <span v-if="!!oauthFlowClientSecret">, "client_secret": "{{ oauthFlowClientSecret
+                        }}"</span></span><br>
                 }
             </li>
             <li><button @click="runRefreshToken">Request</button></li>
@@ -190,6 +202,23 @@
                 }
             </li>
             <li><button @click="runCreateClient">Request</button></li>
+        </ul>
+
+        <h4>
+            <select v-model="createClientSecretMethod">
+                <option value="GET">List existing</option>
+                <option value="POST">Create new</option>
+                <option value="DELETE">Delete existing</option>
+            </select> OAuth Client secret (Needs admin)
+        </h4>
+        <ul>
+            <li>Id of OAuth client: <input v-model="createClientEditId"></li>
+            <li v-if="createClientSecretMethod=='DELETE'">Fingerprint string of secret to delete: <input
+                    v-model="createClientSecretFingerprint"></li>
+            <li>{{ createClientSecretMethod }} {{ loginUrl }}login/client/{{ createClientEditId }}/clientSecret<span
+                    v-if="createClientSecretMethod=='DELETE'">/{{ createClientSecretFingerprint }}</span>
+            </li>
+            <li><button @click="runCreateClientSecret">Request</button></li>
         </ul>
 
         <h4>Run OAuth flow</h4>

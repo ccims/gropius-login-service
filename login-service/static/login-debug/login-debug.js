@@ -146,6 +146,7 @@ export default {
             userpassLoginInstanceId: "",
             userpassLoginUsername: "",
             userpassLoginPassword: "",
+            userpassLoginMode: "login",
 
             createGithubInstanceMethod: "POST",
             createGithubInstanceEditId: "",
@@ -163,6 +164,9 @@ export default {
             createClientIsValid: true,
             createClientRequiresSecret: false,
             createClientName: "",
+
+            createClientSecretMethod: "POST",
+            createClientSecretFingerprint: "",
 
             oauthFlowInstanceId: "",
             oauthFlowClientId: "",

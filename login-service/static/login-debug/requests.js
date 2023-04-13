@@ -16,24 +16,47 @@ export async function runShowInstance() {
 }
 
 export async function runUserpassLogin() {
-    const r = await this.request(`authenticate/oauth/${this.userpassLoginInstanceId}/token`, "POST", {
-        grant_type: "password",
-        username: this.userpassLoginUsername,
-        password: this.userpassLoginPassword,
-        client_id: this.oauthFlowClientId || undefined,
-        client_secret: this.oauthFlowClientSecret || undefined,
-    });
-    this.accessToken = this.replacePrefilled ? r.access_token : this.accessToken || r.access_token;
-    this.refreshToken = this.replacePrefilled ? r.refresh_token : this.refreshToken || r.refresh_token;
+    const r = await this.request(
+        `authenticate/oauth/${this.userpassLoginInstanceId}/token/${this.userpassLoginMode}`,
+        "POST",
+        {
+            grant_type: "password",
+            username: this.userpassLoginUsername,
+            password: this.userpassLoginPassword,
+            client_id: this.oauthFlowClientId || undefined,
+            client_secret: this.oauthFlowClientSecret || undefined,
+        },
+    );
+    if (r.access_token) {
+        const token = this.jwtBodyParse(r);
+        if (token.aud.includes("login-register")) {
+            this.registerTokenValue = r.access_token;
+        }
+        if (token.aud.includes("login")) {
+            this.accessToken = this.replacePrefilled ? r.access_token : this.accessToken || r.access_token;
+            this.refreshToken = this.replacePrefilled ? r.refresh_token : this.refreshToken || r.refresh_token;
+            this.log("Successfully logged in using userpass.");
+        }
+    }
 }
 
 export async function runRefreshToken() {
     const r = await this.request(`authenticate/oauth/a/token`, "POST", {
         grant_type: "refresh_token",
         refresh_token: this.refreshToken,
+        client_id: this.oauthFlowClientId || undefined,
+        client_secret: this.oauthFlowClientSecret || undefined,
     });
-    this.accessToken = r.access_token;
-    this.refreshToken = r.refresh_token;
+    if (!r.error && r.access_token) {
+        const token = this.jwtBodyParse(r);
+        if (token.aud.includes("login-register")) {
+            this.registerTokenValue = r.access_token;
+        }
+        if (token.aud.includes("login")) {
+            this.accessToken = r.access_token;
+            this.refreshToken = r.refresh_token;
+        }
+    }
 }
 
 export async function runListAllUsers() {
