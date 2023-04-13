@@ -335,12 +335,12 @@ export class AuthClientController {
         name: "id",
         type: String,
         format: "uuid",
-        description: "The uuid string of an existing auth client to delete",
+        description: "The uuid string of an existing auth client to delete a client secret from",
     })
     @ApiParam({
         name: "fingerprint",
         type: String,
-        description: "The uuid string of an existing auth client to delete",
+        description: "The fingerprint string of one of the existing client secrets of the client to delete",
     })
     @ApiOkResponse({
         type: DefaultReturn,
