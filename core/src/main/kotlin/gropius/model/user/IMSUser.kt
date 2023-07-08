@@ -12,6 +12,7 @@ import io.github.graphglue.model.FilterProperty
 import io.github.graphglue.model.NodeRelationship
 import org.springframework.data.annotation.Transient
 import org.springframework.data.neo4j.core.schema.CompositeProperty
+import java.net.URI
 
 @DomainNode
 @GraphQLDescription(
@@ -25,7 +26,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 class IMSUser(
     displayName: String,
     email: String?,
-    avatar: String?,
+    avatar: URI?,
     @property:GraphQLIgnore
     var username: String?,
     @property:GraphQLIgnore

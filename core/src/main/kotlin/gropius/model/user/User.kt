@@ -10,6 +10,7 @@ import gropius.model.user.permission.NodePermission
 import gropius.service.user.AvatarGenerationService
 import io.github.graphglue.model.*
 import org.springframework.beans.factory.annotation.Autowired
+import java.net.URI
 
 /**
  * Name of the bean defining the username filter
@@ -36,12 +37,12 @@ abstract class User(
     @OrderProperty
     var email: String?,
     @GraphQLIgnore
-    var avatar: String?
+    var avatar: URI?
 ) : ExtensibleNode() {
 
     @GraphQLDescription(
         """The identifier of the user.
-        This is only unique for GropiusUsers, for IMSUsers, no constrains are guaranteed.
+        This is only unique for GropiusUsers, for IMSUsers, no constrains v  are guaranteed.
         """
     )
     abstract fun username(): String?
@@ -51,8 +52,8 @@ abstract class User(
         @GraphQLIgnore
         @Autowired
         avatarGenerationService: AvatarGenerationService
-    ): String {
-        return avatar ?: avatarGenerationService.generateAvatar(rawId ?: "")
+    ): URI {
+        return avatar ?: URI(avatarGenerationService.generateAvatar(rawId ?: ""))
     }
 
     @NodeRelationship(AuditedNode.CREATED_BY, Direction.INCOMING)

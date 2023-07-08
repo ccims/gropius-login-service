@@ -1,5 +1,6 @@
 package gropius.service.user
 
+import gropius.GropiusCoreConfigurationProperties
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.ifPresent
 import gropius.dto.input.user.CreateGropiusUserInput
@@ -10,15 +11,18 @@ import gropius.repository.user.GropiusUserRepository
 import gropius.service.common.AbstractExtensibleNodeService
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
+import java.net.URI
 
 /**
  * Service for [GropiusUser]s. Provides functions to create and update
  *
  * @param repository the associated repository used for CRUD functionality
+ * @param gropiusCoreConfigurationProperties the configuration properties
  */
 @Service
 class GropiusUserService(
-    repository: GropiusUserRepository
+    repository: GropiusUserRepository,
+    private val gropiusCoreConfigurationProperties: GropiusCoreConfigurationProperties
 ) : AbstractExtensibleNodeService<GropiusUser, GropiusUserRepository>(repository) {
 
     /**
@@ -44,6 +48,9 @@ class GropiusUserService(
             gropiusUser.email = it
         }
         input.avatar.ifPresent {
+            if (it != null) {
+                validateAvatar(it)
+            }
             gropiusUser.avatar = it
         }
         input.isAdmin.ifPresent {
@@ -68,6 +75,9 @@ class GropiusUserService(
         if (repository.existsByUsername(input.username)) {
             throw IllegalArgumentException("A GropiusUser with the specified username already exists")
         }
+        if (input.avatar != null) {
+            validateAvatar(input.avatar)
+        }
         val gropiusUser = GropiusUser(input.displayName, input.email, input.avatar, input.username, input.isAdmin)
         createdExtensibleNode(gropiusUser, input)
         return repository.save(gropiusUser).awaitSingle()
@@ -83,6 +93,20 @@ class GropiusUserService(
     suspend fun findGropiusUserByUsername(username: String): GropiusUser {
         return repository.findByUsername(username)
             ?: throw IllegalStateException("User with provided username does not exist")
+    }
+
+    /**
+     * Validates that a URI can be used as avatar for a [GropiusUser]
+     *
+     * @param avatar the URI to validate
+     * @throws IllegalArgumentException otherwise
+     */
+    suspend fun validateAvatar(avatar: URI) {
+        val asString = avatar.toASCIIString()
+        val allowedPrefixes = gropiusCoreConfigurationProperties.allowedAvatarUrlPrefixes + "data://image/"
+        if (allowedPrefixes.none { asString.startsWith(it) }) {
+            throw IllegalArgumentException("Avatar URI is not allowed")
+        }
     }
 
 }
