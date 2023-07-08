@@ -7,7 +7,9 @@ class CreateGropiusUserInput(
     @GraphQLDescription("The username of the created GropiusUser, must be unique, must match /^[a-zA-Z0-9_-]+$/")
     val username: String,
     @GraphQLDescription("If true, the created GropiusUser is a global admin")
-    val isAdmin: Boolean
+    val isAdmin: Boolean,
+    @GraphQLDescription("The avatar of the created GropiusUser")
+    val avatar: String?
 ) : CreateUserInput() {
 
     override fun validate() {

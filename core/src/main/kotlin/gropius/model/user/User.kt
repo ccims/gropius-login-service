@@ -1,13 +1,15 @@
 package gropius.model.user
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import gropius.model.common.ExtensibleNode
+import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.common.AuditedNode
+import gropius.model.common.ExtensibleNode
 import gropius.model.issue.Issue
 import gropius.model.issue.timeline.Assignment
 import gropius.model.user.permission.NodePermission
+import gropius.service.user.AvatarGenerationService
 import io.github.graphglue.model.*
-import org.springframework.data.annotation.Transient
+import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * Name of the bean defining the username filter
@@ -32,7 +34,9 @@ abstract class User(
     @property:GraphQLDescription("The email address of the user.")
     @FilterProperty
     @OrderProperty
-    var email: String?
+    var email: String?,
+    @GraphQLIgnore
+    var avatar: String?
 ) : ExtensibleNode() {
 
     @GraphQLDescription(
@@ -41,6 +45,15 @@ abstract class User(
         """
     )
     abstract fun username(): String?
+
+    @GraphQLDescription("The avatar of the user.")
+    fun avatar(
+        @GraphQLIgnore
+        @Autowired
+        avatarGenerationService: AvatarGenerationService
+    ): String {
+        return avatar ?: avatarGenerationService.generateAvatar(rawId ?: "")
+    }
 
     @NodeRelationship(AuditedNode.CREATED_BY, Direction.INCOMING)
     @GraphQLDescription("AuditedNodes the user created.")

@@ -6,5 +6,7 @@ import com.expediagroup.graphql.generator.execution.OptionalInput
 @GraphQLDescription("Input for the updateGropiusUserMutation")
 class UpdateGropiusUserInput(
     @GraphQLDescription("The new value for isAdmin of the GropiusUser to update")
-    val isAdmin: OptionalInput<Boolean>
+    val isAdmin: OptionalInput<Boolean>,
+    @GraphQLDescription("The new avatar of the user")
+    val avatar: OptionalInput<String?>
 ) : UpdateUserInput()

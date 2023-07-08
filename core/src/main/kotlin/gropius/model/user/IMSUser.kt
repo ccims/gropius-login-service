@@ -25,12 +25,13 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 class IMSUser(
     displayName: String,
     email: String?,
+    avatar: String?,
     @property:GraphQLIgnore
     var username: String?,
     @property:GraphQLIgnore
     @CompositeProperty
     override val templatedFields: MutableMap<String, String>
-) : User(displayName, email), TemplatedNode {
+) : User(displayName, email, avatar), TemplatedNode {
 
     companion object {
         const val GROPIUS_USER = "GROPIUS_USER"

@@ -43,6 +43,9 @@ class GropiusUserService(
         input.email.ifPresent {
             gropiusUser.email = it
         }
+        input.avatar.ifPresent {
+            gropiusUser.avatar = it
+        }
         input.isAdmin.ifPresent {
             checkIsAdmin(authorizationContext, "update isAdmin of a GropiusUser")
             gropiusUser.isAdmin = it
@@ -65,7 +68,7 @@ class GropiusUserService(
         if (repository.existsByUsername(input.username)) {
             throw IllegalArgumentException("A GropiusUser with the specified username already exists")
         }
-        val gropiusUser = GropiusUser(input.displayName, input.email, input.username, input.isAdmin)
+        val gropiusUser = GropiusUser(input.displayName, input.email, input.avatar, input.username, input.isAdmin)
         createdExtensibleNode(gropiusUser, input)
         return repository.save(gropiusUser).awaitSingle()
     }

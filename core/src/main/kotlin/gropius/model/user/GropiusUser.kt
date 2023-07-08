@@ -25,11 +25,12 @@ import org.springframework.data.annotation.Transient
 class GropiusUser(
     displayName: String,
     email: String?,
+    avatar: String?,
     @property:GraphQLIgnore
     val username: String,
     @GraphQLDescription("True if the user is an admin")
     var isAdmin: Boolean
-) : User(displayName, email) {
+) : User(displayName, email, avatar) {
 
     companion object {
         const val PERMISSION = "PERMISSION"
