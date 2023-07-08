@@ -207,6 +207,6 @@ private class Tag(val name: String, block: Tag.() -> Unit) {
     override fun toString(): String {
         val attributes = attrs.map { "${it.key}=\"${it.value}\"" }.joinToString(" ")
         val innerTags = tags.joinToString("")
-        return "<$name$ $attributes>$innerTags</$name>"
+        return "<$name $attributes>$innerTags</$name>"
     }
 }
