@@ -7,7 +7,7 @@ import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 import org.springframework.data.annotation.Transient
 
-@DomainNode
+@DomainNode(searchQueryName = "searchIssueRelationTypes")
 @GraphQLDescription(
     """Type for an IssueRelation, like DUPLICATES or DEPENDS_ON. Part of an IssueTemplate.
     READ is always granted.
