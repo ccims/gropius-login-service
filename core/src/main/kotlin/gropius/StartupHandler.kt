@@ -8,16 +8,22 @@ import org.springframework.stereotype.Component
  * Handles startup tasks like creating indices.
  *
  * @param defaultIndexCreator the [DefaultIndexCreator] to use
+ * @param gropiusCoreConfigurationProperties used to decide whether to create indices on startup
  */
 @Component
-class StartupHandler(val defaultIndexCreator: DefaultIndexCreator) {
+class StartupHandler(
+    val defaultIndexCreator: DefaultIndexCreator,
+    val gropiusCoreConfigurationProperties: GropiusCoreConfigurationProperties
+) {
 
     /**
      * Called after startup
      */
     @PostConstruct
     fun onStartup() {
-        defaultIndexCreator.createDefaultIndices()
+        if (gropiusCoreConfigurationProperties.createIndicesOnStartup) {
+            defaultIndexCreator.createDefaultIndices()
+        }
     }
 
 }
