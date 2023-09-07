@@ -46,7 +46,7 @@ jobs:
           done
           cd login-service
           echo "Validating login-service generated code"
-          if [[ `npm run generate-model` ]]; then
+          if ! npm run generate-model]; then
             echo "Failed to generate model"
             exit 1
           fi
