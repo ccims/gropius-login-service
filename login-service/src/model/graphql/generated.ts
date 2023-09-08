@@ -947,6 +947,8 @@ export type GropiusUserFilterInput = {
   displayName?: InputMaybe<StringFilterInput>;
   /** Filter by email */
   email?: InputMaybe<NullableStringFilterInput>;
+  /** Filter for users with a specific permission on a node */
+  hasNodePermission?: InputMaybe<NodePermissionFilterEntry>;
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
   /** Filter by imsUsers */
@@ -988,7 +990,9 @@ export enum GropiusUserOrderField {
   /** Order by email */
   Email = 'EMAIL',
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by username */
+  Username = 'USERNAME'
 }
 
 /** Filter which can be used to filter for Nodes with a specific ID field */
@@ -1341,7 +1345,9 @@ export enum ImsUserOrderField {
   /** Order by email */
   Email = 'EMAIL',
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by username */
+  Username = 'USERNAME'
 }
 
 /** Filter used to filter IMSUserTemplate */
@@ -2452,6 +2458,13 @@ export enum LabelOrderField {
   Name = 'NAME'
 }
 
+export type NodePermissionFilterEntry = {
+  /** The node where the user must have the permission */
+  node: Scalars['ID'];
+  /** The permission the user must have on the node */
+  permission: AllPermissionEntry;
+};
+
 /** Filter which can be used to filter for Nodes with a specific DateTime field */
 export type NullableDateTimeFilterInput = {
   /** Matches values which are equal to the provided value */
@@ -3177,7 +3190,9 @@ export enum UserOrderField {
   /** Order by email */
   Email = 'EMAIL',
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by username */
+  Username = 'USERNAME'
 }
 
 export type ImsUserWithDetailFragment = { __typename: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }>, ims: { __typename: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }> } };

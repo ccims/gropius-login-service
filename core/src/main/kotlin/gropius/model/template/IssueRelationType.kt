@@ -5,7 +5,6 @@ import gropius.model.common.NamedNode
 import gropius.model.issue.timeline.IssueRelation
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
-import org.springframework.data.annotation.Transient
 
 @DomainNode(searchQueryName = "searchIssueRelationTypes")
 @GraphQLDescription(
