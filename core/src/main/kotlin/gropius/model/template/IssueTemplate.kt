@@ -8,7 +8,7 @@ import io.github.graphglue.model.FilterProperty
 import io.github.graphglue.model.NodeRelationship
 import org.springframework.data.annotation.Transient
 
-@DomainNode("issueTemplates")
+@DomainNode("issueTemplates", searchQueryName = "searchIssueTemplates")
 @GraphQLDescription(
     """Template for Issues.
     Defines templated fields with specific types (defined using JSON schema).
