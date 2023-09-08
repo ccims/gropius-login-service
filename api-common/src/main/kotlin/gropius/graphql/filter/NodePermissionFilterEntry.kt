@@ -22,11 +22,12 @@ class NodePermissionFilterEntry(
         val definition = definition as NodePermissionFilterEntryDefinition
         val isAdminCondition = node.property("isAdmin").asCondition()
         val nodeDefinition = definition.nodeDefinitionCollection.getNodeDefinition<io.github.graphglue.model.Node>()
+        val authorizationContext = object : GropiusAuthorizationContextBase(true) {
+            override val userNode: Node
+                get() = node
+        }
         val hasPermissionCondition = definition.nodeDefinitionCollection.generateAuthorizationCondition(
-            nodeDefinition, Permission(
-                permission,
-                GropiusAuthorizationContextBase(node, true),
-            )
+            nodeDefinition, Permission(permission, authorizationContext)
         ).generateCondition(nodeDefinition.node().withProperties(mapOf("id" to Cypher.anonParameter(this.node))))
         return isAdminCondition.or(hasPermissionCondition)
     }

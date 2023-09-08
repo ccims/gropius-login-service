@@ -7,10 +7,15 @@ import org.neo4j.cypherdsl.core.Node
  * Base gropius authorization context
  * Provides flexibility how to define the [userNode]
  *
- * @param userNode should be used in authorization check expressions
  * @param checkPermission if `false`, no authorization checks should be performed
  */
-open class GropiusAuthorizationContextBase(
-    val userNode: Node,
+abstract class GropiusAuthorizationContextBase(
     val checkPermission: Boolean
-) : AuthorizationContext
+) : AuthorizationContext {
+
+    /**
+     * Should be used in authorization check expressions
+     */
+    abstract val userNode: Node
+
+}
