@@ -7,8 +7,6 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 const apiSidebar = require("./sidebars").apiSidebar
 
 async function createConfig() {
-    const mdxMermaid = await import("mdx-mermaid")
-
     return {
         title: "Gropius Backend",
         url: "https://ccims.github.io/",
@@ -20,7 +18,9 @@ async function createConfig() {
         organizationName: "ccims",
         projectName: "gropius-backend-docs",
         trailingSlash: false,
-
+        markdown: {
+            mermaid: true
+        },
         presets: [
             [
                 "@docusaurus/preset-classic",
@@ -168,7 +168,7 @@ async function createConfig() {
                 }
             ]
         ],
-        themes: ["docusaurus-theme-openapi-docs"]
+        themes: ["docusaurus-theme-openapi-docs", "@docusaurus/theme-mermaid"]
     };
 }
 
