@@ -9,31 +9,32 @@ slug: /modules
 
 <div className="mermaid-c4">
 
-    ```mermaid
-        Boundary(b1, "Public Services") {
-            Boundary(b2, "Public Services") {
-                System(public-api, public-api, "")
-                System(login-service, login-service, "")
-            }
-            Boundary(b3, "Internal Services") {
-                System(internal-api, internal-api, "")
-                System(github, github, "")
-            }
-            Boundary(b4, "Databases") {
-                SystemDb(neo4j, "Neo4j", "")
-                SystemDb(mongodb, "MongoDB", "")
-                SystemDb(postgres, "PostgresQL", "")
-            }
+```mermaid
+C4Dynamic
+    Boundary(b1, "Public Services") {
+        Boundary(b2, "Public Services") {
+            System(public-api, public-api, "")
+            System(login-service, login-service, "")
         }
-        UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="2")
-        Rel(public-api, neo4j, "bolt/TCP")
-        Rel(internal-api, neo4j, "bolt/TCP")
-        Rel(github, login-service, "REST/HTTP")
-        Rel(login-service, internal-api, "GraphQL/HTTP")
-        Rel(github, neo4j, "bolt/TCP")
-        Rel(github, mongodb, "mongodb/TCP")
-        Rel(login-service, postgres, "TCP")
-    ```
+        Boundary(b3, "Internal Services") {
+            System(internal-api, internal-api, "")
+            System(github, github, "")
+        }
+        Boundary(b4, "Databases") {
+            SystemDb(neo4j, "Neo4j", "")
+            SystemDb(mongodb, "MongoDB", "")
+            SystemDb(postgres, "PostgresQL", "")
+        }
+    }
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="2")
+    Rel(public-api, neo4j, "bolt/TCP")
+    Rel(internal-api, neo4j, "bolt/TCP")
+    Rel(github, login-service, "REST/HTTP")
+    Rel(login-service, internal-api, "GraphQL/HTTP")
+    Rel(github, neo4j, "bolt/TCP")
+    Rel(github, mongodb, "mongodb/TCP")
+    Rel(login-service, postgres, "TCP")
+```
     
 </div>
 

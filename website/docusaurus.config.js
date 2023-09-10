@@ -28,7 +28,6 @@ async function createConfig() {
                     docs: {
                         sidebarPath: require.resolve("./sidebars.js"),
                         routeBasePath: "/",
-                        remarkPlugins: [mdxMermaid.default],
                     },
                     blog: false,
                     theme: {
@@ -116,6 +115,9 @@ async function createConfig() {
                     baseURL: "graphql/api-public",
                     docOptions: {
                         index: true
+                    },
+                    loaders: {
+                        GraphQLFileLoader: "@graphql-tools/graphql-file-loader"
                     }
                 },
             ],
@@ -128,6 +130,9 @@ async function createConfig() {
                     baseURL: "graphql/api-internal",
                     docOptions: {
                         index: true
+                    },
+                    loaders: {
+                        GraphQLFileLoader: "@graphql-tools/graphql-file-loader"
                     }
                 },
             ],
