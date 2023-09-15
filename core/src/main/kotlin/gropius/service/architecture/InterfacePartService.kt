@@ -11,8 +11,10 @@ import gropius.model.architecture.InterfaceSpecification
 import gropius.model.user.permission.NodePermission
 import gropius.repository.architecture.InterfacePartRepository
 import gropius.repository.architecture.InterfaceSpecificationRepository
+import gropius.repository.common.NodeRepository
 import gropius.repository.findAllById
 import gropius.repository.findById
+import gropius.service.issue.IssueAggregationUpdater
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
@@ -24,12 +26,14 @@ import org.springframework.stereotype.Service
  * @param repository the associated repository used for CRUD functionality
  * @param interfaceSpecificationRepository used get [InterfaceSpecification] by id
  * @param templatedNodeService used to update templatedFields
+ * @param nodeRepository used to update/delete nodes
  */
 @Service
 class InterfacePartService(
     repository: InterfacePartRepository,
     private val interfaceSpecificationRepository: InterfaceSpecificationRepository,
-    private val templatedNodeService: TemplatedNodeService
+    private val templatedNodeService: TemplatedNodeService,
+    private val nodeRepository: NodeRepository
 ) : AffectedByIssueService<InterfacePart, InterfacePartRepository>(repository) {
 
     /**
@@ -112,13 +116,16 @@ class InterfacePartService(
         checkPermission(
             interfacePart, Permission(NodePermission.ADMIN, authorizationContext), "delete the InterfacePart"
         )
+        val issueAggregationUpdater = IssueAggregationUpdater()
+        issueAggregationUpdater.deletedInterfacePart(interfacePart)
+        issueAggregationUpdater.save(nodeRepository)
         repository.delete(interfacePart).awaitSingle()
     }
 
     /**
      * Gets [InterfacePart]s by id and validates that all are part of [interfaceSpecification]
      *
-     * @param ids the ids of the [InterfacePart]s to get
+     * @param ids the ids of the [InterfacePart]s to get, can be empty
      * @param interfaceSpecification all returned [InterfacePart]s must be part of this
      * @return the found[InterfacePart]s
      * @throws IllegalArgumentException if any [InterfacePart] was not defined by [interfaceSpecification]
@@ -126,6 +133,9 @@ class InterfacePartService(
     suspend fun findPartsByIdAndValidatePartOfInterfaceSpecification(
         ids: Collection<ID>, interfaceSpecification: InterfaceSpecification
     ): Set<InterfacePart> {
+        if (ids.isEmpty()) {
+            return emptySet()
+        }
         val parts = repository.findAllById(ids)
         parts.forEach {
             if (it.definedOn().value != interfaceSpecification) {

@@ -2,6 +2,7 @@ package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.model.issue.AggregatedIssue
 import gropius.model.template.RelationPartnerTemplate
 import gropius.model.template.TemplatedNode
 import io.github.graphglue.model.Direction
@@ -16,6 +17,7 @@ abstract class RelationPartner(name: String, description: String) : AffectedByIs
     companion object {
         const val INCOMING_RELATION = "INCOMING_RELATION"
         const val OUTGOING_RELATION = "OUTGOING_RELATION"
+        const val AGGREGATED_ISSUE = "AGGREGATED_ISSUE"
     }
 
     @NodeRelationship(INCOMING_RELATION, Direction.OUTGOING)
@@ -27,6 +29,11 @@ abstract class RelationPartner(name: String, description: String) : AffectedByIs
     @GraphQLDescription("Relations which use this as the start of the Relation.")
     @FilterProperty
     val outgoingRelations by NodeSetProperty<Relation>()
+
+    @NodeRelationship(AGGREGATED_ISSUE, Direction.OUTGOING)
+    @GraphQLDescription("AggregatedIssues on this RelationPartner.")
+    @FilterProperty
+    val aggregatedIssues by NodeSetProperty<AggregatedIssue>()
 
     /**
      * Helper function to get the associated [RelationPartnerTemplate]

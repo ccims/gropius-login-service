@@ -6,6 +6,7 @@ import gropius.dto.input.architecture.InterfaceSpecificationVersionInput
 import gropius.dto.input.architecture.UpdateInterfaceSpecificationVersionInput
 import gropius.dto.input.common.DeleteNodeInput
 import gropius.dto.input.ifPresent
+import gropius.dto.input.orElse
 import gropius.model.architecture.Component
 import gropius.model.architecture.InterfacePart
 import gropius.model.architecture.InterfaceSpecification
@@ -16,6 +17,7 @@ import gropius.repository.architecture.InterfaceSpecificationRepository
 import gropius.repository.architecture.InterfaceSpecificationVersionRepository
 import gropius.repository.common.NodeRepository
 import gropius.repository.findById
+import gropius.service.issue.IssueAggregationUpdater
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
@@ -113,19 +115,20 @@ class InterfaceSpecificationVersionService(
             "update the InterfaceSpecificationVersion"
         )
         val interfaceSpecification = interfaceSpecificationVersion.interfaceSpecification().value
-        input.addedActiveParts.ifPresent {
-            interfaceSpecificationVersion.activeParts().addAll(
-                interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(it, interfaceSpecification)
-            )
-        }
-        input.removedActiveParts.ifPresent {
-            interfaceSpecificationVersion.activeParts().removeAll(
-                interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(it, interfaceSpecification)
-            )
-        }
+        val addedParts = interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(
+            input.addedActiveParts.orElse(emptySet()), interfaceSpecification
+        )
+        interfaceSpecificationVersion.activeParts().addAll(addedParts)
+        val removedParts = interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(
+            input.removedActiveParts.orElse(emptySet()), interfaceSpecification
+        )
+        interfaceSpecificationVersion.activeParts().removeAll(removedParts)
         input.version.ifPresent { interfaceSpecificationVersion.version = it }
         templatedNodeService.updateTemplatedFields(interfaceSpecificationVersion, input, false)
         updateNamedNode(interfaceSpecificationVersion, input)
+        val issueAggregationUpdater = IssueAggregationUpdater()
+        issueAggregationUpdater.updatedActiveParts(interfaceSpecificationVersion, addedParts, removedParts)
+        issueAggregationUpdater.save(nodeRepository)
         return repository.save(interfaceSpecificationVersion).awaitSingle()
     }
 

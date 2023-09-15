@@ -287,6 +287,9 @@ class IssueService(
             updateIssueRelationsAfterTemplateUpdate(
                 issue, event, issueRelationTypeMapping, atTime.plusNanos(timeOffset), byUser
             )
+            val aggregationUpdater = IssueAggregationUpdater()
+            aggregationUpdater.changedIssueStateOrType(issue, state ?: issue.state().value, type ?: issue.type().value)
+            aggregationUpdater.save(nodeRepository)
         }
         return event
     }
@@ -466,6 +469,9 @@ class IssueService(
                 "delete Issues on a Trackable the Issue is on"
             )
         }
+        val aggregationUpdater = IssueAggregationUpdater()
+        aggregationUpdater.deletedIssue(issue)
+        aggregationUpdater.save(nodeRepository)
         nodeRepository.deleteAll(prepareIssueDeletion(issue)).awaitSingleOrNull()
     }
 
@@ -565,9 +571,13 @@ class IssueService(
         val trackable = trackableRepository.findById(input.trackable)
         checkManageIssuesPermission(trackable, authorizationContext)
         return if (trackable in issue.trackables()) {
-            timelineItemRepository.save(
+            val event = timelineItemRepository.save(
                 removeIssueFromTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
+            val aggregationUpdater = IssueAggregationUpdater()
+            aggregationUpdater.removedIssueFromTrackable(issue, trackable)
+            aggregationUpdater.save(nodeRepository)
+            event
         } else {
             null
         }
@@ -1261,6 +1271,9 @@ class IssueService(
         event.newState().value = newState
         event.oldState().value = oldState
         changeIssueProperty(issue, newState, atTime, byUser, issue.state()::value, event)
+        val aggregationUpdater = IssueAggregationUpdater()
+        aggregationUpdater.changedIssueStateOrType(issue, oldState, issue.type().value)
+        aggregationUpdater.save(nodeRepository)
         return event
     }
 
@@ -1321,6 +1334,9 @@ class IssueService(
         event.newType().value = newType
         event.oldType().value = oldType
         changeIssueProperty(issue, newType, atTime, byUser, issue.type()::value, event)
+        val aggregationUpdater = IssueAggregationUpdater()
+        aggregationUpdater.changedIssueStateOrType(issue, issue.state().value, oldType)
+        aggregationUpdater.save(nodeRepository)
         return event
     }
 
@@ -1397,6 +1413,9 @@ class IssueService(
             ) { it.removedAffectedEntity().value == affectedEntity }
         ) {
             issue.affects() += affectedEntity
+            val aggregationUpdater = IssueAggregationUpdater()
+            aggregationUpdater.addedAffectedEntity(issue, affectedEntity)
+            aggregationUpdater.save(nodeRepository)
         }
         return event
     }
@@ -1464,6 +1483,9 @@ class IssueService(
             ) { it.addedAffectedEntity().value == affectedEntity }
         ) {
             issue.affects() -= affectedEntity
+            val aggregationUpdater = IssueAggregationUpdater()
+            aggregationUpdater.removedAffectedEntity(issue, affectedEntity)
+            aggregationUpdater.save(nodeRepository)
         }
         return event
     }
