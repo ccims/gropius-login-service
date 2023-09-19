@@ -27,6 +27,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 )
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["interfaceSpecification"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["interfaceSpecification"])
+@Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["interfaceDefinitions"])
 class InterfaceSpecificationVersion(
     name: String,
     description: String,

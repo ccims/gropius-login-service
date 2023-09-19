@@ -23,6 +23,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(NodePermission.READ, allowFromRelated = ["definedOn"])
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["definedOn"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["definedOn"])
+@Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["activeOn"])
 class InterfacePart(
     name: String,
     description: String,

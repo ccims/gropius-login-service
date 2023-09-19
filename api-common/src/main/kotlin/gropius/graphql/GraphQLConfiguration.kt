@@ -16,19 +16,20 @@ import graphql.scalars.regex.RegexScalar
 import graphql.schema.*
 import gropius.authorization.checkPermission
 import gropius.authorization.gropiusAuthorizationContext
-import gropius.graphql.filter.DateTimeFilterDefinition
-import gropius.graphql.filter.DurationFilterDefinition
-import gropius.graphql.filter.NodePermissionFilterEntryDefinition
-import gropius.graphql.filter.TemplatedFieldsFilterEntryDefinition
+import gropius.graphql.filter.*
+import gropius.model.architecture.RELATED_TO_FILTER_BEAN
 import gropius.model.common.PERMISSION_FIELD_BEAN
 import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
 import gropius.model.template.TemplatedNode
 import gropius.model.user.GropiusUser
 import gropius.model.user.NODE_PERMISSION_FILTER_BEAN
 import gropius.model.user.permission.ALL_PERMISSION_ENTRY_NAME
+import gropius.model.architecture.Trackable
+import gropius.model.architecture.AffectedByIssue
 import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.connection.filter.TypeFilterDefinitionEntry
+import io.github.graphglue.connection.filter.definition.SubFilterGenerator
 import io.github.graphglue.connection.filter.definition.scalars.StringFilterDefinition
 import io.github.graphglue.definition.ExtensionFieldDefinition
 import io.github.graphglue.definition.NodeDefinition
@@ -159,6 +160,15 @@ class GraphQLConfiguration {
      */
     @Bean(NODE_PERMISSION_FILTER_BEAN)
     fun nodePermissionFilter(nodeDefinitionCollection: NodeDefinitionCollection) = NodePermissionFilterEntryDefinition(nodeDefinitionCollection)
+
+    /**
+     * Filter for [AffectedByIssue]s which are related to a specific [Trackable]
+     *
+     * @param nodeDefinitionCollection used to get the node definition
+     * @return the generated filter definition
+     */
+    @Bean(RELATED_TO_FILTER_BEAN)
+    fun relatedToFilter(nodeDefinitionCollection: NodeDefinitionCollection) = AffectedByIssueRelatedToFilterEntryDefinition(nodeDefinitionCollection)
 
     /**
      * Provides the permission field for all nodes

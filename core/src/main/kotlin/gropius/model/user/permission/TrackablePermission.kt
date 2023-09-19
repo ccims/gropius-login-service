@@ -8,6 +8,7 @@ import gropius.model.issue.Artefact
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
 import gropius.model.issue.timeline.Comment
+import gropius.model.architecture.AffectedByIssue
 import io.github.graphglue.model.DomainNode
 
 /**
@@ -89,6 +90,12 @@ abstract class TrackablePermission<T : Trackable>(
          * Permission to check if the user can add [Label]s on the [Trackable] to other [Trackable]s
          */
         const val EXPORT_LABELS = "EXPORT_LABELS"
+
+        /**
+         * Used to track [AffectedByIssue] entities relative to a trackable
+         * Not used for permission checking, rather for filtering
+         */
+        const val RELATED_ISSUE_AFFECTED_ENTITY = "RELATED_ISSUE_AFFECTED_ENTITY"
     }
 
 }
