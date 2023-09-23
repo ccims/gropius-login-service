@@ -17,19 +17,16 @@ import graphql.schema.*
 import gropius.authorization.checkPermission
 import gropius.authorization.gropiusAuthorizationContext
 import gropius.graphql.filter.*
-import gropius.model.architecture.RELATED_TO_FILTER_BEAN
+import gropius.model.architecture.*
 import gropius.model.common.PERMISSION_FIELD_BEAN
 import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
 import gropius.model.template.TemplatedNode
 import gropius.model.user.GropiusUser
 import gropius.model.user.NODE_PERMISSION_FILTER_BEAN
 import gropius.model.user.permission.ALL_PERMISSION_ENTRY_NAME
-import gropius.model.architecture.Trackable
-import gropius.model.architecture.AffectedByIssue
 import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.connection.filter.TypeFilterDefinitionEntry
-import io.github.graphglue.connection.filter.definition.SubFilterGenerator
 import io.github.graphglue.connection.filter.definition.scalars.StringFilterDefinition
 import io.github.graphglue.definition.ExtensionFieldDefinition
 import io.github.graphglue.definition.NodeDefinition
@@ -159,7 +156,8 @@ class GraphQLConfiguration {
      * @return the generated filter definition
      */
     @Bean(NODE_PERMISSION_FILTER_BEAN)
-    fun nodePermissionFilter(nodeDefinitionCollection: NodeDefinitionCollection) = NodePermissionFilterEntryDefinition(nodeDefinitionCollection)
+    fun nodePermissionFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
+        NodePermissionFilterEntryDefinition(nodeDefinitionCollection)
 
     /**
      * Filter for [AffectedByIssue]s which are related to a specific [Trackable]
@@ -168,7 +166,15 @@ class GraphQLConfiguration {
      * @return the generated filter definition
      */
     @Bean(RELATED_TO_FILTER_BEAN)
-    fun relatedToFilter(nodeDefinitionCollection: NodeDefinitionCollection) = AffectedByIssueRelatedToFilterEntryDefinition(nodeDefinitionCollection)
+    fun relatedToFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
+        AffectedByIssueRelatedToFilterEntryDefinition(nodeDefinitionCollection)
+
+    /**
+     * Filter for [RelationPartner]s which part of the graph of a specific [Project]
+     */
+    @Bean(PART_OF_PROJECT_FILTER)
+    fun partOfProjectFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
+        PartOfProjectFilterEntryDefinition(nodeDefinitionCollection)
 
     /**
      * Provides the permission field for all nodes
@@ -200,8 +206,7 @@ class GraphQLConfiguration {
             ): Expression {
                 return if (dfe.checkPermission) {
                     val conditionGenerator = nodeDefinitionCollection.generateAuthorizationCondition(
-                        nodeDefinition,
-                        Permission(arguments["permission"] as String, dfe.gropiusAuthorizationContext)
+                        nodeDefinition, Permission(arguments["permission"] as String, dfe.gropiusAuthorizationContext)
                     )
                     val condition = conditionGenerator.generateCondition(node)
                     condition

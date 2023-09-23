@@ -4,6 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.graphql.TypeGraphQLType
 import gropius.model.architecture.ComponentVersion
 import gropius.model.architecture.Project
+import gropius.model.architecture.RelationPartner
 import io.github.graphglue.model.DomainNode
 
 /**
@@ -22,6 +23,11 @@ class ProjectPermission(
          * Permission to check if a user is allowed to add / remove [ComponentVersion]s to / from the [Project]
          */
         const val MANAGE_COMPONENTS = "MANAGE_COMPONENTS"
+
+        /**
+         * Used to track [RelationPartner]s which are part of the graph of a [Project]
+         */
+        const val PART_OF_PROJECT = "PART_OF_PROJECT"
     }
 
     @GraphQLDescription(ENTRIES_DESCRIPTION)

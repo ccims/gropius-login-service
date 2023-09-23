@@ -118,8 +118,7 @@ class ComponentVersionService(
         }
         val graphUpdater = ComponentGraphUpdater()
         updateFunction(graphUpdater, componentVersion, interfaceSpecificationVersion)
-        nodeRepository.saveAll(graphUpdater.updatedNodes).collectList().awaitSingle()
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
+        graphUpdater.save(nodeRepository)
     }
 
     /**

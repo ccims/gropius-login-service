@@ -8,6 +8,7 @@ import gropius.model.template.MutableTemplatedNode
 import gropius.model.template.RelationPartnerTemplate
 import gropius.model.user.permission.ComponentPermission
 import gropius.model.user.permission.NodePermission
+import gropius.model.user.permission.ProjectPermission
 import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.*
 import io.github.graphglue.model.property.NodeCache
@@ -27,6 +28,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(ComponentPermission.ADD_TO_PROJECTS, allowFromRelated = ["component"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["component"])
 @Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["component"])
+@Authorization(ProjectPermission.PART_OF_PROJECT, allowFromRelated = ["includingProjects"])
 class ComponentVersion(
     name: String,
     description: String,

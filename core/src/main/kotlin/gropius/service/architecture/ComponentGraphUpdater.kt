@@ -223,6 +223,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
             definition.invisibleSelfDefined = true
         }
         internalUpdatedNodes += definition
+        handleUpdatedInterfaceDefinition(definition)
         addForUpdatedComponentVersion(componentVersion, setOf(definition))
     }
 
@@ -584,6 +585,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
         newInterface.template(cache).value = interfaceTemplate
         internalUpdatedNodes += definition
         definition.visibleInterface(cache).value = newInterface
+        newInterface.interfaceDefinition(cache).value = definition
         issueAggregationUpdater.createdInterface(newInterface)
     }
 

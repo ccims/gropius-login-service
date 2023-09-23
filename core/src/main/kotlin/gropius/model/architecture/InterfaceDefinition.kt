@@ -8,6 +8,7 @@ import gropius.model.template.InterfaceDefinitionTemplate
 import gropius.model.template.MutableTemplatedNode
 import gropius.model.user.permission.ComponentPermission
 import gropius.model.user.permission.NodePermission
+import gropius.model.user.permission.ProjectPermission
 import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.*
 import org.springframework.data.neo4j.core.schema.CompositeProperty
@@ -25,6 +26,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(ComponentPermission.RELATE_FROM_COMPONENT, allowFromRelated = ["componentVersion"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["componentVersion"])
 @Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["componentVersion"])
+@Authorization(ProjectPermission.PART_OF_PROJECT, allowFromRelated = ["componentVersion"])
 class InterfaceDefinition(
     @property:GraphQLDescription(
         """If true, `interfaceSpecificationVersion`is self-defined visible on the `componentVersion`"""

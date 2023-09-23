@@ -8,6 +8,7 @@ import gropius.model.template.MutableTemplatedNode
 import gropius.model.template.RelationPartnerTemplate
 import gropius.model.user.permission.ComponentPermission
 import gropius.model.user.permission.NodePermission
+import gropius.model.user.permission.ProjectPermission
 import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.model.*
 import io.github.graphglue.model.property.NodeCache
@@ -26,6 +27,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(ComponentPermission.RELATE_FROM_COMPONENT, allowFromRelated = ["interfaceDefinition"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["interfaceDefinition"])
 @Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["interfaceDefinition"])
+@Authorization(ProjectPermission.PART_OF_PROJECT, allowFromRelated = ["interfaceDefinition"])
 class Interface(
     name: String,
     description: String,

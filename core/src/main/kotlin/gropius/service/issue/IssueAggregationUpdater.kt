@@ -367,6 +367,8 @@ class IssueAggregationUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateC
             val type = issue.type(cache).value
             aggregatedIssueLookup.getOrPut(type to state.isOpen) {
                 val aggregatedIssue = AggregatedIssue(0, state.isOpen)
+                aggregatedIssue.relationPartner(cache).value = relationPartner
+                aggregatedIssue.type(cache).value = type
                 aggregatedIssue
             }.let {
                 if (it.issues(cache).add(issue)) {
