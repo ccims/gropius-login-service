@@ -70,6 +70,11 @@ export class TokenService {
         if (!user) {
             user = await this.loginUserService.findOneBy({ id: payload.sub });
         }
+        const tokenIssuedAt = payload.iat as number;
+        const revokeBefore = user?.revokeTokensBefore.getTime();
+        if (revokeBefore !== undefined && revokeBefore / 1000 > tokenIssuedAt) {
+            throw new Error("Token invalid");
+        }
         user = user ?? null;
         return { user };
     }
