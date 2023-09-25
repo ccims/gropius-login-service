@@ -1,20 +1,35 @@
 import { DataSource } from "typeorm";
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { ConfigModule } from "@nestjs/config";
+import { randomBytes } from "crypto";
+
+function setEnvVariables() {
+    //process.env.NODE_ENV = "production";
+    process.env.GROPIUS_INTERNAL_BACKEND_JWT_SECRET = randomBytes(100).toString("base64");
+    process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET = randomBytes(100).toString("base64");
+    process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS = "10";
+}
 
 async function getDataSource(): Promise<DataSource> {
-    process.env.NODE_ENV = "production";
+    console.log(
+        "NOTICE: Make sure to run migrations with NODE_ENV set to the value for which " +
+            "you want to initiaize your database and have configured your database settings.\n" +
+            "E.g. if you have your DB settings in .env.dev, set NODE_ENV=testing",
+    );
+
+    setEnvVariables();
+
+    const { NestFactory } = await import("@nestjs/core");
+    const { AppModule } = await import("./app.module");
+    const { ConfigModule } = await import("@nestjs/config");
 
     const app = await NestFactory.create(AppModule, {
         logger: ["error", "warn"],
     });
 
-    process.env.NODE_ENV = "production";
+    setEnvVariables();
 
     await ConfigModule.envVariablesLoaded;
 
-    process.env.NODE_ENV = "production";
+    setEnvVariables();
 
     const source = app.get(DataSource);
 
