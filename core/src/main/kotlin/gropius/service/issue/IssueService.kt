@@ -549,6 +549,9 @@ class IssueService(
             ) { it.removedFromTrackable().value == trackable }
         ) {
             issue.trackables() += trackable
+            val aggregationUpdater = IssueAggregationUpdater()
+            aggregationUpdater.addedIssueToTrackable(issue, trackable)
+            aggregationUpdater.save(nodeRepository)
         }
         return event
     }
@@ -574,9 +577,6 @@ class IssueService(
             val event = timelineItemRepository.save(
                 removeIssueFromTrackable(issue, trackable, OffsetDateTime.now(), getUser(authorizationContext))
             ).awaitSingle()
-            val aggregationUpdater = IssueAggregationUpdater()
-            aggregationUpdater.removedIssueFromTrackable(issue, trackable)
-            aggregationUpdater.save(nodeRepository)
             event
         } else {
             null
@@ -624,6 +624,9 @@ class IssueService(
                 .map { removeArtefactFromIssue(issue, it, atTime.plusNanos(timeOffset++), byUser) }
             event.childItems() += issue.labels().filter { Collections.disjoint(issue.trackables(), it.trackables()) }
                 .map { removeLabelFromIssue(issue, it, atTime.plusNanos(timeOffset++), byUser) }
+            val aggregationUpdater = IssueAggregationUpdater()
+            aggregationUpdater.removedIssueFromTrackable(issue, trackable)
+            aggregationUpdater.save(nodeRepository)
         }
         return event
     }

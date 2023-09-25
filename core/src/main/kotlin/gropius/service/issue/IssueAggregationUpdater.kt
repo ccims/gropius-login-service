@@ -38,6 +38,13 @@ class IssueAggregationUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateC
         }
     }
 
+    suspend fun addedIssueToTrackable(issue: Issue, trackable: Trackable) {
+        if (trackable !is Component) {
+            return
+        }
+        aggregateIssueOnComponentIfNecessary(issue, trackable)
+    }
+
     suspend fun removedIssueFromTrackable(issue: Issue, trackable: Trackable) {
         if (trackable !is Component) {
             return
