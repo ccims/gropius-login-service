@@ -12,6 +12,12 @@ import io.github.graphglue.data.execution.CypherConditionGenerator
 import io.github.graphglue.definition.NodeDefinitionCollection
 import io.github.graphglue.util.CacheMap
 
+/**
+ * Filter definition entry for affected by issue related to a Trackable.
+ * Takes the id of the Trackable to which the entities must be related.
+ *
+ * @param nodeDefinitionCollection the [NodeDefinitionCollection] to use for authorization
+ */
 class AffectedByIssueRelatedToFilterEntryDefinition(
     private val nodeDefinitionCollection: NodeDefinitionCollection,
 ) : FilterEntryDefinition("relatedTo", "Filters for AffectedByIssues which are related to a Trackable") {

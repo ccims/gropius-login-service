@@ -1,17 +1,22 @@
 package gropius.graphql.filter
 
 import gropius.model.user.permission.ProjectPermission
-import gropius.model.user.permission.TrackablePermission
 import io.github.graphglue.authorization.Permission
-import io.github.graphglue.connection.filter.model.Filter
 import io.github.graphglue.connection.filter.model.FilterEntry
 import org.neo4j.cypherdsl.core.Condition
 import org.neo4j.cypherdsl.core.Conditions
 import org.neo4j.cypherdsl.core.Cypher
 import org.neo4j.cypherdsl.core.Node
 
+/**
+ * Parsed filter entry of a [AffectedByIssueRelatedToFilterEntryDefinition]
+ *
+ * @param projectId the id of the Project to which the entity must be related to
+ * @param permission the node permission to check
+ * @param partOfProjectFilterEntryDefinition [PartOfProjectFilterEntryDefinition] used to create this entry
+ */
 class PartOfProjectFilterEntry(
-    val filter: String,
+    val projectId: String,
     private val partOfProjectFilterEntryDefinition: PartOfProjectFilterEntryDefinition,
     private val permission: Permission?
 
@@ -26,7 +31,7 @@ class PartOfProjectFilterEntry(
         } else {
             Conditions.noCondition()
         }
-        val idCondition = relatedNode.property("id").isEqualTo(Cypher.anonParameter(filter))
+        val idCondition = relatedNode.property("id").isEqualTo(Cypher.anonParameter(projectId))
         return Cypher.match(relationship).where(idCondition.and(authCondition)).asCondition()
     }
 

@@ -10,6 +10,12 @@ import io.github.graphglue.data.execution.CypherConditionGenerator
 import io.github.graphglue.definition.NodeDefinitionCollection
 import io.github.graphglue.util.CacheMap
 
+/**
+ * Filter definition entry for RelationPartners which are part of a Project.
+ * Takes the id of the Project of which the RelationPartners must be part of the graph.
+ *
+ * @param nodeDefinitionCollection the [NodeDefinitionCollection] to use for authorization
+ */
 class PartOfProjectFilterEntryDefinition(
     private val nodeDefinitionCollection: NodeDefinitionCollection,
 ) : FilterEntryDefinition("partOfProject", "Filters for RelationPartners which are part of a Project's component graph") {
