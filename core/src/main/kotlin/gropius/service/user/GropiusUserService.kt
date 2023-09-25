@@ -1,5 +1,6 @@
 package gropius.service.user
 
+import com.expediagroup.graphql.generator.scalars.ID
 import gropius.GropiusCoreConfigurationProperties
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.ifPresent
@@ -109,4 +110,11 @@ class GropiusUserService(
         }
     }
 
+    /**
+     * Find the ids of all [GropiusUser]s
+     */
+    suspend fun findGropiusUserIds(): List<ID> {
+        //return repository.findAll().map { it.graphQLId }.collectList().awaitSingle()
+        return repository.findAllIds().map { ID(it) }
+    }
 }
