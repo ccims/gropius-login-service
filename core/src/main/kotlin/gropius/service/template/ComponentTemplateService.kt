@@ -1,6 +1,7 @@
 package gropius.service.template
 
 import gropius.authorization.GropiusAuthorizationContext
+import gropius.dto.input.orElse
 import gropius.dto.input.template.CreateComponentTemplateInput
 import gropius.model.template.ComponentTemplate
 import gropius.model.template.ComponentVersionTemplate
@@ -36,7 +37,9 @@ class ComponentTemplateService(
     ): ComponentTemplate {
         input.validate()
         checkCreateTemplatePermission(authorizationContext)
-        val template = ComponentTemplate(input.name, input.description, mutableMapOf(), false)
+        val template = ComponentTemplate(
+            input.name, input.description, mutableMapOf(), false, input.shapeRadius.orElse(null), input.shapeType
+        )
         createdRelationPartnerTemplate(template, input)
         template.componentVersionTemplate().value = subTemplateService.createSubTemplate(::ComponentVersionTemplate,
             input.componentVersionTemplate,

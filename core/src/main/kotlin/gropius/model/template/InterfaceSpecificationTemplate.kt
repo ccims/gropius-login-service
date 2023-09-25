@@ -2,6 +2,7 @@ package gropius.model.template
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.model.architecture.InterfaceSpecification
+import gropius.model.template.style.ShapeType
 import io.github.graphglue.model.Direction
 import io.github.graphglue.model.DomainNode
 import io.github.graphglue.model.FilterProperty
@@ -16,9 +17,14 @@ import io.github.graphglue.model.NodeRelationship
     """
 )
 class InterfaceSpecificationTemplate(
-    name: String, description: String, templateFieldSpecifications: MutableMap<String, String>, isDeprecated: Boolean
+    name: String,
+    description: String,
+    templateFieldSpecifications: MutableMap<String, String>,
+    isDeprecated: Boolean,
+    shapeRadius: Double?,
+    shapeType: ShapeType,
 ) : RelationPartnerTemplate<InterfaceSpecification, InterfaceSpecificationTemplate>(
-    name, description, templateFieldSpecifications, isDeprecated
+    name, description, templateFieldSpecifications, isDeprecated, shapeRadius, shapeType
 ) {
 
     @NodeRelationship(ComponentTemplate.VISIBLE_INTERFACE_SPECIFICATION, Direction.INCOMING)
