@@ -13,7 +13,6 @@ import gropius.model.template.ComponentTemplate
 import gropius.model.user.permission.GlobalPermission
 import gropius.model.user.permission.NodePermission
 import gropius.repository.architecture.ComponentRepository
-import gropius.repository.common.NodeRepository
 import gropius.repository.findById
 import gropius.repository.template.ComponentTemplateRepository
 import gropius.service.template.TemplatedNodeService
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Service
  * @param repository the associated repository used for CRUD functionality
  * @param templatedNodeService service used to update templatedFields
  * @param componentTemplateRepository used to get [ComponentTemplate]
- * @param nodeRepository used to save/delete any node
  * @param componentPermissionService used to create the initial permission for a created [Component]
  * @param interfaceSpecificationService used to create [InterfaceSpecification]s
  * @param componentVersionService used to create [ComponentVersion]s
@@ -40,7 +38,6 @@ class ComponentService(
     repository: ComponentRepository,
     private val templatedNodeService: TemplatedNodeService,
     private val componentTemplateRepository: ComponentTemplateRepository,
-    private val nodeRepository: NodeRepository,
     private val componentPermissionService: ComponentPermissionService,
     private val interfaceSpecificationService: InterfaceSpecificationService,
     private val componentVersionService: ComponentVersionService

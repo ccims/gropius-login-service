@@ -5,16 +5,20 @@ import gropius.model.common.NamedNode
 import gropius.model.issue.Issue
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
-import org.springframework.data.annotation.Transient
 
-@DomainNode
+@DomainNode(searchQueryName = "searchIssueTypes")
 @GraphQLDescription(
     """Type of an Issue like BUG or FEATURE_REQUEST. Part of an IssueTemplate.
     READ is always granted.
     """
 )
 @Authorization(NodePermission.READ, allowAll = true)
-class IssueType(name: String, description: String) : NamedNode(name, description) {
+class IssueType(
+    name: String,
+    description: String,
+    @GraphQLDescription("A path that is used as the icon for issues. Used with a 0 0 100 100 viewBox. No stroke, only fill.")
+    val iconPath: String
+) : NamedNode(name, description) {
 
     companion object {
         const val PART_OF = "PART_OF"

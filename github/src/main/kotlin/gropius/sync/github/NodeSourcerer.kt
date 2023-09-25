@@ -63,7 +63,7 @@ class NodeSourcerer(
             }
         }
         var template = IssueTemplate("github-temp", "Github Template", mutableMapOf(), false)
-        template.issueTypes() += IssueType("github-issue", "Issue synced from GitHub")
+        template.issueTypes() += IssueType("github-issue", "Issue synced from GitHub", "M 0 0 L 100 100")
         template.issueStates() += listOf(
             IssueState("Open", "State hinting the Issue is open", true),
             IssueState("Closed", "State hinting the Issue is closed", false)
@@ -187,6 +187,7 @@ class NodeSourcerer(
         return if (userInfo == null) {
             var user = IMSUser(
                 username,
+                null,
                 null,
                 username,
                 mutableMapOf("github_id" to (helper.objectMapper.writeValueAsString(githubId) ?: "null"))

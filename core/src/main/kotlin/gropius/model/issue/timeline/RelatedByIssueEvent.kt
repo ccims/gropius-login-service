@@ -3,7 +3,6 @@ package gropius.model.issue.timeline
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
-import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
@@ -24,9 +23,8 @@ class RelatedByIssueEvent(
     }
 
     @NodeRelationship(RELATION, Direction.OUTGOING)
-    @GraphQLDescription("The IssueRelation the Issue is related at.")
-    @GraphQLNullable
+    @GraphQLDescription("The IssueRelation the Issue is related at, null if deleted.")
     @FilterProperty
-    val relation by NodeProperty<IssueRelation>()
+    val relation by NodeProperty<IssueRelation?>()
 
 }

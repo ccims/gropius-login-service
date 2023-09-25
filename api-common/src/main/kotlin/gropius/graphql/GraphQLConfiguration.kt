@@ -11,17 +11,33 @@ import com.expediagroup.graphql.server.types.GraphQLServerError
 import com.expediagroup.graphql.server.types.GraphQLServerResponse
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import graphql.Scalars
 import graphql.scalars.regex.RegexScalar
 import graphql.schema.*
+import gropius.authorization.checkPermission
+import gropius.authorization.gropiusAuthorizationContext
+import gropius.graphql.filter.DateTimeFilterDefinition
+import gropius.graphql.filter.DurationFilterDefinition
+import gropius.graphql.filter.NodePermissionFilterEntryDefinition
+import gropius.graphql.filter.TemplatedFieldsFilterEntryDefinition
+import gropius.model.common.PERMISSION_FIELD_BEAN
 import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
 import gropius.model.template.TemplatedNode
 import gropius.model.user.GropiusUser
-import gropius.model.user.IMSUser
-import gropius.model.user.USERNAME_FILTER_BEAN
+import gropius.model.user.NODE_PERMISSION_FILTER_BEAN
+import gropius.model.user.permission.ALL_PERMISSION_ENTRY_NAME
 import gropius.util.JsonNodeMapper
+import io.github.graphglue.authorization.Permission
 import io.github.graphglue.connection.filter.TypeFilterDefinitionEntry
 import io.github.graphglue.connection.filter.definition.scalars.StringFilterDefinition
+import io.github.graphglue.definition.ExtensionFieldDefinition
+import io.github.graphglue.definition.NodeDefinition
+import io.github.graphglue.definition.NodeDefinitionCollection
+import org.neo4j.cypherdsl.core.Cypher
+import org.neo4j.cypherdsl.core.Expression
 import org.neo4j.driver.Driver
+import org.neo4j.driver.Value
+import org.springframework.beans.factory.BeanFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -127,14 +143,6 @@ class GraphQLConfiguration {
         }
 
     /**
-     * Filter for usernames on both [IMSUser] and [GropiusUser]
-     *
-     * @return the generated filter definition
-     */
-    @Bean(USERNAME_FILTER_BEAN)
-    fun usernameFilter() = StringFilterDefinition("username", "username", true)
-
-    /**
      * Filter for templatedFields on [TemplatedNode]
      *
      * @param jsonNodeMapper used to serialize [JsonNode]s
@@ -142,6 +150,62 @@ class GraphQLConfiguration {
      */
     @Bean(TEMPLATED_FIELDS_FILTER_BEAN)
     fun templatedFieldsFilter(jsonNodeMapper: JsonNodeMapper) = TemplatedFieldsFilterEntryDefinition(jsonNodeMapper)
+
+    /**
+     * Filter for [GropiusUser]s with a specific permission on a specific node
+     *
+     * @param nodeDefinitionCollection used to get the node definition
+     * @return the generated filter definition
+     */
+    @Bean(NODE_PERMISSION_FILTER_BEAN)
+    fun nodePermissionFilter(nodeDefinitionCollection: NodeDefinitionCollection) = NodePermissionFilterEntryDefinition(nodeDefinitionCollection)
+
+    /**
+     * Provides the permission field for all nodes
+     *
+     * @param beanFactory used to get the [NodeDefinitionCollection]
+     * @return the generated field definition
+     */
+    @Bean(PERMISSION_FIELD_BEAN)
+    fun permissionField(beanFactory: BeanFactory): ExtensionFieldDefinition {
+        val field = GraphQLFieldDefinition.newFieldDefinition().name("hasPermission")
+            .description("Checks if the current user has a specific permission on this Node").argument {
+                it.name("permission").description("The permission to check for").type(
+                    GraphQLTypeReference(
+                        ALL_PERMISSION_ENTRY_NAME
+                    )
+                )
+            }.type(Scalars.GraphQLBoolean).build()
+
+        val nodeDefinitionCollection by lazy {
+            beanFactory.getBean(NodeDefinitionCollection::class.java)
+        }
+
+        return object : ExtensionFieldDefinition(field) {
+            override fun generateFetcher(
+                dfe: DataFetchingEnvironment,
+                arguments: Map<String, Any?>,
+                node: org.neo4j.cypherdsl.core.Node,
+                nodeDefinition: NodeDefinition
+            ): Expression {
+                return if (dfe.checkPermission) {
+                    val conditionGenerator = nodeDefinitionCollection.generateAuthorizationCondition(
+                        nodeDefinition,
+                        Permission(arguments["permission"] as String, dfe.gropiusAuthorizationContext)
+                    )
+                    val condition = conditionGenerator.generateCondition(node)
+                    condition
+                } else {
+                    Cypher.literalTrue()
+                }
+            }
+
+            override fun transformResult(result: Value): Any {
+                return result.asBoolean()
+            }
+
+        }
+    }
 
     /**
      * Provides the [KotlinDataFetcherFactoryProvider] which generates a FunctionDataFetcher which handles
@@ -179,7 +243,8 @@ class GraphQLConfiguration {
                 GraphQLResponse<Any?>(
                     errors = listOf(
                         GraphQLServerError(
-                            e.reason ?: "No error message provided", extensions = mapOf("status" to e.statusCode.value())
+                            e.reason ?: "No error message provided",
+                            extensions = mapOf("status" to e.statusCode.value())
                         )
                     )
                 )

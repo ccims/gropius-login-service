@@ -1,12 +1,9 @@
 package gropius.model.common
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
-import gropius.authorization.IS_DELETED_RULE
 import gropius.model.user.User
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
-import org.springframework.data.annotation.Transient
 import java.time.OffsetDateTime
 
 @DomainNode
@@ -17,7 +14,7 @@ import java.time.OffsetDateTime
     A change on a related related node is not a modification.
     """
 )
-@Authorization(NodePermission.READ, disallow = [Rule(IS_DELETED_RULE)])
+@Authorization(NodePermission.READ)
 abstract class AuditedNode(
     @property:GraphQLDescription("The DateTime this entity was created at.")
     @FilterProperty
@@ -33,13 +30,6 @@ abstract class AuditedNode(
         const val CREATED_BY = "CREATED_BY"
         const val LAST_MODIFIED_BY = "LAST_MODIFIED_BY"
     }
-
-    /**
-     * If true, this entity is marked as deleted and should never be returned by the API.
-     * However, it cannot be deleted completely as is still may be synced.
-     */
-    @GraphQLIgnore
-    var isDeleted: Boolean = false
 
     @NodeRelationship(CREATED_BY, Direction.OUTGOING)
     @GraphQLDescription("The User who created this entity.")

@@ -3,8 +3,8 @@ package gropius.service.user
 import gropius.dto.input.ifPresent
 import gropius.dto.input.user.CreateIMSUserInput
 import gropius.dto.input.user.UpdateIMSUserInput
-import gropius.model.user.IMSUser
 import gropius.model.architecture.IMS
+import gropius.model.user.IMSUser
 import gropius.repository.architecture.IMSRepository
 import gropius.repository.findById
 import gropius.repository.user.IMSUserRepository
@@ -40,7 +40,7 @@ class IMSUserService(
         val ims = imsRepository.findById(input.ims)
         val template = ims.template().value.imsUserTemplate().value
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
-        val imsUser = IMSUser(input.displayName, input.email, input.username, templatedFields)
+        val imsUser = IMSUser(input.displayName, input.email, null, input.username, templatedFields)
         imsUser.template().value = template
         imsUser.ims().value = ims
         if (input.gropiusUser != null) {
