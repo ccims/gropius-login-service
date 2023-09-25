@@ -457,4 +457,20 @@ export class ImsUserFindingService {
 
         return newImsUsers;
     }
+
+    /**
+     * Checks for the existance of a IMSUser with the neo4jid specified in the given UserLoginDataImsUser
+     *
+     * Meant to check database consistency. For a properly created UserLoginDataImsUser this should always return true
+     *
+     * @param user The UserLoginDataImsUser to check in the backend
+     * @returns `true` iff the UserLoginDataImsUser has a valid associated IMSUser in the backend
+     */
+    async checkImsUserExists(imsUser: UserLoginDataImsUser): Promise<boolean> {
+        const loadedImsUser = await this.graphqlService.sdk.getBasicImsUserData({ imsUserId: imsUser.neo4jId });
+        if (loadedImsUser?.node?.__typename == "IMSUser") {
+            return true;
+        }
+        return false;
+    }
 }

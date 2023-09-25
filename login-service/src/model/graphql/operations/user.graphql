@@ -21,6 +21,10 @@ query checkUserIsAdmin($id: ID!) {
     }
 }
 
+query getAllGrpiusUsers {
+    gropiusUserIds
+}
+
 mutation createNewUser($input: CreateGropiusUserInput!) {
     createGropiusUser(input: $input) {
         gropiusUser {
