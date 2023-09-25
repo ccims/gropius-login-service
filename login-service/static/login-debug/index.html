@@ -63,6 +63,18 @@
 
         <h3>Requests</h3>
 
+        <h4>Show all existing strategies of type
+            <select v-model="showStrategyType">
+                <option value="">--all--</option>
+                <option value="userpass">userpass</option>
+                <option value="github">github</option>
+            </select>
+        </h4>
+        <ul>
+            <li>GET {{ loginUrl }}login/strategy/{{ showStrategyType }}</li>
+            <li><button @click="runShowStrategy">Request</button></li>
+        </ul>
+
         <h4>Show all existing
             <select v-model="showInstanceType">
                 <option value="userpass">userpass</option>

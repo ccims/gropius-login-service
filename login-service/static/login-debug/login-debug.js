@@ -141,6 +141,8 @@ export default {
             outputLocation: "console",
             logData: "",
 
+            showStrategyType: "",
+
             showInstanceType: "userpass",
 
             userpassLoginInstanceId: "",

@@ -1,3 +1,10 @@
+export async function runShowStrategy() {
+    const r = await this.request(`login/strategy/${this.showStrategyType}`);
+    if (r.length <= 0) {
+        return;
+    }
+}
+
 export async function runShowInstance() {
     const r = await this.request(`login/strategy/${this.showInstanceType}/instance`);
     if (r.length <= 0) {
@@ -189,6 +196,7 @@ export function storeToStorage() {
 }
 
 export const allMethods = {
+    runShowStrategy,
     runShowInstance,
     runUserpassLogin,
     runRefreshToken,
