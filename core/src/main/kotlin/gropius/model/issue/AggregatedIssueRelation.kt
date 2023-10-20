@@ -1,6 +1,8 @@
 package gropius.model.issue
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
+import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.model.issue.timeline.IssueRelation
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 
@@ -13,6 +15,10 @@ import io.github.graphglue.model.*
 @Authorization(NodePermission.READ, allowFromRelated = ["start"])
 class AggregatedIssueRelation(var count: Int) : Node() {
 
+    companion object {
+        const val ISSUE_RELATION = "ISSUE_RELATION"
+    }
+
     @NodeRelationship(AggregatedIssue.OUTGOING_RELATION, Direction.INCOMING)
     @GraphQLDescription("The start of this AggregatedIssueRelation.")
     @FilterProperty
@@ -22,5 +28,10 @@ class AggregatedIssueRelation(var count: Int) : Node() {
     @GraphQLDescription("The end of this AggregatedIssueRelation.")
     @FilterProperty
     val end by NodeProperty<AggregatedIssue>()
+
+    @NodeRelationship(ISSUE_RELATION, Direction.OUTGOING)
+    @GraphQLDescription("The IssueRelations aggregated by this AggregatedIssueRelation.")
+    @FilterProperty
+    val issueRelations by NodeSetProperty<IssueRelation>()
 
 }

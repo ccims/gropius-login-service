@@ -95,13 +95,6 @@ class InterfaceSpecificationService(
                 )
             }
         }
-        input.definedParts.ifPresent { inputs ->
-            interfaceSpecification.definedParts() += inputs.map {
-                interfacePartService.createInterfacePart(
-                    interfaceSpecification, it
-                )
-            }
-        }
         return interfaceSpecification
     }
 
@@ -146,11 +139,6 @@ class InterfaceSpecificationService(
             val template = interfaceSpecificationTemplateRepository.findById(templateId)
             interfaceSpecification.template().value = template
             updateInterfaceSpecificationVersionTemplate(interfaceSpecification, input, template)
-            val interfacePartTemplate = template.interfacePartTemplate().value
-            interfaceSpecification.definedParts().forEach {
-                it.template().value = interfacePartTemplate
-                templatedNodeService.updateTemplatedFields(it, input.interfacePartTemplatedFields, true)
-            }
             val graphUpdater = ComponentGraphUpdater()
             graphUpdater.updateInterfaceSpecificationTemplate(interfaceSpecification)
             nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()

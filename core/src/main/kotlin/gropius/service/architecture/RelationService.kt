@@ -123,7 +123,7 @@ class RelationService(
                 relationPartner.interfaceDefinition().value.interfaceSpecificationVersion().value
             val parts = partIds.map { interfacePartRepository.findById(it) }.toSet()
             parts.forEach {
-                if (interfaceSpecificationVersion !in it.activeOn()) {
+                if (interfaceSpecificationVersion !in it.partOf()) {
                     throw IllegalArgumentException("InterfacePart must be active on the used InterfaceSpecificationVersion")
                 }
             }

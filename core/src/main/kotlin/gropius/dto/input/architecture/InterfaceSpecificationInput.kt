@@ -17,9 +17,6 @@ open class InterfaceSpecificationInput : CreateNamedNodeInput(), CreateTemplated
     @GraphQLDescription("Initial versions of the InterfaceSpecification")
     var versions: OptionalInput<List<InterfaceSpecificationVersionInput>> by Delegates.notNull()
 
-    @GraphQLDescription("Initial defined InterfaceParts")
-    var definedParts: OptionalInput<List<InterfacePartInput>> by Delegates.notNull()
-
     @GraphQLDescription("Initial values for all templatedFields")
     override var templatedFields: List<JSONFieldInput> by Delegates.notNull()
 
@@ -29,9 +26,6 @@ open class InterfaceSpecificationInput : CreateNamedNodeInput(), CreateTemplated
     override fun validate() {
         super.validate()
         versions.ifPresent {
-            it.forEach(Input::validate)
-        }
-        definedParts.ifPresent {
             it.forEach(Input::validate)
         }
         templatedFields.validateAndEnsureNoDuplicates()

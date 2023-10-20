@@ -32,10 +32,6 @@ class InterfacePart(
     override val templatedFields: MutableMap<String, String>
 ) : AffectedByIssue(name, description), MutableTemplatedNode {
 
-    companion object {
-        const val DEFINED_ON = "DEFINED_ON"
-    }
-
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this InterfacePart")
     @FilterProperty
@@ -56,14 +52,9 @@ class InterfacePart(
     @FilterProperty
     val includingIntraComponentDependencyParticipants by NodeSetProperty<IntraComponentDependencyParticipant>()
 
-    @NodeRelationship(InterfaceSpecificationVersion.ACTIVE_PART, Direction.INCOMING)
+    @NodeRelationship(InterfaceSpecificationVersion.PART, Direction.INCOMING)
     @GraphQLDescription("InterfaceSpecificationVersions where this InterfacePart is active.")
     @FilterProperty
-    val activeOn by NodeSetProperty<InterfaceSpecificationVersion>()
-
-    @NodeRelationship(DEFINED_ON, Direction.OUTGOING)
-    @GraphQLDescription("InterfaceSpecification which defines this InterfacePart")
-    @FilterProperty
-    val definedOn by NodeProperty<InterfaceSpecification>()
+    val partOf by NodeProperty<InterfaceSpecificationVersion>()
 
 }

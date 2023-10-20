@@ -112,7 +112,7 @@ class IssueAggregationUpdater(
         val specificationVersion = definition.interfaceSpecificationVersion(cache).value
         val affectableEntities = listOf(
             createdInterface, specificationVersion, specificationVersion.interfaceSpecification(cache).value
-        ) + specificationVersion.activeParts(cache)
+        ) + specificationVersion.parts(cache)
         val affectedIssues = affectableEntities.flatMap { it.affectingIssues(cache) }.toSet()
         createOrUpdateAggregatedIssues(createdInterface, affectedIssues)
         val component = definition.componentVersion(cache).value.component(cache).value
@@ -143,7 +143,7 @@ class IssueAggregationUpdater(
      * @param interfacePart the deleted interface part
      */
     suspend fun deletedInterfacePart(interfacePart: InterfacePart) {
-        val interfaces = interfacePart.activeOn(cache).flatMap { version ->
+        val interfaces = interfacePart.partOf(cache).flatMap { version ->
             version.interfaceDefinitions(cache).mapNotNull {
                 it.visibleInterface(cache).value
             }
@@ -228,7 +228,7 @@ class IssueAggregationUpdater(
             }
 
             is InterfacePart -> {
-                addedAffectedInterfaceRelatedEntity(issue, affectedEntity.activeOn(cache))
+                addedAffectedInterfaceRelatedEntity(issue, affectedEntity.partOf(cache))
             }
 
             is InterfaceSpecificationVersion -> {
@@ -293,7 +293,7 @@ class IssueAggregationUpdater(
             }
 
             is InterfacePart -> {
-                removedAffectedInterfaceRelatedEntity(issue, affectedEntity.activeOn(cache))
+                removedAffectedInterfaceRelatedEntity(issue, affectedEntity.partOf(cache))
             }
 
             is InterfaceSpecificationVersion -> {
@@ -462,7 +462,7 @@ class IssueAggregationUpdater(
         val specificationVersion = inter.interfaceDefinition(cache).value.interfaceSpecificationVersion(cache).value
         val affectableEntities = listOf(
             inter, specificationVersion, specificationVersion.interfaceSpecification(cache).value
-        ) + specificationVersion.activeParts(cache)
+        ) + specificationVersion.parts(cache)
         return issue.affects(cache).any { it in affectableEntities }
     }
 
@@ -502,7 +502,7 @@ class IssueAggregationUpdater(
                     val specificationVersion = interfaceDefinition.interfaceSpecificationVersion(cache).value
                     affected += specificationVersion
                     affected += specificationVersion.interfaceSpecification(cache).value
-                    affected += specificationVersion.activeParts(cache)
+                    affected += specificationVersion.parts(cache)
                 }
             }
         }

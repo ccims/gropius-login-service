@@ -87,10 +87,13 @@ class InterfaceSpecificationVersionService(
         val interfaceSpecificationVersion =
             InterfaceSpecificationVersion(input.name, input.description, input.version, templatedFields)
         interfaceSpecificationVersion.template().value = template
-        input.activeParts.ifPresent {
-            interfaceSpecificationVersion.activeParts().addAll(
-                interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(it, interfaceSpecification)
-            )
+
+        input.parts.ifPresent { inputs ->
+            interfaceSpecificationVersion.parts() += inputs.map {
+                interfacePartService.createInterfacePart(
+                    interfaceSpecification, it
+                )
+            }
         }
         createdExtensibleNode(interfaceSpecificationVersion, input)
         return interfaceSpecificationVersion
@@ -114,20 +117,10 @@ class InterfaceSpecificationVersionService(
             Permission(NodePermission.ADMIN, authorizationContext),
             "update the InterfaceSpecificationVersion"
         )
-        val interfaceSpecification = interfaceSpecificationVersion.interfaceSpecification().value
-        val addedParts = interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(
-            input.addedActiveParts.orElse(emptySet()), interfaceSpecification
-        )
-        interfaceSpecificationVersion.activeParts().addAll(addedParts)
-        val removedParts = interfacePartService.findPartsByIdAndValidatePartOfInterfaceSpecification(
-            input.removedActiveParts.orElse(emptySet()), interfaceSpecification
-        )
-        interfaceSpecificationVersion.activeParts().removeAll(removedParts)
         input.version.ifPresent { interfaceSpecificationVersion.version = it }
         templatedNodeService.updateTemplatedFields(interfaceSpecificationVersion, input, false)
         updateNamedNode(interfaceSpecificationVersion, input)
         val issueAggregationUpdater = IssueAggregationUpdater()
-        issueAggregationUpdater.updatedActiveParts(interfaceSpecificationVersion, addedParts, removedParts)
         issueAggregationUpdater.save(nodeRepository)
         return repository.save(interfaceSpecificationVersion).awaitSingle()
     }

@@ -170,7 +170,7 @@ class IntraComponentDependencySpecificationService(
         }
         val parts = interfacePartRepository.findAllById(input.includedParts.orElse(emptyList()))
         for (part in parts) {
-            if (interfaceDefinition.interfaceSpecificationVersion().value !in part.activeOn()) {
+            if (interfaceDefinition.interfaceSpecificationVersion().value !in part.partOf()) {
                 throw IllegalArgumentException("Specified includedParts must be active on the specified Interface")
             }
         }

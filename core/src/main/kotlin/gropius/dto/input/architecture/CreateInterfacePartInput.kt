@@ -5,6 +5,6 @@ import com.expediagroup.graphql.generator.scalars.ID
 
 @GraphQLDescription("Input for the createInterfacePart mutation")
 class CreateInterfacePartInput(
-    @GraphQLDescription("The id of the InterfaceSpecification the created InterfacePart is part of")
-    val interfaceSpecification: ID
+    @GraphQLDescription("The id of the InterfaceSpecificationVersion the created InterfacePart is part of")
+    val interfaceSpecificationVersion: ID
 ) : InterfacePartInput()

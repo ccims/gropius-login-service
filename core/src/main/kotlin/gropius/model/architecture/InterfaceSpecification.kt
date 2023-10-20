@@ -48,17 +48,8 @@ class InterfaceSpecification(
     @FilterProperty
     val versions by NodeSetProperty<InterfaceSpecificationVersion>()
 
-    @NodeRelationship(InterfacePart.DEFINED_ON, Direction.INCOMING)
-    @GraphQLDescription(
-        """InterfaceParts defined by this InterfaceSpecification.
-        Note that active parts depend on the InterfaceSpecificationVersion
-        """
-    )
-    @FilterProperty
-    val definedParts by NodeSetProperty<InterfacePart>()
-
     @NodeRelationship(COMPONENT, Direction.OUTGOING)
-    @GraphQLDescription("The Component this InterfaceSpecificaton is part of.")
+    @GraphQLDescription("The Component this InterfaceSpecification is part of.")
     @FilterProperty
     val component by NodeProperty<Component>()
 

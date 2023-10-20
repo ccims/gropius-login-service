@@ -14,10 +14,6 @@ import gropius.dto.input.template.UpdateTemplatedNodeInput
 class UpdateInterfaceSpecificationVersionInput(
     @GraphQLDescription("Values for templatedFields to update")
     override val templatedFields: OptionalInput<List<JSONFieldInput>>,
-    @GraphQLDescription("Ids of InterfaceParts defined by the associated InterfaceSpecification to add to `activeParts`")
-    val addedActiveParts: OptionalInput<List<ID>>,
-    @GraphQLDescription("Ids of InterfaceParts defined by the associated InterfaceSpecification to remove from `activeParts`")
-    val removedActiveParts: OptionalInput<List<ID>>,
     @GraphQLDescription("New version of the InterfaceSpecificationVersion")
     val version: OptionalInput<String>
 ) : UpdateNamedNodeInput(), UpdateTemplatedNodeInput {
@@ -27,6 +23,5 @@ class UpdateInterfaceSpecificationVersionInput(
         templatedFields.ifPresent {
             it.validateAndEnsureNoDuplicates()
         }
-        ::addedActiveParts ensureDisjoint ::removedActiveParts
     }
 }
