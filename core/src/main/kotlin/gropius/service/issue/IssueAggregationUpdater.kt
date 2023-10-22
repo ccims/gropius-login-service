@@ -3,6 +3,8 @@ package gropius.service.issue
 import gropius.model.architecture.*
 import gropius.model.issue.AggregatedIssue
 import gropius.model.issue.Issue
+import gropius.model.issue.MetaAggregatedIssueRelation
+import gropius.model.issue.timeline.IssueRelation
 import gropius.model.template.IssueState
 import gropius.model.template.IssueType
 import gropius.service.NodeBatchUpdateContext
@@ -64,6 +66,17 @@ class IssueAggregationUpdater(
     }
 
     /**
+     * Should be called when a [Component] is deleted.
+     * Must be called BEFORE the component is deleted from the database.
+     *
+     * @param component the component that was deleted
+     */
+    suspend fun deletedComponent(component: Component) {
+        deletedNodes += component.incomingMetaAggregatedIssueRelations(cache)
+        deletedNodes += component.outgoingMetaAggregatedIssueRelations(cache)
+    }
+
+    /**
      * Should be called when an [Issue] is added to a [Trackable].
      * Must be called AFTER the issue was added to the trackable.
      *
@@ -75,6 +88,18 @@ class IssueAggregationUpdater(
             return
         }
         aggregateIssueOnComponentIfNecessary(issue, trackable)
+        issue.incomingRelations(cache).forEach { relation ->
+            val other = relation.issue(cache).value
+            other.trackables(cache).forEach {
+                addToMetaAggregatedRelation(it, trackable, relation)
+            }
+        }
+        issue.outgoingRelations(cache).forEach { relation ->
+            val other = relation.relatedIssue(cache).value
+            other?.trackables?.let { it(cache) }?.forEach {
+                addToMetaAggregatedRelation(trackable, it, relation)
+            }
+        }
     }
 
     /**
@@ -92,14 +117,31 @@ class IssueAggregationUpdater(
         val removed = mutableSetOf<AggregatedIssue>()
         aggregatedBy.forEach {
             val target = it.relationPartner(cache).value
-            if (target is ComponentVersion && target.component(cache).value == trackable) {
-                if (!isIssueStillAggregatedByComponentVersion(issue, target)) {
-                    removeIssueFromAggregatedIssue(issue, it)
-                    removed += it
-                }
+            val targetComponent = if (target is ComponentVersion) {
+                target.component(cache).value
+            } else if (target is Interface) {
+                target.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value
+            } else {
+                error("Unknown relation partner")
+            }
+            if (targetComponent == trackable) {
+                removeIssueFromAggregatedIssue(issue, it)
+                removed += it
             }
         }
         aggregatedBy.removeAll(removed)
+        issue.incomingRelations(cache).forEach { relation ->
+            val other = relation.issue(cache).value
+            other.trackables(cache).forEach {
+                removeFromMetaAggregatedRelation(it, trackable, relation)
+            }
+        }
+        issue.outgoingRelations(cache).forEach { relation ->
+            val other = relation.relatedIssue(cache).value
+            other?.trackables?.let { it(cache) }?.forEach {
+                removeFromMetaAggregatedRelation(trackable, it, relation)
+            }
+        }
     }
 
     /**
@@ -143,10 +185,8 @@ class IssueAggregationUpdater(
      * @param interfacePart the deleted interface part
      */
     suspend fun deletedInterfacePart(interfacePart: InterfacePart) {
-        val interfaces = interfacePart.partOf(cache).flatMap { version ->
-            version.interfaceDefinitions(cache).mapNotNull {
-                it.visibleInterface(cache).value
-            }
+        val interfaces = interfacePart.partOf(cache).value.interfaceDefinitions(cache).mapNotNull {
+            it.visibleInterface(cache).value
         }
         val components = interfaces.map {
             it.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value
@@ -164,41 +204,26 @@ class IssueAggregationUpdater(
         }
     }
 
-    /**
-     * Should be called when the active parts of an [InterfaceSpecificationVersion] were updated.
-     * Must be called AFTER the active parts were updated.
-     *
-     * @param interfaceSpecificationVersion the interface specification version that was updated
-     * @param addedParts the parts that were added
-     * @param removedParts the parts that were removed
-     */
-    suspend fun updatedActiveParts(
-        interfaceSpecificationVersion: InterfaceSpecificationVersion,
-        addedParts: Set<InterfacePart>,
-        removedParts: Set<InterfacePart>
-    ) {
-        val interfaces = interfaceSpecificationVersion.interfaceDefinitions(cache).mapNotNull {
-            it.visibleInterface(cache).value
-        }
-        val newAffectingIssues = addedParts.flatMap { it.affectingIssues(cache) }.toSet()
-        val potentialIssuesToRemove = removedParts.flatMap { it.affectingIssues(cache) }.toSet()
-        for (inter in interfaces) {
-            createOrUpdateAggregatedIssues(inter, newAffectingIssues)
-            for (issue in potentialIssuesToRemove) {
-                if (!isIssueStillAggregatedByInterface(issue, inter)) {
-                    removeIssueFromAggregatedIssueOnRelationPartner(issue, inter)
-                }
+    suspend fun createdIssueRelation(issueRelation: IssueRelation) {
+        val issue = issueRelation.issue(cache).value
+        val relatedIssue = issueRelation.relatedIssue(cache).value
+        val trackables = issue.trackables(cache)
+        val relatedTrackables = relatedIssue?.trackables?.let { it(cache) } ?: emptySet()
+        for (trackable in trackables) {
+            for (relatedTrackable in relatedTrackables) {
+                addToMetaAggregatedRelation(trackable, relatedTrackable, issueRelation)
             }
         }
-        val components = interfaces.map {
-            it.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value
-        }.toSet()
-        for (component in components) {
-            for (issue in newAffectingIssues) {
-                unaggregateIssueOnComponentIfNecessary(issue, component)
-            }
-            for (issue in potentialIssuesToRemove) {
-                aggregateIssueOnComponentIfNecessary(issue, component)
+    }
+
+    suspend fun deletedIssueRelation(issueRelation: IssueRelation) {
+        val issue = issueRelation.issue(cache).value
+        val relatedIssue = issueRelation.relatedIssue(cache).value
+        val trackables = issue.trackables(cache)
+        val relatedTrackables = relatedIssue?.trackables?.let { it(cache) } ?: emptySet()
+        for (trackable in trackables) {
+            for (relatedTrackable in relatedTrackables) {
+                removeFromMetaAggregatedRelation(trackable, relatedTrackable, issueRelation)
             }
         }
     }
@@ -228,7 +253,7 @@ class IssueAggregationUpdater(
             }
 
             is InterfacePart -> {
-                addedAffectedInterfaceRelatedEntity(issue, affectedEntity.partOf(cache))
+                addedAffectedInterfaceRelatedEntity(issue, setOf(affectedEntity.partOf(cache).value))
             }
 
             is InterfaceSpecificationVersion -> {
@@ -293,7 +318,7 @@ class IssueAggregationUpdater(
             }
 
             is InterfacePart -> {
-                removedAffectedInterfaceRelatedEntity(issue, affectedEntity.partOf(cache))
+                removedAffectedInterfaceRelatedEntity(issue, setOf(affectedEntity.partOf(cache).value))
             }
 
             is InterfaceSpecificationVersion -> {
@@ -326,7 +351,9 @@ class IssueAggregationUpdater(
         issue: Issue, interfaceSpecificationVersions: Set<InterfaceSpecificationVersion>
     ) {
         val interfaces = interfaceSpecificationVersions.flatMap { version ->
-            version.interfaceDefinitions(cache).mapNotNull { it.visibleInterface(cache).value }
+            version.interfaceDefinitions(cache).filter {
+                it.componentVersion(cache).value.component(cache).value in issue.trackables(cache)
+            }.mapNotNull { it.visibleInterface(cache).value }
         }
         addedAffectedInterfaceRelatedEntity(issue, interfaces)
     }
@@ -474,6 +501,9 @@ class IssueAggregationUpdater(
      * @return true if the issue affects an entity related to the component, false otherwise
      */
     private suspend fun doesIssueAffectComponentRelatedEntity(issue: Issue, component: Component): Boolean {
+        if (component !in issue.trackables(cache)) {
+            return false
+        }
         val relatedAffectedEntities = componentRelatedEntities(component)
         return issue.affects(cache).any { it in relatedAffectedEntities }
     }
@@ -591,7 +621,7 @@ class IssueAggregationUpdater(
      * @param component the component to unaggregate the issue from
      */
     private suspend fun unaggregateIssueOnComponentIfNecessary(issue: Issue, component: Component) {
-        if (component in issue.trackables(cache)) {
+        if (component !in issue.trackables(cache) || component in issue.affects(cache)) {
             return
         }
         if (doesIssueAffectComponentRelatedEntity(issue, component) && component !in issue.affects(cache)) {
@@ -600,6 +630,37 @@ class IssueAggregationUpdater(
                     removeIssueFromAggregatedIssueOnRelationPartner(issue, componentVersion)
                 }
             }
+        }
+    }
+
+    private suspend fun addToMetaAggregatedRelation(from: Trackable, to: Trackable, issueRelation: IssueRelation) {
+        if (from !is Component || to !is Component) {
+            return
+        }
+        val metaAggregatedRelation = from.outgoingMetaAggregatedIssueRelations(cache).find {
+            it.end(cache).value == to
+        } ?: MetaAggregatedIssueRelation(0).also {
+            it.start(cache).value = from
+            it.end(cache).value = to
+        }
+        internalUpdatedNodes += metaAggregatedRelation
+        if (metaAggregatedRelation.issueRelations(cache).add(issueRelation)) {
+            metaAggregatedRelation.count++
+        }
+    }
+
+    private suspend fun removeFromMetaAggregatedRelation(from: Trackable, to: Trackable, issueRelation: IssueRelation) {
+        if (from !is Component || to !is Component) {
+            return
+        }
+        val metaAggregatedRelation = from.outgoingMetaAggregatedIssueRelations(cache).find {
+            it.end(cache).value == to
+        } ?: return
+        if (metaAggregatedRelation.issueRelations(cache).remove(issueRelation)) {
+            metaAggregatedRelation.count--
+        }
+        if (metaAggregatedRelation.issueRelations(cache).isEmpty()) {
+            deletedNodes += metaAggregatedRelation
         }
     }
 

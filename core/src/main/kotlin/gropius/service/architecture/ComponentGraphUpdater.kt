@@ -41,6 +41,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun deleteComponent(component: Component) {
         cache.add(component)
         deletedNodes += component
+        issueAggregationUpdater.deletedComponent(component)
         component.interfaceSpecifications(cache).forEach {
             deleteInterfaceSpecification(it)
         }
@@ -98,7 +99,6 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun deleteInterfaceSpecification(interfaceSpecification: InterfaceSpecification) {
         cache.add(interfaceSpecification)
         deletedNodes += interfaceSpecification
-        deletedNodes += interfaceSpecification.definedParts(cache)
         interfaceSpecification.versions(cache).forEach {
             deleteInterfaceSpecificationVersion(it)
         }
@@ -112,6 +112,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun deleteInterfaceSpecificationVersion(interfaceSpecificationVersion: InterfaceSpecificationVersion) {
         cache.add(interfaceSpecificationVersion)
         deletedNodes += interfaceSpecificationVersion
+        deletedNodes += interfaceSpecificationVersion.parts(cache)
         interfaceSpecificationVersion.interfaceDefinitions(cache).toSet().forEach {
             deleteInterfaceDefinition(it)
         }

@@ -20,10 +20,10 @@ class MetaAggregatedIssueRelation(var count: Int) : Node() {
     }
 
     @NodeRelationship(Component.OUTGOING_META_AGGREGATED_ISSUE_RELATION, Direction.INCOMING)
-    val start by NodeProperty<AggregatedIssue>()
+    val start by NodeProperty<Component>()
 
     @NodeRelationship(Component.INCOMING_META_AGGREGATED_ISSUE_RELATION, Direction.INCOMING)
-    val end by NodeProperty<AggregatedIssue>()
+    val end by NodeProperty<Component>()
 
     @NodeRelationship(META_ISSUE_RELATION, Direction.OUTGOING)
     val issueRelations by NodeSetProperty<IssueRelation>()

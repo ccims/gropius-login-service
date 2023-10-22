@@ -1791,6 +1791,11 @@ class IssueService(
         relatedEvent.relation().value = relation
         createdTimelineItemOnRelatedIssue(relatedIssue, relatedEvent, atTime, byUser)
         relatedIssue.incomingRelations() += relation
+
+        val aggregationUpdater = IssueAggregationUpdater()
+        aggregationUpdater.createdIssueRelation(relation)
+        aggregationUpdater.save(nodeRepository)
+
         return relation
     }
 
@@ -1940,6 +1945,11 @@ class IssueService(
         createdTimelineItemOnRelatedIssue(relatedIssue!!, relatedEvent, atTime, byUser)
         issue.outgoingRelations() -= issueRelation
         relatedIssue.incomingRelations() -= issueRelation
+
+        val aggregationUpdater = IssueAggregationUpdater()
+        aggregationUpdater.createdIssueRelation(issueRelation)
+        aggregationUpdater.save(nodeRepository)
+
         return event
     }
 
