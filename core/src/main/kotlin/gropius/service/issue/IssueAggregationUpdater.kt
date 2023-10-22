@@ -2,6 +2,7 @@ package gropius.service.issue
 
 import gropius.model.architecture.*
 import gropius.model.issue.AggregatedIssue
+import gropius.model.issue.AggregatedIssueRelation
 import gropius.model.issue.Issue
 import gropius.model.issue.MetaAggregatedIssueRelation
 import gropius.model.issue.timeline.IssueRelation
@@ -36,7 +37,7 @@ class IssueAggregationUpdater(
         }
         issue.aggregatedBy(cache).clear()
         relationPartners.forEach {
-            createOrUpdateAggregatedIssues(it, setOf(issue))
+            createOrUpdateAggregatedIssue(it, issue)
         }
     }
 
@@ -88,6 +89,24 @@ class IssueAggregationUpdater(
             return
         }
         aggregateIssueOnComponentIfNecessary(issue, trackable)
+        val interfaceSpecificationVersions = issue.affects(cache).flatMap {
+            when (it) {
+                is InterfaceSpecificationVersion -> listOf(it)
+                is InterfaceSpecification -> it.versions(cache)
+                is InterfacePart -> listOf(it.partOf(cache).value)
+                else -> emptyList()
+            }
+        }
+        val interfaces = interfaceSpecificationVersions.flatMap { version ->
+            version.interfaceDefinitions(cache).filter {
+                it.componentVersion(cache).value.component(cache).value == trackable
+            }.mapNotNull { it.visibleInterface(cache).value }
+        } + issue.affects(cache).filterIsInstance<Interface>().filter {
+            it.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value == trackable
+        }
+        interfaces.forEach {
+            createOrUpdateAggregatedIssue(it, issue)
+        }
         issue.incomingRelations(cache).forEach { relation ->
             val other = relation.issue(cache).value
             other.trackables(cache).forEach {
@@ -151,13 +170,17 @@ class IssueAggregationUpdater(
      */
     suspend fun createdInterface(createdInterface: Interface) {
         val definition = createdInterface.interfaceDefinition(cache).value
+        val component = definition.componentVersion(cache).value.component(cache).value
         val specificationVersion = definition.interfaceSpecificationVersion(cache).value
         val affectableEntities = listOf(
             createdInterface, specificationVersion, specificationVersion.interfaceSpecification(cache).value
         ) + specificationVersion.parts(cache)
-        val affectedIssues = affectableEntities.flatMap { it.affectingIssues(cache) }.toSet()
-        createOrUpdateAggregatedIssues(createdInterface, affectedIssues)
-        val component = definition.componentVersion(cache).value.component(cache).value
+        val affectedIssues = affectableEntities.flatMap { it.affectingIssues(cache) }.filter {
+            component in it.trackables(cache)
+        }.toSet()
+        affectedIssues.forEach {
+            createOrUpdateAggregatedIssue(createdInterface, it)
+        }
         for (issue in affectedIssues) {
             unaggregateIssueOnComponentIfNecessary(issue, component)
         }
@@ -204,6 +227,12 @@ class IssueAggregationUpdater(
         }
     }
 
+    /**
+     * Should be called when an [IssueRelation] is created.
+     * Must be called AFTER the relation was created.
+     *
+     * @param issueRelation the created issue relation
+     */
     suspend fun createdIssueRelation(issueRelation: IssueRelation) {
         val issue = issueRelation.issue(cache).value
         val relatedIssue = issueRelation.relatedIssue(cache).value
@@ -216,6 +245,11 @@ class IssueAggregationUpdater(
         }
     }
 
+    /**
+     * Should be called when an [IssueRelation] is deleted.
+     *
+     * @param issueRelation the deleted issue relation
+     */
     suspend fun deletedIssueRelation(issueRelation: IssueRelation) {
         val issue = issueRelation.issue(cache).value
         val relatedIssue = issueRelation.relatedIssue(cache).value
@@ -229,6 +263,19 @@ class IssueAggregationUpdater(
     }
 
     /**
+     * Should be called when an [Relation] is created.
+     *
+     * @param relation the created relation
+     */
+    suspend fun createdRelation(relation: Relation) {
+
+    }
+
+    suspend fun deletedRelation(relation: Relation) {
+
+    }
+
+    /**
      * Should be called when an [Issue] affects an additional entity.
      * Must be called AFTER the affected entity was added to the issue.
      *
@@ -239,12 +286,12 @@ class IssueAggregationUpdater(
         when (affectedEntity) {
             is Component -> {
                 affectedEntity.versions(cache).forEach {
-                    createOrUpdateAggregatedIssues(it, setOf(issue))
+                    createOrUpdateAggregatedIssue(it, issue)
                 }
             }
 
             is ComponentVersion -> {
-                createOrUpdateAggregatedIssues(affectedEntity, setOf(issue))
+                createOrUpdateAggregatedIssue(affectedEntity, issue)
                 unaggregateIssueOnComponentIfNecessary(issue, affectedEntity.component(cache).value)
             }
 
@@ -305,7 +352,7 @@ class IssueAggregationUpdater(
                 } else {
                     if (component in issue.trackables(cache)) {
                         for (componentVersion in component.versions(cache)) {
-                            createOrUpdateAggregatedIssues(componentVersion, setOf(issue))
+                            createOrUpdateAggregatedIssue(componentVersion, issue)
                         }
                     } else {
                         removeIssueFromAggregatedIssueOnRelationPartner(issue, affectedEntity)
@@ -367,10 +414,15 @@ class IssueAggregationUpdater(
     private suspend fun addedAffectedInterfaceRelatedEntity(
         issue: Issue, interfaces: Collection<Interface>
     ) {
-        for (inter in interfaces) {
-            createOrUpdateAggregatedIssues(inter, setOf(issue))
+        val filteredInterfaces = interfaces.filter {
+            it.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value in issue.trackables(
+                cache
+            )
         }
-        val components = interfaces.map {
+        for (inter in filteredInterfaces) {
+            createOrUpdateAggregatedIssue(inter, issue)
+        }
+        val components = filteredInterfaces.map {
             it.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value
         }.toSet()
         for (component in components) {
@@ -452,6 +504,34 @@ class IssueAggregationUpdater(
             internalUpdatedNodes += aggregatedIssue
             if (aggregatedIssue.issues(cache).isEmpty()) {
                 deleteAggregatedIssue(aggregatedIssue)
+            }
+            issue.outgoingRelations(cache).forEach { relation ->
+                val aggregatedBy = relation.aggregatedBy(cache).filter {
+                    it.start(cache).value == aggregatedIssue
+                }
+                aggregatedBy.forEach {
+                    removeIssueRelationFromAggregatedIssueRelation(relation, it)
+                }
+            }
+            issue.incomingRelations(cache).forEach { relation ->
+                val aggregatedBy = relation.aggregatedBy(cache).filter {
+                    it.end(cache).value == aggregatedIssue
+                }
+                aggregatedBy.forEach {
+                    removeIssueRelationFromAggregatedIssueRelation(relation, it)
+                }
+            }
+        }
+    }
+
+    private suspend fun removeIssueRelationFromAggregatedIssueRelation(
+        issueRelation: IssueRelation, aggregatedIssueRelation: AggregatedIssueRelation
+    ) {
+        if (aggregatedIssueRelation.issueRelations(cache).remove(issueRelation)) {
+            aggregatedIssueRelation.count--
+            internalUpdatedNodes += aggregatedIssueRelation
+            if (aggregatedIssueRelation.issueRelations(cache).isEmpty()) {
+                deletedNodes += aggregatedIssueRelation
             }
         }
     }
@@ -544,27 +624,54 @@ class IssueAggregationUpdater(
      * Handles the case of an [Issue] already being aggregated on the [RelationPartner].
      *
      * @param relationPartner the relation partner to aggregate the issues on
-     * @param issues the issues to aggregate
+     * @param issue the issue to aggregate
      */
-    private suspend fun createOrUpdateAggregatedIssues(relationPartner: RelationPartner, issues: Set<Issue>) {
+    private suspend fun createOrUpdateAggregatedIssue(relationPartner: RelationPartner, issue: Issue) {
         val aggregatedIssues = relationPartner.aggregatedIssues(cache)
-        val aggregatedIssueLookup = aggregatedIssues.associateBy {
-            it.type(cache).value to it.isOpen
-        }.toMutableMap()
-        for (issue in issues) {
-            val state = issue.state(cache).value
-            val type = issue.type(cache).value
-            aggregatedIssueLookup.getOrPut(type to state.isOpen) {
-                val aggregatedIssue = AggregatedIssue(0, state.isOpen)
-                aggregatedIssue.relationPartner(cache).value = relationPartner
-                aggregatedIssue.type(cache).value = type
-                aggregatedIssue
-            }.let {
-                if (it.issues(cache).add(issue)) {
-                    it.count++
+        val aggregatedIssue = aggregatedIssues.firstOrNull {
+            it.type(cache).value == issue.type(cache).value && it.isOpen == issue.state(cache).value.isOpen
+        } ?: AggregatedIssue(0, issue.state(cache).value.isOpen).also {
+            it.relationPartner(cache).value = relationPartner
+            it.type(cache).value = issue.type(cache).value
+            aggregatedIssues += it
+        }
+        if (aggregatedIssue.issues(cache).add(issue)) {
+            aggregatedIssue.count++
+        }
+        internalUpdatedNodes += aggregatedIssue
+        val incomingRelationPartners = findOutgoingRelationPartners(relationPartner)
+        val outgoingRelationPartners = findIncomingRelationPartners(relationPartner)
+        val graphRelationPartners = incomingRelationPartners + outgoingRelationPartners
+        issue.outgoingRelations(cache).forEach {relation ->
+            val relatedIssue = relation.relatedIssue(cache).value ?: return@forEach
+            for (relatedAggregatedIssue in relatedIssue.aggregatedBy(cache)) {
+                if (relatedAggregatedIssue.relationPartner(cache).value in graphRelationPartners) {
+                    createOrUpdateAggregatedIssueRelation(aggregatedIssue, relatedAggregatedIssue, relation)
                 }
-                internalUpdatedNodes += it
             }
+        }
+        issue.incomingRelations(cache).forEach {relation ->
+            val relatedIssue = relation.issue(cache).value
+            for (relatedAggregatedIssue in relatedIssue.aggregatedBy(cache)) {
+                if (relatedAggregatedIssue.relationPartner(cache).value in graphRelationPartners) {
+                    createOrUpdateAggregatedIssueRelation(relatedAggregatedIssue, aggregatedIssue, relation)
+                }
+            }
+        }
+    }
+
+    private suspend fun createOrUpdateAggregatedIssueRelation(
+        from: AggregatedIssue, to: AggregatedIssue, issueRelation: IssueRelation
+    ) {
+        val aggregatedIssueRelation = from.outgoingRelations(cache).find {
+            it.end(cache).value == to
+        } ?: AggregatedIssueRelation(0).also {
+            it.start(cache).value = from
+            it.end(cache).value = to
+        }
+        internalUpdatedNodes += aggregatedIssueRelation
+        if (aggregatedIssueRelation.issueRelations(cache).add(issueRelation)) {
+            aggregatedIssueRelation.count++
         }
     }
 
@@ -607,7 +714,7 @@ class IssueAggregationUpdater(
         }
         if (!doesIssueAffectComponentRelatedEntity(issue, component)) {
             for (componentVersion in component.versions(cache)) {
-                createOrUpdateAggregatedIssues(componentVersion, setOf(issue))
+                createOrUpdateAggregatedIssue(componentVersion, issue)
             }
         }
     }
@@ -662,6 +769,50 @@ class IssueAggregationUpdater(
         if (metaAggregatedRelation.issueRelations(cache).isEmpty()) {
             deletedNodes += metaAggregatedRelation
         }
+    }
+
+    private suspend fun findOutgoingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
+        val result = mutableSetOf<RelationPartner>()
+        val toExplore = ArrayDeque(listOf(relationPartner))
+        while (toExplore.isNotEmpty()) {
+            val next = toExplore.removeFirst()
+            if (result.add(next)) {
+                toExplore += next.outgoingRelations(cache).map { it.end(cache).value }
+                when (next) {
+                    is ComponentVersion -> {
+                        toExplore += next.component(cache).value.versions(cache)
+                    }
+                    is Interface -> {
+                        toExplore += next.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value.versions(
+                            cache
+                        )
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    private suspend fun findIncomingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
+        val result = mutableSetOf<RelationPartner>()
+        val toExplore = ArrayDeque(listOf(relationPartner))
+        while (toExplore.isNotEmpty()) {
+            val next = toExplore.removeFirst()
+            if (result.add(next)) {
+                toExplore += next.incomingRelations(cache).map { it.start(cache).value }
+                when (next) {
+                    is ComponentVersion -> {
+                        toExplore += next.component(cache).value.versions(cache)
+                    }
+                    is Interface -> {
+                        toExplore += next.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value.versions(
+                            cache
+                        )
+                    }
+                }
+            }
+        }
+        return result
     }
 
 }

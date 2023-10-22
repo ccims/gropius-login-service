@@ -1947,7 +1947,7 @@ class IssueService(
         relatedIssue.incomingRelations() -= issueRelation
 
         val aggregationUpdater = IssueAggregationUpdater()
-        aggregationUpdater.createdIssueRelation(issueRelation)
+        aggregationUpdater.deletedIssueRelation(issueRelation)
         aggregationUpdater.save(nodeRepository)
 
         return event
