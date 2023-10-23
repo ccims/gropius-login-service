@@ -88,6 +88,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
             if (startNode is ComponentVersion) {
                 validateComponentVersion(startNode)
             }
+            issueAggregationUpdater.deletedRelation(relation)
         }
     }
 
@@ -236,6 +237,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
      */
     suspend fun createRelation(relation: Relation) {
         cache.add(relation)
+        issueAggregationUpdater.createdRelation(relation)
         addForUpdatedRelationTransitive(relation)
     }
 
