@@ -20,10 +20,10 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
     READ is granted if READ is granted on `definedOn`.
     """
 )
-@Authorization(NodePermission.READ, allowFromRelated = ["definedOn"])
-@Authorization(NodePermission.ADMIN, allowFromRelated = ["definedOn"])
-@Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["definedOn"])
-@Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["activeOn"])
+@Authorization(NodePermission.READ, allowFromRelated = ["partOf"])
+@Authorization(NodePermission.ADMIN, allowFromRelated = ["partOf"])
+@Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["partOf"])
+@Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["partOf"])
 class InterfacePart(
     name: String,
     description: String,

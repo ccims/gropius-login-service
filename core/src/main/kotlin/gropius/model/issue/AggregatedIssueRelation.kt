@@ -35,7 +35,7 @@ class AggregatedIssueRelation(var count: Int) : Node() {
     @NodeRelationship(TYPE, Direction.OUTGOING)
     @GraphQLDescription("The IssueType of this AggregatedIssue.")
     @FilterProperty
-    val type by NodeProperty<IssueRelationType>()
+    val type by NodeProperty<IssueRelationType?>()
 
     @NodeRelationship(ISSUE_RELATION, Direction.OUTGOING)
     @GraphQLDescription("The IssueRelations aggregated by this AggregatedIssueRelation.")

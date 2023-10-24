@@ -798,11 +798,13 @@ class IssueAggregationUpdater(
     private suspend fun createOrUpdateAggregatedIssueRelation(
         from: AggregatedIssue, to: AggregatedIssue, issueRelation: IssueRelation
     ) {
+        val type = issueRelation.type(cache).value
         val aggregatedIssueRelation = from.outgoingRelations(cache).find {
-            it.end(cache).value == to
+            it.end(cache).value == to && it.type(cache).value == type
         } ?: AggregatedIssueRelation(0).also {
             it.start(cache).value = from
             it.end(cache).value = to
+            it.type(cache).value = type
         }
         internalUpdatedNodes += aggregatedIssueRelation
         if (aggregatedIssueRelation.issueRelations(cache).add(issueRelation)) {
