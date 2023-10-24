@@ -8,8 +8,6 @@ import gropius.dto.input.common.Input
 class StrokeStyleInput(
     @GraphQLDescription("The color of the stroke")
     val color: OptionalInput<String>,
-    @GraphQLDescription("The width of the stroke")
-    val width: OptionalInput<Double>,
     @GraphQLDescription("The dash pattern of the stroke")
     val dash: OptionalInput<List<Double>>
 ) : Input()

@@ -8,8 +8,6 @@ import io.github.graphglue.model.DomainNode
 class StrokeStyle(
     @GraphQLDescription("The color of the stroke")
     val color: String?,
-    @GraphQLDescription("The width of the stroke")
-    val width: Double?,
     @GraphQLDescription("The dash pattern of the stroke")
     val dash: List<Double>?
 ) : BaseStyle()

@@ -36,7 +36,7 @@ abstract class RelationPartnerTemplateService<T : RelationPartnerTemplate<*, T>,
             template.fill().value = FillStyle(it.color)
         }
         input.stroke.ifPresent {
-            template.stroke().value = StrokeStyle(it.color.orElse(null), it.width.orElse(null), it.dash.orElse(null))
+            template.stroke().value = StrokeStyle(it.color.orElse(null), it.dash.orElse(null))
         }
     }
 
