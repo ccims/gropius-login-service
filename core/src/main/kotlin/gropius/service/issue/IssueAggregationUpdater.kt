@@ -798,6 +798,9 @@ class IssueAggregationUpdater(
     private suspend fun createOrUpdateAggregatedIssueRelation(
         from: AggregatedIssue, to: AggregatedIssue, issueRelation: IssueRelation
     ) {
+        if (from == to) {
+            return
+        }
         val type = issueRelation.type(cache).value
         val aggregatedIssueRelation = from.outgoingRelations(cache).find {
             it.end(cache).value == to && it.type(cache).value == type
@@ -885,7 +888,7 @@ class IssueAggregationUpdater(
      * @param issueRelation the issue relation to add
      */
     private suspend fun addToMetaAggregatedRelation(from: Trackable, to: Trackable, issueRelation: IssueRelation) {
-        if (from !is Component || to !is Component) {
+        if (from !is Component || to !is Component || from == to) {
             return
         }
         val metaAggregatedRelation = from.outgoingMetaAggregatedIssueRelations(cache).find {
@@ -909,7 +912,7 @@ class IssueAggregationUpdater(
      * @param issueRelation the issue relation to remove from the meta aggregated issue relation
      */
     private suspend fun removeFromMetaAggregatedRelation(from: Trackable, to: Trackable, issueRelation: IssueRelation) {
-        if (from !is Component || to !is Component) {
+        if (from !is Component || to !is Component || from == to) {
             return
         }
         val metaAggregatedRelation = from.outgoingMetaAggregatedIssueRelations(cache).find {
