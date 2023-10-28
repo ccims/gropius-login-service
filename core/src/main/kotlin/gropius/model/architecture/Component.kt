@@ -14,7 +14,7 @@ import io.github.graphglue.model.*
 import org.springframework.data.neo4j.core.schema.CompositeProperty
 import java.net.URI
 
-@DomainNode("components")
+@DomainNode("components", searchQueryName = "searchComponents")
 @GraphQLDescription(
     """Entity which represents a software component, e.g. a library, a microservice, or a deployment platform, ....
     The type of software component is defined by the template.

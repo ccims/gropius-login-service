@@ -14,7 +14,7 @@ import io.github.graphglue.model.*
 import io.github.graphglue.model.property.NodeCache
 import org.springframework.data.neo4j.core.schema.CompositeProperty
 
-@DomainNode
+@DomainNode(searchQueryName = "searchComponentVersions")
 @GraphQLDescription(
     """Version of a component. 
     Can specifies visible/invisible InterfaceSpecifications.
