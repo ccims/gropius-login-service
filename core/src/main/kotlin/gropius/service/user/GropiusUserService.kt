@@ -114,7 +114,6 @@ class GropiusUserService(
      * Find the ids of all [GropiusUser]s
      */
     suspend fun findGropiusUserIds(): List<ID> {
-        //return repository.findAll().map { it.graphQLId }.collectList().awaitSingle()
         return repository.findAllIds().map { ID(it) }
     }
 }
