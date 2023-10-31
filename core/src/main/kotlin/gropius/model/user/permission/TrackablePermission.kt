@@ -40,7 +40,7 @@ abstract class TrackablePermission<T : Trackable>(
          * Permission to check if the user can affect entities part of this [Trackable],
          * e.g. the [Trackable] itself or [InterfaceSpecification]s with [Issue]s
          */
-        const val AFFECT_ENTITIES_WITH_ISSUES = "LINK_FROM_ISSUES"
+        const val AFFECT_ENTITIES_WITH_ISSUES = "AFFECT_ENTITIES_WITH_ISSUES"
 
         /**
          * Permission to check if the user can moderate [Issue]s on the [Trackable]
