@@ -12,7 +12,7 @@ import { Strategy } from "./Strategy";
 
 /**
  * Contains the logic how the system is supposed to create and link
- * login data ans active logins when users authenticate.
+ * login data and active logins when users authenticate.
  * Defines how the sign up and sign in prcess work from the point
  * when passport has processed the request and returned information about the credentials
  */
@@ -121,6 +121,8 @@ export class PerformAuthFunctionService {
         instance: StrategyInstance,
         strategy: Strategy,
     ): Promise<AuthStateData> {
+        const wantsToDoImplicitRegister =
+            strategy.allowsImplicitSignup && instance.doesImplicitRegister && state.function == AuthFunction.LOGIN;
         if (authResult.loginData) {
             // sucessfully found login data matching the authentication
             if (authResult.loginData.expires != null && authResult.loginData.expires <= new Date()) {
@@ -133,33 +135,35 @@ export class PerformAuthFunctionService {
                         "If this error happens again, something internally went wrong.",
                 };
             }
-            if (state.function == AuthFunction.REGISTER || state.function == AuthFunction.REGISTER_WITH_SYNC) {
-                return this.continueExistingRegistration(
-                    authResult,
-                    instance,
-                    state.function == AuthFunction.REGISTER_WITH_SYNC,
-                );
-            } else if (state.function == AuthFunction.LOGIN) {
-                switch (authResult.loginData.state) {
-                    case LoginState.WAITING_FOR_REGISTER:
+            switch (authResult.loginData.state) {
+                case LoginState.WAITING_FOR_REGISTER:
+                    if (
+                        state.function == AuthFunction.REGISTER ||
+                        state.function == AuthFunction.REGISTER_WITH_SYNC ||
+                        wantsToDoImplicitRegister
+                    ) {
+                        return this.continueExistingRegistration(
+                            authResult,
+                            instance,
+                            state.function == AuthFunction.REGISTER_WITH_SYNC,
+                        );
+                    } else if (state.function == AuthFunction.LOGIN) {
                         return {
                             authErrorMessage:
                                 "For these credentials a registration process is still running. " +
                                 "Complete (or restart) the registration before logging in",
                         };
-                    case LoginState.BLOCKED:
-                        return {
-                            authErrorMessage:
-                                "The login to this account using this specific strategy instance " +
-                                "was blocked by the administrator.",
-                        };
-                    case LoginState.VALID:
-                        return this.loginExistingUser(authResult, instance);
-                }
+                    }
+                case LoginState.BLOCKED:
+                    return {
+                        authErrorMessage:
+                            "The login to this account using this specific strategy instance " +
+                            "was blocked by the administrator.",
+                    };
+                case LoginState.VALID:
+                    return this.loginExistingUser(authResult, instance);
             }
         } else {
-            const wantsToDoImplicitRegister =
-                strategy.allowsImplicitSignup && instance.doesImplicitRegister && state.function == AuthFunction.LOGIN;
             if (
                 state.function == AuthFunction.REGISTER ||
                 state.function == AuthFunction.REGISTER_WITH_SYNC ||

@@ -60,7 +60,7 @@ export class TokenService {
         const payload = await this.backendJwtService.verifyAsync(token, {
             audience: [TokenScope.LOGIN_SERVICE],
         });
-        const audience: TokenScope[] = (payload.aud as string[]).map((scope) => TokenScope[scope]);
+        const audience: string[] = payload.aud as string[];
         let user: LoginUser | null = null;
         if (audience.includes(TokenScope.BACKEND)) {
             user = await this.loginUserService.findOneBy({
@@ -69,6 +69,11 @@ export class TokenService {
         }
         if (!user) {
             user = await this.loginUserService.findOneBy({ id: payload.sub });
+        }
+        const tokenIssuedAt = payload.iat as number;
+        const revokeBefore = user?.revokeTokensBefore.getTime();
+        if (revokeBefore !== undefined && revokeBefore / 1000 > tokenIssuedAt) {
+            throw new Error("Token invalid");
         }
         user = user ?? null;
         return { user };

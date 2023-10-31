@@ -39,12 +39,18 @@ export class CreateDefaultAuthClientService {
             return;
         }
 
+        const redirectUri = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_REDIRECT;
+
         authClient = new AuthClient();
         authClient.isValid = true;
         authClient.name = clientName;
         authClient.requiresSecret = false;
         authClient.clientSecrets = [];
-        authClient.redirectUrls = [];
+        if (redirectUri) {
+            authClient.redirectUrls = [redirectUri];
+        } else {
+            authClient.redirectUrls = [];
+        }
         authClient = await this.authClientService.save(authClient);
 
         this.logger.log(`Created auth client with name ${clientName} without secret. Id:`, authClient.id);

@@ -1,9 +1,11 @@
 #/bin/bash
 
 mkdir -p ./website/schemas
+export NODE_ENV="development"
 export GROPIUS_INTERNAL_BACKEND_JWT_SECRET="SecretToGetGraphQLSchemaDoNotUseInProduction"
 export GROPIUS_LOGIN_SPECIFIC_JWT_SECRET="LoginSpecificSecretdoNotUseInProduction"
 export GROPIUS_LOGIN_DATABASE_DRIVER="sqlite"
+export GROPIUS_DEFAULT_CHECK_DATABASE_CONSISTENT="none"
 
 ./gradlew login-service:npm_start --no-daemon &
 gradlew_pid=$!

@@ -195,7 +195,7 @@ export class ImsUserFindingService {
             displayName: string;
             email?: string;
         },
-    ): Promise<UserLoginData> {
+    ): Promise<UserLoginData | null> {
         const requiredLoginDataData = matchingStrategy.getLoginDataDataForImsUserTemplatedFields({
             ...imsUserTemplatedValues,
             id: imsUser.id,
@@ -215,14 +215,17 @@ export class ImsUserFindingService {
             requiredLoginDataData,
         );
 
-        if (matchingLoginData.length != 1) {
-            throw new Error(`Not exactly one (${matchingLoginData.length}) login data matched the ims user given`);
+        if (matchingLoginData.length > 1) {
+            throw new Error(`More than one (${matchingLoginData.length}) login data matched the ims user given`);
+        }
+        if (matchingLoginData.length == 0) {
+            return null;
         }
 
         return matchingLoginData[0];
     }
 
-    async findLoginDataForImsUser(imsUserId: string): Promise<UserLoginData> {
+    async findLoginDataForImsUser(imsUserId: string): Promise<UserLoginData | null> {
         const imsUserWithDetail = (await this.graphqlService.sdk.getImsUserDetails({ imsUserId })).node;
         if (imsUserWithDetail.__typename != "IMSUser") {
             throw new Error("id is not a ims user id");
@@ -242,7 +245,7 @@ export class ImsUserFindingService {
     }
 
     //todo: make more efficient (optimization by aggregating all imsusers created in one sync run)
-    async createAndLinkSingleImsUser(imsUserId: string): Promise<UserLoginDataImsUser> {
+    async createAndLinkSingleImsUser(imsUserId: string): Promise<UserLoginDataImsUser | null> {
         const existingImsUser = await this.imsUserService.findOneBy({
             neo4jId: imsUserId,
         });
@@ -250,18 +253,28 @@ export class ImsUserFindingService {
             return existingImsUser;
         }
         const loginData = await this.findLoginDataForImsUser(imsUserId);
-
-        let newImsUser = new UserLoginDataImsUser();
-        newImsUser.neo4jId = imsUserId;
-        newImsUser.loginData = Promise.resolve(loginData);
-        newImsUser = await this.imsUserService.save(newImsUser);
-
-        const loginUser = await loginData.user;
-        if (loginUser) {
-            await this.backendUserService.linkOneImsUserToGropiusUser(loginUser, newImsUser);
+        if (loginData === null) {
+            this.logger.debug("No login data for given imsUser with id " + imsUserId);
+            return null;
         }
 
-        return newImsUser;
+        try {
+            await this.imsUserService.manager.transaction(async (entityManager) => {
+                let newImsUser = new UserLoginDataImsUser();
+                newImsUser.neo4jId = imsUserId;
+                newImsUser.loginData = Promise.resolve(loginData);
+                newImsUser = await entityManager.save(newImsUser);
+
+                const loginUser = await loginData.user;
+                if (loginUser) {
+                    await this.backendUserService.linkOneImsUserToGropiusUser(loginUser, newImsUser);
+                }
+                return newImsUser;
+            });
+        } catch (err) {
+            this.logger.warn("Error while linking IMSUser to GropiusUser. Rolling back.");
+            return null;
+        }
     }
 
     /**
@@ -443,5 +456,21 @@ export class ImsUserFindingService {
         }
 
         return newImsUsers;
+    }
+
+    /**
+     * Checks for the existance of a IMSUser with the neo4jid specified in the given UserLoginDataImsUser
+     *
+     * Meant to check database consistency. For a properly created UserLoginDataImsUser this should always return true
+     *
+     * @param user The UserLoginDataImsUser to check in the backend
+     * @returns `true` iff the UserLoginDataImsUser has a valid associated IMSUser in the backend
+     */
+    async checkImsUserExists(imsUser: UserLoginDataImsUser): Promise<boolean> {
+        const loadedImsUser = await this.graphqlService.sdk.getBasicImsUserData({ imsUserId: imsUser.neo4jId });
+        if (loadedImsUser?.node?.__typename == "IMSUser") {
+            return true;
+        }
+        return false;
     }
 }

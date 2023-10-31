@@ -55,7 +55,8 @@ export class CheckAccessTokenGuard implements CanActivate {
         const needsAdmin = this.reflector.get<boolean>("needsAdmin", context.getHandler()) ?? false;
         if (needsAdmin) {
             this.logger.debug("Current request needs admin, quering backend");
-            if (!this.backendUserService.checkIsUserAdmin(user)) {
+            const isAdmin = await this.backendUserService.checkIsUserAdmin(user);
+            if (!isAdmin) {
                 return false;
             }
         }

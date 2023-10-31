@@ -2,6 +2,7 @@ package gropius.repository.user
 
 import gropius.model.user.GropiusUser
 import gropius.repository.GropiusRepository
+import org.springframework.data.neo4j.repository.query.Query
 import org.springframework.stereotype.Repository
 
 /**
@@ -26,4 +27,6 @@ interface GropiusUserRepository : GropiusRepository<GropiusUser, String> {
      */
     suspend fun findByUsername(username: String): GropiusUser?
 
+    @Query("MATCH (n:`GropiusUser`:`User`:`ExtensibleNode`:`Node`) RETURN n.id")
+    suspend fun findAllIds(): List<String>
 }

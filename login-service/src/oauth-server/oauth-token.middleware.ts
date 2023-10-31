@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
 import { TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
@@ -14,6 +14,8 @@ import { OauthHttpException } from "./OauthHttpException";
 
 @Injectable()
 export class OauthTokenMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(OauthTokenMiddleware.name);
+
     constructor(
         private readonly tokenService: TokenService,
         private readonly authClientService: AuthClientService,
@@ -39,7 +41,18 @@ export class OauthTokenMiddleware implements NestMiddleware {
         return false;
     }
 
-    private async getCallingClient(req: Request): Promise<AuthClient | null> {
+    /**
+     * Performs the OAuth client authentication by checking the given client_id and client_secret
+     * in the Authorization header and in the body (both allowed according to OAuth spec).
+     *
+     * Flag can be set to return any client without secrets if desired to allow logins without client
+     * @param req The request object
+     * @param findAnyWithoutSecret Set to `true` to find any client that has no secret
+     * => allowing for login without a known client
+     * @returns The auth client that requested (or any without secret if flag ist set)
+     *  or `null` if credentials invalid or none given
+     */
+    private async getCallingClient(req: Request, findAnyWithoutSecret = false): Promise<AuthClient | null> {
         const auth_head = req.headers["authorization"];
         if (auth_head && auth_head.startsWith("Basic ")) {
             const clientIdSecret = Buffer.from(auth_head.substring(6), "base64")
@@ -56,15 +69,34 @@ export class OauthTokenMiddleware implements NestMiddleware {
                         return client;
                     }
                 }
+                return null;
             }
         }
 
-        const client = await this.authClientService.findOneBy({
-            id: req.body.client_id,
-        });
-        if (client && client.isValid) {
-            if (this.checkGivenClientSecretValidOrNotRequired(client, req.body.client_secret)) {
-                return client;
+        if (req.body.client_id) {
+            const client = await this.authClientService.findOneBy({
+                id: req.body.client_id,
+            });
+            if (client && client.isValid) {
+                if (this.checkGivenClientSecretValidOrNotRequired(client, req.body.client_secret)) {
+                    return client;
+                }
+            }
+            return null;
+        }
+
+        if (findAnyWithoutSecret) {
+            this.logger.log(
+                "Any client password authentication is enabled. Returning any client without client secret",
+            );
+            const client = await this.authClientService.findOneBy({
+                requiresSecret: false,
+                isValid: true,
+            });
+            if (client && client.isValid) {
+                if (this.checkGivenClientSecretValidOrNotRequired(client, "")) {
+                    return client;
+                }
             }
         }
         return null;
@@ -73,13 +105,19 @@ export class OauthTokenMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: () => void) {
         ensureState(res);
 
-        const client = await this.getCallingClient(req);
+        const grant_type = req.body.grant_type;
+
+        const allowNoClient: unknown = process.env.GROPIUS_ALLOW_PASSWORD_TOKEN_MODE_WITHOUT_OAUTH_CLIENT;
+        const mayOmitClientId =
+            (allowNoClient === true || allowNoClient === "true") &&
+            (grant_type == "password" || grant_type == "post_credentials");
+
+        const client = await this.getCallingClient(req, mayOmitClientId);
         if (!client) {
             throw new OauthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
         (res.locals.state as OauthServerStateData).client = client;
 
-        const grant_type = req.body.grant_type;
         switch (grant_type) {
             case "refresh_token": //Request for new token using refresh token
             //Fallthrough as resfrehsh token works the same as the initial code (both used to obtain new access token)

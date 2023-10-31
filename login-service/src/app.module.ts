@@ -11,14 +11,15 @@ import { validationSchema } from "./configuration-validator";
 import { OauthServerModule } from "./oauth-server/oauth-server.module";
 import { DefaultReturn } from "./default-return.dto";
 import { InitializationModule } from "./initialization/initialization.module";
+import * as path from "path";
+import { ServeStaticModule } from "@nestjs/serve-static";
 
 @Module({
     imports: [
         ConfigModule.forRoot({
-            envFilePath:
-                process.env.NODE_ENV === "production"
-                    ? [".env.prod.local", ".env.prod"]
-                    : [".env.dev.local", ".env.dev"],
+            envFilePath: ["development", "testing"].includes(process.env.NODE_ENV)
+                ? [".env.dev.local", ".env.dev"]
+                : [".env.prod.local", ".env.prod"],
             validationSchema,
         }),
         TypeOrmModule.forRootAsync({
@@ -33,8 +34,9 @@ import { InitializationModule } from "./initialization/initialization.module";
                         username: process.env.GROPIUS_LOGIN_DATABASE_USER,
                         password: process.env.GROPIUS_LOGIN_DATABASE_PASSWORD,
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE,
-                        synchronize: process.env.NODE_ENV !== "production",
+                        synchronize: process.env.NODE_ENV === "development",
                         autoLoadEntities: true,
+                        migrations: [path.join(__dirname, "..", "dist", "database-migrations", "*.js")],
                     };
                 } else if (driver == "sqlite") {
                     return {
@@ -45,6 +47,17 @@ import { InitializationModule } from "./initialization/initialization.module";
                     return {};
                 }
             },
+        }),
+        ServeStaticModule.forRoot({
+            rootPath: path.join(__dirname, "..", "static"),
+            renderPath: "a",
+            exclude: ["/login", "/syncApi", "/authenticate"],
+        }),
+        ServeStaticModule.forRoot({
+            rootPath: path.join(__dirname, "..", "node_modules", "vue"),
+            serveRoot: "/vue",
+            renderPath: "a",
+            exclude: ["/login", "/syncApi", "/authenticate"],
         }),
         ModelModule,
         ApiLoginModule,
