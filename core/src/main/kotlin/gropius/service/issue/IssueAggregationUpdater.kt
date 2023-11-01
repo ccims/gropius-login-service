@@ -281,7 +281,7 @@ class IssueAggregationUpdater(
      * @param relation the created relation
      */
     suspend fun createdRelation(relation: Relation) {
-git dif        val start = relation.start(cache).value
+        val start = relation.start(cache).value
         val end = relation.end(cache).value
         val outgoingRelationPartners = findOutgoingRelationPartners(end) + end
         val outgoingComponents =
