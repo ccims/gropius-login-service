@@ -281,7 +281,7 @@ class IssueAggregationUpdater(
      * @param relation the created relation
      */
     suspend fun createdRelation(relation: Relation) {
-        val start = relation.start(cache).value
+git dif        val start = relation.start(cache).value
         val end = relation.end(cache).value
         val outgoingRelationPartners = findOutgoingRelationPartners(end) + end
         val outgoingComponents =
@@ -298,11 +298,9 @@ class IssueAggregationUpdater(
                     )
                 }
             }
-        }
-        for (component in outgoingComponents) {
             for (metaRelation in component.incomingMetaAggregatedIssueRelations(cache)) {
                 val metaStart = metaRelation.start(cache).value
-                if (metaStart in incomingComponents) {
+                if (metaStart in outgoingComponents) {
                     updateAggregatedRelationBasedOnMetaRelations(
                         metaRelation, metaStart, component
                     )

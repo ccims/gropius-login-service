@@ -2,6 +2,7 @@ package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.authorization.RELATED_TO_NODE_PERMISSION_RULE
 import gropius.model.issue.MetaAggregatedIssueRelation
 import gropius.model.template.BaseTemplate
 import gropius.model.template.ComponentTemplate
@@ -28,11 +29,11 @@ import java.net.URI
 @Authorization(NodePermission.READ, allowFromRelated = ["versions"])
 @Authorization(
     ComponentPermission.RELATE_FROM_COMPONENT,
-    allow = [Rule(COMPONENT_PERMISSION_ENTRY_NAME, options = [NodePermission.ADMIN])]
+    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 @Authorization(
     ComponentPermission.ADD_TO_PROJECTS,
-    allow = [Rule(COMPONENT_PERMISSION_ENTRY_NAME, options = [NodePermission.ADMIN])]
+    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 class Component(
     name: String,
@@ -73,11 +74,11 @@ class Component(
     @FilterProperty
     override val permissions by NodeSetProperty<ComponentPermission>()
 
-    @NodeRelationship(INCOMING_META_AGGREGATED_ISSUE_RELATION, Direction.INCOMING)
+    @NodeRelationship(INCOMING_META_AGGREGATED_ISSUE_RELATION, Direction.OUTGOING)
     @GraphQLIgnore
     val incomingMetaAggregatedIssueRelations by NodeSetProperty<MetaAggregatedIssueRelation>()
 
-    @NodeRelationship(OUTGOING_META_AGGREGATED_ISSUE_RELATION, Direction.INCOMING)
+    @NodeRelationship(OUTGOING_META_AGGREGATED_ISSUE_RELATION, Direction.OUTGOING)
     @GraphQLIgnore
     val outgoingMetaAggregatedIssueRelations by NodeSetProperty<MetaAggregatedIssueRelation>()
 

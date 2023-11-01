@@ -191,7 +191,7 @@ class GraphQLConfiguration {
                         ALL_PERMISSION_ENTRY_NAME
                     )
                 )
-            }.type(Scalars.GraphQLBoolean).build()
+            }.type(GraphQLNonNull(Scalars.GraphQLBoolean)).build()
 
         val nodeDefinitionCollection by lazy {
             beanFactory.getBean(NodeDefinitionCollection::class.java)
