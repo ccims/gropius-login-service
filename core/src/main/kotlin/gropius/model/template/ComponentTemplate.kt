@@ -8,7 +8,7 @@ import io.github.graphglue.model.DomainNode
 import io.github.graphglue.model.FilterProperty
 import io.github.graphglue.model.NodeRelationship
 
-@DomainNode("componentTemplates")
+@DomainNode("componentTemplates", searchQueryName = "searchComponentTemplates")
 @GraphQLDescription(
     """Template for Components.
     Defines templated fields with specific types (defined using JSON schema).
