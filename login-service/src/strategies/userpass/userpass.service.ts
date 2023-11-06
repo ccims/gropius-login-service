@@ -32,14 +32,14 @@ export class UserpassStrategyService extends StrategyUsingPassport {
     } {
         return {
             username: {
-                name: "string",
+                name: "username",
                 displayName: "Username",
                 type: "string",
             },
             password: {
-                name: "string",
+                name: "password",
                 displayName: "Password",
-                type: "string",
+                type: "password",
             },
         };
     }
