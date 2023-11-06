@@ -29,7 +29,7 @@ export class OauthTokenController {
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
-    ) {}
+    ) { }
 
     private async checkLoginDataIsVaild(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
         if (!loginData) {
@@ -122,7 +122,7 @@ export class OauthTokenController {
             activeLogin.id,
             currentClient.id,
             activeLogin.nextExpectedRefreshTokenNumber,
-            undefined,
+            activeLogin.expires ?? undefined
         );
         return {
             access_token: accessToken,

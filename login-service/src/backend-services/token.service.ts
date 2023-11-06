@@ -27,7 +27,7 @@ export class TokenService {
         private readonly backendJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly loginUserService: LoginUserService,
-    ) {}
+    ) { }
 
     async signBackendAccessToken(user: LoginUser, expiresIn?: number): Promise<string> {
         const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
@@ -104,16 +104,18 @@ export class TokenService {
         activeLoginId: string,
         clientId: string,
         uniqueId: string | number,
-        expiresIn?: number,
+        expiresInAt?: number | Date,
     ): Promise<string> {
-        const expiryObject = expiresIn !== undefined ? { expiresIn: expiresIn / 1000 } : {};
+        const expiresInObject = (typeof expiresInAt == "number") ? { expiresIn: expiresInAt / 1000 } : {};
+        const expiresAtObject = (typeof expiresInAt == "object" && expiresInAt instanceof Date) ? { exp: Math.floor(expiresInAt.getTime() / 1000) } : {};
         return await this.backendJwtService.signAsync(
             {
+                ...expiresAtObject,
                 client_id: clientId,
             },
             {
                 subject: activeLoginId,
-                ...expiryObject,
+                ...expiresInObject,
                 jwtid: uniqueId.toString(),
                 secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
                 audience: [TokenScope.REFRESH_TOKEN],
