@@ -17,5 +17,11 @@ enum class MarkerType {
     TRIANGLE,
 
     @GraphQLDescription("A filled triangle")
-    FILLED_TRIANGLE
+    FILLED_TRIANGLE,
+
+    @GraphQLDescription("A circle")
+    CIRCLE,
+
+    @GraphQLDescription("A filled circle")
+    FILLED_CIRCLE
 }
