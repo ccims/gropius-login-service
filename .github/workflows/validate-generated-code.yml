@@ -51,6 +51,7 @@ jobs:
             exit 1
           fi
           git status
+          git diff
           if [[ `git status --porcelain` ]]; then
             echo "Outdated generated code in login-service"
             exit 1
