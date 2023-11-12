@@ -50,6 +50,7 @@ jobs:
             echo "Failed to generate model"
             exit 1
           fi
+          git status
           if [[ `git status --porcelain` ]]; then
             echo "Outdated generated code in login-service"
             exit 1
