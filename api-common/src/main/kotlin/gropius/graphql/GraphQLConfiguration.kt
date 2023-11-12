@@ -170,7 +170,7 @@ class GraphQLConfiguration {
         AffectedByIssueRelatedToFilterEntryDefinition(nodeDefinitionCollection)
 
     /**
-     * Filter for [RelationPartner]s which part of the graph of a specific [Project]
+     * Filter for [RelationPartner]s which are part of a specific [Project]'s graph.
      */
     @Bean(PART_OF_PROJECT_FILTER)
     fun partOfProjectFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
