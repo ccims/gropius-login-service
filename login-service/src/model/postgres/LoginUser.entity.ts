@@ -56,6 +56,7 @@ export class LoginUser {
     toJSON() {
         return {
             id: this.id,
+            neo4jId: this.neo4jId,
             username: this.username,
             revokeTokensBefore: this.revokeTokensBefore,
         };
