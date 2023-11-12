@@ -2596,8 +2596,12 @@ export enum LabelOrderField {
 export enum MarkerType {
   /** A regular arrow */
   Arrow = 'ARROW',
+  /** A circle */
+  Circle = 'CIRCLE',
   /** A diamond */
   Diamond = 'DIAMOND',
+  /** A filled circle */
+  FilledCircle = 'FILLED_CIRCLE',
   /** A filled diamond */
   FilledDiamond = 'FILLED_DIAMOND',
   /** A filled triangle */
