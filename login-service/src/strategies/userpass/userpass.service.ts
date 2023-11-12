@@ -69,10 +69,14 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         password: string,
         done: (err: any, user: AuthResult | false, info: any) => any,
     ) {
+        if (!password || password.trim().length == 0) {
+            done("Password cannot be empty or blank!", false, undefined);
+        }
+
         const dataActiveLogin = {};
         const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {});
         const loginDataForCorrectUser = await this.loginDataService.findForUsernameOutOfSet(
-            username,
+            username || "",
             loginDataCandidates.map((candidate) => candidate.id),
         );
 
@@ -88,7 +92,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         }
 
         const loginData = loginDataForCorrectUser[0];
-        const hasCorrectPassword = bcrypt.compare(password, loginData.data["password"]);
+        const hasCorrectPassword = await bcrypt.compare(password, loginData.data["password"]);
 
         if (!hasCorrectPassword) {
             return done(

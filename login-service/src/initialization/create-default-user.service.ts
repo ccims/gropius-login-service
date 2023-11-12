@@ -161,7 +161,7 @@ export class CreateDefaultUserService {
         const user = await this.loginUserService.findOneBy({ username });
         if (user) {
             if (!(await this.backendUserService.checkIsUserAdmin(user))) {
-                throw new Error(`Found user with username ${username} but withoud admin permissions.`);
+                throw new Error(`Found user with username ${username} but without admin permissions.`);
             }
             this.logger.log(`User with username ${username} already exists. Skipping creation`);
         }

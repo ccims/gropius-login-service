@@ -25,10 +25,14 @@ export const validationSchema = Joi.object({
         .default("LOGIN,REG,REG_SYNC"),
     GROPIUS_CLIENT_SECRET_LENGTH: Joi.number().min(15).default(48),
     GROPIUS_LOGIN_LISTEN_PORT: Joi.number().default(3000),
+    GROPIUS_LOGIN_ENABLE_OPENAPI: Joi.bool().default(true),
 
     GROPIUS_PASSPORT_STATE_JWT_ISSUER: Joi.string().default("gropius-login-state"),
     GROPIUS_BCRYPT_HASH_ROUNDS: Joi.number().min(8).default(10),
     GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
+    GROPIUS_ALLOW_PASSWORD_TOKEN_MODE_WITHOUT_OAUTH_CLIENT: Joi.boolean().default(
+        process.env.NODE_ENV === "development" || process.env.NODE_ENV === "testing" ? true : false,
+    ),
 
     GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string(),
 
@@ -40,4 +44,7 @@ export const validationSchema = Joi.object({
     GROPIUS_DEFAULT_USER_PASSWORD: Joi.string().optional(),
     GROPIUS_DEFAULT_USER_STRATEGY_INSTANCE_NAME: Joi.string(),
     GROPIUS_DEFAULT_AUTH_CLIENT_NAME: Joi.string().optional(),
+    GROPIUS_DEFAULT_AUTH_CLIENT_REDIRECT: Joi.string().optional(),
+
+    GROPIUS_DEFAULT_CHECK_DATABASE_CONSISTENT: Joi.string().allow("none", "check", "fix").default("none"),
 });

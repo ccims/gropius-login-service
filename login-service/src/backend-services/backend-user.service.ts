@@ -35,11 +35,41 @@ export class BackendUserService {
             throw new Error(`Backend did not know neo4jid ${user.neo4jId} that it previously returned`);
         }
         if (loadedUser?.node?.__typename == "GropiusUser") {
-            if (loadedUser.node.isAdmin) {
+            if (loadedUser.node.isAdmin === true) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Checks for the existance of a GropiusUser with the neo4jid specified in the given LoginUser
+     *
+     * Meant to check database consistency. For a properly created LoginUser this should always return true
+     *
+     * @param user The LoginUser to check in the backend
+     * @returns `true` iff the LoginUser has a valid associated GropiusUser in the backend
+     */
+    async checkUserExists(user: LoginUser): Promise<boolean> {
+        if (!user.neo4jId) {
+            throw new Error("User without neo4jId: " + user.id);
+        }
+        const loadedUser = await this.graphqlService.sdk.getBasicGropiusUserData({ id: user.neo4jId });
+        if (loadedUser?.node?.__typename == "GropiusUser") {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Fetches all backend ids of all existing GropiusUsers in the backend
+     */
+    async getAllGropiusUsersInBackend(): Promise<string[]> {
+        const ids = (await this.graphqlService.sdk.getAllGrpiusUsers())?.gropiusUserIds;
+        if (!ids) {
+            throw new Error("Could not fetch gropius user ids from backend");
+        }
+        return ids;
     }
 
     async createNewUser(input: CreateUserInput, isAdmin: boolean): Promise<LoginUser> {
@@ -67,6 +97,33 @@ export class BackendUserService {
             throw err;
         }
         return loginUser;
+    }
+
+    /**
+     * Fetches the user date (username, ...) of the user fron the backend and creates a LoginUser for it
+     *
+     * Meant to be used in case of database inconsistency as usually both users should be created simultaneously
+     *
+     * @param neo4jId The bakcend neo4j id of the GropiusUser to create a LoginUser for
+     * @returns The created LoginUser instance
+     */
+    async createLoginUserForExistingBackendUser(neo4jId: string): Promise<LoginUser> {
+        try {
+            const backendUser = await this.graphqlService.sdk.getBasicGropiusUserData({ id: neo4jId });
+            if (backendUser?.node?.__typename !== "GropiusUser") {
+                throw new Error(
+                    `When asking for GropiusUser ${neo4jId}, a ${backendUser?.node?.__typename} was returned`,
+                );
+            }
+            let loginUser = new LoginUser();
+            loginUser.username = backendUser.node.username;
+            loginUser.revokeTokensBefore = new Date();
+            loginUser.neo4jId = backendUser.node.id;
+            loginUser = await this.loginUserService.save(loginUser);
+            return loginUser;
+        } catch (err) {
+            throw err;
+        }
     }
 
     async linkOneImsUserToGropiusUser(loginUser: LoginUser, imsUser: UserLoginDataImsUser) {

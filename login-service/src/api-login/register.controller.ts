@@ -1,15 +1,4 @@
-import {
-    All,
-    Body,
-    Controller,
-    Get,
-    HttpException,
-    HttpStatus,
-    Post,
-    Res,
-    SetMetadata,
-    UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, HttpException, HttpStatus, Post, Res, UseGuards } from "@nestjs/common";
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
@@ -21,20 +10,20 @@ import {
 } from "@nestjs/swagger";
 import { Response } from "express";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { TokenService } from "src/backend-services/token.service";
 import { DefaultReturn } from "src/default-return.dto";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";
+import { StrategiesService } from "src/model/services/strategies.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { ApiStateData } from "./ApiStateData";
 import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
 import { CheckRegistrationTokenService } from "./check-registration-token.service";
 import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto";
-import { SelfRegisterUserInput } from "./dto/user-inputs.dto";
+import { SelfRegisterUserInput, UserDataSuggestionResponse, UserDataSuggestionStatus } from "./dto/user-inputs.dto";
 
 /**
  * Controller for handling self registration of new users as well as linking of existing users to new loginData
@@ -48,7 +37,64 @@ export class RegisterController {
         private readonly userService: LoginUserService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly backendUserSerivce: BackendUserService,
+        private readonly strategiesSerivce: StrategiesService,
     ) {}
+
+    /**
+     * Return username, display name and email suggestions for registering a user
+     * @param input The input data containing the registration token to retrieve suggestions for
+     */
+    @Post("data-suggestion")
+    @ApiOperation({ summary: "Return username, display name and email suggestions for registering a user" })
+    @ApiOkResponse({
+        type: UserDataSuggestionResponse,
+        description: "If valid token and successfull (partial) suggested data for the new user",
+    })
+    @ApiUnauthorizedResponse({
+        description:
+            "If the given registration token is not/no longer valid or the registration time frame has expired",
+    })
+    @ApiBadRequestResponse({
+        description: "If the input data is invalid",
+    })
+    async getDataSuggestions(@Body() input: RegistrationTokenInput): Promise<UserDataSuggestionResponse> {
+        RegistrationTokenInput.check(input);
+        const { loginData, activeLogin } = await this.checkRegistrationTokenService.getActiveLoginAndLoginDataForToken(
+            input.register_token,
+        );
+        const user = await loginData.user;
+        if (!!user) {
+            return {
+                status: UserDataSuggestionStatus.ALREADY_REGISTERED,
+            };
+        }
+
+        const strategy = this.strategiesSerivce.getStrategyByName((await loginData.strategyInstance).type);
+        const suggestions = strategy.getUserDataSuggestion(loginData);
+
+        if (suggestions.username) {
+            const numUsers = await this.userService.countBy({ username: suggestions.username.trim() });
+            if (numUsers > 0) {
+                return {
+                    status: UserDataSuggestionStatus.USERNAME_TAKEN,
+                    email: suggestions.email,
+                };
+            }
+        }
+
+        if (!suggestions.username && !suggestions.displayName && !suggestions.email) {
+            return {
+                status: UserDataSuggestionStatus.NO_DATA,
+            };
+        }
+
+        return {
+            status: UserDataSuggestionStatus.OK,
+            username: suggestions.username,
+            displayName: suggestions.displayName,
+            email: suggestions.email,
+        };
+    }
 
     /**
      * Given user data and a registration token, this will create a new user for the registration.
