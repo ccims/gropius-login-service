@@ -1,7 +1,10 @@
 package gropius.model.issue.timeline
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
+import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.model.issue.AggregatedIssueRelation
 import gropius.model.issue.Issue
+import gropius.model.issue.MetaAggregatedIssueRelation
 import gropius.model.template.IssueRelationType
 import io.github.graphglue.model.Direction
 import io.github.graphglue.model.DomainNode
@@ -37,5 +40,14 @@ class IssueRelation(
     @GraphQLDescription("The end of the relation, null if deleted.")
     @FilterProperty
     val relatedIssue by NodeProperty<Issue?>()
+
+    @NodeRelationship(AggregatedIssueRelation.ISSUE_RELATION, Direction.INCOMING)
+    @GraphQLDescription("The AggregatedIssueRelations this IssueRelation is aggregated by.")
+    @FilterProperty
+    val aggregatedBy by NodeSetProperty<AggregatedIssueRelation>()
+
+    @NodeRelationship(AggregatedIssueRelation.ISSUE_RELATION, Direction.OUTGOING)
+    @GraphQLIgnore
+    val metaAggregatedBy by NodeSetProperty<MetaAggregatedIssueRelation>()
 
 }

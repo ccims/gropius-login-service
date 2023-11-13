@@ -17,4 +17,4 @@ class InterfaceSpecificationDerivationConditionInput(
     val isVisibleDerived: Boolean,
     @GraphQLDescription("If true InterfaceSpecifications are invisible derived")
     val isInvisibleDerived: Boolean
-) : CreateExtensibleNodeInput()
+) : CreateRelationPartnerTemplateInput()

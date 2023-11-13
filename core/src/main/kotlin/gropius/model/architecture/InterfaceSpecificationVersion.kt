@@ -27,6 +27,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 )
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["interfaceSpecification"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["interfaceSpecification"])
+@Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["interfaceDefinitions"])
 class InterfaceSpecificationVersion(
     name: String,
     description: String,
@@ -40,7 +41,7 @@ class InterfaceSpecificationVersion(
 ) : AffectedByIssue(name, description), Versioned, MutableTemplatedNode {
 
     companion object {
-        const val ACTIVE_PART = "ACTIVE_PART"
+        const val PART = "PART"
     }
 
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
@@ -48,15 +49,13 @@ class InterfaceSpecificationVersion(
     @FilterProperty
     override val template by NodeProperty<InterfaceSpecificationVersionTemplate>()
 
-    @NodeRelationship(ACTIVE_PART, Direction.OUTGOING)
+    @NodeRelationship(PART, Direction.OUTGOING)
     @GraphQLDescription(
-        """InterfaceParts which are active on this InterfaceSpecificationVersion
-        Semantically, only the active parts on an InterfaceSpecificationVersion exist on the Interfaces
-        defined by the InterfaceSpecificationVersion.
+        """InterfaceParts which are part of this InterfaceSpecificationVersion
         """
     )
     @FilterProperty
-    val activeParts by NodeSetProperty<InterfacePart>()
+    val parts by NodeSetProperty<InterfacePart>()
 
     @NodeRelationship(InterfaceSpecification.VERSION, Direction.INCOMING)
     @GraphQLDescription("The InterfaceSpecification this is part of.")

@@ -35,6 +35,8 @@ export type AffectedByIssueFilterInput = {
   not?: InputMaybe<AffectedByIssueFilterInput>;
   /** Connects all subformulas via or */
   or?: InputMaybe<Array<AffectedByIssueFilterInput>>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
 };
 
 /** Used to filter by a connection-based property. Fields are joined by AND */
@@ -63,6 +65,102 @@ export enum AffectedByIssueOrderField {
   Name = 'NAME'
 }
 
+/** Filter used to filter AggregatedIssue */
+export type AggregatedIssueFilterInput = {
+  /** Connects all subformulas via and */
+  and?: InputMaybe<Array<AggregatedIssueFilterInput>>;
+  /** Filter by count */
+  count?: InputMaybe<IntFilterInput>;
+  /** Filter by id */
+  id?: InputMaybe<IdFilterInput>;
+  /** Filter by incomingRelations */
+  incomingRelations?: InputMaybe<AggregatedIssueRelationListFilterInput>;
+  /** Filter by isOpen */
+  isOpen?: InputMaybe<BooleanFilterInput>;
+  /** Filter by issues */
+  issues?: InputMaybe<IssueListFilterInput>;
+  /** Negates the subformula */
+  not?: InputMaybe<AggregatedIssueFilterInput>;
+  /** Connects all subformulas via or */
+  or?: InputMaybe<Array<AggregatedIssueFilterInput>>;
+  /** Filter by outgoingRelations */
+  outgoingRelations?: InputMaybe<AggregatedIssueRelationListFilterInput>;
+  /** Filters for nodes where the related node match this filter */
+  relationPartner?: InputMaybe<RelationPartnerFilterInput>;
+  /** Filters for nodes where the related node match this filter */
+  type?: InputMaybe<IssueTypeFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type AggregatedIssueListFilterInput = {
+  /** Filters for nodes where all of the related nodes match this filter */
+  all?: InputMaybe<AggregatedIssueFilterInput>;
+  /** Filters for nodes where any of the related nodes match this filter */
+  any?: InputMaybe<AggregatedIssueFilterInput>;
+  /** Filters for nodes where none of the related nodes match this filter */
+  none?: InputMaybe<AggregatedIssueFilterInput>;
+};
+
+/** Defines the order of a AggregatedIssue list */
+export type AggregatedIssueOrder = {
+  /** The direction to order by, defaults to ASC */
+  direction?: InputMaybe<OrderDirection>;
+  /** The field to order by, defaults to ID */
+  field?: InputMaybe<AggregatedIssueOrderField>;
+};
+
+/** Fields a list of AggregatedIssue can be sorted by */
+export enum AggregatedIssueOrderField {
+  /** Order by count */
+  Count = 'COUNT',
+  /** Order by id */
+  Id = 'ID'
+}
+
+/** Filter used to filter AggregatedIssueRelation */
+export type AggregatedIssueRelationFilterInput = {
+  /** Connects all subformulas via and */
+  and?: InputMaybe<Array<AggregatedIssueRelationFilterInput>>;
+  /** Filters for nodes where the related node match this filter */
+  end?: InputMaybe<AggregatedIssueFilterInput>;
+  /** Filter by id */
+  id?: InputMaybe<IdFilterInput>;
+  /** Filter by issueRelations */
+  issueRelations?: InputMaybe<IssueRelationListFilterInput>;
+  /** Negates the subformula */
+  not?: InputMaybe<AggregatedIssueRelationFilterInput>;
+  /** Connects all subformulas via or */
+  or?: InputMaybe<Array<AggregatedIssueRelationFilterInput>>;
+  /** Filters for nodes where the related node match this filter */
+  start?: InputMaybe<AggregatedIssueFilterInput>;
+  /** Filters for nodes where the related node match this filter */
+  type?: InputMaybe<IssueRelationTypeFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type AggregatedIssueRelationListFilterInput = {
+  /** Filters for nodes where all of the related nodes match this filter */
+  all?: InputMaybe<AggregatedIssueRelationFilterInput>;
+  /** Filters for nodes where any of the related nodes match this filter */
+  any?: InputMaybe<AggregatedIssueRelationFilterInput>;
+  /** Filters for nodes where none of the related nodes match this filter */
+  none?: InputMaybe<AggregatedIssueRelationFilterInput>;
+};
+
+/** Defines the order of a AggregatedIssueRelation list */
+export type AggregatedIssueRelationOrder = {
+  /** The direction to order by, defaults to ASC */
+  direction?: InputMaybe<OrderDirection>;
+  /** The field to order by, defaults to ID */
+  field?: InputMaybe<AggregatedIssueRelationOrderField>;
+};
+
+/** Fields a list of AggregatedIssueRelation can be sorted by */
+export enum AggregatedIssueRelationOrderField {
+  /** Order by id */
+  Id = 'ID'
+}
+
 /** Non global permission entries */
 export enum AllPermissionEntry {
   /**
@@ -73,6 +171,16 @@ export enum AllPermissionEntry {
   AddToProjects = 'ADD_TO_PROJECTS',
   /** Grants all other permissions on the Node except READ. */
   Admin = 'ADMIN',
+  /**
+   * Allows affecting entities part of this Trackable with any Issues.
+   * Affectable entitites include
+   *   - the Trackable itself
+   *   - in case the Trackable is a Component
+   *     - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
+   *     - Interfaces on the Component
+   *     - ComponentVersions of the Component
+   */
+  AffectEntitiesWithIssues = 'AFFECT_ENTITIES_WITH_ISSUES',
   /**
    * Allows to create Comments on Issues on this Trackable.
    * Also allows editing of your own Comments.
@@ -87,16 +195,6 @@ export enum AllPermissionEntry {
   ExportIssues = 'EXPORT_ISSUES',
   /** Allows adding Labels on this Trackable to other Trackables. */
   ExportLabels = 'EXPORT_LABELS',
-  /**
-   * Allows affecting entities part of this Trackable with any Issues.
-   * Affectable entitites include
-   *   - the Trackable itself
-   *   - in case the Trackable is a Component
-   *     - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
-   *     - Interfaces on the Component
-   *     - ComponentVersions of the Component
-   */
-  LinkFromIssues = 'LINK_FROM_ISSUES',
   /** Allows to add, remove, and update Artefacts on this Trackable. */
   ManageArtefacts = 'MANAGE_ARTEFACTS',
   /** Allows to add / remove ComponentVersions to / from this Project. */
@@ -566,6 +664,8 @@ export type ComponentFilterInput = {
   permissions?: InputMaybe<ComponentPermissionListFilterInput>;
   /** Filter by pinnedIssues */
   pinnedIssues?: InputMaybe<IssueListFilterInput>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filter by repositoryURL */
   repositoryURL?: InputMaybe<NullableStringFilterInput>;
   /** Filter by syncsTo */
@@ -615,6 +715,16 @@ export enum ComponentPermissionEntry {
   /** Grants all other permissions on the Node except READ. */
   Admin = 'ADMIN',
   /**
+   * Allows affecting entities part of this Trackable with any Issues.
+   * Affectable entitites include
+   *   - the Trackable itself
+   *   - in case the Trackable is a Component
+   *     - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
+   *     - Interfaces on the Component
+   *     - ComponentVersions of the Component
+   */
+  AffectEntitiesWithIssues = 'AFFECT_ENTITIES_WITH_ISSUES',
+  /**
    * Allows to create Comments on Issues on this Trackable.
    * Also allows editing of your own Comments.
    */
@@ -628,16 +738,6 @@ export enum ComponentPermissionEntry {
   ExportIssues = 'EXPORT_ISSUES',
   /** Allows adding Labels on this Trackable to other Trackables. */
   ExportLabels = 'EXPORT_LABELS',
-  /**
-   * Allows affecting entities part of this Trackable with any Issues.
-   * Affectable entitites include
-   *   - the Trackable itself
-   *   - in case the Trackable is a Component
-   *     - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
-   *     - Interfaces on the Component
-   *     - ComponentVersions of the Component
-   */
-  LinkFromIssues = 'LINK_FROM_ISSUES',
   /** Allows to add, remove, and update Artefacts on this Trackable. */
   ManageArtefacts = 'MANAGE_ARTEFACTS',
   /**
@@ -793,6 +893,8 @@ export enum ComponentTemplateOrderField {
 export type ComponentVersionFilterInput = {
   /** Filter by affectingIssues */
   affectingIssues?: InputMaybe<IssueListFilterInput>;
+  /** Filter by aggregatedIssues */
+  aggregatedIssues?: InputMaybe<AggregatedIssueListFilterInput>;
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<ComponentVersionFilterInput>>;
   /** Filters for nodes where the related node match this filter */
@@ -817,6 +919,10 @@ export type ComponentVersionFilterInput = {
   or?: InputMaybe<Array<ComponentVersionFilterInput>>;
   /** Filter by outgoingRelations */
   outgoingRelations?: InputMaybe<RelationListFilterInput>;
+  /** Filters for RelationPartners which are part of a Project's component graph */
+  partOfProject?: InputMaybe<Scalars['ID']>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<ComponentVersionTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1366,6 +1472,22 @@ export type ImsUserTemplateFilterInput = {
   or?: InputMaybe<Array<ImsUserTemplateFilterInput>>;
 };
 
+/** Filter which can be used to filter for Nodes with a specific Int field */
+export type IntFilterInput = {
+  /** Matches values which are equal to the provided value */
+  eq?: InputMaybe<Scalars['Int']>;
+  /** Matches values which are greater than the provided value */
+  gt?: InputMaybe<Scalars['Int']>;
+  /** Matches values which are greater than or equal to the provided value */
+  gte?: InputMaybe<Scalars['Int']>;
+  /** Matches values which are equal to any of the provided values */
+  in?: InputMaybe<Array<Scalars['Int']>>;
+  /** Matches values which are lesser than the provided value */
+  lt?: InputMaybe<Scalars['Int']>;
+  /** Matches values which are lesser than or equal to the provided value */
+  lte?: InputMaybe<Scalars['Int']>;
+};
+
 /** Filter used to filter InterfaceDefinition */
 export type InterfaceDefinitionFilterInput = {
   /** Connects all subformulas via and */
@@ -1444,6 +1566,8 @@ export type InterfaceDefinitionTemplateFilterInput = {
 export type InterfaceFilterInput = {
   /** Filter by affectingIssues */
   affectingIssues?: InputMaybe<IssueListFilterInput>;
+  /** Filter by aggregatedIssues */
+  aggregatedIssues?: InputMaybe<AggregatedIssueListFilterInput>;
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<InterfaceFilterInput>>;
   /** Filter by description */
@@ -1464,6 +1588,10 @@ export type InterfaceFilterInput = {
   or?: InputMaybe<Array<InterfaceFilterInput>>;
   /** Filter by outgoingRelations */
   outgoingRelations?: InputMaybe<RelationListFilterInput>;
+  /** Filters for RelationPartners which are part of a Project's component graph */
+  partOfProject?: InputMaybe<Scalars['ID']>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<InterfaceTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1488,14 +1616,10 @@ export enum InterfaceOrderField {
 
 /** Filter used to filter InterfacePart */
 export type InterfacePartFilterInput = {
-  /** Filter by activeOn */
-  activeOn?: InputMaybe<InterfaceSpecificationVersionListFilterInput>;
   /** Filter by affectingIssues */
   affectingIssues?: InputMaybe<IssueListFilterInput>;
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<InterfacePartFilterInput>>;
-  /** Filters for nodes where the related node match this filter */
-  definedOn?: InputMaybe<InterfaceSpecificationFilterInput>;
   /** Filter by description */
   description?: InputMaybe<StringFilterInput>;
   /** Filter by id */
@@ -1512,6 +1636,10 @@ export type InterfacePartFilterInput = {
   not?: InputMaybe<InterfacePartFilterInput>;
   /** Connects all subformulas via or */
   or?: InputMaybe<Array<InterfacePartFilterInput>>;
+  /** Filters for nodes where the related node match this filter */
+  partOf?: InputMaybe<InterfaceSpecificationVersionFilterInput>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<InterfacePartTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1620,8 +1748,6 @@ export type InterfaceSpecificationFilterInput = {
   and?: InputMaybe<Array<InterfaceSpecificationFilterInput>>;
   /** Filters for nodes where the related node match this filter */
   component?: InputMaybe<ComponentFilterInput>;
-  /** Filter by definedParts */
-  definedParts?: InputMaybe<InterfacePartListFilterInput>;
   /** Filter by description */
   description?: InputMaybe<StringFilterInput>;
   /** Filter by id */
@@ -1632,6 +1758,8 @@ export type InterfaceSpecificationFilterInput = {
   not?: InputMaybe<InterfaceSpecificationFilterInput>;
   /** Connects all subformulas via or */
   or?: InputMaybe<Array<InterfaceSpecificationFilterInput>>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<InterfaceSpecificationTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1726,8 +1854,6 @@ export enum InterfaceSpecificationTemplateOrderField {
 
 /** Filter used to filter InterfaceSpecificationVersion */
 export type InterfaceSpecificationVersionFilterInput = {
-  /** Filter by activeParts */
-  activeParts?: InputMaybe<InterfacePartListFilterInput>;
   /** Filter by affectingIssues */
   affectingIssues?: InputMaybe<IssueListFilterInput>;
   /** Connects all subformulas via and */
@@ -1746,6 +1872,10 @@ export type InterfaceSpecificationVersionFilterInput = {
   not?: InputMaybe<InterfaceSpecificationVersionFilterInput>;
   /** Connects all subformulas via or */
   or?: InputMaybe<Array<InterfaceSpecificationVersionFilterInput>>;
+  /** Filter by parts */
+  parts?: InputMaybe<InterfacePartListFilterInput>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<InterfaceSpecificationVersionTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1978,6 +2108,8 @@ export enum IssueCommentOrderField {
 export type IssueFilterInput = {
   /** Filter by affects */
   affects?: InputMaybe<AffectedByIssueListFilterInput>;
+  /** Filter by aggregatedBy */
+  aggregatedBy?: InputMaybe<AggregatedIssueListFilterInput>;
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<IssueFilterInput>>;
   /** Filter by artefacts */
@@ -2134,6 +2266,8 @@ export enum IssuePriorityOrderField {
 
 /** Filter used to filter IssueRelation */
 export type IssueRelationFilterInput = {
+  /** Filter by aggregatedBy */
+  aggregatedBy?: InputMaybe<AggregatedIssueRelationListFilterInput>;
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<IssueRelationFilterInput>>;
   /** Filter by createdAt */
@@ -2458,6 +2592,24 @@ export enum LabelOrderField {
   Name = 'NAME'
 }
 
+/** Type of a Relation marker */
+export enum MarkerType {
+  /** A regular arrow */
+  Arrow = 'ARROW',
+  /** A circle */
+  Circle = 'CIRCLE',
+  /** A diamond */
+  Diamond = 'DIAMOND',
+  /** A filled circle */
+  FilledCircle = 'FILLED_CIRCLE',
+  /** A filled diamond */
+  FilledDiamond = 'FILLED_DIAMOND',
+  /** A filled triangle */
+  FilledTriangle = 'FILLED_TRIANGLE',
+  /** A triangle */
+  Triangle = 'TRIANGLE'
+}
+
 export type NodePermissionFilterEntry = {
   /** The node where the user must have the permission */
   node: Scalars['ID'];
@@ -2619,6 +2771,8 @@ export type ProjectFilterInput = {
   permissions?: InputMaybe<ProjectPermissionListFilterInput>;
   /** Filter by pinnedIssues */
   pinnedIssues?: InputMaybe<IssueListFilterInput>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filter by repositoryURL */
   repositoryURL?: InputMaybe<NullableStringFilterInput>;
   /** Filter by syncsTo */
@@ -2656,6 +2810,16 @@ export enum ProjectPermissionEntry {
   /** Grants all other permissions on the Node except READ. */
   Admin = 'ADMIN',
   /**
+   * Allows affecting entities part of this Trackable with any Issues.
+   * Affectable entitites include
+   *   - the Trackable itself
+   *   - in case the Trackable is a Component
+   *     - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
+   *     - Interfaces on the Component
+   *     - ComponentVersions of the Component
+   */
+  AffectEntitiesWithIssues = 'AFFECT_ENTITIES_WITH_ISSUES',
+  /**
    * Allows to create Comments on Issues on this Trackable.
    * Also allows editing of your own Comments.
    */
@@ -2669,16 +2833,6 @@ export enum ProjectPermissionEntry {
   ExportIssues = 'EXPORT_ISSUES',
   /** Allows adding Labels on this Trackable to other Trackables. */
   ExportLabels = 'EXPORT_LABELS',
-  /**
-   * Allows affecting entities part of this Trackable with any Issues.
-   * Affectable entitites include
-   *   - the Trackable itself
-   *   - in case the Trackable is a Component
-   *     - InterfaceSpecifications, their InterfaceSpecificationVersions and their InterfaceParts of the Component (not inherited ones)
-   *     - Interfaces on the Component
-   *     - ComponentVersions of the Component
-   */
-  LinkFromIssues = 'LINK_FROM_ISSUES',
   /** Allows to add, remove, and update Artefacts on this Trackable. */
   ManageArtefacts = 'MANAGE_ARTEFACTS',
   /** Allows to add / remove ComponentVersions to / from this Project. */
@@ -2869,6 +3023,8 @@ export enum RelationOrderField {
 export type RelationPartnerFilterInput = {
   /** Filter by affectingIssues */
   affectingIssues?: InputMaybe<IssueListFilterInput>;
+  /** Filter by aggregatedIssues */
+  aggregatedIssues?: InputMaybe<AggregatedIssueListFilterInput>;
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<RelationPartnerFilterInput>>;
   /** Filter by description */
@@ -2885,6 +3041,10 @@ export type RelationPartnerFilterInput = {
   or?: InputMaybe<Array<RelationPartnerFilterInput>>;
   /** Filter by outgoingRelations */
   outgoingRelations?: InputMaybe<RelationListFilterInput>;
+  /** Filters for RelationPartners which are part of a Project's component graph */
+  partOfProject?: InputMaybe<Scalars['ID']>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
   templatedFields?: InputMaybe<Array<InputMaybe<JsonFieldInput>>>;
 };
@@ -2987,6 +3147,20 @@ export enum RelationTemplateOrderField {
   Name = 'NAME'
 }
 
+/** Type of a Shape */
+export enum ShapeType {
+  /** A Circle */
+  Circle = 'CIRCLE',
+  /** An Ellipse */
+  Ellipse = 'ELLIPSE',
+  /** A Hexagon */
+  Hexagon = 'HEXAGON',
+  /** A Rectangle */
+  Rect = 'RECT',
+  /** A Rhombus */
+  Rhombus = 'RHOMBUS'
+}
+
 /** Filter which can be used to filter for Nodes with a specific String field */
 export type StringFilterInput = {
   /** Matches Strings which contain the provided value */
@@ -3087,6 +3261,8 @@ export type TrackableFilterInput = {
   or?: InputMaybe<Array<TrackableFilterInput>>;
   /** Filter by pinnedIssues */
   pinnedIssues?: InputMaybe<IssueListFilterInput>;
+  /** Filters for AffectedByIssues which are related to a Trackable */
+  relatedTo?: InputMaybe<Scalars['ID']>;
   /** Filter by repositoryURL */
   repositoryURL?: InputMaybe<NullableStringFilterInput>;
   /** Filter by syncsTo */
@@ -3202,14 +3378,14 @@ export type GetBasicImsUserDataQueryVariables = Exact<{
 }>;
 
 
-export type GetBasicImsUserDataQuery = { __typename?: 'Query', node?: { __typename: 'AddedAffectedEntityEvent', id: string } | { __typename: 'AddedArtefactEvent', id: string } | { __typename: 'AddedLabelEvent', id: string } | { __typename: 'AddedToPinnedIssuesEvent', id: string } | { __typename: 'AddedToTrackableEvent', id: string } | { __typename: 'Artefact', id: string } | { __typename: 'ArtefactTemplate', id: string } | { __typename: 'Assignment', id: string } | { __typename: 'AssignmentType', id: string } | { __typename: 'AssignmentTypeChangedEvent', id: string } | { __typename: 'Body', id: string } | { __typename: 'Component', id: string } | { __typename: 'ComponentPermission', id: string } | { __typename: 'ComponentTemplate', id: string } | { __typename: 'ComponentVersion', id: string } | { __typename: 'ComponentVersionTemplate', id: string } | { __typename: 'DueDateChangedEvent', id: string } | { __typename: 'EstimatedTimeChangedEvent', id: string } | { __typename: 'GlobalPermission', id: string } | { __typename: 'GropiusUser', id: string } | { __typename: 'IMS', id: string } | { __typename: 'IMSIssue', id: string } | { __typename: 'IMSIssueTemplate', id: string } | { __typename: 'IMSPermission', id: string } | { __typename: 'IMSProject', id: string } | { __typename: 'IMSProjectTemplate', id: string } | { __typename: 'IMSTemplate', id: string } | { __typename: 'IMSUser', id: string } | { __typename: 'IMSUserTemplate', id: string } | { __typename: 'IncomingRelationTypeChangedEvent', id: string } | { __typename: 'Interface', id: string } | { __typename: 'InterfaceDefinition', id: string } | { __typename: 'InterfaceDefinitionTemplate', id: string } | { __typename: 'InterfacePart', id: string } | { __typename: 'InterfacePartTemplate', id: string } | { __typename: 'InterfaceSpecification', id: string } | { __typename: 'InterfaceSpecificationDerivationCondition', id: string } | { __typename: 'InterfaceSpecificationTemplate', id: string } | { __typename: 'InterfaceSpecificationVersion', id: string } | { __typename: 'InterfaceSpecificationVersionTemplate', id: string } | { __typename: 'InterfaceTemplate', id: string } | { __typename: 'IntraComponentDependencyParticipant', id: string } | { __typename: 'IntraComponentDependencySpecification', id: string } | { __typename: 'Issue', id: string } | { __typename: 'IssueComment', id: string } | { __typename: 'IssuePriority', id: string } | { __typename: 'IssueRelation', id: string } | { __typename: 'IssueRelationType', id: string } | { __typename: 'IssueState', id: string } | { __typename: 'IssueTemplate', id: string } | { __typename: 'IssueType', id: string } | { __typename: 'Label', id: string } | { __typename: 'OutgoingRelationTypeChangedEvent', id: string } | { __typename: 'PriorityChangedEvent', id: string } | { __typename: 'Project', id: string } | { __typename: 'ProjectPermission', id: string } | { __typename: 'RelatedByIssueEvent', id: string } | { __typename: 'Relation', id: string } | { __typename: 'RelationCondition', id: string } | { __typename: 'RelationTemplate', id: string } | { __typename: 'RemovedAffectedEntityEvent', id: string } | { __typename: 'RemovedArtefactEvent', id: string } | { __typename: 'RemovedAssignmentEvent', id: string } | { __typename: 'RemovedFromPinnedIssuesEvent', id: string } | { __typename: 'RemovedFromTrackableEvent', id: string } | { __typename: 'RemovedIncomingRelationEvent', id: string } | { __typename: 'RemovedLabelEvent', id: string } | { __typename: 'RemovedOutgoingRelationEvent', id: string } | { __typename: 'RemovedTemplatedFieldEvent', id: string } | { __typename: 'SpentTimeChangedEvent', id: string } | { __typename: 'StartDateChangedEvent', id: string } | { __typename: 'StateChangedEvent', id: string } | { __typename: 'TemplateChangedEvent', id: string } | { __typename: 'TemplatedFieldChangedEvent', id: string } | { __typename: 'TitleChangedEvent', id: string } | { __typename: 'TypeChangedEvent', id: string } | null };
+export type GetBasicImsUserDataQuery = { __typename?: 'Query', node?: { __typename: 'AddedAffectedEntityEvent', id: string } | { __typename: 'AddedArtefactEvent', id: string } | { __typename: 'AddedLabelEvent', id: string } | { __typename: 'AddedToPinnedIssuesEvent', id: string } | { __typename: 'AddedToTrackableEvent', id: string } | { __typename: 'AggregatedIssue', id: string } | { __typename: 'AggregatedIssueRelation', id: string } | { __typename: 'Artefact', id: string } | { __typename: 'ArtefactTemplate', id: string } | { __typename: 'Assignment', id: string } | { __typename: 'AssignmentType', id: string } | { __typename: 'AssignmentTypeChangedEvent', id: string } | { __typename: 'Body', id: string } | { __typename: 'Component', id: string } | { __typename: 'ComponentPermission', id: string } | { __typename: 'ComponentTemplate', id: string } | { __typename: 'ComponentVersion', id: string } | { __typename: 'ComponentVersionTemplate', id: string } | { __typename: 'DueDateChangedEvent', id: string } | { __typename: 'EstimatedTimeChangedEvent', id: string } | { __typename: 'FillStyle', id: string } | { __typename: 'GlobalPermission', id: string } | { __typename: 'GropiusUser', id: string } | { __typename: 'IMS', id: string } | { __typename: 'IMSIssue', id: string } | { __typename: 'IMSIssueTemplate', id: string } | { __typename: 'IMSPermission', id: string } | { __typename: 'IMSProject', id: string } | { __typename: 'IMSProjectTemplate', id: string } | { __typename: 'IMSTemplate', id: string } | { __typename: 'IMSUser', id: string } | { __typename: 'IMSUserTemplate', id: string } | { __typename: 'IncomingRelationTypeChangedEvent', id: string } | { __typename: 'Interface', id: string } | { __typename: 'InterfaceDefinition', id: string } | { __typename: 'InterfaceDefinitionTemplate', id: string } | { __typename: 'InterfacePart', id: string } | { __typename: 'InterfacePartTemplate', id: string } | { __typename: 'InterfaceSpecification', id: string } | { __typename: 'InterfaceSpecificationDerivationCondition', id: string } | { __typename: 'InterfaceSpecificationTemplate', id: string } | { __typename: 'InterfaceSpecificationVersion', id: string } | { __typename: 'InterfaceSpecificationVersionTemplate', id: string } | { __typename: 'InterfaceTemplate', id: string } | { __typename: 'IntraComponentDependencyParticipant', id: string } | { __typename: 'IntraComponentDependencySpecification', id: string } | { __typename: 'Issue', id: string } | { __typename: 'IssueComment', id: string } | { __typename: 'IssuePriority', id: string } | { __typename: 'IssueRelation', id: string } | { __typename: 'IssueRelationType', id: string } | { __typename: 'IssueState', id: string } | { __typename: 'IssueTemplate', id: string } | { __typename: 'IssueType', id: string } | { __typename: 'Label', id: string } | { __typename: 'MetaAggregatedIssueRelation', id: string } | { __typename: 'OutgoingRelationTypeChangedEvent', id: string } | { __typename: 'PriorityChangedEvent', id: string } | { __typename: 'Project', id: string } | { __typename: 'ProjectPermission', id: string } | { __typename: 'RelatedByIssueEvent', id: string } | { __typename: 'Relation', id: string } | { __typename: 'RelationCondition', id: string } | { __typename: 'RelationTemplate', id: string } | { __typename: 'RemovedAffectedEntityEvent', id: string } | { __typename: 'RemovedArtefactEvent', id: string } | { __typename: 'RemovedAssignmentEvent', id: string } | { __typename: 'RemovedFromPinnedIssuesEvent', id: string } | { __typename: 'RemovedFromTrackableEvent', id: string } | { __typename: 'RemovedIncomingRelationEvent', id: string } | { __typename: 'RemovedLabelEvent', id: string } | { __typename: 'RemovedOutgoingRelationEvent', id: string } | { __typename: 'RemovedTemplatedFieldEvent', id: string } | { __typename: 'SpentTimeChangedEvent', id: string } | { __typename: 'StartDateChangedEvent', id: string } | { __typename: 'StateChangedEvent', id: string } | { __typename: 'StrokeStyle', id: string } | { __typename: 'TemplateChangedEvent', id: string } | { __typename: 'TemplatedFieldChangedEvent', id: string } | { __typename: 'TitleChangedEvent', id: string } | { __typename: 'TypeChangedEvent', id: string } | null };
 
 export type GetImsUserDetailsQueryVariables = Exact<{
   imsUserId: Scalars['ID'];
 }>;
 
 
-export type GetImsUserDetailsQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'AssignmentTypeChangedEvent' } | { __typename?: 'Body' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename?: 'GropiusUser' } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }>, ims: { __typename: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }> } } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'IncomingRelationTypeChangedEvent' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueState' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'OutgoingRelationTypeChangedEvent' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'RemovedTemplatedFieldEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'StateChangedEvent' } | { __typename?: 'TemplateChangedEvent' } | { __typename?: 'TemplatedFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
+export type GetImsUserDetailsQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'AggregatedIssue' } | { __typename?: 'AggregatedIssueRelation' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'AssignmentTypeChangedEvent' } | { __typename?: 'Body' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'FillStyle' } | { __typename?: 'GlobalPermission' } | { __typename?: 'GropiusUser' } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename: 'IMSUser', id: string, username?: string | null, displayName: string, email?: string | null, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }>, ims: { __typename: 'IMS', id: string, name: string, description: string, templatedFields: Array<{ __typename: 'JSONField', name: string, value?: any | null }> } } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'IncomingRelationTypeChangedEvent' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueState' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'MetaAggregatedIssueRelation' } | { __typename?: 'OutgoingRelationTypeChangedEvent' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'RemovedTemplatedFieldEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'StateChangedEvent' } | { __typename?: 'StrokeStyle' } | { __typename?: 'TemplateChangedEvent' } | { __typename?: 'TemplatedFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
 
 export type GetImsUsersByTemplatedFieldValuesQueryVariables = Exact<{
   imsFilterInput: ImsFilterInput;
@@ -3231,7 +3407,7 @@ export type GetBasicGropiusUserDataQueryVariables = Exact<{
 }>;
 
 
-export type GetBasicGropiusUserDataQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'AssignmentTypeChangedEvent' } | { __typename?: 'Body' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'GlobalPermission' } | { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename?: 'IMSUser' } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'IncomingRelationTypeChangedEvent' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueState' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'OutgoingRelationTypeChangedEvent' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'RemovedTemplatedFieldEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'StateChangedEvent' } | { __typename?: 'TemplateChangedEvent' } | { __typename?: 'TemplatedFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
+export type GetBasicGropiusUserDataQuery = { __typename?: 'Query', node?: { __typename?: 'AddedAffectedEntityEvent' } | { __typename?: 'AddedArtefactEvent' } | { __typename?: 'AddedLabelEvent' } | { __typename?: 'AddedToPinnedIssuesEvent' } | { __typename?: 'AddedToTrackableEvent' } | { __typename?: 'AggregatedIssue' } | { __typename?: 'AggregatedIssueRelation' } | { __typename?: 'Artefact' } | { __typename?: 'ArtefactTemplate' } | { __typename?: 'Assignment' } | { __typename?: 'AssignmentType' } | { __typename?: 'AssignmentTypeChangedEvent' } | { __typename?: 'Body' } | { __typename?: 'Component' } | { __typename?: 'ComponentPermission' } | { __typename?: 'ComponentTemplate' } | { __typename?: 'ComponentVersion' } | { __typename?: 'ComponentVersionTemplate' } | { __typename?: 'DueDateChangedEvent' } | { __typename?: 'EstimatedTimeChangedEvent' } | { __typename?: 'FillStyle' } | { __typename?: 'GlobalPermission' } | { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | { __typename?: 'IMS' } | { __typename?: 'IMSIssue' } | { __typename?: 'IMSIssueTemplate' } | { __typename?: 'IMSPermission' } | { __typename?: 'IMSProject' } | { __typename?: 'IMSProjectTemplate' } | { __typename?: 'IMSTemplate' } | { __typename?: 'IMSUser' } | { __typename?: 'IMSUserTemplate' } | { __typename?: 'IncomingRelationTypeChangedEvent' } | { __typename?: 'Interface' } | { __typename?: 'InterfaceDefinition' } | { __typename?: 'InterfaceDefinitionTemplate' } | { __typename?: 'InterfacePart' } | { __typename?: 'InterfacePartTemplate' } | { __typename?: 'InterfaceSpecification' } | { __typename?: 'InterfaceSpecificationDerivationCondition' } | { __typename?: 'InterfaceSpecificationTemplate' } | { __typename?: 'InterfaceSpecificationVersion' } | { __typename?: 'InterfaceSpecificationVersionTemplate' } | { __typename?: 'InterfaceTemplate' } | { __typename?: 'IntraComponentDependencyParticipant' } | { __typename?: 'IntraComponentDependencySpecification' } | { __typename?: 'Issue' } | { __typename?: 'IssueComment' } | { __typename?: 'IssuePriority' } | { __typename?: 'IssueRelation' } | { __typename?: 'IssueRelationType' } | { __typename?: 'IssueState' } | { __typename?: 'IssueTemplate' } | { __typename?: 'IssueType' } | { __typename?: 'Label' } | { __typename?: 'MetaAggregatedIssueRelation' } | { __typename?: 'OutgoingRelationTypeChangedEvent' } | { __typename?: 'PriorityChangedEvent' } | { __typename?: 'Project' } | { __typename?: 'ProjectPermission' } | { __typename?: 'RelatedByIssueEvent' } | { __typename?: 'Relation' } | { __typename?: 'RelationCondition' } | { __typename?: 'RelationTemplate' } | { __typename?: 'RemovedAffectedEntityEvent' } | { __typename?: 'RemovedArtefactEvent' } | { __typename?: 'RemovedAssignmentEvent' } | { __typename?: 'RemovedFromPinnedIssuesEvent' } | { __typename?: 'RemovedFromTrackableEvent' } | { __typename?: 'RemovedIncomingRelationEvent' } | { __typename?: 'RemovedLabelEvent' } | { __typename?: 'RemovedOutgoingRelationEvent' } | { __typename?: 'RemovedTemplatedFieldEvent' } | { __typename?: 'SpentTimeChangedEvent' } | { __typename?: 'StartDateChangedEvent' } | { __typename?: 'StateChangedEvent' } | { __typename?: 'StrokeStyle' } | { __typename?: 'TemplateChangedEvent' } | { __typename?: 'TemplatedFieldChangedEvent' } | { __typename?: 'TitleChangedEvent' } | { __typename?: 'TypeChangedEvent' } | null };
 
 export type GetUserByNameQueryVariables = Exact<{
   username: Scalars['String'];
@@ -3245,7 +3421,7 @@ export type CheckUserIsAdminQueryVariables = Exact<{
 }>;
 
 
-export type CheckUserIsAdminQuery = { __typename?: 'Query', node?: { __typename: 'AddedAffectedEntityEvent' } | { __typename: 'AddedArtefactEvent' } | { __typename: 'AddedLabelEvent' } | { __typename: 'AddedToPinnedIssuesEvent' } | { __typename: 'AddedToTrackableEvent' } | { __typename: 'Artefact' } | { __typename: 'ArtefactTemplate' } | { __typename: 'Assignment' } | { __typename: 'AssignmentType' } | { __typename: 'AssignmentTypeChangedEvent' } | { __typename: 'Body' } | { __typename: 'Component' } | { __typename: 'ComponentPermission' } | { __typename: 'ComponentTemplate' } | { __typename: 'ComponentVersion' } | { __typename: 'ComponentVersionTemplate' } | { __typename: 'DueDateChangedEvent' } | { __typename: 'EstimatedTimeChangedEvent' } | { __typename: 'GlobalPermission' } | { __typename: 'GropiusUser', id: string, isAdmin: boolean } | { __typename: 'IMS' } | { __typename: 'IMSIssue' } | { __typename: 'IMSIssueTemplate' } | { __typename: 'IMSPermission' } | { __typename: 'IMSProject' } | { __typename: 'IMSProjectTemplate' } | { __typename: 'IMSTemplate' } | { __typename: 'IMSUser' } | { __typename: 'IMSUserTemplate' } | { __typename: 'IncomingRelationTypeChangedEvent' } | { __typename: 'Interface' } | { __typename: 'InterfaceDefinition' } | { __typename: 'InterfaceDefinitionTemplate' } | { __typename: 'InterfacePart' } | { __typename: 'InterfacePartTemplate' } | { __typename: 'InterfaceSpecification' } | { __typename: 'InterfaceSpecificationDerivationCondition' } | { __typename: 'InterfaceSpecificationTemplate' } | { __typename: 'InterfaceSpecificationVersion' } | { __typename: 'InterfaceSpecificationVersionTemplate' } | { __typename: 'InterfaceTemplate' } | { __typename: 'IntraComponentDependencyParticipant' } | { __typename: 'IntraComponentDependencySpecification' } | { __typename: 'Issue' } | { __typename: 'IssueComment' } | { __typename: 'IssuePriority' } | { __typename: 'IssueRelation' } | { __typename: 'IssueRelationType' } | { __typename: 'IssueState' } | { __typename: 'IssueTemplate' } | { __typename: 'IssueType' } | { __typename: 'Label' } | { __typename: 'OutgoingRelationTypeChangedEvent' } | { __typename: 'PriorityChangedEvent' } | { __typename: 'Project' } | { __typename: 'ProjectPermission' } | { __typename: 'RelatedByIssueEvent' } | { __typename: 'Relation' } | { __typename: 'RelationCondition' } | { __typename: 'RelationTemplate' } | { __typename: 'RemovedAffectedEntityEvent' } | { __typename: 'RemovedArtefactEvent' } | { __typename: 'RemovedAssignmentEvent' } | { __typename: 'RemovedFromPinnedIssuesEvent' } | { __typename: 'RemovedFromTrackableEvent' } | { __typename: 'RemovedIncomingRelationEvent' } | { __typename: 'RemovedLabelEvent' } | { __typename: 'RemovedOutgoingRelationEvent' } | { __typename: 'RemovedTemplatedFieldEvent' } | { __typename: 'SpentTimeChangedEvent' } | { __typename: 'StartDateChangedEvent' } | { __typename: 'StateChangedEvent' } | { __typename: 'TemplateChangedEvent' } | { __typename: 'TemplatedFieldChangedEvent' } | { __typename: 'TitleChangedEvent' } | { __typename: 'TypeChangedEvent' } | null };
+export type CheckUserIsAdminQuery = { __typename?: 'Query', node?: { __typename: 'AddedAffectedEntityEvent' } | { __typename: 'AddedArtefactEvent' } | { __typename: 'AddedLabelEvent' } | { __typename: 'AddedToPinnedIssuesEvent' } | { __typename: 'AddedToTrackableEvent' } | { __typename: 'AggregatedIssue' } | { __typename: 'AggregatedIssueRelation' } | { __typename: 'Artefact' } | { __typename: 'ArtefactTemplate' } | { __typename: 'Assignment' } | { __typename: 'AssignmentType' } | { __typename: 'AssignmentTypeChangedEvent' } | { __typename: 'Body' } | { __typename: 'Component' } | { __typename: 'ComponentPermission' } | { __typename: 'ComponentTemplate' } | { __typename: 'ComponentVersion' } | { __typename: 'ComponentVersionTemplate' } | { __typename: 'DueDateChangedEvent' } | { __typename: 'EstimatedTimeChangedEvent' } | { __typename: 'FillStyle' } | { __typename: 'GlobalPermission' } | { __typename: 'GropiusUser', id: string, isAdmin: boolean } | { __typename: 'IMS' } | { __typename: 'IMSIssue' } | { __typename: 'IMSIssueTemplate' } | { __typename: 'IMSPermission' } | { __typename: 'IMSProject' } | { __typename: 'IMSProjectTemplate' } | { __typename: 'IMSTemplate' } | { __typename: 'IMSUser' } | { __typename: 'IMSUserTemplate' } | { __typename: 'IncomingRelationTypeChangedEvent' } | { __typename: 'Interface' } | { __typename: 'InterfaceDefinition' } | { __typename: 'InterfaceDefinitionTemplate' } | { __typename: 'InterfacePart' } | { __typename: 'InterfacePartTemplate' } | { __typename: 'InterfaceSpecification' } | { __typename: 'InterfaceSpecificationDerivationCondition' } | { __typename: 'InterfaceSpecificationTemplate' } | { __typename: 'InterfaceSpecificationVersion' } | { __typename: 'InterfaceSpecificationVersionTemplate' } | { __typename: 'InterfaceTemplate' } | { __typename: 'IntraComponentDependencyParticipant' } | { __typename: 'IntraComponentDependencySpecification' } | { __typename: 'Issue' } | { __typename: 'IssueComment' } | { __typename: 'IssuePriority' } | { __typename: 'IssueRelation' } | { __typename: 'IssueRelationType' } | { __typename: 'IssueState' } | { __typename: 'IssueTemplate' } | { __typename: 'IssueType' } | { __typename: 'Label' } | { __typename: 'MetaAggregatedIssueRelation' } | { __typename: 'OutgoingRelationTypeChangedEvent' } | { __typename: 'PriorityChangedEvent' } | { __typename: 'Project' } | { __typename: 'ProjectPermission' } | { __typename: 'RelatedByIssueEvent' } | { __typename: 'Relation' } | { __typename: 'RelationCondition' } | { __typename: 'RelationTemplate' } | { __typename: 'RemovedAffectedEntityEvent' } | { __typename: 'RemovedArtefactEvent' } | { __typename: 'RemovedAssignmentEvent' } | { __typename: 'RemovedFromPinnedIssuesEvent' } | { __typename: 'RemovedFromTrackableEvent' } | { __typename: 'RemovedIncomingRelationEvent' } | { __typename: 'RemovedLabelEvent' } | { __typename: 'RemovedOutgoingRelationEvent' } | { __typename: 'RemovedTemplatedFieldEvent' } | { __typename: 'SpentTimeChangedEvent' } | { __typename: 'StartDateChangedEvent' } | { __typename: 'StateChangedEvent' } | { __typename: 'StrokeStyle' } | { __typename: 'TemplateChangedEvent' } | { __typename: 'TemplatedFieldChangedEvent' } | { __typename: 'TitleChangedEvent' } | { __typename: 'TypeChangedEvent' } | null };
 
 export type GetAllGrpiusUsersQueryVariables = Exact<{ [key: string]: never; }>;
 

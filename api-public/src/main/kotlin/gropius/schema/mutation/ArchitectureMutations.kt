@@ -7,6 +7,7 @@ import graphql.schema.DataFetchingEnvironment
 import gropius.authorization.gropiusAuthorizationContext
 import gropius.dto.input.architecture.*
 import gropius.dto.input.common.DeleteNodeInput
+import gropius.dto.payload.AddComponentVersionToProjectPayload
 import gropius.dto.payload.DeleteNodePayload
 import gropius.graphql.AutoPayloadType
 import gropius.model.architecture.*
@@ -346,12 +347,12 @@ class ArchitectureMutations(
         with the ComponentVersion
         """
     )
-    @AutoPayloadType("The updated Project")
     suspend fun addComponentVersionToProject(
         @GraphQLDescription("Defines which ComponentVersion to add to which Project")
         input: AddComponentVersionToProjectInput, dfe: DataFetchingEnvironment
-    ): Project {
-        return projectService.addComponentVersionToProject(dfe.gropiusAuthorizationContext, input)
+    ): AddComponentVersionToProjectPayload {
+        val (project, componentVersion) = projectService.addComponentVersionToProject(dfe.gropiusAuthorizationContext, input)
+        return AddComponentVersionToProjectPayload(project, componentVersion)
     }
 
     @GraphQLDescription(

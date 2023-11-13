@@ -5,8 +5,9 @@ import gropius.model.template.ComponentTemplate
 import gropius.model.template.InterfaceSpecificationDerivationCondition
 import gropius.model.template.InterfaceSpecificationTemplate
 import gropius.model.template.RelationPartnerTemplate
-import io.github.graphglue.model.Node
-import io.github.graphglue.model.property.NodeCache
+import gropius.service.NodeBatchUpdateContext
+import gropius.service.NodeBatchUpdater
+import gropius.service.issue.IssueAggregationUpdater
 
 /**
  * Helper class to handle anything InterfaceSpecification derivation related
@@ -23,29 +24,14 @@ import io.github.graphglue.model.property.NodeCache
  * - [IntraComponentDependencySpecification]
  * After using, nodes from [deletedNodes] must be deleted, and nodes from [updatedNodes] must be saved
  *
+ * @param updateContext the [NodeBatchUpdater] to use for updating/deleting nodes
  */
-class ComponentGraphUpdater {
-    /**
-     * Cache used to ensure that only one instance of each Node is loaded by the algorithm
-     */
-    private val cache = NodeCache()
+class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateContext()) : NodeBatchUpdater by updateContext {
 
     /**
-     * Nodes which should be deleted
+     * Helper for updating aggregated issues
      */
-    val deletedNodes = mutableSetOf<Node>()
-
-    /**
-     * Nodes which are updated and need to be saved
-     * This may contain nodes also present in [deletedNodes]
-     */
-    private val internalUpdatedNodes: MutableSet<Node> = mutableSetOf()
-
-    /**
-     * Nodes which are updated and need to be saved
-     * Does not include any deleted nodes
-     */
-    val updatedNodes: Set<Node> get() = internalUpdatedNodes - deletedNodes
+    val issueAggregationUpdater = IssueAggregationUpdater(updateContext)
 
     /**
      * Deletes a [Component]
@@ -55,6 +41,7 @@ class ComponentGraphUpdater {
     suspend fun deleteComponent(component: Component) {
         cache.add(component)
         deletedNodes += component
+        issueAggregationUpdater.deletedComponent(component)
         component.interfaceSpecifications(cache).forEach {
             deleteInterfaceSpecification(it)
         }
@@ -77,6 +64,7 @@ class ComponentGraphUpdater {
         componentVersion.incomingRelations(cache).forEach {
             deleteRelation(it)
         }
+        issueAggregationUpdater.deletedComponentVersion(componentVersion)
     }
 
     /**
@@ -100,6 +88,7 @@ class ComponentGraphUpdater {
             if (startNode is ComponentVersion) {
                 validateComponentVersion(startNode)
             }
+            issueAggregationUpdater.deletedRelation(relation)
         }
     }
 
@@ -111,7 +100,6 @@ class ComponentGraphUpdater {
     suspend fun deleteInterfaceSpecification(interfaceSpecification: InterfaceSpecification) {
         cache.add(interfaceSpecification)
         deletedNodes += interfaceSpecification
-        deletedNodes += interfaceSpecification.definedParts(cache)
         interfaceSpecification.versions(cache).forEach {
             deleteInterfaceSpecificationVersion(it)
         }
@@ -125,6 +113,7 @@ class ComponentGraphUpdater {
     suspend fun deleteInterfaceSpecificationVersion(interfaceSpecificationVersion: InterfaceSpecificationVersion) {
         cache.add(interfaceSpecificationVersion)
         deletedNodes += interfaceSpecificationVersion
+        deletedNodes += interfaceSpecificationVersion.parts(cache)
         interfaceSpecificationVersion.interfaceDefinitions(cache).toSet().forEach {
             deleteInterfaceDefinition(it)
         }
@@ -236,6 +225,7 @@ class ComponentGraphUpdater {
             definition.invisibleSelfDefined = true
         }
         internalUpdatedNodes += definition
+        handleUpdatedInterfaceDefinition(definition)
         addForUpdatedComponentVersion(componentVersion, setOf(definition))
     }
 
@@ -247,6 +237,7 @@ class ComponentGraphUpdater {
      */
     suspend fun createRelation(relation: Relation) {
         cache.add(relation)
+        issueAggregationUpdater.createdRelation(relation)
         addForUpdatedRelationTransitive(relation)
     }
 
@@ -570,6 +561,7 @@ class ComponentGraphUpdater {
             if (visibleInterface != null) {
                 deleteInterface(visibleInterface)
                 definition.visibleInterface(cache).value = null
+                issueAggregationUpdater.deletedInterface(visibleInterface)
             }
             if (!definition.invisibleSelfDefined && definition.invisibleDerivedBy(cache).isEmpty()) {
                 deletedNodes += definition
@@ -596,6 +588,8 @@ class ComponentGraphUpdater {
         newInterface.template(cache).value = interfaceTemplate
         internalUpdatedNodes += definition
         definition.visibleInterface(cache).value = newInterface
+        newInterface.interfaceDefinition(cache).value = definition
+        issueAggregationUpdater.createdInterface(newInterface)
     }
 
     /**

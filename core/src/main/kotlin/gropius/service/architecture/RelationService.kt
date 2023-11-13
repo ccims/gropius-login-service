@@ -119,15 +119,7 @@ class RelationService(
             if (relationPartner !is Interface) {
                 throw IllegalArgumentException("InterfaceParts can only be provided if the side of the Relation uses an Interface")
             }
-            val interfaceSpecificationVersion =
-                relationPartner.interfaceDefinition().value.interfaceSpecificationVersion().value
-            val parts = partIds.map { interfacePartRepository.findById(it) }.toSet()
-            parts.forEach {
-                if (interfaceSpecificationVersion !in it.activeOn()) {
-                    throw IllegalArgumentException("InterfacePart must be active on the used InterfaceSpecificationVersion")
-                }
-            }
-            return parts
+            return partIds.map { interfacePartRepository.findById(it) }.toSet()
         }
         return emptySet()
     }

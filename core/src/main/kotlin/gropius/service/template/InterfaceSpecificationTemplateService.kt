@@ -1,6 +1,7 @@
 package gropius.service.template
 
 import gropius.authorization.GropiusAuthorizationContext
+import gropius.dto.input.orElse
 import gropius.dto.input.template.CreateInterfaceSpecificationTemplateInput
 import gropius.model.template.*
 import gropius.repository.findAllById
@@ -36,7 +37,9 @@ class InterfaceSpecificationTemplateService(
     ): InterfaceSpecificationTemplate {
         input.validate()
         checkCreateTemplatePermission(authorizationContext)
-        val template = InterfaceSpecificationTemplate(input.name, input.description, mutableMapOf(), false)
+        val template = InterfaceSpecificationTemplate(
+            input.name, input.description, mutableMapOf(), false, input.shapeRadius.orElse(null), input.shapeType
+        )
         createdRelationPartnerTemplate(template, input)
         template.canBeVisibleOnComponents() += componentTemplateRepository.findAllById(input.canBeVisibleOnComponents)
         template.canBeVisibleOnComponents() += template.extends().flatMap { it.canBeVisibleOnComponents() }
@@ -57,26 +60,21 @@ class InterfaceSpecificationTemplateService(
         template: InterfaceSpecificationTemplate, input: CreateInterfaceSpecificationTemplateInput
     ) {
         val extendedTemplates = template.extends()
-        template.interfaceSpecificationVersionTemplate().value = subTemplateService.createSubTemplate(
-            ::InterfaceSpecificationVersionTemplate,
-            input.interfaceSpecificationVersionTemplate,
-            extendedTemplates.map { it.interfaceSpecificationVersionTemplate().value }
-        )
-        template.interfacePartTemplate().value = subTemplateService.createSubTemplate(
-            ::InterfacePartTemplate,
+        template.interfaceSpecificationVersionTemplate().value =
+            subTemplateService.createSubTemplate(::InterfaceSpecificationVersionTemplate,
+                input.interfaceSpecificationVersionTemplate,
+                extendedTemplates.map { it.interfaceSpecificationVersionTemplate().value })
+        template.interfacePartTemplate().value = subTemplateService.createSubTemplate(::InterfacePartTemplate,
             input.interfacePartTemplate,
-            extendedTemplates.map { it.interfacePartTemplate().value }
-        )
+            extendedTemplates.map { it.interfacePartTemplate().value })
         template.interfaceTemplate().value = subTemplateService.createSubTemplate(
             ::InterfaceTemplate,
             input.interfaceTemplate,
-            extendedTemplates.map { it.interfaceTemplate().value }
-        )
-        template.interfaceDefinitionTemplate().value = subTemplateService.createSubTemplate(
-            ::InterfaceDefinitionTemplate,
-            input.interfaceDefinitionTemplate,
-            extendedTemplates.map { it.interfaceDefinitionTemplate().value }
-        )
+            extendedTemplates.map { it.interfaceTemplate().value })
+        template.interfaceDefinitionTemplate().value =
+            subTemplateService.createSubTemplate(::InterfaceDefinitionTemplate,
+                input.interfaceDefinitionTemplate,
+                extendedTemplates.map { it.interfaceDefinitionTemplate().value })
     }
 
 }

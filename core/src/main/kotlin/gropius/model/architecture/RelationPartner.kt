@@ -2,20 +2,25 @@ package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.model.issue.AggregatedIssue
 import gropius.model.template.RelationPartnerTemplate
 import gropius.model.template.TemplatedNode
-import io.github.graphglue.model.Direction
-import io.github.graphglue.model.DomainNode
-import io.github.graphglue.model.FilterProperty
-import io.github.graphglue.model.NodeRelationship
+import io.github.graphglue.model.*
 import io.github.graphglue.model.property.NodeCache
+
+/**
+ * Name of the bean defining the partOfProject filter
+ */
+const val PART_OF_PROJECT_FILTER = "partOfProject"
 
 @DomainNode
 @GraphQLDescription("Entity which can be used as start / end of Relations. Can be affected by Issues.")
+@AdditionalFilter(PART_OF_PROJECT_FILTER)
 abstract class RelationPartner(name: String, description: String) : AffectedByIssue(name, description), TemplatedNode {
     companion object {
         const val INCOMING_RELATION = "INCOMING_RELATION"
         const val OUTGOING_RELATION = "OUTGOING_RELATION"
+        const val AGGREGATED_ISSUE = "AGGREGATED_ISSUE"
     }
 
     @NodeRelationship(INCOMING_RELATION, Direction.OUTGOING)
@@ -27,6 +32,11 @@ abstract class RelationPartner(name: String, description: String) : AffectedByIs
     @GraphQLDescription("Relations which use this as the start of the Relation.")
     @FilterProperty
     val outgoingRelations by NodeSetProperty<Relation>()
+
+    @NodeRelationship(AGGREGATED_ISSUE, Direction.OUTGOING)
+    @GraphQLDescription("AggregatedIssues on this RelationPartner.")
+    @FilterProperty
+    val aggregatedIssues by NodeSetProperty<AggregatedIssue>()
 
     /**
      * Helper function to get the associated [RelationPartnerTemplate]

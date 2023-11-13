@@ -86,17 +86,11 @@ class InterfaceSpecificationService(
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
         val interfaceSpecification = InterfaceSpecification(input.name, input.description, templatedFields)
         interfaceSpecification.template().value = template
+        interfaceSpecification.component().value = component
         createdExtensibleNode(interfaceSpecification, input)
         input.versions.ifPresent { inputs ->
             interfaceSpecification.versions() += inputs.map {
                 interfaceSpecificationVersionService.createInterfaceSpecificationVersion(
-                    interfaceSpecification, it
-                )
-            }
-        }
-        input.definedParts.ifPresent { inputs ->
-            interfaceSpecification.definedParts() += inputs.map {
-                interfacePartService.createInterfacePart(
                     interfaceSpecification, it
                 )
             }
@@ -145,11 +139,6 @@ class InterfaceSpecificationService(
             val template = interfaceSpecificationTemplateRepository.findById(templateId)
             interfaceSpecification.template().value = template
             updateInterfaceSpecificationVersionTemplate(interfaceSpecification, input, template)
-            val interfacePartTemplate = template.interfacePartTemplate().value
-            interfaceSpecification.definedParts().forEach {
-                it.template().value = interfacePartTemplate
-                templatedNodeService.updateTemplatedFields(it, input.interfacePartTemplatedFields, true)
-            }
             val graphUpdater = ComponentGraphUpdater()
             graphUpdater.updateInterfaceSpecificationTemplate(interfaceSpecification)
             nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()

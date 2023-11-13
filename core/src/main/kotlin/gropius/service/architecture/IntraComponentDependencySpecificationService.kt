@@ -169,11 +169,6 @@ class IntraComponentDependencySpecificationService(
             throw IllegalArgumentException("The specified Interface is not part of the same ComponentVersion")
         }
         val parts = interfacePartRepository.findAllById(input.includedParts.orElse(emptyList()))
-        for (part in parts) {
-            if (interfaceDefinition.interfaceSpecificationVersion().value !in part.activeOn()) {
-                throw IllegalArgumentException("Specified includedParts must be active on the specified Interface")
-            }
-        }
         val intraComponentDependencyParticipant = IntraComponentDependencyParticipant()
         intraComponentDependencyParticipant.`interface`().value = relatedInterface
         intraComponentDependencyParticipant.includedParts() += parts

@@ -14,6 +14,7 @@ import gropius.model.user.permission.NodePermission
 import gropius.model.user.permission.ProjectPermission
 import gropius.repository.architecture.ComponentVersionRepository
 import gropius.repository.architecture.ProjectRepository
+import gropius.repository.common.NodeRepository
 import gropius.repository.findById
 import gropius.service.user.permission.ProjectPermissionService
 import io.github.graphglue.authorization.Permission
@@ -105,11 +106,11 @@ class ProjectService(
      *
      * @param authorizationContext used to check for the required permission
      * @param input defines which [ComponentVersion] to add to which [Project]
-     * @return the updated [Project]
+     * @return the updated [Project] and the added [ComponentVersion]
      */
     suspend fun addComponentVersionToProject(
         authorizationContext: GropiusAuthorizationContext, input: AddComponentVersionToProjectInput
-    ): Project {
+    ): Pair<Project, ComponentVersion> {
         input.validate()
         val project = repository.findById(input.project)
         checkPermission(
@@ -124,7 +125,11 @@ class ProjectService(
             "add the ComponentVersion to Projects"
         )
         project.components() += componentVersion
-        return repository.save(project).awaitSingle()
+        val savedNodes = nodeRepository.saveAll(listOf(project, componentVersion)).collectList().awaitSingle()
+        return Pair(
+            savedNodes.first { it is Project } as Project,
+            savedNodes.first { it is ComponentVersion } as ComponentVersion
+        )
     }
 
     /**

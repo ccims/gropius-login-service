@@ -2,6 +2,8 @@ package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.authorization.RELATED_TO_NODE_PERMISSION_RULE
+import gropius.model.issue.MetaAggregatedIssueRelation
 import gropius.model.template.BaseTemplate
 import gropius.model.template.ComponentTemplate
 import gropius.model.template.MutableTemplatedNode
@@ -13,7 +15,7 @@ import io.github.graphglue.model.*
 import org.springframework.data.neo4j.core.schema.CompositeProperty
 import java.net.URI
 
-@DomainNode("components")
+@DomainNode("components", searchQueryName = "searchComponents")
 @GraphQLDescription(
     """Entity which represents a software component, e.g. a library, a microservice, or a deployment platform, ....
     The type of software component is defined by the template.
@@ -27,11 +29,11 @@ import java.net.URI
 @Authorization(NodePermission.READ, allowFromRelated = ["versions"])
 @Authorization(
     ComponentPermission.RELATE_FROM_COMPONENT,
-    allow = [Rule(COMPONENT_PERMISSION_ENTRY_NAME, options = [NodePermission.ADMIN])]
+    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 @Authorization(
     ComponentPermission.ADD_TO_PROJECTS,
-    allow = [Rule(COMPONENT_PERMISSION_ENTRY_NAME, options = [NodePermission.ADMIN])]
+    allow = [Rule(RELATED_TO_NODE_PERMISSION_RULE, options = [NodePermission.ADMIN])]
 )
 class Component(
     name: String,
@@ -44,6 +46,8 @@ class Component(
 
     companion object {
         const val VERSION = "VERSION"
+        const val INCOMING_META_AGGREGATED_ISSUE_RELATION = "INCOMING_META_AGGREGATED_ISSUE_RELATION"
+        const val OUTGOING_META_AGGREGATED_ISSUE_RELATION = "OUTGOING_META_AGGREGATED_ISSUE_RELATION"
     }
 
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
@@ -69,5 +73,13 @@ class Component(
     @GraphQLDescription("Permissions for this Component.")
     @FilterProperty
     override val permissions by NodeSetProperty<ComponentPermission>()
+
+    @NodeRelationship(INCOMING_META_AGGREGATED_ISSUE_RELATION, Direction.OUTGOING)
+    @GraphQLIgnore
+    val incomingMetaAggregatedIssueRelations by NodeSetProperty<MetaAggregatedIssueRelation>()
+
+    @NodeRelationship(OUTGOING_META_AGGREGATED_ISSUE_RELATION, Direction.OUTGOING)
+    @GraphQLIgnore
+    val outgoingMetaAggregatedIssueRelations by NodeSetProperty<MetaAggregatedIssueRelation>()
 
 }

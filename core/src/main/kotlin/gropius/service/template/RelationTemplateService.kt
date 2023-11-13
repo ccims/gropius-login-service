@@ -1,12 +1,15 @@
 package gropius.service.template
 
 import gropius.authorization.GropiusAuthorizationContext
+import gropius.dto.input.ifPresent
+import gropius.dto.input.orElse
 import gropius.dto.input.template.CreateRelationTemplateInput
 import gropius.dto.input.template.RelationConditionInput
 import gropius.model.template.InterfaceSpecificationDerivationCondition
 import gropius.model.template.RelationCondition
 import gropius.model.template.RelationPartnerTemplate
 import gropius.model.template.RelationTemplate
+import gropius.model.template.style.StrokeStyle
 import gropius.repository.findAllById
 import gropius.repository.template.RelationPartnerTemplateRepository
 import gropius.repository.template.RelationTemplateRepository
@@ -38,7 +41,10 @@ class RelationTemplateService(
     ): RelationTemplate {
         input.validate()
         checkCreateTemplatePermission(authorizationContext)
-        val template = RelationTemplate(input.name, input.description, mutableMapOf(), false)
+        val template = RelationTemplate(input.name, input.description, mutableMapOf(), false, input.markerType)
+        input.stroke.ifPresent {
+            template.stroke().value = StrokeStyle(it.color.orElse(null), it.dash.orElse(null))
+        }
         createdTemplate(template, input)
         template.relationConditions() += input.relationConditions.map {
             createRelationCondition(it)

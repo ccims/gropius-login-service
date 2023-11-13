@@ -2,12 +2,13 @@ package gropius.model.template
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.model.architecture.Component
+import gropius.model.template.style.ShapeType
 import io.github.graphglue.model.Direction
 import io.github.graphglue.model.DomainNode
 import io.github.graphglue.model.FilterProperty
 import io.github.graphglue.model.NodeRelationship
 
-@DomainNode("componentTemplates")
+@DomainNode("componentTemplates", searchQueryName = "searchComponentTemplates")
 @GraphQLDescription(
     """Template for Components.
     Defines templated fields with specific types (defined using JSON schema).
@@ -15,9 +16,14 @@ import io.github.graphglue.model.NodeRelationship
     """
 )
 class ComponentTemplate(
-    name: String, description: String, templateFieldSpecifications: MutableMap<String, String>, isDeprecated: Boolean
+    name: String,
+    description: String,
+    templateFieldSpecifications: MutableMap<String, String>,
+    isDeprecated: Boolean,
+    shapeRadius: Double?,
+    shapeType: ShapeType,
 ) : RelationPartnerTemplate<Component, ComponentTemplate>(
-    name, description, templateFieldSpecifications, isDeprecated
+    name, description, templateFieldSpecifications, isDeprecated, shapeRadius, shapeType
 ) {
 
     companion object {

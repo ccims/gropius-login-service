@@ -8,11 +8,15 @@ import gropius.dto.input.architecture.UpdateInterfacePartInput
 import gropius.dto.input.common.DeleteNodeInput
 import gropius.model.architecture.InterfacePart
 import gropius.model.architecture.InterfaceSpecification
+import gropius.model.architecture.InterfaceSpecificationVersion
 import gropius.model.user.permission.NodePermission
 import gropius.repository.architecture.InterfacePartRepository
 import gropius.repository.architecture.InterfaceSpecificationRepository
+import gropius.repository.architecture.InterfaceSpecificationVersionRepository
+import gropius.repository.common.NodeRepository
 import gropius.repository.findAllById
 import gropius.repository.findById
+import gropius.service.issue.IssueAggregationUpdater
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
@@ -23,13 +27,17 @@ import org.springframework.stereotype.Service
  *
  * @param repository the associated repository used for CRUD functionality
  * @param interfaceSpecificationRepository used get [InterfaceSpecification] by id
+ * @param interfaceSpecificationVersionRepository used get [InterfaceSpecificationVersion] by id
  * @param templatedNodeService used to update templatedFields
+ * @param nodeRepository used to update/delete nodes
  */
 @Service
 class InterfacePartService(
     repository: InterfacePartRepository,
     private val interfaceSpecificationRepository: InterfaceSpecificationRepository,
-    private val templatedNodeService: TemplatedNodeService
+    private val interfaceSpecificationVersionRepository: InterfaceSpecificationVersionRepository,
+    private val templatedNodeService: TemplatedNodeService,
+    private val nodeRepository: NodeRepository
 ) : AffectedByIssueService<InterfacePart, InterfacePartRepository>(repository) {
 
     /**
@@ -44,19 +52,20 @@ class InterfacePartService(
         authorizationContext: GropiusAuthorizationContext, input: CreateInterfacePartInput
     ): InterfacePart {
         input.validate()
-        val interfaceSpecification = interfaceSpecificationRepository.findById(input.interfaceSpecification)
+        val interfaceSpecificationVersion = interfaceSpecificationVersionRepository.findById(input.interfaceSpecificationVersion)
+        val interfaceSpecification = interfaceSpecificationVersion.interfaceSpecification().value
         checkPermission(
             interfaceSpecification,
             Permission(NodePermission.ADMIN, authorizationContext),
             "create InterfaceParts on the InterfaceSpecification"
         )
         val interfacePart = createInterfacePart(interfaceSpecification, input)
-        interfacePart.definedOn().value = interfaceSpecification
+        interfacePart.partOf().value = interfaceSpecificationVersion
         return repository.save(interfacePart).awaitSingle()
     }
 
     /**
-     * Creates a new [InterfacePart] based on the provided [input] on [interfaceSpecification]
+     * Creates a new [InterfacePart] based on the provided [input]
      * Does not check the authorization status, does not save the created nodes
      * Validates the [input]
      *
@@ -112,27 +121,10 @@ class InterfacePartService(
         checkPermission(
             interfacePart, Permission(NodePermission.ADMIN, authorizationContext), "delete the InterfacePart"
         )
+        val issueAggregationUpdater = IssueAggregationUpdater()
+        issueAggregationUpdater.deletedInterfacePart(interfacePart)
+        issueAggregationUpdater.save(nodeRepository)
         repository.delete(interfacePart).awaitSingle()
-    }
-
-    /**
-     * Gets [InterfacePart]s by id and validates that all are part of [interfaceSpecification]
-     *
-     * @param ids the ids of the [InterfacePart]s to get
-     * @param interfaceSpecification all returned [InterfacePart]s must be part of this
-     * @return the found[InterfacePart]s
-     * @throws IllegalArgumentException if any [InterfacePart] was not defined by [interfaceSpecification]
-     */
-    suspend fun findPartsByIdAndValidatePartOfInterfaceSpecification(
-        ids: Collection<ID>, interfaceSpecification: InterfaceSpecification
-    ): Set<InterfacePart> {
-        val parts = repository.findAllById(ids)
-        parts.forEach {
-            if (it.definedOn().value != interfaceSpecification) {
-                throw IllegalArgumentException("InterfacePart ${it.rawId} is not part of ${interfaceSpecification.rawId}")
-            }
-        }
-        return parts.toSet()
     }
 
 }

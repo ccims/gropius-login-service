@@ -174,4 +174,9 @@ class Issue(
     )
     @FilterProperty
     val imsIssues by NodeSetProperty<IMSIssue>()
+
+    @NodeRelationship(AggregatedIssue.ISSUE, Direction.INCOMING)
+    @GraphQLDescription("AggregatedIssues which aggregate this Issue.")
+    @FilterProperty
+    val aggregatedBy by NodeSetProperty<AggregatedIssue>()
 }

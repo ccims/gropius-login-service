@@ -22,6 +22,7 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(NodePermission.READ, allowFromRelated = ["component", "versions"])
 @Authorization(NodePermission.ADMIN, allowFromRelated = ["component"])
 @Authorization(TrackablePermission.AFFECT_ENTITIES_WITH_ISSUES, allowFromRelated = ["component"])
+@Authorization(TrackablePermission.RELATED_ISSUE_AFFECTED_ENTITY, allowFromRelated = ["versions"])
 class InterfaceSpecification(
     name: String,
     description: String,
@@ -47,17 +48,8 @@ class InterfaceSpecification(
     @FilterProperty
     val versions by NodeSetProperty<InterfaceSpecificationVersion>()
 
-    @NodeRelationship(InterfacePart.DEFINED_ON, Direction.INCOMING)
-    @GraphQLDescription(
-        """InterfaceParts defined by this InterfaceSpecification.
-        Note that active parts depend on the InterfaceSpecificationVersion
-        """
-    )
-    @FilterProperty
-    val definedParts by NodeSetProperty<InterfacePart>()
-
     @NodeRelationship(COMPONENT, Direction.OUTGOING)
-    @GraphQLDescription("The Component this InterfaceSpecificaton is part of.")
+    @GraphQLDescription("The Component this InterfaceSpecification is part of.")
     @FilterProperty
     val component by NodeProperty<Component>()
 

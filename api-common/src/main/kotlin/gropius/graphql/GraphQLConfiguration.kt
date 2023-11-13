@@ -16,10 +16,8 @@ import graphql.scalars.regex.RegexScalar
 import graphql.schema.*
 import gropius.authorization.checkPermission
 import gropius.authorization.gropiusAuthorizationContext
-import gropius.graphql.filter.DateTimeFilterDefinition
-import gropius.graphql.filter.DurationFilterDefinition
-import gropius.graphql.filter.NodePermissionFilterEntryDefinition
-import gropius.graphql.filter.TemplatedFieldsFilterEntryDefinition
+import gropius.graphql.filter.*
+import gropius.model.architecture.*
 import gropius.model.common.PERMISSION_FIELD_BEAN
 import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
 import gropius.model.template.TemplatedNode
@@ -158,7 +156,25 @@ class GraphQLConfiguration {
      * @return the generated filter definition
      */
     @Bean(NODE_PERMISSION_FILTER_BEAN)
-    fun nodePermissionFilter(nodeDefinitionCollection: NodeDefinitionCollection) = NodePermissionFilterEntryDefinition(nodeDefinitionCollection)
+    fun nodePermissionFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
+        NodePermissionFilterEntryDefinition(nodeDefinitionCollection)
+
+    /**
+     * Filter for [AffectedByIssue]s which are related to a specific [Trackable]
+     *
+     * @param nodeDefinitionCollection used to get the node definition
+     * @return the generated filter definition
+     */
+    @Bean(RELATED_TO_FILTER_BEAN)
+    fun relatedToFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
+        AffectedByIssueRelatedToFilterEntryDefinition(nodeDefinitionCollection)
+
+    /**
+     * Filter for [RelationPartner]s which are part of a specific [Project]'s graph.
+     */
+    @Bean(PART_OF_PROJECT_FILTER)
+    fun partOfProjectFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
+        PartOfProjectFilterEntryDefinition(nodeDefinitionCollection)
 
     /**
      * Provides the permission field for all nodes
@@ -175,7 +191,7 @@ class GraphQLConfiguration {
                         ALL_PERMISSION_ENTRY_NAME
                     )
                 )
-            }.type(Scalars.GraphQLBoolean).build()
+            }.type(GraphQLNonNull(Scalars.GraphQLBoolean)).build()
 
         val nodeDefinitionCollection by lazy {
             beanFactory.getBean(NodeDefinitionCollection::class.java)
@@ -190,8 +206,7 @@ class GraphQLConfiguration {
             ): Expression {
                 return if (dfe.checkPermission) {
                     val conditionGenerator = nodeDefinitionCollection.generateAuthorizationCondition(
-                        nodeDefinition,
-                        Permission(arguments["permission"] as String, dfe.gropiusAuthorizationContext)
+                        nodeDefinition, Permission(arguments["permission"] as String, dfe.gropiusAuthorizationContext)
                     )
                     val condition = conditionGenerator.generateCondition(node)
                     condition
