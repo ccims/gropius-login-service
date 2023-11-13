@@ -13,6 +13,7 @@ import { AuthResult } from "../AuthResult";
 import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
+import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 
 @Injectable()
 export class UserpassStrategyService extends StrategyUsingPassport {
@@ -48,8 +49,12 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         return {};
     }
 
-    private async generateLoginDataData(password: string): Promise<{ password: string }> {
+    private async generateLoginDataData(
+        username: string,
+        password: string,
+    ): Promise<{ username: string; password: string }> {
         return {
+            username,
             password: await bcrypt.hash(password, parseInt(process.env.GROPIUS_BCRYPT_HASH_ROUNDS, 10)),
         };
     }
@@ -81,7 +86,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         );
 
         if (loginDataForCorrectUser.length == 0) {
-            const dataUserLoginData = await this.generateLoginDataData(password);
+            const dataUserLoginData = await this.generateLoginDataData(username, password);
             return done(
                 null,
                 { dataActiveLogin, dataUserLoginData, mayRegister: true },
@@ -107,5 +112,17 @@ export class UserpassStrategyService extends StrategyUsingPassport {
 
     public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
         return new passportLocal.Strategy({}, this.passportUserCallback.bind(this, strategyInstance));
+    }
+
+    override getUserDataSuggestion(loginData: UserLoginData): {
+        username?: string;
+        displayName?: string;
+        email?: string;
+    } {
+        return {
+            username: loginData.data?.username || undefined,
+            displayName: loginData.data?.displayName || undefined,
+            email: loginData.data?.email || undefined,
+        };
     }
 }
