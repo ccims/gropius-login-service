@@ -71,7 +71,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign(authStateData),
+                    state: jwtService.sign(authStateData), // TODO: check if an expiration and/or an additional random value are needed
                     ...this.getAdditionalPassportOptions(strategyInstance, authStateData),
                 },
                 (err, user: AuthResult | false, info) => {

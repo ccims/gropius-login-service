@@ -12,7 +12,7 @@ import { AuthResult, AuthStateData } from "./AuthResult";
 export interface StrategyVariable {
     name: string;
     displayName?: string;
-    type: "boolean" | "number" | "object" | "string";
+    type: "boolean" | "number" | "object" | "string" | "password";
     nullable?: boolean;
 }
 

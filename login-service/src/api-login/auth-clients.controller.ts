@@ -57,7 +57,7 @@ export class AuthClientController {
         private readonly backendUserSerice: BackendUserService,
         private readonly loginDataSerive: UserLoginDataService,
         private readonly authClientService: AuthClientService,
-    ) {}
+    ) { }
 
     /**
      * Gets all auth clients that exist in the system.
@@ -156,7 +156,8 @@ export class AuthClientController {
         } else {
             newClient.isValid = true;
         }
-        if (input.requiresSecret != undefined) {
+        newClient.clientSecrets = []
+        if (input.requiresSecret !== undefined) {
             newClient.requiresSecret = input.requiresSecret;
         } else {
             newClient.requiresSecret = true;

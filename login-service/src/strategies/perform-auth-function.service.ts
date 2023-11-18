@@ -24,7 +24,7 @@ export class PerformAuthFunctionService {
         private readonly activeLoginService: ActiveLoginService,
         private readonly userLoginDataService: UserLoginDataService,
         private readonly strategiesService: StrategiesService,
-    ) {}
+    ) { }
 
     public checkFunctionIsAllowed(state: AuthStateData, instance: StrategyInstance, strategy: Strategy): string | null {
         switch (state?.function) {
@@ -84,7 +84,7 @@ export class PerformAuthFunctionService {
         let loginData = authResult.loginData;
         loginData.data = authResult.dataUserLoginData;
         const newExpiryDate = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
-        if (loginData.expires != null && loginData.expires < newExpiryDate) {
+        if (loginData.expires != null) {
             loginData.expires = newExpiryDate;
         }
         loginData = await this.userLoginDataService.save(loginData);

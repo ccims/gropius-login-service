@@ -35,6 +35,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
      *         If imsTemplatedFieldsFilter not given, defaults to "https://api.github.com/graphql"
      * - authorizationUrl: Oauth authorization URL. Optional, default: "https://github.com/login/oauth/authorize"
      * - tokenUrl: Oauth token url. Optional, default: "https://github.com/login/oauth/access_token"
+     * - userProfileUrl: API URL to request user profile info from. Needs to be specified for GitHib Enterprise instances. Optional
      * - clientId: Id of GitHub oauth app. Optional, default: GROPIUS_OAUTH_CLIENT_ID config variable
      * - clientSecret: secret of GitHub oaut app. Optional, default: GROPIUS_OAUTH_CLIENT_SECRET config value
      * - callbackUrl: Oauth callback url. Should be [URL]/authenticate/:id/callback. Optional, default empty
@@ -45,13 +46,13 @@ export class GithubStrategyService extends StrategyUsingPassport {
     protected override checkAndExtendInstanceConfig(instanceConfig: object): object {
         const resultingConfig = instanceConfig;
 
-        if (instanceConfig["imsTemplatedFieldsFilter"]) {
-            const githubUrl = instanceConfig["imsTemplatedFieldsFilter"]["graphql-url"];
+        if (resultingConfig["imsTemplatedFieldsFilter"]) {
+            const githubUrl = resultingConfig["imsTemplatedFieldsFilter"]["graphql-url"];
             if (!githubUrl) {
                 throw new Error("At least GitHub URL must be given in imsTemplatedFieldsFilter");
             }
         } else {
-            instanceConfig["imsTemplatedFieldsFilter"] = {
+            resultingConfig["imsTemplatedFieldsFilter"] = {
                 "graphql-url": "https://api.github.com/graphql",
             };
         }
@@ -71,6 +72,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 true,
                 "https://github.com/login/oauth/access_token",
             );
+            resultingConfig["userProfileUrl"] = checkType(instanceConfig, "userProfileUrl", "string", true);
             resultingConfig["clientId"] = checkType(
                 instanceConfig,
                 "clientId",
@@ -122,7 +124,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
     } {
         return {
             username: loginData.data?.username || undefined,
-            displayName: loginData.data?.username || undefined,
+            displayName: loginData.data?.displayName || undefined,
             email: loginData.data?.email || undefined,
         };
     }
@@ -166,6 +168,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
             username,
             github_id: profile.id,
             email: profile.emails[0].value,
+            displayName: profile.displayName 
         };
         const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {
             github_id: profile.id,
@@ -183,9 +186,10 @@ export class GithubStrategyService extends StrategyUsingPassport {
         return new passportGithub.Strategy(
             {
                 authorizationURL: strategyInstance.instanceConfig["authorizationUrl"],
+                tokenURL: strategyInstance.instanceConfig["tokenUrl"],
+                userProfileURL: strategyInstance.instanceConfig["userProfileUrl"],
                 clientID: strategyInstance.instanceConfig["clientId"],
                 clientSecret: strategyInstance.instanceConfig["clientSecret"],
-                tokenURL: strategyInstance.instanceConfig["tokenUrl"],
                 callbackURL: strategyInstance.instanceConfig["callbackUrl"],
                 store: {
                     store: (req, state, meta, callback) => callback(null, state),

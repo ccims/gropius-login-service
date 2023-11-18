@@ -15,7 +15,7 @@ export class OauthRedirectMiddleware implements NestMiddleware {
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly authClientService: AuthClientService,
-    ) {}
+    ) { }
 
     private handleErrorCases(state: (AuthStateData & OauthServerStateData) | undefined | null, url: URL): boolean {
         const errorMessage = state?.authErrorMessage;
@@ -73,7 +73,9 @@ export class OauthRedirectMiddleware implements NestMiddleware {
             throw new Error("Active login expired");
         }
         state.activeLogin.createdByClient = Promise.resolve(state.client);
-        state.activeLogin.expires = new Date(Date.now() + expiresIn);
+        if (state.activeLogin.expires == null) {
+            state.activeLogin.expires = new Date(Date.now() + expiresIn);
+        }
         const codeJwtId = ++state.activeLogin.nextExpectedRefreshTokenNumber;
 
         state.activeLogin = await this.activeLoginService.save(state.activeLogin);

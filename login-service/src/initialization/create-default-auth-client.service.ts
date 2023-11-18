@@ -18,16 +18,21 @@ export class CreateDefaultAuthClientService {
         private readonly userLoginDataService: UserLoginDataService,
         private readonly backendUserService: BackendUserService,
         private readonly authClientService: AuthClientService,
-    ) {}
+    ) { }
 
     async createDefaultAuthClient() {
         const clientName = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_NAME;
+        const clientId = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_ID;
+        const redirectUri = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_REDIRECT;
 
-        if (!clientName) {
+        if (!clientName && !clientId) {
             return;
         }
+        const nameObject = clientName ? { name: clientName } : {}
+        const idObject = clientId ? { id: clientId } : {}
         let authClient = await this.authClientService.findOneBy({
-            name: clientName,
+            ...nameObject,
+            ...idObject,
             requiresSecret: false,
             isValid: true,
         });
@@ -36,12 +41,18 @@ export class CreateDefaultAuthClientService {
                 `Valid auth client with name ${clientName} without secret already exists. Skipping creation. Id:`,
                 authClient.id,
             );
+            if (!authClient.redirectUrls.includes(redirectUri)) {
+                this.logger.warn(`The existing auth client does not include the redirect url specified as config parameter! 
+If you require this, remove the existing client OR change the redirect URL via the API`)
+            }
             return;
         }
 
-        const redirectUri = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_REDIRECT;
 
         authClient = new AuthClient();
+        if (clientId) {
+            authClient.id = clientId;
+        }
         authClient.isValid = true;
         authClient.name = clientName;
         authClient.requiresSecret = false;
