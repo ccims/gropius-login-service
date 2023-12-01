@@ -25,6 +25,7 @@ const val NODE_PERMISSION_FILTER_BEAN = "nodePermissionFilter"
 )
 @Authorization(GlobalPermission.CAN_CREATE_COMPONENTS, allow = [Rule(RELATED_TO_GLOBAL_PERMISSION_RULE)])
 @Authorization(GlobalPermission.CAN_CREATE_PROJECTS, allow = [Rule(RELATED_TO_GLOBAL_PERMISSION_RULE)])
+@Authorization(GlobalPermission.CAN_CREATE_IMSS, allow = [Rule(RELATED_TO_GLOBAL_PERMISSION_RULE)])
 @Authorization(GlobalPermission.CAN_CREATE_TEMPLATES, allow = [Rule(RELATED_TO_GLOBAL_PERMISSION_RULE)])
 @AdditionalFilter(NODE_PERMISSION_FILTER_BEAN)
 class GropiusUser(
