@@ -41,5 +41,9 @@ val DataFetchingEnvironment.gropiusAuthorizationContext: GropiusAuthorizationCon
  */
 val DataFetchingEnvironment.checkPermission: Boolean
     get() {
-        return this.authorizationContext is GropiusAuthorizationContext
+        return if (this.authorizationContext is GropiusAuthorizationContext) {
+            this.gropiusAuthorizationContext.checkPermission
+        } else {
+            false
+        }
     }
