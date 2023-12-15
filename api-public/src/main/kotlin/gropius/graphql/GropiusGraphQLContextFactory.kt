@@ -1,6 +1,8 @@
 package gropius.graphql
 
+import com.expediagroup.graphql.generator.extensions.plus
 import com.expediagroup.graphql.server.spring.execution.DefaultSpringGraphQLContextFactory
+import graphql.GraphQLContext
 import gropius.GropiusPublicApiConfigurationProperties
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.model.user.GropiusUser
@@ -38,11 +40,11 @@ class GropiusGraphQLContextFactory(
     /**
      * Jwt parser based on the secret defined by [gropiusPublicApiConfigurationProperties]
      */
-    private val jwtParser = Jwts.parserBuilder()
-        .setSigningKey(Keys.hmacShaKeyFor(Decoders.BASE64.decode(gropiusPublicApiConfigurationProperties.jwtSecret)))
+    private val jwtParser = Jwts.parser()
+        .verifyWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(gropiusPublicApiConfigurationProperties.jwtSecret)))
         .build()
 
-    override suspend fun generateContextMap(request: ServerRequest): Map<*, Any> {
+    override suspend fun generateContext(request: ServerRequest): GraphQLContext {
         val token = request.headers().firstHeader("Authorization")
         val additionalContextEntries = if (token == null) {
             if (gropiusPublicApiConfigurationProperties.debugNoAuthentication) {
@@ -61,7 +63,7 @@ class GropiusGraphQLContextFactory(
             }
 
         }
-        return super.generateContextMap(request) + additionalContextEntries
+        return super.generateContext(request) + additionalContextEntries
     }
 
     /**
@@ -74,14 +76,14 @@ class GropiusGraphQLContextFactory(
     private suspend fun verifyToken(token: String): GropiusUser {
         val tokenWithoutBearer = token.replace("Bearer ", "", true)
         val jwt = try {
-            jwtParser.parseClaimsJws(tokenWithoutBearer)
+            jwtParser.parseSignedClaims(tokenWithoutBearer)
         } catch (e: JwtException) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid jwt")
         }
-        if (!jwt.body.audience.contains(JWT_AUDIENCE_BACKEND)) {
+        if (!jwt.payload.audience.contains(JWT_AUDIENCE_BACKEND)) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Not a backend token")
         }
-        val user = jwt.body.subject!!
+        val user = jwt.payload.subject!!
         return gropiusUserRepository.findById(user).awaitSingle()
     }
 

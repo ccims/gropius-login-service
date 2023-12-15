@@ -89,7 +89,7 @@ object DefaultSchemaGeneratorHooks : SchemaGeneratorHooks {
             }
         }
 
-    override fun willBuildSchema(builder: GraphQLSchema.Builder): GraphQLSchema.Builder {
+    override fun didBuildSchema(builder: GraphQLSchema.Builder): GraphQLSchema.Builder {
         val oldCodeRegistry = builder.build().codeRegistry
         val newCodeRegistry = oldCodeRegistry.transform {
             it.dataFetchers(codeRegistry.build())

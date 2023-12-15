@@ -46,6 +46,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.net.URI
 import java.time.Duration
 import java.time.OffsetDateTime
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
 
@@ -232,7 +233,7 @@ class GraphQLConfiguration {
     @Bean
     fun kotlinDataFetcherFactory(applicationContext: ApplicationContext): KotlinDataFetcherFactoryProvider =
         object : SimpleKotlinDataFetcherFactoryProvider() {
-            override fun functionDataFetcherFactory(target: Any?, kFunction: KFunction<*>) = DataFetcherFactory {
+            override fun functionDataFetcherFactory(target: Any?, kClass: KClass<*>, kFunction: KFunction<*>) = DataFetcherFactory {
                 GropiusFunctionDataFetcher(target, kFunction, applicationContext)
             }
         }
@@ -248,7 +249,7 @@ class GraphQLConfiguration {
     @Bean
     fun springGraphQLServer(
         requestParser: SpringGraphQLRequestParser,
-        contextFactory: SpringGraphQLContextFactory<*>,
+        contextFactory: SpringGraphQLContextFactory,
         requestHandler: GraphQLRequestHandler
     ): SpringGraphQLServer = object : SpringGraphQLServer(requestParser, contextFactory, requestHandler) {
         override suspend fun execute(request: ServerRequest): GraphQLServerResponse? {
