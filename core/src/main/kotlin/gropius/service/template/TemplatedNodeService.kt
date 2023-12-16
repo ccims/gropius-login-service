@@ -4,8 +4,6 @@ import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.networknt.schema.JsonSchemaFactory
-import com.networknt.schema.SpecVersionDetector
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.ifPresent
 import gropius.dto.input.orElse
@@ -14,6 +12,8 @@ import gropius.dto.input.template.UpdateTemplatedNodeInput
 import gropius.model.template.BaseTemplate
 import gropius.model.template.TemplatedNode
 import gropius.util.JsonNodeMapper
+import gropius.util.schema.Schema
+import gropius.util.schema.Validator
 import org.springframework.stereotype.Service
 
 /**
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service
  * @param jsonNodeMapper used to map [JsonNode] to [String]
  */
 @Service
-class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: JsonNodeMapper) {
+class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: JsonNodeMapper, val validator: Validator) {
 
     /**
      * Updates the [TemplatedNode.templatedFields] of a [TemplatedNode] based on the [input]
@@ -159,10 +159,8 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
         val unparsedValue = templatedNode.templatedFields[field]
         return if (unparsedValue != null) {
             val schema = templatedNode.template().value.templateFieldSpecifications[field]!!
-            val parsedSchema = objectMapper.readTree(schema)
-            val validator =
-                JsonSchemaFactory.getInstance(SpecVersionDetector.detect(parsedSchema)).getSchema(parsedSchema)
-            val validationResult = validator.validate(objectMapper.readTree(unparsedValue))
+            val parsedSchema = objectMapper.readValue(schema, Schema::class.java)
+            val validationResult = validator.validate(parsedSchema, objectMapper.readTree(unparsedValue))
             return validationResult.isEmpty()
         } else {
             false
@@ -178,9 +176,8 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      * @throws IllegalArgumentException if the [schema] does not allow [value]
      */
     private fun validateField(value: JsonNode, schema: String, name: String) {
-        val parsedSchema = objectMapper.readTree(schema)
-        val validator = JsonSchemaFactory.getInstance(SpecVersionDetector.detect(parsedSchema)).getSchema(parsedSchema)
-        val validationResult = validator.validate(value)
+        val parsedSchema = objectMapper.readValue(schema, Schema::class.java)
+        val validationResult = validator.validate(parsedSchema, value)
         if (validationResult.isNotEmpty()) {
             throw IllegalArgumentException("Invalid input for templated field $name: ${validationResult.map { it.message }}")
         }

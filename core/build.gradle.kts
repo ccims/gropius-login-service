@@ -9,5 +9,4 @@ plugins {
 dependencies {
     api("io.github.graphglue", "graphglue-core", graphglueVersion)
     api("com.graphql-java","graphql-java-extended-scalars", graphqlJavaVersion)
-    api("com.networknt", "json-schema-validator", jsonSchemaValidatorVersion)
 }
