@@ -5,12 +5,10 @@ import gropius.dto.input.ifPresent
 import gropius.dto.input.orElse
 import gropius.dto.input.template.CreateRelationTemplateInput
 import gropius.dto.input.template.RelationConditionInput
-import gropius.model.template.InterfaceSpecificationDerivationCondition
-import gropius.model.template.RelationCondition
-import gropius.model.template.RelationPartnerTemplate
-import gropius.model.template.RelationTemplate
+import gropius.model.template.*
 import gropius.model.template.style.StrokeStyle
 import gropius.repository.findAllById
+import gropius.repository.template.InterfaceSpecificationTemplateRepository
 import gropius.repository.template.RelationPartnerTemplateRepository
 import gropius.repository.template.RelationTemplateRepository
 import kotlinx.coroutines.reactor.awaitSingle
@@ -21,11 +19,13 @@ import org.springframework.stereotype.Service
  *
  * @param repository the associated repository used for CRUD functionality
  * @param relationPartnerTemplateRepository used to get [RelationPartnerTemplate]s by id
+ * @param interfaceSpecificationTemplateRepository used to get [InterfaceSpecificationTemplate]s by id
  */
 @Service
 class RelationTemplateService(
     repository: RelationTemplateRepository,
-    private val relationPartnerTemplateRepository: RelationPartnerTemplateRepository
+    private val relationPartnerTemplateRepository: RelationPartnerTemplateRepository,
+    private val interfaceSpecificationTemplateRepository: InterfaceSpecificationTemplateRepository
 ) : AbstractTemplateService<RelationTemplate, RelationTemplateRepository>(repository) {
 
     /**
@@ -65,7 +65,7 @@ class RelationTemplateService(
     ): RelationCondition {
         val relationCondition = RelationCondition()
         relationCondition.interfaceSpecificationDerivationConditions() += input.interfaceSpecificationDerivationConditions.map {
-            InterfaceSpecificationDerivationCondition(
+            val condition = InterfaceSpecificationDerivationCondition(
                 it.derivesVisibleSelfDefined,
                 it.derivesInvisibleSelfDefined,
                 it.derivesVisibleDerived,
@@ -73,6 +73,8 @@ class RelationTemplateService(
                 it.isVisibleDerived,
                 it.isInvisibleDerived
             )
+            condition.derivableInterfaceSpecifications() += interfaceSpecificationTemplateRepository.findAllById(it.derivableInterfaceSpecifications)
+            condition
         }
         relationCondition.from() += relationPartnerTemplateRepository.findAllById(input.from)
         relationCondition.to() += relationPartnerTemplateRepository.findAllById(input.to)
