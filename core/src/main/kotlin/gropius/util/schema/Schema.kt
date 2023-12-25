@@ -6,7 +6,7 @@ import graphql.schema.validation.InvalidSchemaException
  * Represents a JSON Type Definition schema.
  */
 class Schema(
-    val isNullable: Boolean = false,
+    val nullable: Boolean = false,
     val metadata: Map<String, Any>? = null,
     val ref: String? = null,
     val type: Type? = null,
@@ -14,7 +14,6 @@ class Schema(
     val elements: Schema? = null,
     val properties: Map<String, Schema>? = null,
     val optionalProperties: Map<String, Schema>? = null,
-    val additionalProperties: Boolean = false,
     val values: Schema? = null,
     val discriminator: String? = null,
     val mapping: Map<String, Schema>? = null,
@@ -44,7 +43,6 @@ class Schema(
             if (elements != null) SchemaField.ELEMENTS else null,
             if (properties != null) SchemaField.PROPERTIES else null,
             if (optionalProperties != null) SchemaField.OPTIONAL_PROPERTIES else null,
-            if (additionalProperties) SchemaField.ADDITIONAL_PROPERTIES else null,
             if (values != null) SchemaField.VALUES else null,
             if (discriminator != null) SchemaField.DISCRIMINATOR else null,
             if (mapping != null) SchemaField.MAPPING else null
@@ -109,7 +107,7 @@ class Schema(
             for (schema in mapping.values) {
                 schema.verify(root)
 
-                if (schema.isNullable) {
+                if (schema.nullable) {
                     throw InvalidSchemaException("mapping value has nullable set to true")
                 }
 
@@ -171,9 +169,6 @@ class Schema(
             setOf(SchemaField.PROPERTIES),
             setOf(SchemaField.OPTIONAL_PROPERTIES),
             setOf(SchemaField.PROPERTIES, SchemaField.OPTIONAL_PROPERTIES),
-            setOf(SchemaField.PROPERTIES, SchemaField.ADDITIONAL_PROPERTIES),
-            setOf(SchemaField.OPTIONAL_PROPERTIES, SchemaField.ADDITIONAL_PROPERTIES),
-            setOf(SchemaField.PROPERTIES, SchemaField.OPTIONAL_PROPERTIES, SchemaField.ADDITIONAL_PROPERTIES),
             setOf(SchemaField.VALUES),
             setOf(SchemaField.DISCRIMINATOR, SchemaField.MAPPING),
         )

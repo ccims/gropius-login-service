@@ -56,7 +56,7 @@ class Validator {
     }
 
     private fun validate(state: ValidationState, schema: Schema, instance: JsonNode, parentTag: String?) {
-        if (schema.isNullable && instance.isNull) {
+        if (schema.nullable && instance.isNull) {
             return
         }
 
@@ -174,19 +174,16 @@ class Validator {
                     }
                     state.popSchemaToken()
                 }
+                for (key in instance.asObject().keys) {
+                    val inProperties = schema.properties != null && schema.properties.containsKey(key)
+                    val inOptionalProperties = (schema.optionalProperties != null
+                            && schema.optionalProperties.containsKey(key))
+                    val discriminatorTagException = key == parentTag
 
-                if (!schema.additionalProperties) {
-                    for (key in instance.asObject().keys) {
-                        val inProperties = schema.properties != null && schema.properties.containsKey(key)
-                        val inOptionalProperties = (schema.optionalProperties != null
-                                && schema.optionalProperties.containsKey(key))
-                        val discriminatorTagException = key == parentTag
-
-                        if (!inProperties && !inOptionalProperties && !discriminatorTagException) {
-                            state.pushInstanceToken(key)
-                            state.pushError()
-                            state.popInstanceToken()
-                        }
+                    if (!inProperties && !inOptionalProperties && !discriminatorTagException) {
+                        state.pushInstanceToken(key)
+                        state.pushError()
+                        state.popInstanceToken()
                     }
                 }
             } else {

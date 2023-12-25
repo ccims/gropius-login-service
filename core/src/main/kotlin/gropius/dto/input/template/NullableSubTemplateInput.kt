@@ -8,7 +8,7 @@ class NullableSubTemplateInput : SubTemplateInput() {
 
     override fun validateJsonSchema(schema: Schema, name: String) {
         super.validateJsonSchema(schema, name)
-        if (!schema.isNullable) {
+        if (!schema.nullable) {
             throw IllegalArgumentException("TemplatedField $name must allow null")
         }
     }
