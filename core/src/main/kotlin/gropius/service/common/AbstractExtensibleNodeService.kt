@@ -63,7 +63,7 @@ abstract class AbstractExtensibleNodeService<T : ExtensibleNode, R : GropiusRepo
      */
     private fun updateExtensionFields(node: ExtensibleNode, fields: List<JSONFieldInput>) {
         for (field in fields) {
-            node.extensionFields[field.name] = jsonNodeMapper.jsonNodeToDeterministicString(field.value as JsonNode)
+            node.extensionFields[field.name] = jsonNodeMapper.jsonNodeToDeterministicString(field.value as JsonNode?)
         }
     }
 }

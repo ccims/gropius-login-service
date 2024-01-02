@@ -83,7 +83,7 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
     suspend fun updateTemplatedField(node: TemplatedNode, field: JSONFieldInput) {
         val template = node.template().value
         ensureTemplatedFieldExist(template, field.name)
-        validateField(field.value as JsonNode, template.templateFieldSpecifications[field.name]!!, field.name)
+        validateField(field.value as JsonNode?, template.templateFieldSpecifications[field.name]!!, field.name)
         node.templatedFields[field.name] = jsonNodeMapper.jsonNodeToDeterministicString(field.value)
     }
 
@@ -142,7 +142,7 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
         ensureTemplatedFieldsExist(template, fields.map { it.name })
         val fieldLookup = fields.associateBy { it.name }
         return template.templateFieldSpecifications.mapValues {
-            val value: JsonNode = fieldLookup[it.key]?.value as JsonNode? ?: JsonNodeFactory.instance.nullNode()
+            val value = fieldLookup[it.key]?.value as JsonNode?
             validateField(value, it.value, it.key)
             jsonNodeMapper.jsonNodeToDeterministicString(value)
         }.toMutableMap()
@@ -175,9 +175,9 @@ class TemplatedNodeService(val objectMapper: ObjectMapper, val jsonNodeMapper: J
      * @param name the name of the field
      * @throws IllegalArgumentException if the [schema] does not allow [value]
      */
-    private fun validateField(value: JsonNode, schema: String, name: String) {
+    private fun validateField(value: JsonNode?, schema: String, name: String) {
         val parsedSchema = objectMapper.readValue(schema, Schema::class.java)
-        val validationResult = validator.validate(parsedSchema, value)
+        val validationResult = validator.validate(parsedSchema, value ?: JsonNodeFactory.instance.nullNode())
         if (validationResult.isNotEmpty()) {
             throw IllegalArgumentException("Invalid input for templated field $name: ${validationResult.map { it.message }}")
         }
