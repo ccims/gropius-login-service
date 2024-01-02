@@ -18,14 +18,14 @@ import org.springframework.stereotype.Service
  * Service for [RelationTemplate]s. Provides functions to create, update and delete
  *
  * @param repository the associated repository used for CRUD functionality
- * @param relationPartnerTemplateRepository used to get [RelationPartnerTemplate]s by id
- * @param interfaceSpecificationTemplateRepository used to get [InterfaceSpecificationTemplate]s by id
+ * @param interfaceSpecificationTemplateService used to find extending [InterfaceSpecificationTemplate]s
+ * @param relationPartnerTemplateService used to find extending [RelationPartnerTemplate]s
  */
 @Service
 class RelationTemplateService(
     repository: RelationTemplateRepository,
-    private val relationPartnerTemplateRepository: RelationPartnerTemplateRepository,
-    private val interfaceSpecificationTemplateRepository: InterfaceSpecificationTemplateRepository
+    private val interfaceSpecificationTemplateService: InterfaceSpecificationTemplateService,
+    private val relationPartnerTemplateService: RelationPartnerTemplateService
 ) : AbstractTemplateService<RelationTemplate, RelationTemplateRepository>(repository) {
 
     /**
@@ -73,11 +73,11 @@ class RelationTemplateService(
                 it.isVisibleDerived,
                 it.isInvisibleDerived
             )
-            condition.derivableInterfaceSpecifications() += interfaceSpecificationTemplateRepository.findAllById(it.derivableInterfaceSpecifications)
+            condition.derivableInterfaceSpecifications() += interfaceSpecificationTemplateService.findAllByIdWithExtending(it.derivableInterfaceSpecifications)
             condition
         }
-        relationCondition.from() += relationPartnerTemplateRepository.findAllById(input.from)
-        relationCondition.to() += relationPartnerTemplateRepository.findAllById(input.to)
+        relationCondition.from() += relationPartnerTemplateService.findAllByIdWithExtending(input.from)
+        relationCondition.to() += relationPartnerTemplateService.findAllByIdWithExtending(input.to)
         return relationCondition
     }
 

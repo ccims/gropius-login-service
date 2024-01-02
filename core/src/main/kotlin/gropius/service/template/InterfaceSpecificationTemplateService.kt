@@ -14,15 +14,15 @@ import org.springframework.stereotype.Service
  * Service for [InterfaceSpecificationTemplate]s. Provides functions to create, update and delete
  *
  * @param repository the associated repository used for CRUD functionality
- * @param componentTemplateRepository used to get [ComponentTemplate]s
+ * @param componentTemplateService used to get [ComponentTemplate]s
  * @param subTemplateService used to create [SubTemplate]s
  */
 @Service
 class InterfaceSpecificationTemplateService(
     repository: InterfaceSpecificationTemplateRepository,
-    private val componentTemplateRepository: ComponentTemplateRepository,
+    private val componentTemplateService: ComponentTemplateService,
     private val subTemplateService: SubTemplateService
-) : RelationPartnerTemplateService<InterfaceSpecificationTemplate, InterfaceSpecificationTemplateRepository>(repository) {
+) : AbstractRelationPartnerTemplateService<InterfaceSpecificationTemplate, InterfaceSpecificationTemplateRepository>(repository) {
 
     /**
      * Creates a new [InterfaceSpecificationTemplate] based on the provided [input]
@@ -41,9 +41,9 @@ class InterfaceSpecificationTemplateService(
             input.name, input.description, mutableMapOf(), false, input.shapeRadius.orElse(null), input.shapeType
         )
         createdRelationPartnerTemplate(template, input)
-        template.canBeVisibleOnComponents() += componentTemplateRepository.findAllById(input.canBeVisibleOnComponents)
+        template.canBeVisibleOnComponents() += componentTemplateService.findAllByIdWithExtending(input.canBeVisibleOnComponents)
         template.canBeVisibleOnComponents() += template.extends().flatMap { it.canBeVisibleOnComponents() }
-        template.canBeInvisibleOnComponents() += componentTemplateRepository.findAllById(input.canBeInvisibleOnComponents)
+        template.canBeInvisibleOnComponents() += componentTemplateService.findAllByIdWithExtending(input.canBeInvisibleOnComponents)
         template.canBeInvisibleOnComponents() += template.extends().flatMap { it.canBeInvisibleOnComponents() }
         template.derivableBy() += template.extends().flatMap { it.derivableBy() }
         initSubTemplates(template, input)

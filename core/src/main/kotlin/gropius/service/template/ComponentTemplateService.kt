@@ -22,7 +22,7 @@ class ComponentTemplateService(
     repository: ComponentTemplateRepository,
     private val componentTemplateRepository: ComponentTemplateRepository,
     private val subTemplateService: SubTemplateService
-) : RelationPartnerTemplateService<ComponentTemplate, ComponentTemplateRepository>(repository) {
+) : AbstractRelationPartnerTemplateService<ComponentTemplate, ComponentTemplateRepository>(repository) {
 
     /**
      * Creates a new [ComponentTemplate] based on the provided [input]
