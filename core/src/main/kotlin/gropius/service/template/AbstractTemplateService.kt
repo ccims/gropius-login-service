@@ -47,7 +47,7 @@ suspend fun <T : Template<*, out T>, R : GropiusRepository<T, String>> BaseTempl
     val found = toCheck.toMutableSet()
     while (toCheck.isNotEmpty()) {
         val current = toCheck.removeLast()
-        current.extends().forEach {
+        current.extendedBy().forEach {
             if (found.add(it)) {
                 toCheck.add(it)
             }
