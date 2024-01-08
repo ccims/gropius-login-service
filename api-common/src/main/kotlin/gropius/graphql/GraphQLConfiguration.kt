@@ -19,6 +19,8 @@ import gropius.authorization.gropiusAuthorizationContext
 import gropius.graphql.filter.*
 import gropius.model.architecture.*
 import gropius.model.common.PERMISSION_FIELD_BEAN
+import gropius.model.issue.timeline.TIMELINE_ITEM_TYPE_FILTER_BEAN
+import gropius.model.issue.timeline.TimelineItem
 import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
 import gropius.model.template.TemplatedNode
 import gropius.model.user.GropiusUser
@@ -46,9 +48,16 @@ import org.springframework.web.server.ResponseStatusException
 import java.net.URI
 import java.time.Duration
 import java.time.OffsetDateTime
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.isSubclassOf
+
+/**
+ * Name of the GraphQL enum providing all types of timeline items
+ */
+const val TIMELINE_ITEM_TYPE_NAME = "TimelineItemType"
 
 /**
  * Contains bean necessary for GraphQL configuration
@@ -176,6 +185,35 @@ class GraphQLConfiguration {
     @Bean(PART_OF_PROJECT_FILTER)
     fun partOfProjectFilter(nodeDefinitionCollection: NodeDefinitionCollection) =
         PartOfProjectFilterEntryDefinition(nodeDefinitionCollection)
+
+    /**
+     * GraphQL enum with all subtypes of [TimelineItem]
+     *
+     * @param nodeDefinitionCollection used to obtain subtypes
+     * @return the generated GraphQL type
+     */
+    @Bean
+    fun timelineItemTypeType(
+        nodeDefinitionCollection: NodeDefinitionCollection
+    ): GraphQLEnumType {
+        val builder = GraphQLEnumType.newEnum().name(TIMELINE_ITEM_TYPE_NAME).description("All timeline items types")
+        for (nodeDefinition in nodeDefinitionCollection) {
+            if (nodeDefinition.nodeType.isSubclassOf(TimelineItem::class)) {
+                builder.value(
+                    nodeDefinition.primaryLabel.replace("(?<=[a-zA-Z])[A-Z]".toRegex(), "_$0").uppercase(),
+                    nodeDefinition.primaryLabel,
+                    "${nodeDefinition.name} timeline item"
+                )
+            }
+        }
+        return builder.build()
+    }
+
+    /**
+     * Filter for [TimelineItem]s of specific types
+     */
+    @Bean(TIMELINE_ITEM_TYPE_FILTER_BEAN)
+    fun timelineItemTypeFilter() = TimelineItemTypeFilterEntryDefinition()
 
     /**
      * Provides the permission field for all nodes
