@@ -4,6 +4,7 @@ import com.expediagroup.graphql.generator.scalars.ID
 import gropius.authorization.GropiusAuthorizationContext
 import gropius.dto.input.architecture.*
 import gropius.dto.input.common.DeleteNodeInput
+import gropius.dto.input.ifPresent
 import gropius.model.architecture.Component
 import gropius.model.architecture.ComponentVersion
 import gropius.model.architecture.InterfaceSpecificationVersion
@@ -186,6 +187,9 @@ class ComponentVersionService(
         )
         templatedNodeService.updateTemplatedFields(componentVersion, input, false)
         updateNamedNode(componentVersion, input)
+        input.version.ifPresent {
+            componentVersion.version = it
+        }
         return repository.save(componentVersion).awaitSingle()
     }
 
