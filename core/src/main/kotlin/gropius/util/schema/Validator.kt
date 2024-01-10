@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException
 
 /**
  * Validates schemas against instances, returning a list of validation errors.
+ * Modified version of https://github.com/jsontypedef/json-typedef-java/blob/master/src/main/java/com/jsontypedef/jtd/Validator.java
  */
 @Component
 class Validator {
@@ -37,8 +38,7 @@ class Validator {
      * @param schema the schema to validate against
      * @param instance the JSON data to validate
      * @return a list of validation errors
-     * @throws MaxDepthExceededException if the number of references followed
-     * exceeds the configured maximum depth
+     * @throws MaxDepthExceededException if the number of references followed exceeds the configured maximum depth
      */
     fun validate(schema: Schema, instance: JsonNode): List<ValidationError> {
         val state = ValidationState(schema)
@@ -55,6 +55,14 @@ class Validator {
         return state.errors
     }
 
+    /**
+     * Validate [schema] against [instance]
+     *
+     * @param schema the schema to validate against
+     * @param instance the JSON data to validate
+     * @param state the validation state, used to track errors
+     * @param parentTag the parent tag, used to prevent infinite recursion
+     */
     private fun validate(state: ValidationState, schema: Schema, instance: JsonNode, parentTag: String?) {
         if (schema.nullable && instance.isNull) {
             return
@@ -253,6 +261,14 @@ class Validator {
         }
     }
 
+    /**
+     * Validates an integer.
+     *
+     * @param state the validation state
+     * @param instance the instance to validate
+     * @param min the minimum value
+     * @param max the maximum value
+     */
     private fun checkInt(state: ValidationState, instance: JsonNode, min: Long, max: Long) {
         if (!instance.isNumber) {
             state.pushError()
@@ -264,6 +280,11 @@ class Validator {
         }
     }
 
+    /**
+     * Validation state.
+     *
+     * @property root the root schema
+     */
     private class ValidationState(val root: Schema) {
         val errors: MutableList<ValidationError> = mutableListOf()
         val instanceTokens: MutableList<String> = mutableListOf()

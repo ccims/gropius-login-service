@@ -4,6 +4,7 @@ import graphql.schema.validation.InvalidSchemaException
 
 /**
  * Represents a JSON Type Definition schema.
+ * Modified version of https://github.com/jsontypedef/json-typedef-java/blob/master/src/main/java/com/jsontypedef/jtd/Schema.java
  */
 class Schema(
     val nullable: Boolean = false,
@@ -35,6 +36,12 @@ class Schema(
         verify(this)
     }
 
+    /**
+     * Verifies that this schema is valid
+     *
+     * @param root the root schema
+     * @throws InvalidSchemaException if the schema is not valid
+     */
     private fun verify(root: Schema) {
         val formSignature = setOf(
             if (ref != null) SchemaField.REF else null,
