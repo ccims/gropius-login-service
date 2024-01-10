@@ -23,31 +23,24 @@ class IMSConfigManager(
 
     companion object {
         /**
-         * JSON schema version to include
-         */
-        const val SCHEMA = "https://json-schema.org/draft/2020-12/schema"
-
-        /**
          * Template fields for IMSTemplate and IMSProjectTemplate
          */
         val COMMON_TEMPLATE_FIELDS = mapOf("bot-user" to obj {
-            "\$schema" to SCHEMA
-            "type" to arr["null", "string"]
+            "nullable" to true
+            "type" to "string"
         }.toString(), "last-notification" to obj {
-            "\$schema" to SCHEMA
-            "type" to arr["null", obj {
-                "type" to "object"
-                "properties" to obj {
-                    "title" to obj {
-                        "type" to "string"
-                    }
-                    "content" to obj {
-                        "type" to "string"
-                    }
+            "nullable" to true
+            "properties" to obj {
+                "title" to obj {
+                    "type" to "string"
                 }
-                "required" to arr["title", "content"]
+                "content" to obj {
+                    "type" to "string"
+                }
+            }
+            "metadata" to obj {
                 "gropius-type" to "notification"
-            }]
+            }
         }.toString())
 
         /**
@@ -59,30 +52,27 @@ class IMSConfigManager(
          * Fields of the required IMSIssueTemplate
          */
         private val IMS_ISSUE_TEMPLATE_FIELDS = mapOf("last-notification" to obj {
-            "\$schema" to SCHEMA
-            "type" to arr["null", obj {
-                "type" to "object"
-                "properties" to obj {
-                    "title" to obj {
-                        "type" to "string"
-                    }
-                    "content" to obj {
-                        "type" to "string"
-                    }
+            "nullable" to true
+            "properties" to obj {
+                "title" to obj {
+                    "type" to "string"
                 }
-                "required" to arr["title", "content"]
+                "content" to obj {
+                    "type" to "string"
+                }
+            }
+            "metadata" to obj {
                 "gropius-type" to "notification"
-            }]
+            }
         }.toString(), "url" to obj {
-            "\$schema" to SCHEMA
             "type" to "string"
-            "format" to "uri"
+            "metadata" to obj {
+                "format" to "uri"
+            }
         }.toString(), "id" to obj {
-            "\$schema" to SCHEMA
-            "type" to "number"
+            "type" to "int32"
         }.toString(), "number" to obj {
-            "\$schema" to SCHEMA
-            "type" to "number"
+            "type" to "int32"
         }.toString()
         )
 
@@ -96,8 +86,8 @@ class IMSConfigManager(
          */
         private val IMS_USER_TEMPLATE_FIELDS = mapOf(
             "github_id" to obj {
-                "\$schema" to SCHEMA
-                "type" to arr["null", "string"]
+                "nullable" to true
+                "type" to "string"
             }.toString()
         )
     }

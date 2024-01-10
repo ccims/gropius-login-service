@@ -42,16 +42,17 @@ data class IMSConfig(
          * Fields of the requested IMSTemplate
          */
         val IMS_TEMPLATE_FIELDS = mapOf("read-user" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", obj {
-                "type" to "string"
+            "nullable" to true
+            "type" to "string"
+            "metadata" to obj {
                 "gropius-node" to "IMSUser"
                 "gropius-type" to "jira-user"
-            }]
+            }
         }.toString(), "root-url" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
             "type" to "string"
-            "format" to "uri"
+            "metadata" to obj {
+                "format" to "uri"
+            }
         }.toString()) + IMSConfigManager.COMMON_TEMPLATE_FIELDS
     }
 }
