@@ -1,6 +1,6 @@
 package gropius
 
-import gropius.sync.github.GithubSync
+import gropius.sync.jira.JiraSync
 import io.github.graphglue.data.repositories.EnableGraphglueRepositories
 import kotlinx.coroutines.runBlocking
 import org.neo4j.driver.Driver
@@ -13,6 +13,7 @@ import org.springframework.boot.runApplication
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import org.springframework.data.neo4j.core.ReactiveDatabaseSelectionProvider
 import org.springframework.data.neo4j.core.transaction.ReactiveNeo4jTransactionManager
@@ -26,6 +27,11 @@ import kotlin.system.exitProcess
 class SyncConfiguration(
     val configurableApplicationContext: ConfigurableApplicationContext
 ) {
+    @Autowired
+    fun setMapKeyDotReplacement(mappingMongoConverter: MappingMongoConverter) {
+        mappingMongoConverter.setMapKeyDotReplacement("_FUCKDOT_")
+    }
+
     /**
      * Necessary transaction manager
      *
@@ -53,7 +59,7 @@ class Application : CommandLineRunner {
      * Reference for the spring instance of GithubSync
      */
     @Autowired
-    lateinit var githubSync: GithubSync
+    lateinit var jiraSync: JiraSync
 
     /**
      * Logger used to print notifications
@@ -64,7 +70,7 @@ class Application : CommandLineRunner {
         try {
             runBlocking {
                 try {
-                    githubSync.sync()
+                    jiraSync.sync()
                 } catch (e: Exception) {
                     println("ERROR")
                     e.printStackTrace()

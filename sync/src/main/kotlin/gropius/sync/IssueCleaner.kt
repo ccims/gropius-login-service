@@ -40,6 +40,25 @@ class IssueCleaner(
     }
 
     /**
+     * Clean all labels on this issue into a consistent state
+     * @param issue issue to work on
+     */
+    private suspend fun cleanAssignments(issue: Issue) {
+        issue.assignments().clear()
+        for (item in issue.timelineItems().sortedBy { it.createdAt }) {
+            if (item is Assignment) {
+                issue.assignments() += item
+            }
+            if (item is RemovedAssignmentEvent) {
+                issue.assignments() -= item.removedAssignment().value
+            }
+            if (item is AssignmentTypeChangedEvent) {
+                TODO()
+            }
+        }
+    }
+
+    /**
      * Clean the title on this issue into a consistent state
      * @param issue issue to work on
      */
@@ -64,6 +83,18 @@ class IssueCleaner(
     }
 
     /**
+     * Resort comments into comments list
+     * @param issue issue to work on
+     */
+    private suspend fun cleanComments(issue: Issue) {
+        for (item in issue.timelineItems()) {
+            if (item is IssueComment) {
+                issue.issueComments() += item
+            }
+        }
+    }
+
+    /**
      * Execute the cleaning process
      *
      * @param id Issue ID to clean
@@ -73,8 +104,10 @@ class IssueCleaner(
     suspend fun cleanIssue(id: String) {
         var issue = neoOperations.findById<Issue>(id)!!
         cleanLabels(issue)
+        cleanAssignments(issue)
         cleanState(issue)
         cleanTitle(issue)
+        cleanComments(issue)
         issue = neoOperations.save(issue).awaitSingle()
     }
 }

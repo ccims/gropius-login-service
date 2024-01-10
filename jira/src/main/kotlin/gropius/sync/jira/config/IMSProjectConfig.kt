@@ -1,10 +1,9 @@
-package gropius.sync.github.config
+package gropius.sync.jira.config
 
 import com.lectra.koson.arr
 import com.lectra.koson.obj
 import gropius.model.architecture.IMSProject
 import gropius.sync.JsonHelper
-import gropius.sync.github.model.RepoDescription
 
 /**
  * Config read out from a single IMSProject and an IMSConfig node
@@ -16,7 +15,7 @@ import gropius.sync.github.model.RepoDescription
  */
 data class IMSProjectConfig(
     val botUser: String?,
-    val repo: RepoDescription,
+    val repo: String,
     val enableOutgoing: Boolean,
     val enableOutgoingLabels: Boolean,
     val enableOutgoingComments: Boolean,
@@ -33,9 +32,7 @@ data class IMSProjectConfig(
         helper: JsonHelper, imsProject: IMSProject
     ) : this(
         botUser = helper.parseString(imsProject.templatedFields["bot-user"]),
-        repo = helper.objectMapper.readValue<RepoDescription>(
-            imsProject.templatedFields["repo"]!!, RepoDescription::class.java
-        ),
+        repo = helper.parseString(imsProject.templatedFields["repo"])!!,
         enableOutgoing = helper.parseBoolean(imsProject.templatedFields["enable-outgoing"]),
         enableOutgoingLabels = helper.parseBoolean(imsProject.templatedFields["enable-outgoing-labels"]),
         enableOutgoingComments = helper.parseBoolean(imsProject.templatedFields["enable-outgoing-comments"]),
@@ -48,24 +45,14 @@ data class IMSProjectConfig(
         /**
          * Name of requested IMSProjectTemplate
          */
-        const val IMS_PROJECT_TEMPLATE_NAME = "Github"
+        const val IMS_PROJECT_TEMPLATE_NAME = "Jira"
 
         /**
          * Fields of the requested IMSProjectTemplate
          */
         val IMS_PROJECT_TEMPLATE_FIELDS = mapOf("repo" to obj {
             "\$schema" to IMSConfigManager.SCHEMA
-            "type" to "object"
-            "properties" to obj {
-                "owner" to obj {
-                    "type" to "string"
-                }
-                "repo" to obj {
-                    "type" to "string"
-                }
-            }
-            "required" to arr["owner", "repo"]
-            "gropius-type" to "github-owner"
+            "type" to "string"
         }.toString(), "enable-outgoing" to obj {
             "\$schema" to IMSConfigManager.SCHEMA
             "type" to arr["null", "boolean"]
