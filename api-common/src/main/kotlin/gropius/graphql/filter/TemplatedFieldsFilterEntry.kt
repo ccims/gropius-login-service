@@ -32,7 +32,7 @@ class TemplatedFieldsFilterEntry(
                 val templatedFieldProperty: KProperty<*> = TemplatedNode::templatedFields
                 val property =
                     node.property("${templatedFieldProperty.name}.${entry[JSONFieldInput::name.name] as String}")
-                val jsonNode = entry[JSONFieldInput::value.name] as JsonNode? ?: JsonNodeFactory.instance.nullNode()
+                val jsonNode = entry[JSONFieldInput::value.name] as JsonNode?
                 val propertyValue = jsonNodeMapper.jsonNodeToDeterministicString(jsonNode)
                 condition.and(property.isEqualTo(Cypher.anonParameter(propertyValue)))
             }

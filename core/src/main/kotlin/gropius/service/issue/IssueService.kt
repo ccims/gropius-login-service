@@ -1508,7 +1508,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         checkManageIssuesPermission(issue, authorizationContext)
-        val newSerializedValue = jsonNodeMapper.jsonNodeToDeterministicString(input.value as JsonNode)
+        val newSerializedValue = jsonNodeMapper.jsonNodeToDeterministicString(input.value as JsonNode?)
         val oldSerializedValue = issue.templatedFields[input.name]
         return if (newSerializedValue != oldSerializedValue) {
             timelineItemRepository.save(
@@ -1542,7 +1542,7 @@ class IssueService(
         issue: Issue, field: JSONFieldInput, oldValue: String?, atTime: OffsetDateTime, byUser: User
     ): TemplatedFieldChangedEvent {
         templatedNodeService.ensureTemplatedFieldExist(issue.template().value, field.name)
-        val newValue = jsonNodeMapper.jsonNodeToDeterministicString(field.value as JsonNode)
+        val newValue = jsonNodeMapper.jsonNodeToDeterministicString(field.value as JsonNode?)
         val event = TemplatedFieldChangedEvent(atTime, atTime, field.name, oldValue, newValue)
         createdTimelineItem(issue, event, atTime, byUser)
         if (!existsNewerTimelineItem<TemplatedFieldChangedEvent>(issue, atTime) { it.fieldName == field.name }) {

@@ -6,7 +6,7 @@ import gropius.model.issue.Issue
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 
-@DomainNode
+@DomainNode(searchQueryName = "searchIssuePriorities")
 @GraphQLDescription(
     """Priority of an Issue like HIGH or LOW. Part of an IssueTemplate.
     READ is always granted.

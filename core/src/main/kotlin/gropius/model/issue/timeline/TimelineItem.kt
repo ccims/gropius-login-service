@@ -6,8 +6,14 @@ import gropius.model.issue.Issue
 import io.github.graphglue.model.*
 import java.time.OffsetDateTime
 
+/**
+ * Name of the bean defining the templatedFields filter
+ */
+const val TIMELINE_ITEM_TYPE_FILTER_BEAN = "timelineItemTypeFilter"
+
 @DomainNode
 @GraphQLDescription("Supertype of all timeline items. Always part of an Issue.")
+@AdditionalFilter(TIMELINE_ITEM_TYPE_FILTER_BEAN)
 abstract class TimelineItem(
     createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime
 ) : AuditedNode(createdAt, lastModifiedAt) {

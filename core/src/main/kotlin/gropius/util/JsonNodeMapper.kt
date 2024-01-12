@@ -3,6 +3,7 @@ package gropius.util
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import org.springframework.stereotype.Component
 
 /**
@@ -22,8 +23,8 @@ class JsonNodeMapper {
      * @param jsonNode to convert
      * @return the conversion result
      */
-    fun jsonNodeToDeterministicString(jsonNode: JsonNode): String {
-        val value = objectMapper.treeToValue(jsonNode, Object::class.java)
+    fun jsonNodeToDeterministicString(jsonNode: JsonNode?): String {
+        val value = objectMapper.treeToValue(jsonNode ?: JsonNodeFactory.instance.nullNode(), Object::class.java)
         return objectMapper.writeValueAsString(value)
     }
 

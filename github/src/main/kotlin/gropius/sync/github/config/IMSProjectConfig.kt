@@ -54,8 +54,6 @@ data class IMSProjectConfig(
          * Fields of the requested IMSProjectTemplate
          */
         val IMS_PROJECT_TEMPLATE_FIELDS = mapOf("repo" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to "object"
             "properties" to obj {
                 "owner" to obj {
                     "type" to "string"
@@ -64,26 +62,27 @@ data class IMSProjectConfig(
                     "type" to "string"
                 }
             }
-            "required" to arr["owner", "repo"]
-            "gropius-type" to "github-owner"
+            "metadata" to obj {
+                "gropius-type" to "github-owner"
+            }
         }.toString(), "enable-outgoing" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", "boolean"]
+            "nullable" to true
+            "type" to "boolean"
         }.toString(), "enable-outgoing-labels" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", "boolean"]
+            "nullable" to true
+            "type" to "boolean"
         }.toString(), "enable-outgoing-comments" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", "boolean"]
+            "nullable" to true
+            "type" to "boolean"
         }.toString(), "enable-outgoing-assignments" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", "boolean"]
+            "nullable" to true
+            "type" to "boolean"
         }.toString(), "enable-outgoing-title-changes" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", "boolean"]
+            "nullable" to true
+            "type" to "boolean"
         }.toString(), "enable-outgoing-state" to obj {
-            "\$schema" to IMSConfigManager.SCHEMA
-            "type" to arr["null", "boolean"]
+            "nullable" to true
+            "type" to "boolean"
         }.toString()) + IMSConfigManager.COMMON_TEMPLATE_FIELDS
     }
 }

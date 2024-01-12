@@ -1,5 +1,6 @@
 package gropius.service.template
 
+import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.orElse
 import gropius.dto.input.template.CreateTemplateInput
 import gropius.model.template.Template
@@ -30,4 +31,27 @@ abstract class AbstractTemplateService<T : Template<*, T>, R : GropiusRepository
         createdBaseTemplate(template, input, extendedTemplates)
     }
 
+}
+
+/**
+ * Returns all templates which extend the template with the provided [ids]
+ * Includes the template with the provided [ids], and indirect extending templates.
+ *
+ * @param ids the ids of the templates to get the extending templates for
+ * @return the extending templates
+ */
+suspend fun <T : Template<*, out T>, R : GropiusRepository<T, String>> BaseTemplateService<T, R>.findAllByIdWithExtending(
+    ids: Collection<ID>
+): Set<T> {
+    val toCheck = repository.findAllById(ids).toMutableList()
+    val found = toCheck.toMutableSet()
+    while (toCheck.isNotEmpty()) {
+        val current = toCheck.removeLast()
+        current.extendedBy().forEach {
+            if (found.add(it)) {
+                toCheck.add(it)
+            }
+        }
+    }
+    return found
 }
