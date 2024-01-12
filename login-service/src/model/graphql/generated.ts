@@ -388,6 +388,8 @@ export type AssignmentFilterInput = {
   or?: InputMaybe<Array<AssignmentFilterInput>>;
   /** Filters for nodes where the related node match this filter */
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
   /** Filters for nodes where the related node match this filter */
   type?: InputMaybe<AssignmentTypeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -594,6 +596,8 @@ export type BodyFilterInput = {
   or?: InputMaybe<Array<BodyFilterInput>>;
   /** Filters for nodes where the related node match this filter */
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
 };
 
 /** Filter which can be used to filter for Nodes with a specific Boolean field */
@@ -634,6 +638,8 @@ export type CommentFilterInput = {
   or?: InputMaybe<Array<CommentFilterInput>>;
   /** Filters for nodes where the related node match this filter */
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
 };
 
 /** Filter used to filter Component */
@@ -2072,6 +2078,8 @@ export type IssueCommentFilterInput = {
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
   /** Filter by referencedArtefacts */
   referencedArtefacts?: InputMaybe<ArtefactListFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
 };
 
 /** Used to filter by a connection-based property. Fields are joined by AND */
@@ -2290,6 +2298,8 @@ export type IssueRelationFilterInput = {
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
   /** Filters for nodes where the related node match this filter */
   relatedIssue?: InputMaybe<IssueFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
   /** Filters for nodes where the related node match this filter */
   type?: InputMaybe<IssueRelationTypeFilterInput>;
 };
@@ -2729,6 +2739,8 @@ export type ParentTimelineItemFilterInput = {
   or?: InputMaybe<Array<ParentTimelineItemFilterInput>>;
   /** Filters for nodes where the related node match this filter */
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
 };
 
 /** Permission entry enum type. */
@@ -3207,6 +3219,8 @@ export type TimelineItemFilterInput = {
   or?: InputMaybe<Array<TimelineItemFilterInput>>;
   /** Filters for nodes where the related node match this filter */
   parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+  /** Filter for specific timeline items. Entries are joined by OR */
+  timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
 };
 
 /** Used to filter by a connection-based property. Fields are joined by AND */
@@ -3235,6 +3249,88 @@ export enum TimelineItemOrderField {
   Id = 'ID',
   /** Order by lastModifiedAt */
   LastModifiedAt = 'LAST_MODIFIED_AT'
+}
+
+/** All timeline items types */
+export enum TimelineItemType {
+  /** AbstractTypeChangedEvent timeline item */
+  AbstractTypeChangedEvent = 'ABSTRACT_TYPE_CHANGED_EVENT',
+  /** AddedAffectedEntityEvent timeline item */
+  AddedAffectedEntityEvent = 'ADDED_AFFECTED_ENTITY_EVENT',
+  /** AddedArtefactEvent timeline item */
+  AddedArtefactEvent = 'ADDED_ARTEFACT_EVENT',
+  /** AddedLabelEvent timeline item */
+  AddedLabelEvent = 'ADDED_LABEL_EVENT',
+  /** AddedToPinnedIssuesEvent timeline item */
+  AddedToPinnedIssuesEvent = 'ADDED_TO_PINNED_ISSUES_EVENT',
+  /** AddedToTrackableEvent timeline item */
+  AddedToTrackableEvent = 'ADDED_TO_TRACKABLE_EVENT',
+  /** Assignment timeline item */
+  Assignment = 'ASSIGNMENT',
+  /** AssignmentTypeChangedEvent timeline item */
+  AssignmentTypeChangedEvent = 'ASSIGNMENT_TYPE_CHANGED_EVENT',
+  /** Body timeline item */
+  Body = 'BODY',
+  /** Comment timeline item */
+  Comment = 'COMMENT',
+  /** DueDateChangedEvent timeline item */
+  DueDateChangedEvent = 'DUE_DATE_CHANGED_EVENT',
+  /** EstimatedTimeChangedEvent timeline item */
+  EstimatedTimeChangedEvent = 'ESTIMATED_TIME_CHANGED_EVENT',
+  /** IncomingRelationTypeChangedEvent timeline item */
+  IncomingRelationTypeChangedEvent = 'INCOMING_RELATION_TYPE_CHANGED_EVENT',
+  /** IssueComment timeline item */
+  IssueComment = 'ISSUE_COMMENT',
+  /** IssueRelation timeline item */
+  IssueRelation = 'ISSUE_RELATION',
+  /** OutgoingRelationTypeChangedEvent timeline item */
+  OutgoingRelationTypeChangedEvent = 'OUTGOING_RELATION_TYPE_CHANGED_EVENT',
+  /** ParentTimelineItem timeline item */
+  ParentTimelineItem = 'PARENT_TIMELINE_ITEM',
+  /** PriorityChangedEvent timeline item */
+  PriorityChangedEvent = 'PRIORITY_CHANGED_EVENT',
+  /** PublicTimelineItem timeline item */
+  PublicTimelineItem = 'PUBLIC_TIMELINE_ITEM',
+  /** RelatedByIssueEvent timeline item */
+  RelatedByIssueEvent = 'RELATED_BY_ISSUE_EVENT',
+  /** RelationTypeChangedEvent timeline item */
+  RelationTypeChangedEvent = 'RELATION_TYPE_CHANGED_EVENT',
+  /** RemovedAffectedEntityEvent timeline item */
+  RemovedAffectedEntityEvent = 'REMOVED_AFFECTED_ENTITY_EVENT',
+  /** RemovedArtefactEvent timeline item */
+  RemovedArtefactEvent = 'REMOVED_ARTEFACT_EVENT',
+  /** RemovedAssignmentEvent timeline item */
+  RemovedAssignmentEvent = 'REMOVED_ASSIGNMENT_EVENT',
+  /** RemovedFromPinnedIssuesEvent timeline item */
+  RemovedFromPinnedIssuesEvent = 'REMOVED_FROM_PINNED_ISSUES_EVENT',
+  /** RemovedFromTrackableEvent timeline item */
+  RemovedFromTrackableEvent = 'REMOVED_FROM_TRACKABLE_EVENT',
+  /** RemovedIncomingRelationEvent timeline item */
+  RemovedIncomingRelationEvent = 'REMOVED_INCOMING_RELATION_EVENT',
+  /** RemovedLabelEvent timeline item */
+  RemovedLabelEvent = 'REMOVED_LABEL_EVENT',
+  /** RemovedOutgoingRelationEvent timeline item */
+  RemovedOutgoingRelationEvent = 'REMOVED_OUTGOING_RELATION_EVENT',
+  /** RemovedRelationEvent timeline item */
+  RemovedRelationEvent = 'REMOVED_RELATION_EVENT',
+  /** RemovedTemplatedFieldEvent timeline item */
+  RemovedTemplatedFieldEvent = 'REMOVED_TEMPLATED_FIELD_EVENT',
+  /** SpentTimeChangedEvent timeline item */
+  SpentTimeChangedEvent = 'SPENT_TIME_CHANGED_EVENT',
+  /** StartDateChangedEvent timeline item */
+  StartDateChangedEvent = 'START_DATE_CHANGED_EVENT',
+  /** StateChangedEvent timeline item */
+  StateChangedEvent = 'STATE_CHANGED_EVENT',
+  /** TemplatedFieldChangedEvent timeline item */
+  TemplatedFieldChangedEvent = 'TEMPLATED_FIELD_CHANGED_EVENT',
+  /** TemplateChangedEvent timeline item */
+  TemplateChangedEvent = 'TEMPLATE_CHANGED_EVENT',
+  /** TimelineItem timeline item */
+  TimelineItem = 'TIMELINE_ITEM',
+  /** TitleChangedEvent timeline item */
+  TitleChangedEvent = 'TITLE_CHANGED_EVENT',
+  /** TypeChangedEvent timeline item */
+  TypeChangedEvent = 'TYPE_CHANGED_EVENT'
 }
 
 /** Filter used to filter Trackable */
