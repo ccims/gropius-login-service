@@ -2104,7 +2104,7 @@ class IssueService(
     ) {
         if (comment.createdBy().value != user) {
             checkPermission(
-                comment, Permission(TrackablePermission.MODERATOR, authorizationContext), "update the IssueComment"
+                comment.issue().value, Permission(TrackablePermission.MODERATOR, authorizationContext), "update the IssueComment"
             )
         } else {
             checkPermission(
