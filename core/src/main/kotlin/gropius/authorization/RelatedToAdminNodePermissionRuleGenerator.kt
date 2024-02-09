@@ -25,16 +25,16 @@ class RelatedToAdminNodePermissionRuleGenerator(
 ) : NodePermissionRuleGenerator() {
 
     override fun generateRule(
-        node: Node, currentRelationship: RelationshipPattern, rule: Rule, permission: Permission
-    ): Pair<RelationshipPattern, Condition> {
+        node: Node, rule: Rule, permission: Permission
+    ): Condition {
         val relatedNodePermissionNode = nodePermissionDefinition.node().named("g_2")
         val subQueryPredicate = generatePredicateCondition(
             relatedNodePermissionNode, permission, listOf(NodePermission.ADMIN)
         )
         val maxLength = rule.options.first().toInt()
-        val newRelationship = currentRelationship.relationshipBetween(relatedNodePermissionNode)
-            .properties(NodePermission.RELATED_TO_NODE_PERMISSION, Cypher.literalTrue()).length(0, maxLength)
-        return newRelationship to subQueryPredicate
+        val newRelationship = node.relationshipBetween(relatedNodePermissionNode)
+            .withProperties(NodePermission.RELATED_TO_NODE_PERMISSION, Cypher.literalTrue()).length(0, maxLength)
+        return Cypher.match(newRelationship).where(subQueryPredicate).asCondition()
     }
 
 }

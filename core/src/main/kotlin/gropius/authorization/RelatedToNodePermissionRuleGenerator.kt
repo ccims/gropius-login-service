@@ -6,6 +6,7 @@ import io.github.graphglue.authorization.Permission
 import io.github.graphglue.definition.NodeDefinition
 import io.github.graphglue.model.Rule
 import org.neo4j.cypherdsl.core.Condition
+import org.neo4j.cypherdsl.core.Cypher
 import org.neo4j.cypherdsl.core.Node
 import org.neo4j.cypherdsl.core.RelationshipPattern
 
@@ -33,17 +34,16 @@ class RelatedToNodePermissionRuleGenerator(
 
     override fun generateRule(
         node: Node,
-        currentRelationship: RelationshipPattern,
         rule: Rule,
         permission: Permission
-    ): Pair<RelationshipPattern, Condition> {
+    ): Condition {
         val nodePermissionNode = nodePermissionDefinition.node().named("g_2")
         val permissionNames = rule.options.toList() + permission.name
         val subQueryPredicate = generatePredicateCondition(
             nodePermissionNode, permission, permissionNames
         )
-        val newRelationship = currentRelationship.relationshipFrom(nodePermissionNode, NodePermission.NODE)
-        return newRelationship to subQueryPredicate
+        val newRelationship = node.relationshipFrom(nodePermissionNode, NodePermission.NODE)
+        return Cypher.match(newRelationship).where(subQueryPredicate).asCondition()
     }
 
 }

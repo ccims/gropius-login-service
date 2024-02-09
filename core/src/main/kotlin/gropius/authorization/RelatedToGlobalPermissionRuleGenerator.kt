@@ -22,11 +22,11 @@ class RelatedToGlobalPermissionRuleGenerator(
     private val nodePermissionDefinition: NodeDefinition
 ) : AllowRuleGenerator {
     override fun generateRule(
-        node: Node, currentRelationship: RelationshipPattern, rule: Rule, permission: Permission
-    ): Pair<RelationshipPattern, Condition> {
+        node: Node, rule: Rule, permission: Permission
+    ): Condition {
         val nodePermissionNode = nodePermissionDefinition.node().named("g_2")
         val nodePermissionPredicate =
             Cypher.anonParameter(permission.name).`in`(nodePermissionNode.property(GlobalPermission::entries.name))
-        return currentRelationship.relationshipTo(nodePermissionNode, GropiusUser.PERMISSION) to nodePermissionPredicate
+        return Cypher.match(node.relationshipTo(nodePermissionNode, GropiusUser.PERMISSION)).where(nodePermissionPredicate).asCondition()
     }
 }
