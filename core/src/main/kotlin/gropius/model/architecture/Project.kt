@@ -8,7 +8,7 @@ import gropius.model.user.permission.ProjectPermission
 import io.github.graphglue.model.*
 import java.net.URI
 
-@DomainNode("projects")
+@DomainNode("projects", searchQueryName = "searchProjects")
 @GraphQLDescription(
     """A project of the Gropius system.
     Consists of a set of ComponentVersions, which form a graph with the Relations between them.
