@@ -77,18 +77,6 @@ object DefaultSchemaGeneratorHooks : SchemaGeneratorHooks {
             }
         }
 
-    /**
-     * Gets a nullable version of the type
-     */
-    private val GraphQLOutputType.nullable: GraphQLOutputType
-        get() {
-            return if (this is GraphQLNonNull) {
-                this.originalWrappedType as GraphQLOutputType
-            } else {
-                this
-            }
-        }
-
     override fun didBuildSchema(builder: GraphQLSchema.Builder): GraphQLSchema.Builder {
         val oldCodeRegistry = builder.build().codeRegistry
         val newCodeRegistry = oldCodeRegistry.transform {
