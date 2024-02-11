@@ -3496,7 +3496,7 @@ export type CreateNewImsUserInImsMutationVariables = Exact<{
 }>;
 
 
-export type CreateNewImsUserInImsMutation = { __typename?: 'Mutation', createIMSUser?: { __typename: 'CreateIMSUserPayload', imsUser?: { __typename: 'IMSUser', id: string } | null } | null };
+export type CreateNewImsUserInImsMutation = { __typename?: 'Mutation', createIMSUser?: { __typename: 'CreateIMSUserPayload', imsUser: { __typename: 'IMSUser', id: string } } };
 
 export type GetBasicGropiusUserDataQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3529,7 +3529,7 @@ export type CreateNewUserMutationVariables = Exact<{
 }>;
 
 
-export type CreateNewUserMutation = { __typename?: 'Mutation', createGropiusUser?: { __typename?: 'CreateGropiusUserPayload', gropiusUser?: { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } | null } | null };
+export type CreateNewUserMutation = { __typename?: 'Mutation', createGropiusUser?: { __typename?: 'CreateGropiusUserPayload', gropiusUser: { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null } } };
 
 export type SetImsUserLinkMutationVariables = Exact<{
   gropiusUserId: Scalars['ID'];
@@ -3537,7 +3537,7 @@ export type SetImsUserLinkMutationVariables = Exact<{
 }>;
 
 
-export type SetImsUserLinkMutation = { __typename?: 'Mutation', updateIMSUser?: { __typename: 'UpdateIMSUserPayload', imsUser?: { __typename: 'IMSUser', id: string } | null } | null };
+export type SetImsUserLinkMutation = { __typename?: 'Mutation', updateIMSUser?: { __typename: 'UpdateIMSUserPayload', imsUser: { __typename: 'IMSUser', id: string } } };
 
 export type UserDataFragment = { __typename: 'GropiusUser', id: string, username: string, displayName: string, email?: string | null };
 
