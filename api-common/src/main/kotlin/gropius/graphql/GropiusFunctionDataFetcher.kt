@@ -12,7 +12,8 @@ import kotlin.reflect.full.isSubtypeOf
 
 /**
  * FunctionDataFetcher which handles files parameter mapping for parameters of GraphQL type JSON correctly
- * Allows input classes to have `lateinit` properties which are correctly deserialized
+ * Allows input classes to have `lateinit` properties which are correctly deserialized.
+ * Also handles wrapping the result of a mutation when using [AutoPayloadType]
  * Extends [SpringDataFetcher]
  *
  * @param target if present, the object on which the function is invoked
@@ -20,8 +21,18 @@ import kotlin.reflect.full.isSubtypeOf
  * @param applicationContext used to obtain Spring beans
  */
 class GropiusFunctionDataFetcher(
-    target: Any?, function: KFunction<*>, applicationContext: ApplicationContext
+    target: Any?, private val function: KFunction<*>, applicationContext: ApplicationContext
 ) : SpringDataFetcher(target, function, applicationContext) {
+
+    override fun get(environment: DataFetchingEnvironment): Any? {
+        val res = super.get(environment)
+        return if (function.hasAnnotation<AutoPayloadType>()) {
+            PayloadWrapper(res)
+        } else {
+            res
+        }
+    }
+
     override fun mapParameterToValue(param: KParameter, environment: DataFetchingEnvironment): Pair<KParameter, Any?>? {
         return when {
             param.hasAnnotation<GraphQLIgnore>() -> super.mapParameterToValue(param, environment)

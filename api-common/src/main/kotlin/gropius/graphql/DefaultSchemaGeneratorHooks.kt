@@ -20,7 +20,7 @@ import kotlin.reflect.full.hasAnnotation
  * - [OffsetDateTime] -> DateTime
  * - [URI] -> Url
  * - Duration -> Duration
- * 
+ *
  * Handles the automatic generation of payload types for mutations annotated with [AutoPayloadType]
  */
 object DefaultSchemaGeneratorHooks : SchemaGeneratorHooks {
@@ -53,12 +53,12 @@ object DefaultSchemaGeneratorHooks : SchemaGeneratorHooks {
             val payloadType =
                 GraphQLObjectType.newObject().name(fieldDefinition.name.replaceFirstChar(Char::titlecase) + "Payload")
                     .field {
-                        it.name(fieldName).description(description).type(fieldDefinition.type.nullable)
+                        it.name(fieldName).description(description).type(fieldDefinition.type)
                     }.build()
             codeRegistry.dataFetcher(
                 FieldCoordinates.coordinates(payloadType, fieldName),
-                DataFetcher<Any> { it.getSource() })
-            fieldDefinition.transform { it.type(payloadType) }
+                DataFetcher { it.getSource<PayloadWrapper>().payload })
+            fieldDefinition.transform { it.type(GraphQLNonNull(payloadType)) }
         } else {
             super.didGenerateMutationField(kClass, function, fieldDefinition)
         }
@@ -74,18 +74,6 @@ object DefaultSchemaGeneratorHooks : SchemaGeneratorHooks {
             val pattern = "^(([A-Z](?=[a-z]))|([A-Z]+(?=[A-Z][a-z]))|([A-Z]+$))".toRegex()
             return pattern.replace(unwrappedName) {
                 it.value.map(Char::lowercase).joinToString("")
-            }
-        }
-
-    /**
-     * Gets a nullable version of the type
-     */
-    private val GraphQLOutputType.nullable: GraphQLOutputType
-        get() {
-            return if (this is GraphQLNonNull) {
-                this.originalWrappedType as GraphQLOutputType
-            } else {
-                this
             }
         }
 
