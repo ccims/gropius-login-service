@@ -8,9 +8,10 @@ import kotlin.reflect.KProperty0
  *
  * @param block executed if input is defined
  */
+@Suppress("UNCHECKED_CAST")
 inline fun <T> OptionalInput<T>.ifPresent(block: (T) -> Unit) {
     if (this is OptionalInput.Defined) {
-        block(this.value!!)
+        block(this.value as T)
     }
 }
 
