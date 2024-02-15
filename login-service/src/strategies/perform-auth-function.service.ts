@@ -145,7 +145,7 @@ export class PerformAuthFunctionService {
                         return this.continueExistingRegistration(
                             authResult,
                             instance,
-                            state.function != AuthFunction.REGISTER,
+                            state.function == AuthFunction.REGISTER_WITH_SYNC,
                         );
                     } else if (state.function == AuthFunction.LOGIN) {
                         return {
@@ -174,7 +174,7 @@ export class PerformAuthFunctionService {
                     return { authErrorMessage: "Invalid user credentials." };
                 }
 
-                return this.registerNewUser(authResult, instance, state.function != AuthFunction.REGISTER);
+                return this.registerNewUser(authResult, instance, state.function == AuthFunction.REGISTER_WITH_SYNC);
             } else if (state.function == AuthFunction.LOGIN && !wantsToDoImplicitRegister) {
                 return { authErrorMessage: "Invalid user credentials." };
             }
