@@ -31,8 +31,8 @@ export class JiraStrategyService extends StrategyUsingPassport {
      *
      * Needed parameters
      * - imsTemplatedFieldsFilter containing:
-     *     - graphql-url: The URL of the jira graphql endpoint.
-     *         If imsTemplatedFieldsFilter not given, defaults to "https://api.jira.com/graphql"
+     *     - root-url: The URL of the jira root endpoint.
+     *         If imsTemplatedFieldsFilter not given, defaults to "https://itscalledccims.atlassian.net/rest/api/2"
      * - authorizationUrl: Oauth authorization URL. Optional, default: "https://jira.com/login/oauth/authorize"
      * - tokenUrl: Oauth token url. Optional, default: "https://jira.com/login/oauth/access_token"
      * - userProfileUrl: API URL to request user profile info from. Needs to be specified for GitHib Enterprise instances. Optional
@@ -47,18 +47,13 @@ export class JiraStrategyService extends StrategyUsingPassport {
         const resultingConfig = instanceConfig;
 
         if (resultingConfig["imsTemplatedFieldsFilter"]) {
-            const jiraUrl = resultingConfig["imsTemplatedFieldsFilter"]["graphql-url"];
-            if (!jiraUrl) {
+            const rootUrl = resultingConfig["imsTemplatedFieldsFilter"]["root-url"];
+            if (!rootUrl) {
                 throw new Error("At least Jira URL must be given in imsTemplatedFieldsFilter");
             }
         } else {
-            resultingConfig["imsTemplatedFieldsFilter"] = {
-                "graphql-url": "https://api.jira.com/graphql",
-            };
+            throw new Error("At least imsTemplatedFieldsFilter must be given");
         }
-        resultingConfig["imsTemplatedFieldsFilter"] = {
-            "root-url": "https://itscalledccims.atlassian.net/rest/api/2",
-        };
 
         try {
             resultingConfig["authorizationUrl"] = checkType(
@@ -91,6 +86,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
             resultingConfig["callbackUrl"] = checkType(instanceConfig, "callbackUrl", "string", true);
+            resultingConfig["callbackRoot"] = checkType(instanceConfig, "callbackRoot", "string", false);
         } catch (err) {
             throw new Error("Instance config for jira instance invalid: " + err.message);
         }
@@ -180,7 +176,10 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 clientSecret: strategyInstance.instanceConfig["clientSecret"],
                 callbackURL:
                     strategyInstance.instanceConfig["callbackUrl"] ??
-                    "http://localhost:3000/authenticate/oauth/" + strategyInstance.id + "/callback",
+                    strategyInstance.instanceConfig["callbackRoot"] +
+                        "/authenticate/oauth/" +
+                        strategyInstance.id +
+                        "/callback",
                 scope: ["read:jira-work", "write:jira-work"],
                 store: {
                     store: (req, state, meta, callback) => callback(null, state),

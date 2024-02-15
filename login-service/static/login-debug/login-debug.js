@@ -169,6 +169,8 @@ export default {
             createJiraInstanceIsSyncActive: false,
             createJiraInstanceDoesImplicitRegister: false,
             createJiraInstanceName: "",
+            createJiraInstanceRootURL: "",
+            createJiraInstanceCallbackRoot: "",
 
             createClientMethod: "PUT",
             createClientEditId: "",

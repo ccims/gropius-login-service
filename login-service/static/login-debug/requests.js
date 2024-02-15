@@ -109,6 +109,8 @@ export async function runCreateJiraInstance() {
             instanceConfig: {
                 clientId: this.createJiraInstanceClientId,
                 clientSecret: this.createJiraInstanceClientSecret,
+                callbackRoot: this.createJiraInstanceCallbackRoot,
+                imsTemplatedFieldsFilter: {"root-url": this.createJiraInstanceRootURL},
             },
             isLoginActive: this.createJiraInstanceIsLoginActive,
             isSelfRegisterActive: this.createJiraInstanceIsSelfRegisterActive,

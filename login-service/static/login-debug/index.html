@@ -193,6 +193,8 @@
             </li>
             <li>Jira OAuth App Settings: Client id: <input v-model="createJiraInstanceClientId"><br>
                 Client secret: <input v-model="createJiraInstanceClientSecret"></li>
+            <li>Root URL: <input v-model="createJiraInstanceRootURL"><br/>
+                Callback Root: <input v-model="createJiraInstanceCallbackRoot"></li>
             <li>Settings for this instance:
                 <label><input type="checkbox" v-model="createJiraInstanceIsLoginActive">Enable login</label>;
                 <label><input type="checkbox" v-model="createJiraInstanceIsSelfRegisterActive">Enable self
@@ -208,7 +210,9 @@
             <li class="body">{ <br>
                 "instanceConfig": {
                 "clientId": "{{ createJiraInstanceClientId }}",
-                "clientSecret": "{{ createJiraInstanceClientSecret }}"
+                "imsTemplatedFieldsFilter": {"root-url": "{{ createJiraInstanceRootURL }}"},
+                "clientSecret": "{{ createJiraInstanceClientSecret }}",
+                "callbackRoot": "{{ createJiraInstanceCallbackRoot }}"
                 },<br>
                 "isLoginActive": {{ createJiraInstanceIsLoginActive }}, "isSelfRegisterActive": {{
                 createJiraInstanceIsSelfRegisterActive }},<br>
