@@ -19,6 +19,13 @@ export async function runShowInstance() {
         this.createGithubInstanceIsSelfRegisterActive = r[0].isSelfRegisterActive;
         this.createGithubInstanceIsSyncActive = r[0].isSyncActive;
         this.createGithubInstanceDoesImplicitRegister = r[0].doesImplicitRegister;
+    } if (r[0].type == "jira") {
+        this.createJiraInstanceEditId = r[0].id;
+        this.oauthFlowInstanceId = r[0].id;
+        this.createJiraInstanceIsLoginActive = r[0].isLoginActive;
+        this.createJiraInstanceIsSelfRegisterActive = r[0].isSelfRegisterActive;
+        this.createJiraInstanceIsSyncActive = r[0].isSyncActive;
+        this.createJiraInstanceDoesImplicitRegister = r[0].doesImplicitRegister;
     }
 }
 
@@ -89,6 +96,28 @@ export async function runCreateGithubInstance() {
         },
     );
     this.createGithubInstanceEditId = r.id;
+    this.oauthFlowInstanceId = r.id;
+}
+
+export async function runCreateJiraInstance() {
+    const r = await this.request(
+        `login/strategy/jira/instance${
+            this.createJiraInstanceMethod == "PUT" ? "/" + this.createJiraInstanceEditId : ""
+        }`,
+        this.createJiraInstanceMethod,
+        {
+            instanceConfig: {
+                clientId: this.createJiraInstanceClientId,
+                clientSecret: this.createJiraInstanceClientSecret,
+            },
+            isLoginActive: this.createJiraInstanceIsLoginActive,
+            isSelfRegisterActive: this.createJiraInstanceIsSelfRegisterActive,
+            isSyncActive: this.createJiraInstanceIsSyncActive,
+            doesImplicitRegister: this.createJiraInstanceDoesImplicitRegister,
+            name: this.createJiraInstanceName || undefined,
+        },
+    );
+    this.createJiraInstanceEditId = r.id;
     this.oauthFlowInstanceId = r.id;
 }
 
@@ -202,6 +231,7 @@ export const allMethods = {
     runRefreshToken,
     runListAllUsers,
     runCreateGithubInstance,
+    runCreateJiraInstance,
     runListAllClients,
     runCreateClient,
     oauthFlowInitiate,

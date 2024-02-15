@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger, Type } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
-import * as passportGithub from "passport-github2";
+import * as passportJira from "passport-atlassian-oauth2";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
@@ -13,8 +13,8 @@ import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../utils";
 
 @Injectable()
-export class GithubStrategyService extends StrategyUsingPassport {
-    private readonly loggerGithub = new Logger(GithubStrategyService.name);
+export class JiraStrategyService extends StrategyUsingPassport {
+    private readonly loggerJira = new Logger(JiraStrategyService.name);
     constructor(
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
@@ -23,39 +23,42 @@ export class GithubStrategyService extends StrategyUsingPassport {
         passportJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, passportJwtService, true, true, true, true);
+        super("jira", strategyInstanceService, strategiesService, passportJwtService, true, true, true, true);
     }
 
     /**
-     * Chechs the given config is valid for a github (or github enterprise)
+     * Chechs the given config is valid for a jira (or jira enterprise)
      *
      * Needed parameters
      * - imsTemplatedFieldsFilter containing:
-     *     - graphql-url: The URL of the github graphql endpoint.
-     *         If imsTemplatedFieldsFilter not given, defaults to "https://api.github.com/graphql"
-     * - authorizationUrl: Oauth authorization URL. Optional, default: "https://github.com/login/oauth/authorize"
-     * - tokenUrl: Oauth token url. Optional, default: "https://github.com/login/oauth/access_token"
+     *     - graphql-url: The URL of the jira graphql endpoint.
+     *         If imsTemplatedFieldsFilter not given, defaults to "https://api.jira.com/graphql"
+     * - authorizationUrl: Oauth authorization URL. Optional, default: "https://jira.com/login/oauth/authorize"
+     * - tokenUrl: Oauth token url. Optional, default: "https://jira.com/login/oauth/access_token"
      * - userProfileUrl: API URL to request user profile info from. Needs to be specified for GitHib Enterprise instances. Optional
-     * - clientId: Id of GitHub oauth app. Optional, default: GROPIUS_OAUTH_CLIENT_ID config variable
-     * - clientSecret: secret of GitHub oaut app. Optional, default: GROPIUS_OAUTH_CLIENT_SECRET config value
+     * - clientId: Id of Jira oauth app. Optional, default: GROPIUS_OAUTH_CLIENT_ID config variable
+     * - clientSecret: secret of Jira oaut app. Optional, default: GROPIUS_OAUTH_CLIENT_SECRET config value
      * - callbackUrl: Oauth callback url. Should be [URL]/authenticate/:id/callback. Optional, default empty
      *
-     * @param instanceConfig The instance config for a github strategy instance to check
-     * @returns The extended config (with default parameters for the global github) if check successful
+     * @param instanceConfig The instance config for a jira strategy instance to check
+     * @returns The extended config (with default parameters for the global jira) if check successful
      */
     protected override checkAndExtendInstanceConfig(instanceConfig: object): object {
         const resultingConfig = instanceConfig;
 
         if (resultingConfig["imsTemplatedFieldsFilter"]) {
-            const githubUrl = resultingConfig["imsTemplatedFieldsFilter"]["graphql-url"];
-            if (!githubUrl) {
-                throw new Error("At least GitHub URL must be given in imsTemplatedFieldsFilter");
+            const jiraUrl = resultingConfig["imsTemplatedFieldsFilter"]["graphql-url"];
+            if (!jiraUrl) {
+                throw new Error("At least Jira URL must be given in imsTemplatedFieldsFilter");
             }
         } else {
             resultingConfig["imsTemplatedFieldsFilter"] = {
-                "graphql-url": "https://api.github.com/graphql",
+                "graphql-url": "https://api.jira.com/graphql",
             };
         }
+        resultingConfig["imsTemplatedFieldsFilter"] = {
+            "root-url": "https://itscalledccims.atlassian.net/rest/api/2",
+        };
 
         try {
             resultingConfig["authorizationUrl"] = checkType(
@@ -63,14 +66,14 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 "authorizationUrl",
                 "string",
                 true,
-                "https://github.com/login/oauth/authorize",
+                "https://auth.atlassian.com/authorize",
             );
             resultingConfig["tokenUrl"] = checkType(
                 instanceConfig,
                 "tokenUrl",
                 "string",
                 true,
-                "https://github.com/login/oauth/access_token",
+                "https://auth.atlassian.com/oauth/token",
             );
             resultingConfig["userProfileUrl"] = checkType(instanceConfig, "userProfileUrl", "string", true);
             resultingConfig["clientId"] = checkType(
@@ -89,7 +92,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
             );
             resultingConfig["callbackUrl"] = checkType(instanceConfig, "callbackUrl", "string", true);
         } catch (err) {
-            throw new Error("Instance config for github instance invalid: " + err.message);
+            throw new Error("Instance config for jira instance invalid: " + err.message);
         }
 
         new URL(instanceConfig["authorizationUrl"]);
@@ -107,13 +110,13 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
-            github_id: loginData.data["github_id"],
+            jira_id: loginData.data["jira_id"],
         };
     }
 
     override getLoginDataDataForImsUserTemplatedFields(imsUser: object): object | Promise<object> {
         return {
-            github_id: imsUser["github_id"],
+            jira_id: imsUser["jira_id"],
         };
     }
 
@@ -129,30 +132,14 @@ export class GithubStrategyService extends StrategyUsingPassport {
         };
     }
 
-    protected override getAdditionalPassportOptions(
-        strategyInstance: StrategyInstance,
-        authStateData: object | AuthStateData,
-    ): passport.AuthenticateOptions {
-        const mode = (authStateData as AuthStateData).function;
-        if (mode == AuthFunction.REGISTER_WITH_SYNC) {
-            return {
-                scope: ["scope", "user:email", "repo"],
-            };
-        } else {
-            return {
-                scope: ["scope", "user:email"],
-            };
-        }
-    }
-
     /**
-     * Finds the login data for the given strategy instance and the valued returned by GitHub.
+     * Finds the login data for the given strategy instance and the valued returned by Jira.
      * To be executed as passport user callback.
      *
-     * @param strategyInstance The instance of the GitHub strategy for which to find the user
-     * @param accessToken The access token returned by GitHub
-     * @param refreshToken The refreshToken returned by GitHub
-     * @param profile The profile data for the logged in user returned by GitHub
+     * @param strategyInstance The instance of the Jira strategy for which to find the user
+     * @param accessToken The access token returned by Jira
+     * @param refreshToken The refreshToken returned by Jira
+     * @param profile The profile data for the logged in user returned by Jira
      * @param done The done function to be called with the found login data or the error
      */
     protected async passportUserCallback(
@@ -162,19 +149,20 @@ export class GithubStrategyService extends StrategyUsingPassport {
         profile: any,
         done: (err, user: AuthResult | false, info) => void,
     ) {
+        console.log("Jira profile should be here, but isn't", profile);
         const username = profile.username;
         const dataActiveLogin = { accessToken, refreshToken };
         const dataUserLoginData = {
             username,
-            github_id: profile.id,
-            email: profile.emails?.[0]?.value,
+            jira_id: profile.id,
+            email: profile.email,
             displayName: profile.displayName,
         };
         const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {
-            github_id: profile.id,
+            jira_id: profile.id,
         });
         if (loginDataCandidates.length != 1) {
-            this.loggerGithub.debug("Oauth login didn't find unique login data", loginDataCandidates);
+            this.loggerJira.debug("Oauth login didn't find unique login data", loginDataCandidates);
             done(null, { dataActiveLogin, dataUserLoginData, mayRegister: true }, { message: "No unique user found" });
         } else {
             const loginData = loginDataCandidates[0];
@@ -183,14 +171,17 @@ export class GithubStrategyService extends StrategyUsingPassport {
     }
 
     public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
-        return new passportGithub.Strategy(
+        return new passportJira.Strategy(
             {
                 authorizationURL: strategyInstance.instanceConfig["authorizationUrl"],
                 tokenURL: strategyInstance.instanceConfig["tokenUrl"],
                 userProfileURL: strategyInstance.instanceConfig["userProfileUrl"],
                 clientID: strategyInstance.instanceConfig["clientId"],
                 clientSecret: strategyInstance.instanceConfig["clientSecret"],
-                callbackURL: strategyInstance.instanceConfig["callbackUrl"],
+                callbackURL:
+                    strategyInstance.instanceConfig["callbackUrl"] ??
+                    "http://localhost:3000/authenticate/oauth/" + strategyInstance.id + "/callback",
+                scope: ["read:jira-work", "write:jira-work"],
                 store: {
                     store: (req, state, meta, callback) => callback(null, state),
                     verify: (req, providedState, callback) => callback(null, true, providedState),

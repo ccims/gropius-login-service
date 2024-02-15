@@ -68,6 +68,7 @@
                 <option value="">--all--</option>
                 <option value="userpass">userpass</option>
                 <option value="github">github</option>
+                <option value="jira">jira</option>
             </select>
         </h4>
         <ul>
@@ -79,6 +80,7 @@
             <select v-model="showInstanceType">
                 <option value="userpass">userpass</option>
                 <option value="github">github</option>
+                <option value="jira">jira</option>
             </select>
             strategy instances
         </h4>
@@ -179,6 +181,45 @@
             <li><button @click="runCreateGithubInstance">Request</button></li>
         </ul>
 
+        <h4>
+            <select v-model="createJiraInstanceMethod">
+                <option value="POST">Create new</option>
+                <option value="PUT">Edit existing</option>
+            </select> jira strategy instance (Nedees admin)
+        </h4>
+        <ul>
+            <li v-if="createJiraInstanceMethod == 'PUT'">
+                Id of instance to edit: <input v-model="createJiraInstanceEditId">
+            </li>
+            <li>Jira OAuth App Settings: Client id: <input v-model="createJiraInstanceClientId"><br>
+                Client secret: <input v-model="createJiraInstanceClientSecret"></li>
+            <li>Settings for this instance:
+                <label><input type="checkbox" v-model="createJiraInstanceIsLoginActive">Enable login</label>;
+                <label><input type="checkbox" v-model="createJiraInstanceIsSelfRegisterActive">Enable self
+                    registration</label>;
+                <label><input type="checkbox" v-model="createJiraInstanceIsSyncActive">Enable sync</label>;
+                <label><input type="checkbox" v-model="createJiraInstanceDoesImplicitRegister">Allow implicit
+                    register</label>
+            </li>
+            <li>Optional (if set, unique) name: <input v-model="createJiraInstanceName"></li>
+            <li>{{ createJiraInstanceMethod }} {{ loginUrl }}login/strategy/jira/instance<span
+                    v-if="createJiraInstanceMethod == 'PUT'">/{{ createJiraInstanceEditId }}</span>
+            </li>
+            <li class="body">{ <br>
+                "instanceConfig": {
+                "clientId": "{{ createJiraInstanceClientId }}",
+                "clientSecret": "{{ createJiraInstanceClientSecret }}"
+                },<br>
+                "isLoginActive": {{ createJiraInstanceIsLoginActive }}, "isSelfRegisterActive": {{
+                createJiraInstanceIsSelfRegisterActive }},<br>
+                "isSyncActive": {{ createJiraInstanceIsSyncActive }}, "doesImplicitRegister": {{
+                createJiraInstanceDoesImplicitRegister }}<span v-if="createJiraInstanceName.length > 0">,<br>
+                    "name": "{{ createJiraInstanceName }}"</span><br>
+                }
+            </li>
+            <li><button @click="runCreateJiraInstance">Request</button></li>
+        </ul>
+
         <h4>List all OAuth clients (Needs admin)
         </h4>
         <ul>
@@ -235,7 +276,7 @@
 
         <h4>Run OAuth flow</h4>
         <ul>
-            <li>Github-Strategy instance id to use: <input v-model="oauthFlowInstanceId"> (request at the
+            <li>Jira-Strategy instance id to use: <input v-model="oauthFlowInstanceId"> (request at the
                 top)
             </li>
             <li>Id of the client to initiate: <input v-model="oauthFlowClientId"> (request above)</li>
@@ -243,10 +284,10 @@
                 <ul>
                     <li>Mode:
                         <select v-model="oauthFlowMode">
-                            <option value="login">Login with GitHub (requires being registered or registeres if implicit
+                            <option value="login">Login with Jira (requires being registered or registeres if implicit
                                 registration is active)</option>
-                            <option value="register">Register with GitHub (Don't allow sync)</option>
-                            <option value="register-sync">Register with GitHub (Allow sync)</option>
+                            <option value="register">Register with Jira (Don't allow sync)</option>
+                            <option value="register-sync">Register with Jira (Allow sync)</option>
                         </select>
                     </li>
                     <li>Redirect user to: GET {{ loginUrl }}authenticate/oauth/{{ oauthFlowInstanceId }}/authorize/{{
