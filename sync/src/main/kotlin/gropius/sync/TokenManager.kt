@@ -1,20 +1,25 @@
 package gropius.sync
 
 import gropius.model.architecture.IMS
+import gropius.model.user.GropiusUser
 import gropius.model.user.IMSUser
+import gropius.model.user.User
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findById
 import org.springframework.stereotype.Component
 import java.net.URI
-import io.ktor.serialization.kotlinx.json.*
+import java.util.*
 
 /**
  * Configuration properties for the GitHub API
@@ -39,10 +44,19 @@ class TokenManager(
     val client = HttpClient() {
         expectSuccess = true
         install(ContentNegotiation) {
-            json()
-            json(contentType = ContentType.parse("application/json; charset=utf-8"))
+            json(Json {
+                ignoreUnknownKeys = true
+            })
+            json(Json {
+                ignoreUnknownKeys = true
+            }, contentType = ContentType.parse("application/json; charset=utf-8"))
         }
     }
+
+    /**
+     * Logger used to print notifications
+     */
+    private val logger = LoggerFactory.getLogger(TokenManager::class.java)
 
     /**
      * Response of the getIMSToken login endpoint
@@ -57,7 +71,7 @@ class TokenManager(
      * @param imsUser The IMSUser the token should be for
      * @return token if available
      */
-    suspend fun getGithubUserToken(imsUser: IMSUser): String? {
+    suspend fun getUserToken(imsUser: IMSUser): String? {
         val tokenResponse: TokenResponse = client.get(syncConfigurationProperties.loginServiceBase.toString()) {
             url {
                 appendPathSegments("syncApi", "getIMSToken")
@@ -87,9 +101,50 @@ class TokenManager(
                 "SYNC_GITHUB_USER_INVALID_IMS"
             )
         }
-        return getGithubUserToken(readUserInfo) ?: throw SyncNotificator.NotificatedError(
+        return getUserToken(readUserInfo) ?: throw SyncNotificator.NotificatedError(
             "SYNC_GITHUB_USER_NO_TOKEN"
         )
+    }
+
+    suspend fun getPossibleUsersForUser(ims: IMS, user: User): List<IMSUser> {
+        val ret = mutableListOf<IMSUser>()
+        if (user is IMSUser) {
+            if (user.ims().value == ims) {
+                ret.add(user)
+            }
+        }
+        val gropiusUser = if (user is IMSUser) user.gropiusUser().value else user as GropiusUser
+        if (gropiusUser != null) {
+            for (imsUser in gropiusUser.imsUsers()) {
+                if (imsUser.ims().value == ims) {
+                    ret.add(imsUser)
+                }
+            }
+        }
+        return ret
+    }
+
+    suspend fun <T> executeUntilWorking(
+        users: List<IMSUser>, executor: suspend (token: String) -> Optional<T>
+    ): Pair<IMSUser, T> {
+        for (user in users) {
+            val token = getUserToken(user)
+            if (token != null) {
+                val ret = executor(token)
+                if (ret.isPresent) {
+                    return user to ret.get()
+                }
+            }
+        }
+        TODO("Error Message")
+    }
+
+    suspend fun <T> executeUntilWorking(
+        ims: IMS, user: List<User>, executor: suspend (token: String) -> Optional<T>
+    ): Pair<IMSUser, T> {
+        val users = user.map { getPossibleUsersForUser(ims, it) }.flatten()
+        logger.info("Expanding $user to $users")
+        return executeUntilWorking(users, executor)
     }
 
     /**

@@ -6,18 +6,15 @@ import gropius.model.issue.Label
 import gropius.model.issue.timeline.IssueComment
 import gropius.model.template.IMSTemplate
 import gropius.model.template.IssueState
+import gropius.model.user.User
 import gropius.sync.*
 import gropius.sync.jira.config.IMSConfig
 import gropius.sync.jira.config.IMSConfigManager
 import gropius.sync.jira.config.IMSProjectConfig
 import gropius.sync.jira.model.*
-import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -44,16 +41,6 @@ final class JiraSync(
     val loadBalancedDataFetcher: LoadBalancedDataFetcher = LoadBalancedDataFetcher(),
     val issueDataService: IssueDataService
 ) : AbstractSync(collectedSyncInfo) {
-
-    private val client = HttpClient() {
-        expectSuccess = true
-        install(Logging)
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-            }, contentType = ContentType.parse("application/json; charset=utf-8"))
-        }
-    }
 
     /**
      * Logger used to print notifications
@@ -108,8 +95,7 @@ final class JiraSync(
 
     @OptIn(ExperimentalEncodingApi::class)
     private suspend fun fetchIssueContent(
-        issueList: MutableList<String>,
-        imsProject: IMSProject
+        issueList: MutableList<String>, imsProject: IMSProject
     ) {
         logger.info("ISSUE LIST $issueList")
         for (issueId in issueList) {
@@ -117,22 +103,12 @@ final class JiraSync(
             while (true) {
                 val imsProjectConfig = IMSProjectConfig(helper, imsProject)
                 val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-                val basicContent: String =
-                    System.getenv("JIRA_DUMMY_EMAIL") + ":" + System.getenv("JIRA_DUMMY_TOKEN")
-                val basicToken = Base64.encode(basicContent.toByteArray())
-                val q = client.get(imsConfig.rootUrl.toString()) {
-                    url {
-                        appendPathSegments("issue")
-                        appendPathSegments(issueId)
-                        appendPathSegments("comment")
-                        parameters.append("startAt", "$startAt")
-                    }
-                    headers {
-                        append(
-                            HttpHeaders.Authorization, "Basic ${basicToken}"
-                        )
-                    }
-                }.body<CommentQuery>()
+                val q = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
+                    appendPathSegments("issue")
+                    appendPathSegments(issueId)
+                    appendPathSegments("comment")
+                    parameters.append("startAt", "$startAt")
+                }.second.body<CommentQuery>()
                 q.comments.forEach {
                     issueDataService.insertComment(imsProject, issueId, it)
                 }
@@ -144,28 +120,18 @@ final class JiraSync(
 
     @OptIn(ExperimentalEncodingApi::class)
     private suspend fun fetchIssueList(
-        imsProject: IMSProject,
-        issueList: MutableList<String>
+        imsProject: IMSProject, issueList: MutableList<String>
     ) {
         var startAt = 0
         while (true) {
             val imsProjectConfig = IMSProjectConfig(helper, imsProject)
             val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-            val basicContent: String = System.getenv("JIRA_DUMMY_EMAIL") + ":" + System.getenv("JIRA_DUMMY_TOKEN")
-            val basicToken = Base64.encode(basicContent.toByteArray())
-            val q = client.get(imsConfig.rootUrl.toString()) {
-                url {
-                    appendPathSegments("search")
-                    parameters.append("jql", "project=${imsProjectConfig.repo}")
-                    parameters.append("expand", "names,schema,editmeta,changelog")
-                    parameters.append("startAt", "$startAt")
-                }
-                headers {
-                    append(
-                        HttpHeaders.Authorization, "Basic ${basicToken}"
-                    )
-                }
-            }.body<ProjectQuery>()
+            val q = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
+                appendPathSegments("search")
+                parameters.append("jql", "project=${imsProjectConfig.repo}")
+                parameters.append("expand", "names,schema,editmeta,changelog")
+                parameters.append("startAt", "$startAt")
+            }.second.body<ProjectQuery>()
             q.issues(imsProject).forEach {
                 issueList.add(it.jiraId)
                 issueDataService.insertIssue(imsProject, it)
@@ -185,42 +151,34 @@ final class JiraSync(
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         if (issueComment.body.isNullOrEmpty()) return null;
-        val iid = client.post(imsConfig.rootUrl.toString()) {
-            jiraHttpData()
-            url {
-                appendPathSegments("issue")
-                appendPathSegments(issueId)
-                appendPathSegments("comment")
-            }
-            setBody(
-                JsonObject(mapOf("body" to JsonPrimitive(issueComment.body)))
-            )
-        }.body<JsonObject>()["id"]!!.jsonPrimitive.content
+        val iid = jiraDataService.request(
+            imsProject, listOf(), HttpMethod.Post, JsonObject(mapOf("body" to JsonPrimitive(issueComment.body)))
+        ) {
+            appendPathSegments("issue")
+            appendPathSegments(issueId)
+            appendPathSegments("comment")
+        }.second.body<JsonObject>()["id"]!!.jsonPrimitive.content
         return JiraTimelineItemConversionInformation(imsProject.rawId!!, iid)
     }
 
     override suspend fun syncTitleChange(
-        imsProject: IMSProject, issueId: String, newTitle: String
+        imsProject: IMSProject, issueId: String, newTitle: String, users: List<User>
     ): TimelineItemConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-        client.put(imsConfig.rootUrl.toString()) {
-            jiraHttpData()
-            url {
-                appendPathSegments("issue")
-                appendPathSegments(issueId)
-            }
-            setBody(
-                JsonObject(
-                    mapOf(
-                        "fields" to JsonObject(
-                            mapOf(
-                                "summary" to JsonPrimitive(newTitle)
-                            )
+        jiraDataService.request(
+            imsProject, users, HttpMethod.Put, JsonObject(
+                mapOf(
+                    "fields" to JsonObject(
+                        mapOf(
+                            "summary" to JsonPrimitive(newTitle)
                         )
                     )
                 )
             )
+        ) {
+            appendPathSegments("issue")
+            appendPathSegments(issueId)
         }
         return JiraTimelineItemConversionInformation(
             imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
@@ -236,24 +194,20 @@ final class JiraSync(
         }
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-        client.put(imsConfig.rootUrl.toString()) {
-            jiraHttpData()
-            url {
-                appendPathSegments("issue")
-                appendPathSegments(issueId)
-            }
-            setBody(
-                JsonObject(
-                    mapOf(
-                        "fields" to JsonObject(
-                            mapOf(
-                                "resolution" to if (newState.isOpen) JsonNull else JsonPrimitive("Done"),
-                                "status" to if (newState.isOpen) JsonPrimitive("To Do") else JsonPrimitive("Done")
-                            )
+        jiraDataService.request(
+            imsProject, listOf(), HttpMethod.Put, JsonObject(
+                mapOf(
+                    "fields" to JsonObject(
+                        mapOf(
+                            "resolution" to if (newState.isOpen) JsonNull else JsonPrimitive("Done"),
+                            "status" to if (newState.isOpen) JsonPrimitive("To Do") else JsonPrimitive("Done")
                         )
                     )
                 )
             )
+        ) {
+            appendPathSegments("issue")
+            appendPathSegments(issueId)
         }
         return JiraTimelineItemConversionInformation(
             imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
@@ -265,24 +219,17 @@ final class JiraSync(
     ): TimelineItemConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-        client.put(imsConfig.rootUrl.toString()) {
-            jiraHttpData()
-            url {
-                appendPathSegments("issue")
-                appendPathSegments(issueId)
-            }
-            setBody(
-                JsonObject(
-                    mapOf(
-                        "update" to JsonObject(
-                            mapOf(
-                                "labels" to JsonArray(
-                                    listOf(
-                                        JsonObject(
-                                            mapOf(
-                                                "add" to JsonPrimitive(
-                                                    jirafyLabelName(label.name)
-                                                )
+        jiraDataService.request(
+            imsProject, listOf(), HttpMethod.Put, JsonObject(
+                mapOf(
+                    "update" to JsonObject(
+                        mapOf(
+                            "labels" to JsonArray(
+                                listOf(
+                                    JsonObject(
+                                        mapOf(
+                                            "add" to JsonPrimitive(
+                                                jirafyLabelName(label.name)
                                             )
                                         )
                                     )
@@ -292,6 +239,9 @@ final class JiraSync(
                     )
                 )
             )
+        ) {
+            appendPathSegments("issue")
+            appendPathSegments(issueId)
         }
         return JiraTimelineItemConversionInformation(
             imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
@@ -311,24 +261,17 @@ final class JiraSync(
     ): TimelineItemConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-        client.put(imsConfig.rootUrl.toString()) {
-            jiraHttpData()
-            url {
-                appendPathSegments("issue")
-                appendPathSegments(issueId)
-            }
-            setBody(
-                JsonObject(
-                    mapOf(
-                        "update" to JsonObject(
-                            mapOf(
-                                "labels" to JsonArray(
-                                    listOf(
-                                        JsonObject(
-                                            mapOf(
-                                                "remove" to JsonPrimitive(
-                                                    jirafyLabelName(label.name)
-                                                )
+        jiraDataService.request(
+            imsProject, listOf(), HttpMethod.Put, JsonObject(
+                mapOf(
+                    "update" to JsonObject(
+                        mapOf(
+                            "labels" to JsonArray(
+                                listOf(
+                                    JsonObject(
+                                        mapOf(
+                                            "remove" to JsonPrimitive(
+                                                jirafyLabelName(label.name)
                                             )
                                         )
                                     )
@@ -338,6 +281,9 @@ final class JiraSync(
                     )
                 )
             )
+        ) {
+            appendPathSegments("issue")
+            appendPathSegments(issueId)
         }
         return JiraTimelineItemConversionInformation(
             imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
@@ -347,23 +293,19 @@ final class JiraSync(
     override suspend fun createOutgoingIssue(imsProject: IMSProject, issue: Issue): IssueConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-        val iid = client.post(imsConfig.rootUrl.toString()) {
-            jiraHttpData()
-            url {
-                appendPathSegments("issue")
-            }
-            setBody(
-                IssueQueryRequest(
-                    IssueQueryRequestFields(
-                        issue.title,
-                        issue.body().value.body,
-                        IssueTypeRequest("Bug"),
-                        ProjectRequest(imsProjectConfig.repo),
-                        listOf()
-                    )
+        val iid = jiraDataService.request(
+            imsProject, listOf(), HttpMethod.Put, IssueQueryRequest(
+                IssueQueryRequestFields(
+                    issue.title,
+                    issue.body().value.body,
+                    IssueTypeRequest("Bug"),
+                    ProjectRequest(imsProjectConfig.repo),
+                    listOf()
                 )
             )
-        }.body<JsonObject>()["id"]!!.jsonPrimitive.content
+        ) {
+            appendPathSegments("issue")
+        }.second.body<JsonObject>()["id"]!!.jsonPrimitive.content
         return IssueConversionInformation(imsProject.rawId!!, iid, issue.rawId!!)
     }
 

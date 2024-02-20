@@ -3,18 +3,32 @@ package gropius.sync.jira
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Label
 import gropius.model.template.*
+import gropius.model.user.IMSUser
 import gropius.model.user.User
+import gropius.sync.JsonHelper
 import gropius.sync.SyncDataService
+import gropius.sync.TokenManager
+import gropius.sync.jira.config.IMSConfig
+import gropius.sync.jira.config.IMSProjectConfig
 import gropius.sync.user.UserMapper
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.stereotype.Component
+import java.net.URI
 import java.time.OffsetDateTime
+import java.util.*
 
 /**
  * Context for Jira Operations
@@ -25,8 +39,13 @@ import java.time.OffsetDateTime
 class JiraDataService(
     val userMapper: UserMapper,
     @Qualifier("graphglueNeo4jOperations")
-    val neoOperations: ReactiveNeo4jOperations
+    val neoOperations: ReactiveNeo4jOperations, val tokenManager: TokenManager, val helper: JsonHelper
 ) : SyncDataService {
+
+    /**
+     * Logger used to print notifications
+     */
+    final val logger = LoggerFactory.getLogger(JiraDataService::class.java)
 
     /**
      * Get the default issue template
@@ -97,6 +116,72 @@ class JiraDataService(
             return labels.single()
         } else {
             return labels.first()
+        }
+    }
+
+    val client = HttpClient() {
+        expectSuccess = true
+        install(Logging)
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+            }, contentType = ContentType.parse("application/json; charset=utf-8"))
+        }
+    }
+
+    suspend fun requestCloudId(token: String, url: String): String? {
+        return client.get("https://api.atlassian.com/oauth/token/accessible-resources") {
+            headers {
+                append(
+                    HttpHeaders.Authorization, "Bearer $token"
+                )
+            }
+        }.body<JsonArray>()
+            .filter { URI(it.jsonObject["url"]!!.jsonPrimitive.content + "/rest/api/2") == URI(url) }
+            .map { it.jsonObject["id"]!!.jsonPrimitive.content }.firstOrNull()
+    }
+
+    final suspend inline fun <reified T> request(
+        imsProject: IMSProject,
+        users: List<User>,
+        requestMethod: HttpMethod,
+        body: T? = null,
+        crossinline urlBuilder: URLBuilder .(URLBuilder) -> Unit
+    ): Pair<IMSUser, HttpResponse> {
+        val imsProjectConfig = IMSProjectConfig(helper, imsProject)
+        val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
+        val userList = users.toMutableList()
+        if (imsConfig.readUser != null) {
+            val imsUser = neoOperations.findById(imsConfig.readUser, IMSUser::class.java).awaitSingle()
+            if (imsUser.ims().value != imsProject.ims().value) {
+                TODO("Error handling")
+            }
+            userList.add(imsUser)
+        }
+        logger.info("Requesting with users: $userList")
+        return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
+            val cloudId = requestCloudId(token, imsConfig.rootUrl.toString())
+            if (cloudId != null) {
+                val res = client.request("https://api.atlassian.com/ex/jira/") {
+                    method = requestMethod
+                    url {
+                        appendPathSegments(cloudId)
+                        appendPathSegments("/rest/api/2/")
+                        urlBuilder(this)
+                    }
+                    headers {
+                        append(
+                            HttpHeaders.Authorization, "Bearer $token"
+                        )
+                    }
+                    if (body != null) {
+                        setBody(body)
+                    }
+                }
+                logger.info("Response Code for request with token $token is ${res.status}")
+                if (res.status == HttpStatusCode.OK) Optional.of(res)
+                else Optional.empty()
+            } else Optional.empty()
         }
     }
 }

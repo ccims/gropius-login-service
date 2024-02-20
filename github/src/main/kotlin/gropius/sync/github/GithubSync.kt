@@ -185,7 +185,7 @@ final class GithubSync(
     }
 
     override suspend fun syncTitleChange(
-        imsProject: IMSProject, issueId: String, newTitle: String
+        imsProject: IMSProject, issueId: String, newTitle: String, users: List<User>
     ): TimelineItemConversionInformation? {
         val response = apolloClient.mutation(MutateChangeTitleMutation(issueId, newTitle)).execute()
         val item = response.data?.updateIssue?.issue?.timelineItems?.nodes?.lastOrNull()

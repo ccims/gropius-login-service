@@ -118,7 +118,7 @@ abstract class AbstractSync(
      * @return Conversion information
      */
     abstract suspend fun syncTitleChange(
-        imsProject: IMSProject, issueId: String, newTitle: String
+        imsProject: IMSProject, issueId: String, newTitle: String, users: List<User>
     ): TimelineItemConversionInformation?
 
     /**
@@ -593,7 +593,11 @@ abstract class AbstractSync(
                     imsProject.rawId!!, it.rawId!!
                 ) != null
             }) {
-            syncTitleChange(imsProject, issueInfo.githubId, finalBlock.first().newTitle)
+            syncTitleChange(
+                imsProject,
+                issueInfo.githubId,
+                finalBlock.first().newTitle,
+                finalBlock.map { it.createdBy().value })
         }
     }
 
