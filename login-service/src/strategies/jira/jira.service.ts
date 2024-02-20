@@ -145,11 +145,9 @@ export class JiraStrategyService extends StrategyUsingPassport {
         profile: any,
         done: (err, user: AuthResult | false, info) => void,
     ) {
-        console.log("Jira profile should be here, but isn't", profile);
-        const username = profile.username;
         const dataActiveLogin = { accessToken, refreshToken };
         const dataUserLoginData = {
-            username,
+            username: "",
             jira_id: profile.id,
             email: profile.email,
             displayName: profile.displayName,
@@ -167,26 +165,29 @@ export class JiraStrategyService extends StrategyUsingPassport {
     }
 
     public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
-        return new passportJira.Strategy(
-            {
-                authorizationURL: strategyInstance.instanceConfig["authorizationUrl"],
-                tokenURL: strategyInstance.instanceConfig["tokenUrl"],
-                userProfileURL: strategyInstance.instanceConfig["userProfileUrl"],
-                clientID: strategyInstance.instanceConfig["clientId"],
-                clientSecret: strategyInstance.instanceConfig["clientSecret"],
-                callbackURL:
-                    strategyInstance.instanceConfig["callbackUrl"] ??
-                    strategyInstance.instanceConfig["callbackRoot"] +
-                        "/authenticate/oauth/" +
-                        strategyInstance.id +
-                        "/callback",
-                scope: ["read:jira-work", "write:jira-work"],
-                store: {
-                    store: (req, state, meta, callback) => callback(null, state),
-                    verify: (req, providedState, callback) => callback(null, true, providedState),
-                } as any,
-            },
-            this.passportUserCallback.bind(this, strategyInstance),
-        );
+        const config = {
+            authorizationURL: strategyInstance.instanceConfig["authorizationUrl"],
+            tokenURL: strategyInstance.instanceConfig["tokenUrl"],
+            profileURL: strategyInstance.instanceConfig["userProfileUrl"],
+            clientID: strategyInstance.instanceConfig["clientId"],
+            clientSecret: strategyInstance.instanceConfig["clientSecret"],
+            callbackURL:
+                strategyInstance.instanceConfig["callbackUrl"] ??
+                strategyInstance.instanceConfig["callbackRoot"] +
+                    "/authenticate/oauth/" +
+                    strategyInstance.id +
+                    "/callback",
+            scope: ["offline_access", "read:jira-user", "read:me", "read:jira-work", "write:jira-work"],
+            store: {
+                store: (req, state, meta, callback) => callback(null, state),
+                verify: (req, providedState, callback) => callback(null, true, providedState),
+            } as any,
+        };
+        for (const key in config) {
+            if (config[key] === undefined) {
+                delete config[key];
+            }
+        }
+        return new passportJira(config, this.passportUserCallback.bind(this, strategyInstance));
     }
 }
