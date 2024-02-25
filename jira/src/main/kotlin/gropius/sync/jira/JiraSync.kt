@@ -146,13 +146,13 @@ final class JiraSync(
     }
 
     override suspend fun syncComment(
-        imsProject: IMSProject, issueId: String, issueComment: IssueComment
+        imsProject: IMSProject, issueId: String, issueComment: IssueComment, users: List<User>
     ): TimelineItemConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         if (issueComment.body.isNullOrEmpty()) return null;
         val iid = jiraDataService.request(
-            imsProject, listOf(), HttpMethod.Post, JsonObject(mapOf("body" to JsonPrimitive(issueComment.body)))
+            imsProject, users, HttpMethod.Post, JsonObject(mapOf("body" to JsonPrimitive(issueComment.body)))
         ) {
             appendPathSegments("issue")
             appendPathSegments(issueId)
@@ -186,7 +186,7 @@ final class JiraSync(
     }
 
     override suspend fun syncStateChange(
-        imsProject: IMSProject, issueId: String, newState: IssueState
+        imsProject: IMSProject, issueId: String, newState: IssueState, users: List<User>
     ): TimelineItemConversionInformation? {
         if (true) {
             //TODO: Jira State Transitions
@@ -195,7 +195,7 @@ final class JiraSync(
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         jiraDataService.request(
-            imsProject, listOf(), HttpMethod.Put, JsonObject(
+            imsProject, users, HttpMethod.Put, JsonObject(
                 mapOf(
                     "fields" to JsonObject(
                         mapOf(
@@ -215,12 +215,12 @@ final class JiraSync(
     }
 
     override suspend fun syncAddedLabel(
-        imsProject: IMSProject, issueId: String, label: Label
+        imsProject: IMSProject, issueId: String, label: Label, users: List<User>
     ): TimelineItemConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         jiraDataService.request(
-            imsProject, listOf(), HttpMethod.Put, JsonObject(
+            imsProject, users, HttpMethod.Put, JsonObject(
                 mapOf(
                     "update" to JsonObject(
                         mapOf(
@@ -257,12 +257,12 @@ final class JiraSync(
     }
 
     override suspend fun syncRemovedLabel(
-        imsProject: IMSProject, issueId: String, label: Label
+        imsProject: IMSProject, issueId: String, label: Label, users: List<User>
     ): TimelineItemConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         jiraDataService.request(
-            imsProject, listOf(), HttpMethod.Put, JsonObject(
+            imsProject, users, HttpMethod.Put, JsonObject(
                 mapOf(
                     "update" to JsonObject(
                         mapOf(

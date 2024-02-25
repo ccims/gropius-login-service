@@ -107,7 +107,7 @@ abstract class AbstractSync(
      * @return Conversion information
      */
     abstract suspend fun syncComment(
-        imsProject: IMSProject, issueId: String, issueComment: IssueComment
+        imsProject: IMSProject, issueId: String, issueComment: IssueComment, users: List<User>
     ): TimelineItemConversionInformation?
 
     /**
@@ -129,7 +129,7 @@ abstract class AbstractSync(
      * @return Conversion information
      */
     abstract suspend fun syncStateChange(
-        imsProject: IMSProject, issueId: String, newState: IssueState
+        imsProject: IMSProject, issueId: String, newState: IssueState, users: List<User>
     ): TimelineItemConversionInformation?
 
     /**
@@ -140,7 +140,7 @@ abstract class AbstractSync(
      * @return Conversion information
      */
     abstract suspend fun syncAddedLabel(
-        imsProject: IMSProject, issueId: String, label: Label
+        imsProject: IMSProject, issueId: String, label: Label, users: List<User>
     ): TimelineItemConversionInformation?
 
     /**
@@ -151,7 +151,7 @@ abstract class AbstractSync(
      * @return Conversion information
      */
     abstract suspend fun syncRemovedLabel(
-        imsProject: IMSProject, issueId: String, label: Label
+        imsProject: IMSProject, issueId: String, label: Label, users: List<User>
     ): TimelineItemConversionInformation?
 
     /**
@@ -246,27 +246,19 @@ abstract class AbstractSync(
      * @return Conversion information
      */
     private suspend fun syncIncomingIssue(
-        imsProject: IMSProject,
-        incomingIssue: IncomingIssue,
-        dereplicatorRequest: SimpleIssueDereplicatorRequest
+        imsProject: IMSProject, incomingIssue: IncomingIssue, dereplicatorRequest: SimpleIssueDereplicatorRequest
     ) {
         val issueInfo = collectedSyncInfo.issueConversionInformationService.findByImsProjectAndGithubId(
             imsProject.rawId!!, incomingIssue.identification()
         ) ?: IssueConversionInformation(imsProject.rawId!!, incomingIssue.identification(), null)
-        var issue =
-            if (issueInfo.gropiusId != null) collectedSyncInfo.issueRepository.findById(issueInfo.gropiusId!!)
-                .awaitSingle() else incomingIssue.createIssue(imsProject, syncDataService())
+        var issue = if (issueInfo.gropiusId != null) collectedSyncInfo.issueRepository.findById(issueInfo.gropiusId!!)
+            .awaitSingle() else incomingIssue.createIssue(imsProject, syncDataService())
         val nodesToSave = mutableListOf<Node>(issue)
         val savedNodeHandlers = mutableListOf<suspend (node: Node) -> Unit>()
         val timelineItems = incomingIssue.incomingTimelineItems(syncDataService())
         for (timelineItem in timelineItems) {
             syncIncomingTimelineItem(
-                imsProject,
-                timelineItem,
-                issue,
-                dereplicatorRequest,
-                nodesToSave,
-                savedNodeHandlers
+                imsProject, timelineItem, issue, dereplicatorRequest, nodesToSave, savedNodeHandlers
             )
         }
         var dereplicationResult: IssueDereplicatorIssueResult? = null
@@ -276,8 +268,7 @@ abstract class AbstractSync(
             for (fakeSyncedItem in dereplicationResult.fakeSyncedItems) {
                 nodesToSave.add(fakeSyncedItem)
                 savedNodeHandlers.add {
-                    val tici =
-                        DummyTimelineItemConversionInformation(imsProject.rawId!!, (it as TimelineItem).rawId!!)
+                    val tici = DummyTimelineItemConversionInformation(imsProject.rawId!!, (it as TimelineItem).rawId!!)
                     tici.gropiusId = (it as TimelineItem).rawId
                     collectedSyncInfo.timelineItemConversionInformationService.save(tici).awaitSingle()
                 }
@@ -315,16 +306,14 @@ abstract class AbstractSync(
         nodesToSave: MutableList<Node>,
         savedNodeHandlers: MutableList<suspend (node: Node) -> Unit>
     ) {
-        val oldInfo =
-            collectedSyncInfo.timelineItemConversionInformationService.findByImsProjectAndGithubId(
-                imsProject.rawId!!, timelineItem.identification()
-            )
+        val oldInfo = collectedSyncInfo.timelineItemConversionInformationService.findByImsProjectAndGithubId(
+            imsProject.rawId!!, timelineItem.identification()
+        )
         var (timelineItem, newInfo) = timelineItem.gropiusTimelineItem(
             imsProject, syncDataService(), oldInfo
         )
         if (issue.rawId != null) {
-            val dereplicationResult =
-                issueDereplicator.validateTimelineItem(issue, timelineItem, dereplicatorRequest)
+            val dereplicationResult = issueDereplicator.validateTimelineItem(issue, timelineItem, dereplicatorRequest)
             timelineItem = dereplicationResult.resultingTimelineItems
         }
         if (timelineItem.isNotEmpty()) {//TODO: Handle multiple
@@ -386,8 +375,7 @@ abstract class AbstractSync(
         relevantTimeline: List<TimelineItem>,
         restoresDefaultState: Boolean
     ): Boolean {
-        return shouldSyncType(
-            imsProject,
+        return shouldSyncType(imsProject,
             { it is AddingItem },
             { it is RemovingItem },
             finalBlock,
@@ -514,10 +502,9 @@ abstract class AbstractSync(
         var labelIsSynced = false
         val finalBlock = findFinalTypeBlock(relevantTimeline)
         for (item in finalBlock) {
-            val relevantEvent =
-                collectedSyncInfo.timelineItemConversionInformationService.findByImsProjectAndGropiusId(
-                    imsProject.rawId!!, item.rawId!!
-                )
+            val relevantEvent = collectedSyncInfo.timelineItemConversionInformationService.findByImsProjectAndGropiusId(
+                imsProject.rawId!!, item.rawId!!
+            )
             if (relevantEvent?.githubId != null) {
                 labelIsSynced = true
             }
@@ -528,8 +515,10 @@ abstract class AbstractSync(
                 )
             ) {
                 val conversionInformation = syncRemovedLabel(
-                    imsProject, issueInfo.githubId, label!!/*,finalBlock.map { it.lastModifiedBy().value }*/
-                )
+                    imsProject,
+                    issueInfo.githubId,
+                    label!!,
+                    finalBlock.map { it.lastModifiedBy().value })
                 if (conversionInformation != null) {
                     conversionInformation.gropiusId = finalBlock.map { it.rawId!! }.first()
                     collectedSyncInfo.timelineItemConversionInformationService.save(
@@ -542,8 +531,10 @@ abstract class AbstractSync(
                 )
             ) {
                 val conversionInformation = syncAddedLabel(
-                    imsProject, issueInfo.githubId, label!!/*,finalBlock.map { it.lastModifiedBy().value }*/
-                )
+                    imsProject,
+                    issueInfo.githubId,
+                    label!!,
+                    finalBlock.map { it.lastModifiedBy().value })
                 if (conversionInformation != null) {
                     conversionInformation.gropiusId = finalBlock.map { it.rawId!! }.first()
                     collectedSyncInfo.timelineItemConversionInformationService.save(
@@ -568,7 +559,12 @@ abstract class AbstractSync(
                 imsProject.rawId!!, it.rawId!!
             ) == null
         }.forEach {
-            val conversionInformation = syncComment(imsProject, issueInfo.githubId, it)
+            val conversionInformation = syncComment(
+                imsProject,
+                issueInfo.githubId,
+                it,
+                listOf(it.createdBy().value, it.lastModifiedBy().value, it.bodyLastEditedBy().value)
+            )
             if (conversionInformation != null) {
                 conversionInformation.gropiusId = it.rawId!!
                 collectedSyncInfo.timelineItemConversionInformationService.save(conversionInformation).awaitSingle()
@@ -620,7 +616,10 @@ abstract class AbstractSync(
                 ) != null
             }) {
             logger.trace("syncOutgoingStateChanges: $finalBlock")
-            syncStateChange(imsProject, issueInfo.githubId, finalBlock.first().newState().value)
+            syncStateChange(imsProject,
+                issueInfo.githubId,
+                finalBlock.first().newState().value,
+                finalBlock.map { it.lastModifiedBy().value })
         }
     }
 
