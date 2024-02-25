@@ -18,20 +18,22 @@ const val ENTRIES_DESCRIPTION = "All permissions this Permission grants"
  * @param allUsers if true, the permission is granted to all users
  */
 @DomainNode
-@GraphQLIgnore
 abstract class BasePermission(
     @property:GraphQLDescription("The name of this entity.")
     @FilterProperty
     @OrderProperty
+    @SearchProperty
     override var name: String,
     @property:GraphQLDescription("The description of this entity.")
     @FilterProperty
+    @SearchProperty
     override var description: String,
     @GraphQLIgnore
+    @SearchProperty
     open val entries: MutableList<String>,
     @property:GraphQLDescription("If, the permission is granted to all users. Use with caution.")
-    @property:FilterProperty
-    @property:OrderProperty
+    @FilterProperty
+    @OrderProperty
     var allUsers: Boolean,
 ) : Node(), Named {
 

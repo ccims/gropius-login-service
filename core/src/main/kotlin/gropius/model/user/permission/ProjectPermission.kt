@@ -12,7 +12,7 @@ import io.github.graphglue.model.DomainNode
  */
 const val PROJECT_PERMISSION_ENTRY_NAME = "ProjectPermissionEntry"
 
-@DomainNode
+@DomainNode(searchQueryName = "searchProjectPermissions")
 @GraphQLDescription("NodePermission to grant specific permissions to a set of Projects.")
 class ProjectPermission(
     name: String, description: String, entries: MutableList<String>, allUsers: Boolean
