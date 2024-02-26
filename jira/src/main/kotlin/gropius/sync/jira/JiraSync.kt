@@ -13,12 +13,10 @@ import gropius.sync.jira.config.IMSConfigManager
 import gropius.sync.jira.config.IMSProjectConfig
 import gropius.sync.jira.model.*
 import io.ktor.client.call.*
-import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
@@ -294,7 +292,11 @@ final class JiraSync(
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         val iid = jiraDataService.request(
-            imsProject, listOf(), HttpMethod.Put, IssueQueryRequest(
+            imsProject,
+            listOf(issue.createdBy().value, issue.lastModifiedBy().value) + issue.timelineItems()
+                .map { it.createdBy().value },
+            HttpMethod.Put,
+            IssueQueryRequest(
                 IssueQueryRequestFields(
                     issue.title,
                     issue.body().value.body,
@@ -307,17 +309,5 @@ final class JiraSync(
             appendPathSegments("issue")
         }.second.body<JsonObject>()["id"]!!.jsonPrimitive.content
         return IssueConversionInformation(imsProject.rawId!!, iid, issue.rawId!!)
-    }
-
-    @OptIn(ExperimentalEncodingApi::class)
-    private fun HttpRequestBuilder.jiraHttpData() {
-        val basicContent: String = System.getenv("JIRA_DUMMY_EMAIL") + ":" + System.getenv("JIRA_DUMMY_TOKEN")
-        val basicToken = Base64.encode(basicContent.toByteArray())
-        headers {
-            append(
-                HttpHeaders.Authorization, "Basic ${basicToken}"
-            )
-        }
-        contentType(ContentType.parse("application/json; charset=utf-8"))
     }
 }
