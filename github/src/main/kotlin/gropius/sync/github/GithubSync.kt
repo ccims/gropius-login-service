@@ -1,6 +1,5 @@
 package gropius.sync.github
 
-import com.apollographql.apollo3.ApolloClient
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
@@ -18,7 +17,6 @@ import gropius.sync.github.generated.MutateRemoveLabelMutation.Data.RemoveLabels
 import gropius.sync.github.generated.fragment.TimelineItemData.Companion.asNode
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.net.URI
 
 /**
  * This class is responsible for syncing data from and to GitHub
@@ -44,9 +42,6 @@ final class GithubSync(
     init {
         loadBalancedDataFetcher.start(this)
     }
-
-    private val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
-        .addHttpHeader("Authorization", "bearer " + System.getenv("GITHUB_DUMMY_PAT")).build()
 
     /**
      * Logger used to print notifications
@@ -110,7 +105,7 @@ final class GithubSync(
                     GithubGithubResourceWalkerEstimatedBudgetUsageType(),
                     GithubGithubResourceWalkerBudgetUsageType()
                 ), imsProjectConfig.repo.owner, imsProjectConfig.repo.repo, 100
-            ), budget, apolloClient, issuePileService, cursorResourceWalkerDataService
+            ), budget, githubDataService, issuePileService, cursorResourceWalkerDataService
         )
 
         walkers += issuePileService.findByImsProjectAndNeedsTimelineRequest(
@@ -124,7 +119,7 @@ final class GithubSync(
                         GithubGithubResourceWalkerEstimatedBudgetUsageType(),
                         GithubGithubResourceWalkerBudgetUsageType()
                     ), imsProjectConfig.repo.owner, imsProjectConfig.repo.repo, 100
-                ), budget, apolloClient, issuePileService, cursorResourceWalkerDataService
+                ), budget, githubDataService, issuePileService, cursorResourceWalkerDataService
             )
         }
         for (dirtyIssue in issuePileService.findByImsProjectAndNeedsCommentRequest(
@@ -139,7 +134,7 @@ final class GithubSync(
                             GithubGithubResourceWalkerEstimatedBudgetUsageType(),
                             GithubGithubResourceWalkerBudgetUsageType()
                         ), imsProjectConfig.repo.owner, imsProjectConfig.repo.repo, 100
-                    ), budget, apolloClient, issuePileService, cursorResourceWalkerDataService
+                    ), budget, githubDataService, issuePileService, cursorResourceWalkerDataService
                 )
             }
         }
@@ -242,9 +237,12 @@ final class GithubSync(
 
     override suspend fun createOutgoingIssue(imsProject: IMSProject, issue: Issue): IssueConversionInformation? {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
-        val repoInfoResponse =
-            apolloClient.query(RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo))
-                .execute()//TODO
+        val repoInfoResponse = githubDataService.query(
+            imsProject,
+            listOf(issue.createdBy().value, issue.lastModifiedBy().value) + issue.timelineItems()
+                .map { it.createdBy().value },
+            RepositoryIDQuery(imsProjectConfig.repo.owner, imsProjectConfig.repo.repo)
+        ).second//TODO
         val repoId = repoInfoResponse.data?.repository?.id!!
         val response = githubDataService.mutation(
             imsProject,

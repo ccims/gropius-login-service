@@ -1,6 +1,5 @@
 package gropius.sync.github
 
-import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.exception.ApolloException
 import gropius.model.architecture.IMSProject
 import gropius.sync.CursorResourceWalker
@@ -28,7 +27,7 @@ class CommentWalker(
     val comment: String,
     val config: GitHubResourceWalkerConfig,
     budget: GithubResourceWalkerBudget,
-    val apolloClient: ApolloClient,
+    val githubDataService: GithubDataService,
     val issuePileService: IssuePileService,
     cursorResourceWalkerDataService: CursorResourceWalkerDataService
 ) : CursorResourceWalker<GithubGithubResourceWalkerBudgetUsageType, GithubGithubResourceWalkerEstimatedBudgetUsageType, GithubResourceWalkerBudget>(
@@ -46,7 +45,7 @@ class CommentWalker(
             val query = CommentReadQuery(
                 comment = comment
             )
-            val response = apolloClient.query(query).execute()
+            val response = githubDataService.query(imsProject, listOf(), query).second
             val isRateLimited = response.errors?.any {
                 it.nonStandardFields?.get("type") == "RATE_LIMITED"
             } ?: false

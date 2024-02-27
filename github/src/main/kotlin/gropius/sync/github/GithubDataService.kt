@@ -3,6 +3,7 @@ package gropius.sync.github
 import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.api.ApolloResponse
 import com.apollographql.apollo3.api.Mutation
+import com.apollographql.apollo3.api.Query
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Label
 import gropius.model.template.*
@@ -128,8 +129,32 @@ class GithubDataService(
         logger.info("Requesting with users: $userList")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
             val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
-                .addHttpHeader("Authorization", "Bearer " + token).build()
+                .addHttpHeader("Authorization", "Bearer $token").build()
             val res = apolloClient.mutation(body).execute()
+            logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
+            if (res.errors?.isNotEmpty() != true) Optional.of(res)
+            else Optional.empty()
+        }
+    }
+
+    final suspend inline fun <reified D : Query.Data> query(
+        imsProject: IMSProject, users: List<User>, body: Query<D>
+    ): Pair<IMSUser, ApolloResponse<D>> {
+        val imsProjectConfig = IMSProjectConfig(helper, imsProject)
+        val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
+        val userList = users.toMutableList()
+        if (imsConfig.readUser != null) {
+            val imsUser = neoOperations.findById(imsConfig.readUser, IMSUser::class.java).awaitSingle()
+            if (imsUser.ims().value != imsProject.ims().value) {
+                TODO("Error handling")
+            }
+            userList.add(imsUser)
+        }
+        logger.info("Requesting with users: $userList")
+        return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
+            val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
+                .addHttpHeader("Authorization", "Bearer $token").build()
+            val res = apolloClient.query(body).execute()
             logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
             if (res.errors?.isNotEmpty() != true) Optional.of(res)
             else Optional.empty()
