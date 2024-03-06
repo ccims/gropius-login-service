@@ -98,11 +98,13 @@ export class GithubStrategyService extends StrategyUsingPassport {
         return super.checkAndExtendInstanceConfig(instanceConfig);
     }
 
-    override async getSyncTokenForLoginData(loginData: UserLoginData): Promise<string | null> {
+    override async getSyncDataForLoginData(
+        loginData: UserLoginData,
+    ): Promise<{ token: string | null; [key: string]: any }> {
         const syncLogins = (
             await this.activeLoginService.findValidForLoginDataSortedByExpiration(loginData, true)
         ).filter((login) => !!login.data["accessToken"]);
-        return syncLogins[0]?.data["accessToken"] ?? null;
+        return { token: syncLogins[0]?.data["accessToken"] ?? null };
     }
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {

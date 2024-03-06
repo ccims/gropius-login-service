@@ -97,11 +97,66 @@ export class JiraStrategyService extends StrategyUsingPassport {
         return super.checkAndExtendInstanceConfig(instanceConfig);
     }
 
-    override async getSyncTokenForLoginData(loginData: UserLoginData): Promise<string | null> {
+    override async getSyncDataForLoginData(
+        loginData: UserLoginData,
+    ): Promise<{ token: string | null; [key: string]: any }> {
         const syncLogins = (
             await this.activeLoginService.findValidForLoginDataSortedByExpiration(loginData, true)
         ).filter((login) => !!login.data["accessToken"]);
-        return syncLogins[0]?.data["accessToken"] ?? null;
+        const strategyInstance = await loginData.strategyInstance;
+        console.log(syncLogins);
+        while (syncLogins.length) {
+            let stuff = await (
+                await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+                    headers: { authorization: "Bearer " + syncLogins[0]?.data["accessToken"] },
+                })
+            ).json();
+            if (!stuff || stuff.code) {
+                if (syncLogins[0].data["refreshToken"]) {
+                    const d = await (
+                        await fetch(strategyInstance.instanceConfig["tokenUrl"], {
+                            headers: { "content-type": "application/json" },
+                            method: "POST",
+                            body: JSON.stringify({
+                                grant_type: "refresh_token",
+                                client_id: strategyInstance.instanceConfig["clientId"],
+                                client_secret: strategyInstance.instanceConfig["clientSecret"],
+                                refresh_token: syncLogins[0].data["refreshToken"],
+                            }),
+                        })
+                    ).json();
+                    d["accessToken"] = d["access_token"];
+                    d["refreshToken"] = d["refresh_token:"];
+                    delete d["access_token"];
+                    delete d["refresh_token:"];
+                    console.log("DX", d);
+                    syncLogins[0].data = d;
+                    console.log("PRE SAVE", syncLogins[0]);
+                    stuff = await (
+                        await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+                            headers: { authorization: "Bearer " + syncLogins[0]?.data["accessToken"] },
+                        })
+                    ).json();
+                    if (!stuff || stuff.code) {
+                        await this.activeLoginService.delete(syncLogins[0].id);
+                        syncLogins.shift();
+                    } else {
+                        console.log("STUFF2", "Bearer " + syncLogins[0]?.data["accessToken"], stuff);
+                        syncLogins[0] = await this.activeLoginService.save(syncLogins[0]);
+                        console.log("POST SAVE", syncLogins[0]);
+                        console.log("STUFFING4", stuff);
+                        return { token: syncLogins[0]?.data["accessToken"] ?? null, cloudIds: stuff };
+                    }
+                } else {
+                    await this.activeLoginService.delete(syncLogins[0].id);
+                    syncLogins.shift();
+                }
+            } else {
+                console.log("STUFFING3", stuff);
+                return { token: syncLogins[0]?.data["accessToken"] ?? null, cloudIds: stuff };
+            }
+        }
+        return { token: null };
     }
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
