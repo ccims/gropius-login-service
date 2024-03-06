@@ -306,6 +306,7 @@ abstract class AbstractSync(
         nodesToSave: MutableList<Node>,
         savedNodeHandlers: MutableList<suspend (node: Node) -> Unit>
     ) {
+        logger.info("Syncing incoming for issue ${issue.rawId} $timelineItem ${timelineItem.identification()}")
         val oldInfo = collectedSyncInfo.timelineItemConversionInformationService.findByImsProjectAndGithubId(
             imsProject.rawId!!, timelineItem.identification()
         )
@@ -375,7 +376,8 @@ abstract class AbstractSync(
         relevantTimeline: List<TimelineItem>,
         restoresDefaultState: Boolean
     ): Boolean {
-        return shouldSyncType(imsProject,
+        return shouldSyncType(
+            imsProject,
             { it is AddingItem },
             { it is RemovingItem },
             finalBlock,

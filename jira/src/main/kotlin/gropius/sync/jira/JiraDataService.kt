@@ -7,7 +7,6 @@ import gropius.model.user.IMSUser
 import gropius.model.user.User
 import gropius.sync.JsonHelper
 import gropius.sync.SyncDataService
-import gropius.sync.TokenManager
 import gropius.sync.jira.config.IMSConfig
 import gropius.sync.jira.config.IMSProjectConfig
 import gropius.sync.user.UserMapper
@@ -39,7 +38,7 @@ import java.util.*
 class JiraDataService(
     val userMapper: UserMapper,
     @Qualifier("graphglueNeo4jOperations")
-    val neoOperations: ReactiveNeo4jOperations, val tokenManager: TokenManager, val helper: JsonHelper
+    val neoOperations: ReactiveNeo4jOperations, val tokenManager: JiraTokenManager, val helper: JsonHelper
 ) : SyncDataService {
 
     /**
@@ -129,18 +128,6 @@ class JiraDataService(
         }
     }
 
-    suspend fun requestCloudId(token: String, url: String): String? {
-        return client.get("https://api.atlassian.com/oauth/token/accessible-resources") {
-            headers {
-                append(
-                    HttpHeaders.Authorization, "Bearer $token"
-                )
-            }
-        }.body<JsonArray>()
-            .filter { URI(it.jsonObject["url"]!!.jsonPrimitive.content + "/rest/api/2") == URI(url) }
-            .map { it.jsonObject["id"]!!.jsonPrimitive.content }.firstOrNull()
-    }
-
     final suspend inline fun <reified T> request(
         imsProject: IMSProject,
         users: List<User>,
@@ -160,7 +147,9 @@ class JiraDataService(
         }
         logger.info("Requesting with users: $userList")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
-            val cloudId = requestCloudId(token, imsConfig.rootUrl.toString())
+            val cloudId = token.cloudIds?.filter { URI(it.url + "/rest/api/2") == URI(imsConfig.rootUrl.toString()) }
+                ?.map { it.id }?.firstOrNull()
+            println("CLOUDID: $cloudId from ${token.cloudIds}")
             if (cloudId != null) {
                 val res = client.request("https://api.atlassian.com/ex/jira/") {
                     method = requestMethod
@@ -171,16 +160,18 @@ class JiraDataService(
                     }
                     headers {
                         append(
-                            HttpHeaders.Authorization, "Bearer $token"
+                            HttpHeaders.Authorization, "Bearer ${token.token}"
                         )
                     }
                     if (body != null) {
                         setBody(body)
                     }
                 }
-                logger.info("Response Code for request with token $token is ${res.status}")
-                if (res.status == HttpStatusCode.OK) Optional.of(res)
-                else Optional.empty()
+                logger.info("Response Code for request with token token is ${res.status} (${res.status == HttpStatusCode.OK}, ${HttpStatusCode.OK})")
+                if (res.status == HttpStatusCode.OK) {
+                    logger.trace("Response for ${res.request.url} ${res.bodyAsText()}")
+                    Optional.of(res)
+                } else Optional.empty()
             } else Optional.empty()
         }
     }

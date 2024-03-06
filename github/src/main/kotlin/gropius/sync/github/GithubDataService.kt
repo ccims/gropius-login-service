@@ -11,7 +11,6 @@ import gropius.model.user.IMSUser
 import gropius.model.user.User
 import gropius.sync.JsonHelper
 import gropius.sync.SyncDataService
-import gropius.sync.TokenManager
 import gropius.sync.github.config.IMSConfig
 import gropius.sync.github.config.IMSProjectConfig
 import gropius.sync.github.generated.fragment.LabelData
@@ -46,7 +45,7 @@ class GithubDataService(
     @Qualifier("graphglueNeo4jOperations")
     val neoOperations: ReactiveNeo4jOperations,
     val labelInfoRepository: LabelInfoRepository,
-    val tokenManager: TokenManager,
+    val tokenManager: GithubTokenManager,
     val helper: JsonHelper
 ) : SyncDataService {
     /**
@@ -131,7 +130,7 @@ class GithubDataService(
             val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
                 .addHttpHeader("Authorization", "Bearer $token").build()
             val res = apolloClient.mutation(body).execute()
-            logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
+            logger.info("Response Code for request with tokenG1 $token is ${res.data} ${res.errors}")
             if (res.errors?.isNotEmpty() != true) Optional.of(res)
             else Optional.empty()
         }
@@ -155,7 +154,7 @@ class GithubDataService(
             val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
                 .addHttpHeader("Authorization", "Bearer $token").build()
             val res = apolloClient.query(body).execute()
-            logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
+            logger.info("Response Code for request with tokenG2 $token is ${res.data} ${res.errors}")
             if (res.errors?.isNotEmpty() != true) Optional.of(res)
             else Optional.empty()
         }

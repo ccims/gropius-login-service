@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 data class ChangelogFieldEntry(
     val field: String,
     val fieldtype: String,
-    val fieldId: String,
+    val fieldId: String? = null,
     val from: JsonElement,
     val to: JsonElement,
     val fromString: String?,
