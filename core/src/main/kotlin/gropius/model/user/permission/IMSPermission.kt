@@ -11,7 +11,7 @@ import io.github.graphglue.model.DomainNode
  */
 const val IMS_PERMISSION_ENTRY_NAME = "IMSPermissionEntry"
 
-@DomainNode
+@DomainNode(searchQueryName = "searchIMSPermissions")
 @GraphQLDescription("NodePermission to grant specific permissions to a set of IMSs.")
 class IMSPermission(
     name: String, description: String, entries: MutableList<String>, allUsers: Boolean

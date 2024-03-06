@@ -161,14 +161,14 @@ class IssueService(
             throw IllegalStateException("An Issue must be created on at least one Trackable")
         }
         val fields = templatedNodeService.validateInitialTemplatedFields(template, templatedFields)
-        val issue = Issue(atTime, atTime, fields, title, atTime, null, null, null, null)
+        val issue = Issue(atTime, atTime, fields, title, body, atTime, null, null, null, null)
         issue.template().value = template
         checkIssueTypeCompatibility(issue, type)
         checkIssueStateCompatibility(issue, state)
         issue.type().value = type
         issue.state().value = state
         createdAuditedNode(issue, byUser)
-        val bodyItem = Body(atTime, atTime, body, atTime)
+        val bodyItem = Body(atTime, atTime, atTime)
         bodyItem.bodyLastEditedBy().value = byUser
         createdTimelineItem(issue, bodyItem, atTime, byUser)
         issue.body().value = bodyItem
@@ -2132,6 +2132,7 @@ class IssueService(
         val atTime = OffsetDateTime.now()
         updateBody(body, input.body.orElse(null), atTime, byUser)
         updateAuditedNode(body, input, byUser, atTime)
+        repository.save(body.issue().value).awaitSingle()
         return timelineItemRepository.save(body).awaitSingle()
     }
 
@@ -2149,8 +2150,9 @@ class IssueService(
     suspend fun updateBody(
         body: Body, newBodyValue: String?, atTime: OffsetDateTime, byUser: User
     ) {
-        if (newBodyValue != null && newBodyValue != body.body && atTime >= body.bodyLastEditedAt) {
-            body.body = newBodyValue
+        val issue = body.issue().value
+        if (newBodyValue != null && newBodyValue != issue.bodyBody && atTime >= body.bodyLastEditedAt) {
+            issue.bodyBody = newBodyValue
             body.bodyLastEditedAt = atTime
             body.bodyLastEditedBy().value = byUser
         }

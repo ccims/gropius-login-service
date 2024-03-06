@@ -248,7 +248,7 @@ final class GithubSync(
             imsProject,
             listOf(issue.createdBy().value, issue.lastModifiedBy().value) + issue.timelineItems()
                 .map { it.createdBy().value },
-            MutateCreateIssueMutation(repoId, issue.title, issue.body().value.body)
+            MutateCreateIssueMutation(repoId, issue.title, issue.bodyBody)
         ).second
         val item = response.data?.createIssue?.issue
         if (item != null) {

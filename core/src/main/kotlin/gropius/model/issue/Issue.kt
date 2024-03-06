@@ -44,6 +44,9 @@ class Issue(
     @OrderProperty
     @SearchProperty
     var title: String,
+    @property:GraphQLIgnore
+    @SearchProperty
+    var bodyBody: String,
     @property:GraphQLDescription("The DateTime when the Issue was last updated, this includes a changed timeline.")
     @FilterProperty
     @OrderProperty

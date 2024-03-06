@@ -315,10 +315,10 @@ data class IssueData(
             fields["updated"]!!.jsonPrimitive.content, formatter
         )
         val issue = Issue(
-            created, updated, mutableMapOf(), fields["summary"]!!.jsonPrimitive.content, updated, null, null, null, null
+            created, updated, mutableMapOf(), fields["summary"]!!.jsonPrimitive.content, fields["description"]!!.jsonPrimitive.content, updated, null, null, null, null
         )
         issue.body().value = Body(
-            created, updated, fields["description"]!!.jsonPrimitive.content, updated
+            created, updated, updated
         )
         issue.body().value.lastModifiedBy().value = jiraService.mapUser(imsProject, fields["reporter"]!!)
         issue.body().value.bodyLastEditedBy().value = jiraService.mapUser(imsProject, fields["reporter"]!!)
