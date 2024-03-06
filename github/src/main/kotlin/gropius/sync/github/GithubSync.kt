@@ -243,7 +243,7 @@ final class GithubSync(
                 .execute()//TODO
         val repoId = repoInfoResponse.data?.repository?.id!!
         val response =
-            apolloClient.mutation(MutateCreateIssueMutation(repoId, issue.title, issue.body().value.body)).execute()
+            apolloClient.mutation(MutateCreateIssueMutation(repoId, issue.title, issue.bodyBody)).execute()
         val item = response.data?.createIssue?.issue
         if (item != null) {
             return IssueConversionInformation(imsProject.rawId!!, item.id, issue.rawId!!)
