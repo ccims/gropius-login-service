@@ -59,7 +59,7 @@ class HeuristicDereplicator(val issueThreshold: Double, val commentThreshold: Do
                 .and(issueNamedNode.relationshipFrom(trackableNamedNode, Trackable.ISSUE).asCondition())
         ).toIterable().map { it.rawId!! }.toSet()
         val bodyNamedNode = Cypher.node(Body::class.simpleName)
-            .withProperties(mapOf("body" to Cypher.anonParameter(issue.body().value.body)))
+            .withProperties(mapOf("body" to Cypher.anonParameter(issue.bodyBody)))
         val bodyMatches = request.issueRepository.findAll(
             issueNamedNode.relationshipTo(bodyNamedNode, Issue.BODY).asCondition()
                 .and(issueNamedNode.relationshipFrom(trackableNamedNode, Trackable.ISSUE).asCondition())

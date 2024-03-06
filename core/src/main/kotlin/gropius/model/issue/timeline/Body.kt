@@ -12,5 +12,5 @@ import java.time.OffsetDateTime
     """
 )
 class Body(
-    createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime, body: String, bodyLastEditedAt: OffsetDateTime
-) : Comment(createdAt, lastModifiedAt, body, bodyLastEditedAt)
+    createdAt: OffsetDateTime, lastModifiedAt: OffsetDateTime, bodyLastEditedAt: OffsetDateTime
+) : Comment(createdAt, lastModifiedAt, bodyLastEditedAt)
