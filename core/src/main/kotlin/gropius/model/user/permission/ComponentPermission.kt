@@ -13,7 +13,7 @@ import io.github.graphglue.model.DomainNode
  */
 const val COMPONENT_PERMISSION_ENTRY_NAME = "ComponentPermissionEntry"
 
-@DomainNode
+@DomainNode(searchQueryName = "searchComponentPermissions")
 @GraphQLDescription("NodePermission to grant specific permissions to a set of Components.")
 class ComponentPermission(
     name: String, description: String, entries: MutableList<String>, allUsers: Boolean

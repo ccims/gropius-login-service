@@ -356,7 +356,7 @@ final class JiraSync(
                 IssueQueryRequest(
                     IssueQueryRequestFields(
                         issue.title,
-                        issue.body().value.body,
+                        issue.bodyBody,
                         IssueTypeRequest("Bug"),
                         ProjectRequest(imsProjectConfig.repo),
                         listOf()

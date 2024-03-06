@@ -19,8 +19,8 @@ import gropius.authorization.gropiusAuthorizationContext
 import gropius.graphql.filter.*
 import gropius.model.architecture.*
 import gropius.model.common.PERMISSION_FIELD_BEAN
-import gropius.model.issue.timeline.TIMELINE_ITEM_TYPE_FILTER_BEAN
-import gropius.model.issue.timeline.TimelineItem
+import gropius.model.issue.Issue
+import gropius.model.issue.timeline.*
 import gropius.model.template.TEMPLATED_FIELDS_FILTER_BEAN
 import gropius.model.template.TemplatedNode
 import gropius.model.user.GropiusUser
@@ -48,7 +48,6 @@ import org.springframework.web.server.ResponseStatusException
 import java.net.URI
 import java.time.Duration
 import java.time.OffsetDateTime
-import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
@@ -262,6 +261,55 @@ class GraphQLConfiguration {
     }
 
     /**
+     * Provides the body field for [IssueComment]s
+     *
+     * @param beanFactory used to get the [NodeDefinitionCollection]
+     * @return the generated field definition
+     */
+    @Bean(BODY_FIELD_BEAN)
+    fun bodyField(beanFactory: BeanFactory): ExtensionFieldDefinition {
+        val field = GraphQLFieldDefinition.newFieldDefinition().name("body")
+            .description(
+                """The text of the Comment.
+                Supports GFM (GitHub Flavored Markdown).
+                Updates cause lastEditedAt and lastEditedBy to change.
+                Empty String if IssueComment is deleted.
+                """
+            ).type(GraphQLNonNull(Scalars.GraphQLString)).build()
+
+        val nodeDefinitionCollection by lazy {
+            beanFactory.getBean(NodeDefinitionCollection::class.java)
+        }
+
+        return object : ExtensionFieldDefinition(field) {
+            override fun generateFetcher(
+                dfe: DataFetchingEnvironment,
+                arguments: Map<String, Any?>,
+                node: org.neo4j.cypherdsl.core.Node,
+                nodeDefinition: NodeDefinition
+            ): Expression {
+                val issueNode = nodeDefinitionCollection.getNodeDefinition<Issue>().node().named("body_issue")
+                return Cypher.caseExpression()
+                    .`when`(node.hasLabels(nodeDefinitionCollection.getNodeDefinition<Body>().primaryLabel))
+                    .then(
+                        Cypher.valueAt(
+                            Cypher.listBasedOn(node.relationshipFrom(issueNode, Issue.BODY))
+                                .returning(issueNode.property(Issue::bodyBody.name)), 0
+                        )
+                    )
+                    .`when`(node.property(IssueComment::isCommentDeleted.name))
+                    .then(Cypher.literalOf<String>(""))
+                    .elseDefault(node.property(IssueComment::body.name))
+            }
+
+            override fun transformResult(result: Value): Any {
+                return result.asString()
+            }
+
+        }
+    }
+
+    /**
      * Provides the [KotlinDataFetcherFactoryProvider] which generates a FunctionDataFetcher which handles
      * JSON input value injecting correctly.
      *
@@ -271,9 +319,10 @@ class GraphQLConfiguration {
     @Bean
     fun kotlinDataFetcherFactory(applicationContext: ApplicationContext): KotlinDataFetcherFactoryProvider =
         object : SimpleKotlinDataFetcherFactoryProvider() {
-            override fun functionDataFetcherFactory(target: Any?, kClass: KClass<*>, kFunction: KFunction<*>) = DataFetcherFactory {
-                GropiusFunctionDataFetcher(target, kFunction, applicationContext)
-            }
+            override fun functionDataFetcherFactory(target: Any?, kClass: KClass<*>, kFunction: KFunction<*>) =
+                DataFetcherFactory {
+                    GropiusFunctionDataFetcher(target, kFunction, applicationContext)
+                }
         }
 
     /**

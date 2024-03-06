@@ -5,6 +5,11 @@ import gropius.model.user.User
 import io.github.graphglue.model.*
 import java.time.OffsetDateTime
 
+/**
+ * Name of the bean which provides the body extension field
+ */
+const val BODY_FIELD_BEAN = "bodyFieldBean"
+
 @DomainNode
 @GraphQLDescription(
     """Supertype for IssueComment and Body.
@@ -13,18 +18,10 @@ import java.time.OffsetDateTime
     READ is granted if READ is granted on `issue`.
     """
 )
+@ExtensionField(BODY_FIELD_BEAN)
 abstract class Comment(
     createdAt: OffsetDateTime,
     lastModifiedAt: OffsetDateTime,
-    @property:GraphQLDescription(
-        """The text of the Comment.
-        Supports GFM (GitHub Flavored Markdown).
-        Updates to the body cause lastEditedAt and lastEditedBy to change, while updates to referencedArtefacts
-        do not.
-        """
-    )
-    @FilterProperty
-    open var body: String,
     @property:GraphQLDescription(
         """Keep track when the body of the Comment was last updated.
         If not updated yet, the DateTime of creation.

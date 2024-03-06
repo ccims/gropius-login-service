@@ -16,6 +16,7 @@ import gropius.repository.findAllById
 import gropius.repository.findById
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
+import io.github.graphglue.model.property.NodeCache
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 
@@ -87,7 +88,7 @@ abstract class NodePermissionService<T : NodePermission<V>, V, R : GropiusReposi
             }
         }
         removedPermissions.ifPresent {
-            ensureAdminPermissionExistsForNode(node)
+            ensureAdminPermissionExistsForNode(node, NodeCache())
         }
         repository.deleteAll(nodesToDelete).awaitSingleOrNull()
     }
@@ -96,13 +97,14 @@ abstract class NodePermissionService<T : NodePermission<V>, V, R : GropiusReposi
      * Ensures that at least one permission on [node] grants [NodePermission.ADMIN] to at least one user
      *
      * @param node the node on which permissions where removed
+     * @param cache cache used to prevent failures caused by double loading of the same node
      * @throws IllegalStateException if the [node] has no valid [NodePermission.ADMIN] permission left
      */
     private suspend fun ensureAdminPermissionExistsForNode(
-        node: V
+        node: V, cache: NodeCache
     ) {
-        if (node.permissions()
-                .none { NodePermission.ADMIN in it.entries && (it.allUsers || it.users().isNotEmpty()) }
+        if (node.permissions(cache)
+                .none { NodePermission.ADMIN in it.entries && (it.allUsers || it.users(cache).isNotEmpty()) }
         ) {
             throw IllegalStateException("No permission granting ADMIN left")
         }
@@ -161,8 +163,9 @@ abstract class NodePermissionService<T : NodePermission<V>, V, R : GropiusReposi
             )
         }
         updateBasePermission(permission, input)
-        permission.nodesWithPermission().forEach {
-            ensureAdminPermissionExistsForNode(it)
+        val nodeCache = NodeCache(listOf(permission))
+        permission.nodesWithPermission(nodeCache).forEach {
+            ensureAdminPermissionExistsForNode(it, nodeCache)
         }
         return repository.save(permission).awaitSingle()
     }
@@ -188,7 +191,7 @@ abstract class NodePermissionService<T : NodePermission<V>, V, R : GropiusReposi
         }
         permission.nodesWithPermission().forEach {
             it.permissions() -= permission
-            ensureAdminPermissionExistsForNode(it)
+            ensureAdminPermissionExistsForNode(it, NodeCache())
         }
         repository.delete(permission).awaitSingleOrNull()
     }

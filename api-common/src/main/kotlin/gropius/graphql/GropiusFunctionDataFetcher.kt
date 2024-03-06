@@ -4,6 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import com.expediagroup.graphql.server.spring.execution.SpringDataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.springframework.context.ApplicationContext
+import java.util.concurrent.CompletableFuture
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.createType
@@ -27,7 +28,11 @@ class GropiusFunctionDataFetcher(
     override fun get(environment: DataFetchingEnvironment): Any? {
         val res = super.get(environment)
         return if (function.hasAnnotation<AutoPayloadType>()) {
-            PayloadWrapper(res)
+            if (res is CompletableFuture<*>) {
+                res.thenApply { PayloadWrapper(it) }
+            } else {
+                PayloadWrapper(res)
+            }
         } else {
             res
         }

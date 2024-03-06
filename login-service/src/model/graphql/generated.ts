@@ -1047,6 +1047,26 @@ export type FloatFilterInput = {
   lte?: InputMaybe<Scalars['Float']>;
 };
 
+/** Filter used to filter GlobalPermission */
+export type GlobalPermissionFilterInput = {
+  /** Filter by allUsers */
+  allUsers?: InputMaybe<BooleanFilterInput>;
+  /** Connects all subformulas via and */
+  and?: InputMaybe<Array<GlobalPermissionFilterInput>>;
+  /** Filter by description */
+  description?: InputMaybe<StringFilterInput>;
+  /** Filter by id */
+  id?: InputMaybe<IdFilterInput>;
+  /** Filter by name */
+  name?: InputMaybe<StringFilterInput>;
+  /** Negates the subformula */
+  not?: InputMaybe<GlobalPermissionFilterInput>;
+  /** Connects all subformulas via or */
+  or?: InputMaybe<Array<GlobalPermissionFilterInput>>;
+  /** Filter by users */
+  users?: InputMaybe<GropiusUserListFilterInput>;
+};
+
 /** Filter used to filter GropiusUser */
 export type GropiusUserFilterInput = {
   /** Connects all subformulas via and */
