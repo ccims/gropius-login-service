@@ -104,16 +104,18 @@ export class JiraStrategyService extends StrategyUsingPassport {
             await this.activeLoginService.findValidForLoginDataSortedByExpiration(loginData, true)
         ).filter((login) => !!login.data["accessToken"]);
         const strategyInstance = await loginData.strategyInstance;
-        console.log(syncLogins);
         while (syncLogins.length) {
-            let stuff = await (
+            let firstLogin = syncLogins[0];
+            this.loggerJira.log("Requesting cloud IDs");
+            let cloudIds = await (
                 await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
-                    headers: { authorization: "Bearer " + syncLogins[0]?.data["accessToken"] },
+                    headers: { authorization: "Bearer " + firstLogin?.data["accessToken"] },
                 })
             ).json();
-            if (!stuff || stuff.code) {
-                if (syncLogins[0].data["refreshToken"]) {
-                    const d = await (
+            if (!cloudIds || cloudIds.code) {
+                if (firstLogin.data["refreshToken"]) {
+                    this.loggerJira.log("Non valid cloud IDs, refreshing token");
+                    const refreshTokenResponse = await (
                         await fetch(strategyInstance.instanceConfig["tokenUrl"], {
                             headers: { "content-type": "application/json" },
                             method: "POST",
@@ -121,39 +123,40 @@ export class JiraStrategyService extends StrategyUsingPassport {
                                 grant_type: "refresh_token",
                                 client_id: strategyInstance.instanceConfig["clientId"],
                                 client_secret: strategyInstance.instanceConfig["clientSecret"],
-                                refresh_token: syncLogins[0].data["refreshToken"],
+                                refresh_token: firstLogin.data["refreshToken"],
                             }),
                         })
                     ).json();
-                    d["accessToken"] = d["access_token"];
-                    d["refreshToken"] = d["refresh_token:"];
-                    delete d["access_token"];
-                    delete d["refresh_token:"];
-                    console.log("DX", d);
-                    syncLogins[0].data = d;
-                    console.log("PRE SAVE", syncLogins[0]);
-                    stuff = await (
+                    refreshTokenResponse["accessToken"] = refreshTokenResponse["access_token"];
+                    refreshTokenResponse["refreshToken"] = refreshTokenResponse["refresh_token:"];
+                    delete refreshTokenResponse["access_token"];
+                    delete refreshTokenResponse["refresh_token:"];
+                    firstLogin.data = refreshTokenResponse;
+                    this.loggerJira.log("Requesting cloud IDs for refreshed token");
+                    cloudIds = await (
                         await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
-                            headers: { authorization: "Bearer " + syncLogins[0]?.data["accessToken"] },
+                            headers: { authorization: "Bearer " + firstLogin?.data["accessToken"] },
                         })
                     ).json();
-                    if (!stuff || stuff.code) {
-                        await this.activeLoginService.delete(syncLogins[0].id);
+                    if (!cloudIds || cloudIds.code) {
+                        this.loggerJira.log("Non valid cloud IDs, invalidating token");
+                        firstLogin.isValid = false;
+                        await this.activeLoginService.save(firstLogin);
                         syncLogins.shift();
                     } else {
-                        console.log("STUFF2", "Bearer " + syncLogins[0]?.data["accessToken"], stuff);
-                        syncLogins[0] = await this.activeLoginService.save(syncLogins[0]);
-                        console.log("POST SAVE", syncLogins[0]);
-                        console.log("STUFFING4", stuff);
-                        return { token: syncLogins[0]?.data["accessToken"] ?? null, cloudIds: stuff };
+                        this.loggerJira.log("Refreshed token valid");
+                        firstLogin = await this.activeLoginService.save(firstLogin);
+                        return { token: firstLogin?.data["accessToken"] ?? null, cloudIds: cloudIds };
                     }
                 } else {
-                    await this.activeLoginService.delete(syncLogins[0].id);
+                    this.loggerJira.log("Non valid cloud IDs, invalidating token");
+                    firstLogin.isValid = false;
+                    await this.activeLoginService.save(firstLogin);
                     syncLogins.shift();
                 }
             } else {
-                console.log("STUFFING3", stuff);
-                return { token: syncLogins[0]?.data["accessToken"] ?? null, cloudIds: stuff };
+                this.loggerJira.log("Found valid token");
+                return { token: firstLogin?.data["accessToken"] ?? null, cloudIds };
             }
         }
         return { token: null };
