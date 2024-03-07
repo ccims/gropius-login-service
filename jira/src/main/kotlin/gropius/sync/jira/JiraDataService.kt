@@ -1,5 +1,7 @@
 package gropius.sync.jira
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Label
 import gropius.model.template.*
@@ -10,6 +12,7 @@ import gropius.sync.SyncDataService
 import gropius.sync.jira.config.IMSConfig
 import gropius.sync.jira.config.IMSProjectConfig
 import gropius.sync.user.UserMapper
+import gropius.util.JsonNodeMapper
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -38,7 +41,11 @@ import java.util.*
 class JiraDataService(
     val userMapper: UserMapper,
     @Qualifier("graphglueNeo4jOperations")
-    val neoOperations: ReactiveNeo4jOperations, val tokenManager: JiraTokenManager, val helper: JsonHelper
+    val neoOperations: ReactiveNeo4jOperations,
+    val tokenManager: JiraTokenManager,
+    val helper: JsonHelper,
+    val objectMapper: ObjectMapper,
+    val jsonNodeMapper: JsonNodeMapper
 ) : SyncDataService {
 
     /**
@@ -89,12 +96,27 @@ class JiraDataService(
      * @param user the Jira user
      */
     suspend fun mapUser(imsProject: IMSProject, user: JsonElement): User {
-        return userMapper.mapUser(
-            imsProject,
-            user.jsonObject["accountId"]!!.jsonPrimitive.content,
-            user.jsonObject["displayName"]!!.jsonPrimitive.content,
-            user.jsonObject["emailAddress"]?.jsonPrimitive?.content
+        val encodedAccountId =
+            jsonNodeMapper.jsonNodeToDeterministicString(objectMapper.valueToTree<JsonNode>(user.jsonObject["accountId"]!!.jsonPrimitive.content))
+        val foundImsUser =
+            imsProject.ims().value.users().firstOrNull { it.templatedFields["jira_id"] == encodedAccountId }
+        if (foundImsUser != null) {
+            return foundImsUser
+        }
+        println("FOUND NO USER FOR ${user.jsonObject["accountId"]!!.jsonPrimitive.content}")
+        val imsUser = IMSUser(
+            user.jsonObject["displayName"]?.jsonPrimitive?.content
+                ?: user.jsonObject["emailAddress"]?.jsonPrimitive?.content ?: "Unnamed User",
+            user.jsonObject["emailAddress"]?.jsonPrimitive?.content,
+            null,
+            user.jsonObject["emailAddress"]?.jsonPrimitive?.content,
+            mutableMapOf("jira_id" to encodedAccountId)
         )
+        imsUser.ims().value = imsProject.ims().value
+        imsUser.template().value = imsUser.ims().value.template().value.imsUserTemplate().value
+        val newUser = neoOperations.save(imsUser).awaitSingle()
+        imsProject.ims().value.users() += newUser
+        return newUser
     }
 
     /**
@@ -137,14 +159,15 @@ class JiraDataService(
     ): Pair<IMSUser, HttpResponse> {
         val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
-        val userList = users.toMutableList()
+        val rawUserList = users.toMutableList()
         if (imsConfig.readUser != null) {
             val imsUser = neoOperations.findById(imsConfig.readUser, IMSUser::class.java).awaitSingle()
             if (imsUser.ims().value != imsProject.ims().value) {
                 TODO("Error handling")
             }
-            userList.add(imsUser)
+            rawUserList.add(imsUser)
         }
+        val userList = rawUserList.distinct()
         logger.info("Requesting with users: $userList")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
             val cloudId = token.cloudIds?.filter { URI(it.url + "/rest/api/2") == URI(imsConfig.rootUrl.toString()) }
@@ -164,11 +187,12 @@ class JiraDataService(
                         )
                     }
                     if (body != null) {
+                        contentType(ContentType.parse("application/json; charset=utf-8"))
                         setBody(body)
                     }
                 }
-                logger.info("Response Code for request with token token is ${res.status} (${res.status == HttpStatusCode.OK}, ${HttpStatusCode.OK})")
-                if (res.status == HttpStatusCode.OK) {
+                logger.info("Response Code for request with token token is ${res.status} (${res.status == HttpStatusCode.OK}, ${HttpStatusCode.OK}, ${res.status.isSuccess()})")
+                if (res.status.isSuccess()) {
                     logger.trace("Response for ${res.request.url} ${res.bodyAsText()}")
                     Optional.of(res)
                 } else Optional.empty()
