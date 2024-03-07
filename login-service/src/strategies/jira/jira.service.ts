@@ -159,6 +159,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 return { token: firstLogin?.data["accessToken"] ?? null, cloudIds };
             }
         }
+        this.loggerJira.log("Token list exhausted, falling back");
         return { token: null };
     }
 
