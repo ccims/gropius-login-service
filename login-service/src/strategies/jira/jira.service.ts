@@ -128,9 +128,9 @@ export class JiraStrategyService extends StrategyUsingPassport {
                         })
                     ).json();
                     refreshTokenResponse["accessToken"] = refreshTokenResponse["access_token"];
-                    refreshTokenResponse["refreshToken"] = refreshTokenResponse["refresh_token:"];
+                    refreshTokenResponse["refreshToken"] = refreshTokenResponse["refresh_token"];
                     delete refreshTokenResponse["access_token"];
-                    delete refreshTokenResponse["refresh_token:"];
+                    delete refreshTokenResponse["refresh_token"];
                     firstLogin.data = refreshTokenResponse;
                     this.loggerJira.log("Requesting cloud IDs for refreshed token");
                     cloudIds = await (
@@ -149,7 +149,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                         return { token: firstLogin?.data["accessToken"] ?? null, cloudIds: cloudIds };
                     }
                 } else {
-                    this.loggerJira.log("Non valid cloud IDs, invalidating token");
+                    this.loggerJira.log("Non valid cloud IDs, and no refresh token token");
                     firstLogin.isValid = false;
                     await this.activeLoginService.save(firstLogin);
                     syncLogins.shift();
