@@ -40,7 +40,7 @@ class IssueTemplateService(
         template.assignmentTypes() += template.extends().flatMap { it.assignmentTypes() }
         template.issuePriorities() += input.issuePriorities.map { IssuePriority(it.name, it.description, it.value) }
         template.issuePriorities() += template.extends().flatMap { it.issuePriorities() }
-        template.relationTypes() += input.relationTypes.map { IssueRelationType(it.name, it.description) }
+        template.relationTypes() += input.relationTypes.map { IssueRelationType(it.name, it.description, it.inverseName) }
         template.relationTypes() += template.extends().flatMap { it.relationTypes() }
         return repository.save(template).awaitSingle()
     }
