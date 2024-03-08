@@ -3,7 +3,6 @@ package gropius.model.architecture
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.authorization.RELATED_TO_NODE_PERMISSION_RULE
-import gropius.model.common.NamedNode
 import gropius.model.template.BaseTemplate
 import gropius.model.template.IMSTemplate
 import gropius.model.template.MutableTemplatedNode
@@ -30,7 +29,7 @@ class IMS(
     @property:GraphQLIgnore
     @CompositeProperty
     override val templatedFields: MutableMap<String, String>
-) : NamedNode(name, description), MutableTemplatedNode, NodeWithPermissions<IMSPermission> {
+) : SyncPermissionTarget(name, description), MutableTemplatedNode, NodeWithPermissions<IMSPermission> {
 
     companion object {
         const val PROJECT = "PROJECT"

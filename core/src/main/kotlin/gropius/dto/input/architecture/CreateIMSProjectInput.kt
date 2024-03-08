@@ -2,6 +2,7 @@ package gropius.dto.input.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.scalars.ID
+import gropius.dto.input.common.CreateNamedNodeInput
 import gropius.dto.input.common.Input
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.validateAndEnsureNoDuplicates
@@ -15,7 +16,7 @@ class CreateIMSProjectInput(
     val ims: ID,
     @GraphQLDescription("The id of the Trackable which is synced")
     val trackable: ID
-) : Input(), CreateTemplatedNodeInput {
+) : CreateNamedNodeInput(), CreateTemplatedNodeInput {
 
     override fun validate() {
         super.validate()

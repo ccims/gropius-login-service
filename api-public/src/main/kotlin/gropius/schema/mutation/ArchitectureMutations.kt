@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional
  * @param imsService used for IMS-related mutations
  * @param imsProjectService used for IMSProject-related mutations
  * @param intraComponentDependencySpecificationService used for IntraComponentDependencySpecificationService-related mutations
+ * @param syncPermissionTargetService used for SyncPermissionTarget-related mutations
  */
 @org.springframework.stereotype.Component
 @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -41,7 +42,8 @@ class ArchitectureMutations(
     private val relationService: RelationService,
     private val imsService: IMSService,
     private val imsProjectService: IMSProjectService,
-    private val intraComponentDependencySpecificationService: IntraComponentDependencySpecificationService
+    private val intraComponentDependencySpecificationService: IntraComponentDependencySpecificationService,
+    private val syncPermissionTargetService: SyncPermissionTargetService
 ) : Mutation {
 
     @GraphQLDescription(
@@ -493,6 +495,17 @@ class ArchitectureMutations(
             dfe.gropiusAuthorizationContext, input
         )
         return DeleteNodePayload(input.id)
+    }
+
+    @GraphQLDescription("Updates whether the current user allows sync self/others on the specified target")
+    @AutoPayloadType("The updated SyncPermissionTarget")
+    suspend fun updateSyncPermissions(
+        @GraphQLDescription("Defines which SyncPermissionTarget to update and how to update it")
+        input: UpdateSyncPermissionsInput, dfe: DataFetchingEnvironment
+    ): SyncPermissionTarget {
+        return syncPermissionTargetService.updateSyncPermissions(
+            dfe.gropiusAuthorizationContext, input
+        )
     }
 
 }

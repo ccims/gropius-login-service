@@ -2,6 +2,7 @@ package gropius.model.user
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.authorization.RELATED_TO_GLOBAL_PERMISSION_RULE
+import gropius.model.architecture.SyncPermissionTarget
 import gropius.model.user.permission.BasePermission
 import gropius.model.user.permission.GlobalPermission
 import io.github.graphglue.model.*
@@ -39,6 +40,8 @@ class GropiusUser(
 
     companion object {
         const val PERMISSION = "PERMISSION"
+        const val CAN_SYNC_SELF = "CAN_SYNC_SELF"
+        const val CAN_SYNC_OTHERS = "CAN_SYNC_OTHERS"
     }
 
     @GraphQLDescription("A unique identifier for the GropiusUser. Note that this might not be unique across all Users.")
@@ -53,4 +56,14 @@ class GropiusUser(
     @GraphQLDescription("Permissions the user has.")
     @FilterProperty
     val permissions by NodeSetProperty<BasePermission>()
+
+    @NodeRelationship(CAN_SYNC_SELF, Direction.OUTGOING)
+    @GraphQLDescription("The UserSyncPermissionTarget this users allow to sync content of this user.")
+    @FilterProperty
+    val canSyncSelf by NodeSetProperty<SyncPermissionTarget>()
+
+    @NodeRelationship(CAN_SYNC_OTHERS, Direction.OUTGOING)
+    @GraphQLDescription("The IMSSyncPermissionTarget this users allow to sync content of other users.")
+    @FilterProperty
+    val canSyncOthers by NodeSetProperty<SyncPermissionTarget>()
 }

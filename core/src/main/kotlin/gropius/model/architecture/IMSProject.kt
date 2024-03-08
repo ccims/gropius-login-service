@@ -3,7 +3,6 @@ package gropius.model.architecture
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.authorization.RELATED_TO_ADMIN_NODE_PERMISSION_RULE
-import gropius.model.common.BaseNode
 import gropius.model.template.BaseTemplate
 import gropius.model.template.IMSProjectTemplate
 import gropius.model.template.MutableTemplatedNode
@@ -27,10 +26,12 @@ import org.springframework.data.neo4j.core.schema.CompositeProperty
 @Authorization(TrackablePermission.MANAGE_IMS, allowFromRelated = ["trackable"])
 @Authorization(NodePermission.RELATED_TO_NODE_PERMISSION, allowFromRelated = ["ims"])
 class IMSProject(
+    name: String,
+    description: String,
     @property:GraphQLIgnore
     @CompositeProperty
     override val templatedFields: MutableMap<String, String>
-) : BaseNode(), MutableTemplatedNode {
+) : SyncPermissionTarget(name, description), MutableTemplatedNode {
 
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Component.")
