@@ -95,7 +95,6 @@ class InterfaceSpecificationVersionService(
                 )
             }
         }
-        createdExtensibleNode(interfaceSpecificationVersion, input)
         return interfaceSpecificationVersion
     }
 

@@ -175,7 +175,6 @@ class ComponentVersionService(
         val componentVersion =
             ComponentVersion(input.name, input.description, input.version, templatedFields)
         componentVersion.template().value = template
-        createdExtensibleNode(componentVersion, input)
         return componentVersion
     }
 

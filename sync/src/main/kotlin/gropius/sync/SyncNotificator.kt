@@ -1,7 +1,7 @@
 package gropius.sync
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.template.MutableTemplatedNode
 import kotlinx.coroutines.reactor.awaitSingle
 import org.slf4j.LoggerFactory
@@ -56,7 +56,7 @@ class SyncNotificator(
      * @param node Node of which the users should receive the notification from
      * @param dummy MotificationDummy containing the content
      */
-    suspend fun sendNotification(node: ExtensibleNode, dummy: NotificationDummy) {
+    suspend fun sendNotification(node: BaseNode, dummy: NotificationDummy) {
         logger.info("Send Notification: $dummy")
         if (node is MutableTemplatedNode) {
             node.templatedFields["last-notification"] = helper.objectMapper.writeValueAsString(dummy)

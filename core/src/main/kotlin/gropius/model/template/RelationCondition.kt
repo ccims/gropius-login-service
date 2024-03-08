@@ -1,7 +1,7 @@
 package gropius.model.template
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 
@@ -16,7 +16,7 @@ import io.github.graphglue.model.*
     """
 )
 @Authorization(NodePermission.READ, allowAll = true)
-class RelationCondition : ExtensibleNode() {
+class RelationCondition : BaseNode() {
 
     companion object {
         const val PART_OF = "PART_OF"

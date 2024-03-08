@@ -572,8 +572,6 @@ export type BodyFilterInput = {
   and?: InputMaybe<Array<BodyFilterInput>>;
   /** Filter by answeredBy */
   answeredBy?: InputMaybe<IssueCommentListFilterInput>;
-  /** Filter by body */
-  body?: InputMaybe<StringFilterInput>;
   /** Filter by bodyLastEditedAt */
   bodyLastEditedAt?: InputMaybe<DateTimeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -614,8 +612,6 @@ export type CommentFilterInput = {
   and?: InputMaybe<Array<CommentFilterInput>>;
   /** Filter by answeredBy */
   answeredBy?: InputMaybe<IssueCommentListFilterInput>;
-  /** Filter by body */
-  body?: InputMaybe<StringFilterInput>;
   /** Filter by bodyLastEditedAt */
   bodyLastEditedAt?: InputMaybe<DateTimeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -989,8 +985,6 @@ export type CreateGropiusUserInput = {
   displayName: Scalars['String'];
   /** The email of the created User if present */
   email?: InputMaybe<Scalars['String']>;
-  /** The initial value of the extension fields */
-  extensionFields?: InputMaybe<Array<JsonFieldInput>>;
   /** If true, the created GropiusUser is a global admin */
   isAdmin: Scalars['Boolean'];
   /** The username of the created GropiusUser, must be unique, must match /^[a-zA-Z0-9_-]+$/ */
@@ -1003,8 +997,6 @@ export type CreateImsUserInput = {
   displayName: Scalars['String'];
   /** The email of the created User if present */
   email?: InputMaybe<Scalars['String']>;
-  /** The initial value of the extension fields */
-  extensionFields?: InputMaybe<Array<JsonFieldInput>>;
   /** If present, the id of the GropiusUser the created IMSUser is associated with */
   gropiusUser?: InputMaybe<Scalars['ID']>;
   /** The id of the IMS the created IMSUser is part of */
@@ -2070,8 +2062,6 @@ export type IssueCommentFilterInput = {
   answeredBy?: InputMaybe<IssueCommentListFilterInput>;
   /** Filters for nodes where the related node match this filter */
   answers?: InputMaybe<CommentFilterInput>;
-  /** Filter by body */
-  body?: InputMaybe<StringFilterInput>;
   /** Filter by bodyLastEditedAt */
   bodyLastEditedAt?: InputMaybe<DateTimeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -2360,6 +2350,8 @@ export type IssueRelationTypeFilterInput = {
   description?: InputMaybe<StringFilterInput>;
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
+  /** Filter by inverseName */
+  inverseName?: InputMaybe<StringFilterInput>;
   /** Filter by name */
   name?: InputMaybe<StringFilterInput>;
   /** Negates the subformula */
@@ -2394,6 +2386,8 @@ export type IssueRelationTypeOrder = {
 export enum IssueRelationTypeOrderField {
   /** Order by id */
   Id = 'ID',
+  /** Order by inverseName */
+  InverseName = 'INVERSE_NAME',
   /** Order by name */
   Name = 'NAME'
 }
@@ -3417,8 +3411,6 @@ export type UpdateImsUserInput = {
   displayName?: InputMaybe<Scalars['String']>;
   /** The new email of the User to update */
   email?: InputMaybe<Scalars['String']>;
-  /** Extension fields to update. To remove, provide no value */
-  extensionFields?: InputMaybe<Array<JsonFieldInput>>;
   /**
    * The id of the GropiusUser the updated IMSUser is associated with, replaces existing association
    *         or removes it if null is provided.

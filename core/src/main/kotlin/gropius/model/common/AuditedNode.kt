@@ -8,7 +8,7 @@ import java.time.OffsetDateTime
 
 @DomainNode
 @GraphQLDescription(
-    """ExtensibleNode which provides auditing information, which can e.g. be used for the sync.
+    """Node which provides auditing information, which can e.g. be used for the sync.
     When it was created and last modified, if the it is already deleted, and by who it was created and last modified.
     A modification is any change of a field on the node itself and a change of a relation (add or removed).
     A change on a related related node is not a modification.
@@ -24,7 +24,7 @@ abstract class AuditedNode(
     @FilterProperty
     @OrderProperty
     var lastModifiedAt: OffsetDateTime
-) : ExtensibleNode() {
+) : BaseNode() {
 
     companion object {
         const val CREATED_BY = "CREATED_BY"

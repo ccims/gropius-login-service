@@ -55,7 +55,6 @@ class IMSService(
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
         val ims = IMS(input.name, input.description, templatedFields)
         ims.template().value = template
-        createdExtensibleNode(ims, input)
         imsPermissionService.createDefaultPermission(user, ims)
         return repository.save(ims).awaitSingle()
     }
@@ -80,7 +79,6 @@ class IMSService(
         imsPermissionService.updatePermissionsOfNode(
             ims, input.addedPermissions, input.removedPermissions, authorizationContext
         )
-        updateExtensibleNode(ims, input)
         return repository.save(ims).awaitSingle()
     }
 

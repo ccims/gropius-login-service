@@ -81,7 +81,6 @@ class InterfacePartService(
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
         val interfacePart = InterfacePart(input.name, input.description, templatedFields)
         interfacePart.template().value = template
-        createdExtensibleNode(interfacePart, input)
         return interfacePart
     }
 

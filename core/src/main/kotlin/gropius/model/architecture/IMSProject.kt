@@ -3,7 +3,7 @@ package gropius.model.architecture
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.authorization.RELATED_TO_ADMIN_NODE_PERMISSION_RULE
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.template.BaseTemplate
 import gropius.model.template.IMSProjectTemplate
 import gropius.model.template.MutableTemplatedNode
@@ -30,7 +30,7 @@ class IMSProject(
     @property:GraphQLIgnore
     @CompositeProperty
     override val templatedFields: MutableMap<String, String>
-) : ExtensibleNode(), MutableTemplatedNode {
+) : BaseNode(), MutableTemplatedNode {
 
     @NodeRelationship(BaseTemplate.USED_IN, Direction.INCOMING)
     @GraphQLDescription("The Template of this Component.")

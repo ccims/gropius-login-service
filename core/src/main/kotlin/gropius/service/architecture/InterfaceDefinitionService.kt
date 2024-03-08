@@ -6,7 +6,7 @@ import gropius.model.architecture.InterfaceDefinition
 import gropius.model.user.permission.NodePermission
 import gropius.repository.architecture.InterfaceDefinitionRepository
 import gropius.repository.findById
-import gropius.service.common.AbstractExtensibleNodeService
+import gropius.service.common.NodeService
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service
 @Service
 class InterfaceDefinitionService(
     repository: InterfaceDefinitionRepository, private val templatedNodeService: TemplatedNodeService
-) : AbstractExtensibleNodeService<InterfaceDefinition, InterfaceDefinitionRepository>(repository) {
+) : NodeService<InterfaceDefinition, InterfaceDefinitionRepository>(repository) {
 
     /**
      * Updates a [InterfaceDefinition] based on the provided [input]
@@ -40,7 +40,6 @@ class InterfaceDefinitionService(
             Permission(NodePermission.ADMIN, authorizationContext),
             "update the InterfaceDefinition"
         )
-        updateExtensibleNode(interfaceDefinitionToUpdate, input)
         templatedNodeService.updateTemplatedFields(interfaceDefinitionToUpdate, input)
         return repository.save(interfaceDefinitionToUpdate).awaitSingle()
     }

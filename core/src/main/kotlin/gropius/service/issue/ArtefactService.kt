@@ -62,7 +62,7 @@ class ArtefactService(
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
         val artefact = Artefact(now, now, templatedFields, input.file, input.from, input.to, input.version)
         artefact.trackable().value = trackable
-        createdAuditedNode(artefact, input, getUser(authorizationContext))
+        createdAuditedNode(artefact, getUser(authorizationContext))
         return repository.save(artefact).awaitSingle()
     }
 
@@ -90,7 +90,7 @@ class ArtefactService(
         input.from.ifPresent { artefact.from = it }
         input.to.ifPresent { artefact.to = it }
         input.version.ifPresent { artefact.version = it }
-        updateAuditedNode(artefact, input, getUser(authorizationContext), OffsetDateTime.now())
+        updateAuditedNode(artefact, getUser(authorizationContext), OffsetDateTime.now())
         return repository.save(artefact).awaitSingle()
     }
 

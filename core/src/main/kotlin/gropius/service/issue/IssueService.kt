@@ -124,7 +124,7 @@ class IssueService(
             OffsetDateTime.now(),
             byUser
         )
-        createdAuditedNode(issue, input, byUser)
+        createdAuditedNode(issue, byUser)
         return repository.save(issue).awaitSingle()
     }
 
@@ -1571,7 +1571,7 @@ class IssueService(
         val byUser = getUser(authorizationContext)
         val atTime = OffsetDateTime.now()
         val assignment = createAssignment(issue, user, assignmentType, atTime, byUser)
-        createdAuditedNode(assignment, input, byUser)
+        createdAuditedNode(assignment, byUser)
         return assignmentRepository.save(assignment).awaitSingle()
     }
 
@@ -1757,7 +1757,7 @@ class IssueService(
         val issueRelationType = input.issueRelationType?.let { issueRelationTypeRepository.findById(it) }
         val byUser = getUser(authorizationContext)
         val issueRelation = createIssueRelation(issue, relatedIssue, issueRelationType, OffsetDateTime.now(), byUser)
-        createdAuditedNode(issueRelation, input, byUser)
+        createdAuditedNode(issueRelation, byUser)
         return issueRelationRepository.save(issueRelation).awaitSingle()
     }
 
@@ -1975,7 +1975,7 @@ class IssueService(
         val answers = input.answers?.let { commentRepository.findById(it) }
         val byUser = getUser(authorizationContext)
         val issueComment = createIssueComment(issue, answers, input.body, artefacts, OffsetDateTime.now(), byUser)
-        createdAuditedNode(issueComment, input, byUser)
+        createdAuditedNode(issueComment, byUser)
         return timelineItemRepository.save(issueComment).awaitSingle()
     }
 
@@ -2055,7 +2055,7 @@ class IssueService(
         val byUser = getUser(authorizationContext)
         val atTime = OffsetDateTime.now()
         updateIssueComment(issueComment, input.body.orElse(null), addedArtefacts, removedArtefacts, atTime, byUser)
-        updateAuditedNode(issueComment, input, byUser, atTime)
+        updateAuditedNode(issueComment, byUser, atTime)
         return timelineItemRepository.save(issueComment).awaitSingle()
     }
 
@@ -2131,7 +2131,7 @@ class IssueService(
         val byUser = getUser(authorizationContext)
         val atTime = OffsetDateTime.now()
         updateBody(body, input.body.orElse(null), atTime, byUser)
-        updateAuditedNode(body, input, byUser, atTime)
+        updateAuditedNode(body, byUser, atTime)
         repository.save(body.issue().value).awaitSingle()
         return timelineItemRepository.save(body).awaitSingle()
     }
