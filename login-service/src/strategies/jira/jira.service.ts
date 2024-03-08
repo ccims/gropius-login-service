@@ -70,6 +70,13 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 true,
                 "https://auth.atlassian.com/oauth/token",
             );
+            resultingConfig["cloudIdUrl"] = checkType(
+                instanceConfig,
+                "cloudIdUrl",
+                "string",
+                true,
+                "https://api.atlassian.com/oauth/token/accessible-resources",
+            );
             resultingConfig["userProfileUrl"] = checkType(instanceConfig, "userProfileUrl", "string", true);
             resultingConfig["clientId"] = checkType(
                 instanceConfig,
@@ -104,11 +111,12 @@ export class JiraStrategyService extends StrategyUsingPassport {
             await this.activeLoginService.findValidForLoginDataSortedByExpiration(loginData, true)
         ).filter((login) => !!login.data["accessToken"]);
         const strategyInstance = await loginData.strategyInstance;
+        const config = this.checkAndExtendInstanceConfig(strategyInstance.instanceConfig);
         while (syncLogins.length) {
             let firstLogin = syncLogins[0];
             this.loggerJira.log("Requesting cloud IDs");
             let cloudIds = await (
-                await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+                await fetch(config["cloudIdUrl"], {
                     headers: { authorization: "Bearer " + firstLogin?.data["accessToken"] },
                 })
             ).json();
@@ -116,13 +124,13 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 if (firstLogin.data["refreshToken"]) {
                     this.loggerJira.log("Non valid cloud IDs, refreshing token");
                     const refreshTokenResponse = await (
-                        await fetch(strategyInstance.instanceConfig["tokenUrl"], {
+                        await fetch(config["tokenUrl"], {
                             headers: { "content-type": "application/json" },
                             method: "POST",
                             body: JSON.stringify({
                                 grant_type: "refresh_token",
-                                client_id: strategyInstance.instanceConfig["clientId"],
-                                client_secret: strategyInstance.instanceConfig["clientSecret"],
+                                client_id: config["clientId"],
+                                client_secret: config["clientSecret"],
                                 refresh_token: firstLogin.data["refreshToken"],
                             }),
                         })
@@ -134,7 +142,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                     firstLogin.data = refreshTokenResponse;
                     this.loggerJira.log("Requesting cloud IDs for refreshed token");
                     cloudIds = await (
-                        await fetch("https://api.atlassian.com/oauth/token/accessible-resources", {
+                        await fetch(config["cloudIdUrl"], {
                             headers: { authorization: "Bearer " + firstLogin?.data["accessToken"] },
                         })
                     ).json();
@@ -227,18 +235,16 @@ export class JiraStrategyService extends StrategyUsingPassport {
     }
 
     public override createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy {
+        const configData = this.checkAndExtendInstanceConfig(strategyInstance.instanceConfig);
         const config = {
-            authorizationURL: strategyInstance.instanceConfig["authorizationUrl"],
-            tokenURL: strategyInstance.instanceConfig["tokenUrl"],
-            profileURL: strategyInstance.instanceConfig["userProfileUrl"],
-            clientID: strategyInstance.instanceConfig["clientId"],
-            clientSecret: strategyInstance.instanceConfig["clientSecret"],
+            authorizationURL: configData["authorizationUrl"],
+            tokenURL: configData["tokenUrl"],
+            profileURL: configData["userProfileUrl"],
+            clientID: configData["clientId"],
+            clientSecret: configData["clientSecret"],
             callbackURL:
-                strategyInstance.instanceConfig["callbackUrl"] ??
-                strategyInstance.instanceConfig["callbackRoot"] +
-                    "/authenticate/oauth/" +
-                    strategyInstance.id +
-                    "/callback",
+                configData["callbackUrl"] ??
+                configData["callbackRoot"] + "/authenticate/oauth/" + strategyInstance.id + "/callback",
             scope: ["offline_access", "read:jira-user", "read:me", "read:jira-work", "write:jira-work"],
             store: {
                 store: (req, state, meta, callback) => callback(null, state),
