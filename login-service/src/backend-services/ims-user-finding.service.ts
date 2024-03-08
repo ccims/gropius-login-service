@@ -181,13 +181,7 @@ export class ImsUserFindingService {
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                if (value === null) {
-                    //filterObject[key] = { isNull: true };
-                } else if (value === undefined) {
-                    //filterObject[key] = { isNull: true };
-                    this.logger.warn("Undefined value in object", key, data);
-                    //throw new Error("Cannot filter for undefined");
-                } else {
+                if (value !== null && value !== undefined) {
                     filterObject[key] = { eq: value };
                 }
             }
