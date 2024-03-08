@@ -17,7 +17,7 @@ import gropius.repository.architecture.RelationRepository
 import gropius.repository.common.NodeRepository
 import gropius.repository.findById
 import gropius.repository.template.RelationTemplateRepository
-import gropius.service.common.AbstractExtensibleNodeService
+import gropius.service.common.NodeService
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
@@ -43,7 +43,7 @@ class RelationService(
     private val templatedNodeService: TemplatedNodeService,
     private val interfacePartRepository: InterfacePartRepository,
     private val nodeRepository: NodeRepository
-) : AbstractExtensibleNodeService<Relation, RelationRepository>(repository) {
+) : NodeService<Relation, RelationRepository>(repository) {
 
     /**
      * Creates a new [Relation] based on the provided [input]
@@ -69,7 +69,6 @@ class RelationService(
         input.startParts.ifPresent { relation.startParts() += getInterfaceParts(start, it) }
         input.endParts.ifPresent { relation.endParts() += getInterfaceParts(end, it) }
         relation.template().value = template
-        createdExtensibleNode(relation, input)
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.createRelation(relation)
         nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
@@ -167,7 +166,6 @@ class RelationService(
         input.removedStartParts.ifPresent { relation.startParts() -= getInterfaceParts(relation.start().value, it) }
         input.removedEndParts.ifPresent { relation.endParts() -= getInterfaceParts(relation.end().value, it) }
         templatedNodeService.updateTemplatedFields(relation, input, input.template.isPresent)
-        updateExtensibleNode(relation, input)
         return nodeRepository.saveAll(nodesToSave).collectList().awaitSingle().first { it == relation } as Relation
     }
 

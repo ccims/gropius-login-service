@@ -2,7 +2,7 @@ package gropius.model.user.permission
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
-import gropius.model.common.Named
+import gropius.model.common.NamedNode
 import gropius.model.user.GropiusUser
 import io.github.graphglue.model.*
 
@@ -19,15 +19,8 @@ const val ENTRIES_DESCRIPTION = "All permissions this Permission grants"
  */
 @DomainNode
 abstract class BasePermission(
-    @property:GraphQLDescription("The name of this entity.")
-    @FilterProperty
-    @OrderProperty
-    @SearchProperty
-    override var name: String,
-    @property:GraphQLDescription("The description of this entity.")
-    @FilterProperty
-    @SearchProperty
-    override var description: String,
+    name: String,
+    description: String,
     @GraphQLIgnore
     @SearchProperty
     open val entries: MutableList<String>,
@@ -35,7 +28,7 @@ abstract class BasePermission(
     @FilterProperty
     @OrderProperty
     var allUsers: Boolean,
-) : Node(), Named {
+) : NamedNode(name, description) {
 
     @NodeRelationship(GropiusUser.PERMISSION, Direction.INCOMING)
     @GraphQLDescription("GropiusUsers granted this Permission")

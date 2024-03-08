@@ -2,6 +2,7 @@ package gropius.model.issue
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import gropius.model.architecture.RelationPartner
+import gropius.model.common.BaseNode
 import gropius.model.template.IssueType
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
@@ -29,7 +30,7 @@ class AggregatedIssue(
     @FilterProperty
     @property:GraphQLDescription("If aggregated issues are open or closed.")
     val isOpen: Boolean
-) : Node() {
+) : BaseNode() {
 
     companion object {
         const val TYPE = "TYPE"

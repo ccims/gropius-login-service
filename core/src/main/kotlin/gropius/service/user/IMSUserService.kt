@@ -8,7 +8,7 @@ import gropius.model.user.IMSUser
 import gropius.repository.architecture.IMSRepository
 import gropius.repository.findById
 import gropius.repository.user.IMSUserRepository
-import gropius.service.common.AbstractExtensibleNodeService
+import gropius.service.common.NodeService
 import gropius.service.template.TemplatedNodeService
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
@@ -25,7 +25,7 @@ class IMSUserService(
     repository: IMSUserRepository,
     private val imsRepository: IMSRepository,
     private val templatedNodeService: TemplatedNodeService
-) : AbstractExtensibleNodeService<IMSUser, IMSUserRepository>(repository) {
+) : NodeService<IMSUser, IMSUserRepository>(repository) {
 
     /**
      * Creates a new [IMSUser] based on the provided [input]
@@ -46,7 +46,6 @@ class IMSUserService(
         if (input.gropiusUser != null) {
             imsUser.gropiusUser().value = gropiusUserRepository.findById(input.gropiusUser)
         }
-        createdExtensibleNode(imsUser, input)
         return repository.save(imsUser).awaitSingle()
     }
 
@@ -78,7 +77,6 @@ class IMSUserService(
             }
         }
         templatedNodeService.updateTemplatedFields(imsUser, input, false)
-        updateExtensibleNode(imsUser, input)
         return repository.save(imsUser).awaitSingle()
     }
 

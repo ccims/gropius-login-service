@@ -3,7 +3,7 @@ package gropius.dto.input.architecture
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.UpdateExtensibleNodeInput
+import gropius.dto.input.common.UpdateNodeInput
 import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.ifPresent
 import gropius.dto.input.template.UpdateTemplatedNodeInput
@@ -12,7 +12,7 @@ import gropius.dto.input.template.UpdateTemplatedNodeInput
 class UpdateIMSProjectInput(
     @GraphQLDescription("Values for templatedFields to update")
     override val templatedFields: OptionalInput<List<JSONFieldInput>>
-) : UpdateExtensibleNodeInput(), UpdateTemplatedNodeInput {
+) : UpdateNodeInput(), UpdateTemplatedNodeInput {
 
     override fun validate() {
         super.validate()

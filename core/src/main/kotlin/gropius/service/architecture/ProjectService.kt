@@ -53,7 +53,6 @@ class ProjectService(
             user, Permission(GlobalPermission.CAN_CREATE_PROJECTS, authorizationContext), "create Projects"
         )
         val project = Project(input.name, input.description, input.repositoryURL)
-        createdExtensibleNode(project, input)
         projectPermissionService.createDefaultPermission(user, project)
         return repository.save(project).awaitSingle()
     }

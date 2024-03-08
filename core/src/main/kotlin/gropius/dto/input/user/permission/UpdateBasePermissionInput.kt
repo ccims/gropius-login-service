@@ -3,6 +3,7 @@ package gropius.dto.input.user.permission
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
+import gropius.dto.input.common.UpdateNamedNodeInput
 import gropius.dto.input.common.UpdateNodeInput
 import gropius.dto.input.ensureDisjoint
 import gropius.dto.input.ifPresent
@@ -12,13 +13,7 @@ import kotlin.properties.Delegates
 /**
  * Fragment for update mutation inputs for classes extending [BasePermission]
  */
-abstract class UpdateBasePermissionInput : UpdateNodeInput() {
-
-    @GraphQLDescription("The new name of the NamedNode, must not be empty")
-    var name: OptionalInput<String> by Delegates.notNull()
-
-    @GraphQLDescription("The description of the BasePermission")
-    var description: OptionalInput<String> by Delegates.notNull()
+abstract class UpdateBasePermissionInput : UpdateNamedNodeInput() {
 
     @GraphQLDescription("The new value for allUsers")
     var allUsers: OptionalInput<Boolean> by Delegates.notNull()

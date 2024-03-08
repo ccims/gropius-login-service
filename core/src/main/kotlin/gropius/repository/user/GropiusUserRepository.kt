@@ -27,6 +27,6 @@ interface GropiusUserRepository : GropiusRepository<GropiusUser, String> {
      */
     suspend fun findByUsername(username: String): GropiusUser?
 
-    @Query("MATCH (n:`GropiusUser`:`User`:`ExtensibleNode`:`Node`) RETURN n.id")
+    @Query("MATCH (n:`GropiusUser`:`User`:`BaseNode`:`Node`) RETURN n.id")
     suspend fun findAllIds(): List<String>
 }
