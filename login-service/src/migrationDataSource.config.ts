@@ -21,7 +21,7 @@ async function getDataSource(): Promise<DataSource> {
     const { ConfigModule } = await import("@nestjs/config");
 
     const app = await NestFactory.create(AppModule, {
-        logger: ["error", "warn"],
+        logger: ["error", "warn", "log"],
     });
 
     setEnvVariables();
