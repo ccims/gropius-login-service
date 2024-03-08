@@ -166,6 +166,9 @@ export class JiraStrategyService extends StrategyUsingPassport {
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
             jira_id: loginData.data["jira_id"],
+            username: loginData.data["username"],
+            displayName: loginData.data["displayName"],
+            email: loginData.data["email"],
         };
     }
 

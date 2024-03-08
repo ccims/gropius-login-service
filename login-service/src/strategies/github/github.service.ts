@@ -110,6 +110,9 @@ export class GithubStrategyService extends StrategyUsingPassport {
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
             github_id: loginData.data["github_id"],
+            username: loginData.data["username"],
+            displayName: loginData.data["displayName"],
+            email: loginData.data["email"],
         };
     }
 
@@ -168,12 +171,12 @@ export class GithubStrategyService extends StrategyUsingPassport {
         const dataActiveLogin = { accessToken, refreshToken };
         const dataUserLoginData = {
             username,
-            github_id: profile.id,
+            github_id: parseInt(profile.id),
             email: profile.emails?.[0]?.value,
             displayName: profile.displayName,
         };
         const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {
-            github_id: profile.id,
+            github_id: parseInt(profile.id),
         });
         if (loginDataCandidates.length != 1) {
             this.loggerGithub.debug("Oauth login didn't find unique login data", loginDataCandidates);

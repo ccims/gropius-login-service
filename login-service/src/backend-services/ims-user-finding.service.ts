@@ -174,12 +174,22 @@ export class ImsUserFindingService {
      * @param data The object for which to wrap the values in (string) filters
      * @returns The filter object
      */
-    private transformObjectToFilterObject(data: { [key: string]: string }): { [key: string]: { eq: string } } {
-        const filterObject: { [key: string]: { eq: string } } = {};
+    private transformObjectToFilterObject(data: { [key: string]: string }): {
+        [key: string]: { eq: string } | { isNull: true };
+    } {
+        const filterObject: { [key: string]: { eq: string } | { isNull: true } } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                filterObject[key] = { eq: value };
+                if (value === null) {
+                    //filterObject[key] = { isNull: true };
+                } else if (value === undefined) {
+                    //filterObject[key] = { isNull: true };
+                    this.logger.warn("Undefined value in object", key, data);
+                    //throw new Error("Cannot filter for undefined");
+                } else {
+                    filterObject[key] = { eq: value };
+                }
             }
         }
         return filterObject;
