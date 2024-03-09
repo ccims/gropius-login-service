@@ -1836,8 +1836,8 @@ class IssueService(
             val event = changeIssueRelationType(
                 issueRelation, oldType, newType, OffsetDateTime.now(), getUser(authorizationContext)
             )
-            repository.save(issueRelation.relatedIssue().value!!).awaitSingle()
-            timelineItemRepository.save(event).awaitSingle()
+            nodeRepository.saveAll(listOf(event, issueRelation.relatedIssue().value!!)).collectList().awaitSingle()
+                .first { it is OutgoingRelationTypeChangedEvent } as OutgoingRelationTypeChangedEvent
         } else {
             null
         }
@@ -2104,7 +2104,9 @@ class IssueService(
     ) {
         if (comment.createdBy().value != user) {
             checkPermission(
-                comment.issue().value, Permission(TrackablePermission.MODERATOR, authorizationContext), "update the IssueComment"
+                comment.issue().value,
+                Permission(TrackablePermission.MODERATOR, authorizationContext),
+                "update the IssueComment"
             )
         } else {
             checkPermission(
