@@ -1065,6 +1065,10 @@ export type GropiusUserFilterInput = {
   and?: InputMaybe<Array<GropiusUserFilterInput>>;
   /** Filter by assignments */
   assignments?: InputMaybe<AssignmentListFilterInput>;
+  /** Filter by canSyncOthers */
+  canSyncOthers?: InputMaybe<SyncPermissionTargetListFilterInput>;
+  /** Filter by canSyncSelf */
+  canSyncSelf?: InputMaybe<SyncPermissionTargetListFilterInput>;
   /** Filter by createdNodes */
   createdNodes?: InputMaybe<AuditedNodeListFilterInput>;
   /** Filter by displayName */
@@ -1145,6 +1149,10 @@ export type ImsFilterInput = {
   permissions?: InputMaybe<ImsPermissionListFilterInput>;
   /** Filter by projects */
   projects?: InputMaybe<ImsProjectListFilterInput>;
+  /** Filter by syncOthersAllowedBy */
+  syncOthersAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+  /** Filter by syncSelfAllowedBy */
+  syncSelfAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<ImsTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1306,16 +1314,24 @@ export enum ImsPermissionOrderField {
 export type ImsProjectFilterInput = {
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<ImsProjectFilterInput>>;
+  /** Filter by description */
+  description?: InputMaybe<StringFilterInput>;
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
   /** Filters for nodes where the related node match this filter */
   ims?: InputMaybe<ImsFilterInput>;
   /** Filter by imsIssues */
   imsIssues?: InputMaybe<ImsIssueListFilterInput>;
+  /** Filter by name */
+  name?: InputMaybe<StringFilterInput>;
   /** Negates the subformula */
   not?: InputMaybe<ImsProjectFilterInput>;
   /** Connects all subformulas via or */
   or?: InputMaybe<Array<ImsProjectFilterInput>>;
+  /** Filter by syncOthersAllowedBy */
+  syncOthersAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+  /** Filter by syncSelfAllowedBy */
+  syncSelfAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<ImsProjectTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1345,7 +1361,9 @@ export type ImsProjectOrder = {
 /** Fields a list of IMSProject can be sorted by */
 export enum ImsProjectOrderField {
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by name */
+  Name = 'NAME'
 }
 
 /** Filter used to filter IMSProjectTemplate */
@@ -3210,6 +3228,52 @@ export type StringFilterInput = {
   /** Matches Strings which start with the provided value */
   startsWith?: InputMaybe<Scalars['String']>;
 };
+
+/** Filter used to filter SyncPermissionTarget */
+export type SyncPermissionTargetFilterInput = {
+  /** Connects all subformulas via and */
+  and?: InputMaybe<Array<SyncPermissionTargetFilterInput>>;
+  /** Filter by description */
+  description?: InputMaybe<StringFilterInput>;
+  /** Filter by id */
+  id?: InputMaybe<IdFilterInput>;
+  /** Filter by name */
+  name?: InputMaybe<StringFilterInput>;
+  /** Negates the subformula */
+  not?: InputMaybe<SyncPermissionTargetFilterInput>;
+  /** Connects all subformulas via or */
+  or?: InputMaybe<Array<SyncPermissionTargetFilterInput>>;
+  /** Filter by syncOthersAllowedBy */
+  syncOthersAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+  /** Filter by syncSelfAllowedBy */
+  syncSelfAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type SyncPermissionTargetListFilterInput = {
+  /** Filters for nodes where all of the related nodes match this filter */
+  all?: InputMaybe<SyncPermissionTargetFilterInput>;
+  /** Filters for nodes where any of the related nodes match this filter */
+  any?: InputMaybe<SyncPermissionTargetFilterInput>;
+  /** Filters for nodes where none of the related nodes match this filter */
+  none?: InputMaybe<SyncPermissionTargetFilterInput>;
+};
+
+/** Defines the order of a SyncPermissionTarget list */
+export type SyncPermissionTargetOrder = {
+  /** The direction to order by, defaults to ASC */
+  direction?: InputMaybe<OrderDirection>;
+  /** The field to order by, defaults to ID */
+  field?: InputMaybe<SyncPermissionTargetOrderField>;
+};
+
+/** Fields a list of SyncPermissionTarget can be sorted by */
+export enum SyncPermissionTargetOrderField {
+  /** Order by id */
+  Id = 'ID',
+  /** Order by name */
+  Name = 'NAME'
+}
 
 /** Filter used to filter TimelineItem */
 export type TimelineItemFilterInput = {

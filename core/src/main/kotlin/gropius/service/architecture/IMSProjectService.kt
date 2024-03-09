@@ -17,6 +17,7 @@ import gropius.repository.architecture.IMSRepository
 import gropius.repository.architecture.TrackableRepository
 import gropius.repository.common.NodeRepository
 import gropius.repository.findById
+import gropius.service.common.NamedNodeService
 import gropius.service.common.NodeService
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
@@ -43,7 +44,7 @@ class IMSProjectService(
     private val imsIssueRepository: IMSIssueRepository,
     private val templatedNodeService: TemplatedNodeService,
     private val nodeRepository: NodeRepository
-) : NodeService<IMSProject, IMSProjectRepository>(repository) {
+) : NamedNodeService<IMSProject, IMSProjectRepository>(repository) {
 
     /**
      * Creates a new [IMSProject] based on the provided [input]
@@ -69,7 +70,7 @@ class IMSProjectService(
         )
         val template = ims.template().value.imsProjectTemplate().value
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
-        val imsProject = IMSProject(templatedFields)
+        val imsProject = IMSProject(input.name, input.description, templatedFields)
         imsProject.template().value = template
         imsProject.ims().value = ims
         imsProject.trackable().value = trackable
@@ -99,6 +100,7 @@ class IMSProjectService(
             Permission(TrackablePermission.MANAGE_IMS, authorizationContext),
             "update the IMSProject due to missing Permission on the Trackable"
         )
+        updateNamedNode(imsProject, input)
         templatedNodeService.updateTemplatedFields(imsProject, input)
         return repository.save(imsProject).awaitSingle()
     }
