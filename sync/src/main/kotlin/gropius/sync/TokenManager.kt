@@ -142,8 +142,8 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
     suspend fun <T> executeUntilWorking(
         ims: IMS, user: List<User>, executor: suspend (token: ResponseType) -> Optional<T>
     ): Pair<IMSUser, T> {
-        val users = user.map { getPossibleUsersForUser(ims, it) }.flatten()
-        logger.info("Expanding $user to $users")
+        val users = user.map { getPossibleUsersForUser(ims, it) }.flatten().distinct()
+        logger.info("Expanding ${user.map { "${it::class.simpleName}:${it.rawId}(${it.username})" }} to ${users.map { "${it::class.simpleName}:${it.rawId}(${it.username})" }}")
         return executeUntilWorking(users, executor)
     }
 

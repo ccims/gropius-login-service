@@ -295,7 +295,7 @@ final class JiraSync(
             imsProject,
             listOf(issue.createdBy().value, issue.lastModifiedBy().value) + issue.timelineItems()
                 .map { it.createdBy().value },
-            HttpMethod.Put,
+            HttpMethod.Post,
             IssueQueryRequest(
                 IssueQueryRequestFields(
                     issue.title,

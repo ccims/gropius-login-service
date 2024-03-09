@@ -28,10 +28,15 @@ class IssueWalker(
 
     override suspend fun execute(): GithubGithubResourceWalkerBudgetUsageType {
         try {
+            println("E1")
             val newestIssue = issuePileService.findFirstByImsProjectOrderByLastUpdateDesc(imsProject.rawId!!)
+            println("E2")
             val since = newestIssue?.lastUpdate
+            println("E3")
             var cursor: String? = null
+            println("E4")
             do {
+                println("E5")
                 val query = IssueReadQuery(
                     repoOwner = config.remoteOwner,
                     repoName = config.remoteRepo,
@@ -39,24 +44,36 @@ class IssueWalker(
                     cursor = cursor,
                     issueCount = config.count
                 )
+                println("E6")
                 val response = githubDataService.query(imsProject, listOf(), query).second
+                println("E7")
                 cursor = if (response.data?.repository?.issues?.pageInfo?.hasNextPage == true) {
+                    println("E8")
                     response.data?.repository?.issues?.pageInfo?.endCursor
                 } else null;
+                println("E9")
                 val isRateLimited = response.errors?.any {
+                    println("E10")
                     it.nonStandardFields?.get("type") == "RATE_LIMITED"
                 } ?: false
+                println("E11")
                 if (isRateLimited) {
+                    println("E12")
                     return GithubGithubResourceWalkerBudgetUsageType()//TODO: rate limit max err
                 }
+                println("E13")
                 if (response.errors?.isEmpty() != false) {
+                    println("E14")
                     response.data?.repository?.issues?.nodes?.forEach {
+                        println("E15")
                         issuePileService.integrateIssue(
                             imsProject, it!!
                         )
                     }
                 }
+                println("E16")
             } while (cursor != null);
+            println("E17")
         } catch (e: ApolloException) {
             e.printStackTrace()
         }

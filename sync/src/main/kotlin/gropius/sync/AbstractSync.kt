@@ -80,7 +80,7 @@ abstract class AbstractSync(
     /**
      * Currently active dereplicator
      */
-    val issueDereplicator: IssueDereplicator = InvasiveDereplicator()
+    val issueDereplicator: IssueDereplicator = HeuristicDereplicator(1.0, 1.0)
 
     /**
      * Get the currently unsynced issue for an IMSProject

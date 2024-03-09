@@ -1,6 +1,5 @@
 package gropius.sync.github.config
 
-import com.lectra.koson.arr
 import com.lectra.koson.obj
 import gropius.model.template.*
 import kotlinx.coroutines.flow.filter
@@ -87,7 +86,7 @@ class IMSConfigManager(
         private val IMS_USER_TEMPLATE_FIELDS = mapOf(
             "github_id" to obj {
                 "nullable" to true
-                "type" to "string"
+                "type" to "int32"
             }.toString()
         )
     }

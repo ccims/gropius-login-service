@@ -5,16 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Label
 import gropius.model.template.*
+import gropius.model.user.GropiusUser
 import gropius.model.user.IMSUser
 import gropius.model.user.User
+import gropius.repository.user.GropiusUserRepository
 import gropius.sync.JsonHelper
 import gropius.sync.SyncDataService
 import gropius.sync.jira.config.IMSConfig
 import gropius.sync.jira.config.IMSProjectConfig
-import gropius.sync.user.UserMapper
 import gropius.util.JsonNodeMapper
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
@@ -34,18 +36,17 @@ import java.util.*
 
 /**
  * Context for Jira Operations
- * @param userMapper UserMapper to map Jira Users to Gropius Users
  * @param neoOperations Neo4jOperations to access the database
  */
 @Component
 class JiraDataService(
-    val userMapper: UserMapper,
     @Qualifier("graphglueNeo4jOperations")
     val neoOperations: ReactiveNeo4jOperations,
     val tokenManager: JiraTokenManager,
     val helper: JsonHelper,
     val objectMapper: ObjectMapper,
-    val jsonNodeMapper: JsonNodeMapper
+    val jsonNodeMapper: JsonNodeMapper,
+    val gropiusUserRepository: GropiusUserRepository
 ) : SyncDataService {
 
     /**
@@ -129,7 +130,8 @@ class JiraDataService(
         val labels = trackable.labels().filter { it.name == label }
         if (labels.isEmpty()) {
             val label = Label(OffsetDateTime.now(), OffsetDateTime.now(), label, "Jira Label", "000000")
-            label.createdBy().value = userMapper.mapUser(imsProject, "jira-user")
+            label.createdBy().value =
+                gropiusUserRepository.findByUsername("jira") ?: GropiusUser("Jira", null, null, "jira", true)
             label.lastModifiedBy().value = label.createdBy().value
             label.trackables() += trackable
             return neoOperations.save(label).awaitSingle()
@@ -148,6 +150,50 @@ class JiraDataService(
                 ignoreUnknownKeys = true
             }, contentType = ContentType.parse("application/json; charset=utf-8"))
         }
+    }
+
+    final suspend inline fun <reified T> sendRequest(
+        imsProject: IMSProject,
+        users: List<User>,
+        requestMethod: HttpMethod,
+        body: T? = null,
+        crossinline urlBuilder: URLBuilder .(URLBuilder) -> Unit,
+        token: JiraTokenResponse
+    ): Optional<HttpResponse> {
+        val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
+        val cloudId =
+            token.cloudIds?.filter { URI(it.url + "/rest/api/2") == URI(imsConfig.rootUrl.toString()) }?.map { it.id }
+                ?.firstOrNull()
+        println("CLOUDID: $cloudId from ${token.cloudIds}")
+        if (cloudId != null) {
+            try {
+                val res = client.request("https://api.atlassian.com/ex/jira/") {
+                    method = requestMethod
+                    url {
+                        appendPathSegments(cloudId)
+                        appendPathSegments("/rest/api/2/")
+                        urlBuilder(this)
+                    }
+                    headers {
+                        append(
+                            HttpHeaders.Authorization, "Bearer ${token.token}"
+                        )
+                    }
+                    if (body != null) {
+                        contentType(ContentType.parse("application/json; charset=utf-8"))
+                        setBody(body)
+                    }
+                }
+                logger.info("Response Code for request with token token is ${res.status} (${res.status == HttpStatusCode.OK}, ${HttpStatusCode.OK}, ${res.status.isSuccess()})")
+                return if (res.status.isSuccess()) {
+                    logger.trace("Response for ${res.request.url} ${res.bodyAsText()}")
+                    Optional.of(res)
+                } else Optional.empty()
+            } catch (e: ClientRequestException) {
+                e.printStackTrace()
+                return Optional.empty()
+            }
+        } else return Optional.empty()
     }
 
     final suspend inline fun <reified T> request(
@@ -169,34 +215,10 @@ class JiraDataService(
         }
         val userList = rawUserList.distinct()
         logger.info("Requesting with users: $userList")
-        return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
-            val cloudId = token.cloudIds?.filter { URI(it.url + "/rest/api/2") == URI(imsConfig.rootUrl.toString()) }
-                ?.map { it.id }?.firstOrNull()
-            println("CLOUDID: $cloudId from ${token.cloudIds}")
-            if (cloudId != null) {
-                val res = client.request("https://api.atlassian.com/ex/jira/") {
-                    method = requestMethod
-                    url {
-                        appendPathSegments(cloudId)
-                        appendPathSegments("/rest/api/2/")
-                        urlBuilder(this)
-                    }
-                    headers {
-                        append(
-                            HttpHeaders.Authorization, "Bearer ${token.token}"
-                        )
-                    }
-                    if (body != null) {
-                        contentType(ContentType.parse("application/json; charset=utf-8"))
-                        setBody(body)
-                    }
-                }
-                logger.info("Response Code for request with token token is ${res.status} (${res.status == HttpStatusCode.OK}, ${HttpStatusCode.OK}, ${res.status.isSuccess()})")
-                if (res.status.isSuccess()) {
-                    logger.trace("Response for ${res.request.url} ${res.bodyAsText()}")
-                    Optional.of(res)
-                } else Optional.empty()
-            } else Optional.empty()
+        return tokenManager.executeUntilWorking(imsProject.ims().value, userList) {
+            sendRequest<T>(
+                imsProject, users, requestMethod, body, urlBuilder, it
+            )
         }
     }
 }
