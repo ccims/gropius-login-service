@@ -12,7 +12,6 @@ import gropius.repository.user.GropiusUserRepository
 import gropius.sync.JsonHelper
 import gropius.sync.SyncDataService
 import gropius.sync.jira.config.IMSConfig
-import gropius.sync.jira.config.IMSProjectConfig
 import gropius.util.JsonNodeMapper
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -37,6 +36,11 @@ import java.util.*
 /**
  * Context for Jira Operations
  * @param neoOperations Neo4jOperations to access the database
+ * @param tokenManager Reference for the spring instance of JiraTokenManager
+ * @param helper Reference for the spring instance of JsonHelper
+ * @param objectMapper Reference for the spring instance of ObjectMapper
+ * @param jsonNodeMapper Reference for the spring instance of JsonNodeMapper
+ * @param gropiusUserRepository Reference for the spring instance of GropiusUserRepository
  */
 @Component
 class JiraDataService(
@@ -104,7 +108,6 @@ class JiraDataService(
         if (foundImsUser != null) {
             return foundImsUser
         }
-        println("FOUND NO USER FOR ${user.jsonObject["accountId"]!!.jsonPrimitive.content}")
         val imsUser = IMSUser(
             user.jsonObject["displayName"]?.jsonPrimitive?.content
                 ?: user.jsonObject["emailAddress"]?.jsonPrimitive?.content ?: "Unnamed User",
@@ -154,7 +157,6 @@ class JiraDataService(
 
     final suspend inline fun <reified T> sendRequest(
         imsProject: IMSProject,
-        users: List<User>,
         requestMethod: HttpMethod,
         body: T? = null,
         crossinline urlBuilder: URLBuilder .(URLBuilder) -> Unit,
@@ -164,7 +166,6 @@ class JiraDataService(
         val cloudId =
             token.cloudIds?.filter { URI(it.url + "/rest/api/2") == URI(imsConfig.rootUrl.toString()) }?.map { it.id }
                 ?.firstOrNull()
-        println("CLOUDID: $cloudId from ${token.cloudIds}")
         if (cloudId != null) {
             try {
                 val res = client.request("https://api.atlassian.com/ex/jira/") {
@@ -184,7 +185,7 @@ class JiraDataService(
                         setBody(body)
                     }
                 }
-                logger.info("Response Code for request with token token is ${res.status} (${res.status == HttpStatusCode.OK}, ${HttpStatusCode.OK}, ${res.status.isSuccess()})")
+                logger.info("Response Code for request with token token is ${res.status}(${res.status.isSuccess()}): $body is ${res.bodyAsText()}")
                 return if (res.status.isSuccess()) {
                     logger.trace("Response for ${res.request.url} ${res.bodyAsText()}")
                     Optional.of(res)
@@ -203,7 +204,6 @@ class JiraDataService(
         body: T? = null,
         crossinline urlBuilder: URLBuilder .(URLBuilder) -> Unit
     ): Pair<IMSUser, HttpResponse> {
-        val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         val rawUserList = users.toMutableList()
         if (imsConfig.readUser != null) {
@@ -217,7 +217,7 @@ class JiraDataService(
         logger.info("Requesting with users: $userList")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) {
             sendRequest<T>(
-                imsProject, users, requestMethod, body, urlBuilder, it
+                imsProject, requestMethod, body, urlBuilder, it
             )
         }
     }

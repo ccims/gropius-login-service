@@ -8,7 +8,6 @@ import java.net.URI
 
 /**
  * Config read out from a single IMS node
- * @param ims the Gropius ims to use as input
  * @param botUser the bot user string extracted from the template
  * @param readUser the read user string extracted from the template
  * @param rootUrl the read url extracted from the template

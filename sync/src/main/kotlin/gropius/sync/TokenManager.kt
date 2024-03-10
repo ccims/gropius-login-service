@@ -29,8 +29,18 @@ import java.util.*
 @ConfigurationProperties("gropius.sync")
 data class SyncConfigurationProperties(val loginServiceBase: URI, val apiSecret: String)
 
+/**
+ * Base class for Login Service API responses
+ */
 interface BaseResponseType {
+    /**
+     * Token from the login service
+     */
     val token: String?
+
+    /**
+     * If the IMSUser is known to the login service
+     */
     val isImsUserKnown: Boolean
 }
 

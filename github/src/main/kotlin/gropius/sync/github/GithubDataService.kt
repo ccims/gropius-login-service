@@ -43,6 +43,11 @@ import java.util.*
  * @param issuePileService the issue pile service to use
  * @param neoOperations Reference for the spring instance of ReactiveNeo4jOperations
  * @param labelInfoRepository the label info repository to use
+ * @param tokenManager Reference for the spring instance of GithubTokenManager
+ * @param helper Reference for the spring instance of JsonHelper
+ * @param objectMapper Reference for the spring instance of ObjectMapper
+ * @param jsonNodeMapper Reference for the spring instance of JsonNodeMapper
+ * @param gropiusUserRepository Reference for the spring instance of GropiusUserRepository
  */
 @Component
 class GithubDataService(
@@ -95,7 +100,6 @@ class GithubDataService(
         }
         val encodedAccountId =
             jsonNodeMapper.jsonNodeToDeterministicString(objectMapper.valueToTree<JsonNode>(userData?.asUser()?.databaseId))
-        println("FOUND NO USER FOR $userData with $encodedAccountId")
         val imsUser = IMSUser(
             userData?.asUser()?.name ?: userData?.login ?: "github",
             userData?.asUser()?.email,
@@ -175,11 +179,10 @@ class GithubDataService(
         }
         logger.info("Requesting with users: $userList")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
-            println("Querying with token: ${token.token}")
             val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
                 .addHttpHeader("Authorization", "Bearer ${token.token}").build()
             val res = apolloClient.mutation(body).execute()
-            logger.info("Response Code for request with tokenG1 $token is ${res.data} ${res.errors}")
+            logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
             if (res.errors?.isNotEmpty() != true) Optional.of(res)
             else Optional.empty()
         }
@@ -201,13 +204,12 @@ class GithubDataService(
             }
             userList.add(imsUser)
         }
-        logger.info("Requesting with users: $userList")
+        logger.info("Requesting with users: $userList ")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
-            println("Querying with token: ${token.token}")
             val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
                 .addHttpHeader("Authorization", "Bearer ${token.token}").build()
             val res = apolloClient.query(body).execute()
-            logger.info("Response Code for request with tokenG2 $token is ${res.data} ${res.errors}")
+            logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
             if (res.errors?.isNotEmpty() != true) Optional.of(res)
             else Optional.empty()
         }
