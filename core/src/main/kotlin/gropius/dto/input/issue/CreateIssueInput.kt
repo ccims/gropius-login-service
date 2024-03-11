@@ -2,7 +2,7 @@ package gropius.dto.input.issue
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.scalars.ID
-import gropius.dto.input.common.CreateExtensibleNodeInput
+import gropius.dto.input.common.Input
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.template.CreateTemplatedNodeInput
@@ -23,7 +23,7 @@ class CreateIssueInput(
     val type: ID,
     @GraphQLDescription("The id of the state of the created Issue, must be compatible with template ")
     val state: ID
-) : CreateExtensibleNodeInput(), CreateTemplatedNodeInput {
+) : Input(), CreateTemplatedNodeInput {
 
     override fun validate() {
         super.validate()

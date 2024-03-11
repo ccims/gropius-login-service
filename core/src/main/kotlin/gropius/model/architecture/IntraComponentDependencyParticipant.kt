@@ -1,7 +1,7 @@
 package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 
@@ -13,7 +13,7 @@ import io.github.graphglue.model.*
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["interface", "usedAsIncomingAt", "usedAsOutgoingAt"])
-class IntraComponentDependencyParticipant : ExtensibleNode() {
+class IntraComponentDependencyParticipant : BaseNode() {
 
     companion object {
         const val INTERFACE = "INTERFACE"

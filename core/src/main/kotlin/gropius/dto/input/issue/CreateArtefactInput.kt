@@ -2,7 +2,7 @@ package gropius.dto.input.issue
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.scalars.ID
-import gropius.dto.input.common.CreateExtensibleNodeInput
+import gropius.dto.input.common.Input
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.template.CreateTemplatedNodeInput
@@ -24,7 +24,7 @@ class CreateArtefactInput(
     val version: String?,
     @GraphQLDescription("ID of the Trackable the created Artefact is part of")
     val trackable: ID
-) : CreateExtensibleNodeInput(), CreateTemplatedNodeInput {
+) : Input(), CreateTemplatedNodeInput {
 
     override fun validate() {
         super.validate()

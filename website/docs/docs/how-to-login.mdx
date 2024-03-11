@@ -18,7 +18,7 @@ Some steps taken in this how to might however NOT be appropriate for a productio
 1. Run the services and - if desired - access the `/login-debug` page
 1. Get an access token for the default user by logging in using the userpass strategy
 1. Configure/Create one (or more) OAuth clients with the desired redirect URL and - if desired - client secrets
-1. [Create a GitHub OAuth App](https://github.com/settings/applications/new) and retrieve the client id and client secret
+1. [Create a GitHub OAuth App](https://github.com/settings/applications/new) and retrieve the client id and client secret (https://developer.atlassian.com/console/myapps/)
 1. Create/Configure a github-strategy instance with the client id and secret (enable login, sync and if desired self & implicit registration)
 1. Run the redirect OAuth flowusing the github-strategy instance and an OAuth client
     a. Choose between login(/implicit-register), register or register with sync

@@ -2,7 +2,6 @@ package gropius.dto.input.template
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.scalars.ID
-import gropius.dto.input.common.CreateExtensibleNodeInput
 import gropius.dto.input.common.Input
 
 @GraphQLDescription("Input to create a InterfaceSpecificationDerivationCondition")

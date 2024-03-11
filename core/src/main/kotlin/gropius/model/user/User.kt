@@ -3,7 +3,7 @@ package gropius.model.user
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.common.AuditedNode
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.issue.Issue
 import gropius.model.issue.timeline.Assignment
 import gropius.model.user.permission.NodePermission
@@ -38,7 +38,7 @@ abstract class User(
     @OrderProperty
     @SearchProperty
     var username: String?,
-) : ExtensibleNode() {
+) : BaseNode() {
 
     @GraphQLDescription(
         """The identifier of the user.

@@ -54,7 +54,19 @@ class ComponentVersionService(
         input.validate()
         updateInterfaceSpecificationOnComponentVersion(
             authorizationContext, input.componentVersion, input.interfaceSpecificationVersion
-        ) { graphUpdater, componentVersion, interfaceSpecificationVersion ->
+        ) { graphUpdater, componentVersion, component, interfaceSpecificationVersion ->
+            val componentTemplate = component.template().value
+            val interfaceSpecificationTemplate = interfaceSpecificationVersion.interfaceSpecification().value.template().value
+            if (input.visible && componentTemplate !in interfaceSpecificationTemplate.canBeVisibleOnComponents()) {
+                throw IllegalArgumentException(
+                    "InterfaceSpecificationVersion ${interfaceSpecificationVersion.rawId} cannot be visible ComponentTemplate on ${componentTemplate.rawId}"
+                )
+            }
+            if (input.invisible && componentTemplate !in interfaceSpecificationTemplate.canBeInvisibleOnComponents()) {
+                throw IllegalArgumentException(
+                    "InterfaceSpecificationVersion ${interfaceSpecificationVersion.rawId} cannot be invisible on ComponentTemplate ${componentTemplate.rawId}"
+                )
+            }
             graphUpdater.addInterfaceSpecificationVersionToComponentVersion(
                 interfaceSpecificationVersion, componentVersion, input.visible, input.invisible
             )
@@ -78,7 +90,7 @@ class ComponentVersionService(
         input.validate()
         updateInterfaceSpecificationOnComponentVersion(
             authorizationContext, input.componentVersion, input.interfaceSpecificationVersion
-        ) { graphUpdater, componentVersion, interfaceSpecificationVersion ->
+        ) { graphUpdater, componentVersion, _, interfaceSpecificationVersion ->
             graphUpdater.removeInterfaceSpecificationVersionFromComponentVersion(
                 interfaceSpecificationVersion, componentVersion, input.visible, input.invisible
             )
@@ -102,7 +114,7 @@ class ComponentVersionService(
         authorizationContext: GropiusAuthorizationContext,
         componentVersionId: ID,
         interfaceSpecificationId: ID,
-        updateFunction: suspend (ComponentGraphUpdater, ComponentVersion, InterfaceSpecificationVersion) -> Any
+        updateFunction: suspend (ComponentGraphUpdater, ComponentVersion, Component, InterfaceSpecificationVersion) -> Any
     ) {
         val componentVersion = repository.findById(componentVersionId)
         checkPermission(
@@ -118,7 +130,7 @@ class ComponentVersionService(
             )
         }
         val graphUpdater = ComponentGraphUpdater()
-        updateFunction(graphUpdater, componentVersion, interfaceSpecificationVersion)
+        updateFunction(graphUpdater, componentVersion, component, interfaceSpecificationVersion)
         graphUpdater.save(nodeRepository)
     }
 
@@ -163,7 +175,6 @@ class ComponentVersionService(
         val componentVersion =
             ComponentVersion(input.name, input.description, input.version, templatedFields)
         componentVersion.template().value = template
-        createdExtensibleNode(componentVersion, input)
         return componentVersion
     }
 

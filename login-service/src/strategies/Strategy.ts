@@ -134,8 +134,10 @@ export abstract class Strategy {
         return {};
     }
 
-    getSyncTokenForLoginData(loginData: UserLoginData): string | null | Promise<string | null> {
-        return null;
+    getSyncDataForLoginData(
+        loginData: UserLoginData,
+    ): { token: string | null; [key: string]: any } | Promise<{ token: string | null; [key: string]: any }> {
+        return { token: null };
     }
 
     /**

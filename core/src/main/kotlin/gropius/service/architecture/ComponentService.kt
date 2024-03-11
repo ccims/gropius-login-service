@@ -73,7 +73,6 @@ class ComponentService(
                 componentVersionService.createComponentVersion(component, it)
             }
         }
-        createdExtensibleNode(component, input)
         componentPermissionService.createDefaultPermission(user, component)
         return repository.save(component).awaitSingle()
     }

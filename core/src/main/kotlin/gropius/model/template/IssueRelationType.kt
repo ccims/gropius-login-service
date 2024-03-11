@@ -13,7 +13,14 @@ import io.github.graphglue.model.*
     """
 )
 @Authorization(NodePermission.READ, allowAll = true)
-class IssueRelationType(name: String, description: String) : NamedNode(name, description) {
+class IssueRelationType(
+    name: String,
+    description: String,
+    @property:GraphQLDescription("The name of the relation from the inverse (incoming) perspective")
+    @FilterProperty
+    @OrderProperty
+    val inverseName: String
+) : NamedNode(name, description) {
 
     companion object {
         const val PART_OF = "PART_OF"

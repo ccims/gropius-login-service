@@ -174,12 +174,16 @@ export class ImsUserFindingService {
      * @param data The object for which to wrap the values in (string) filters
      * @returns The filter object
      */
-    private transformObjectToFilterObject(data: { [key: string]: string }): { [key: string]: { eq: string } } {
-        const filterObject: { [key: string]: { eq: string } } = {};
+    private transformObjectToFilterObject(data: { [key: string]: string }): {
+        [key: string]: { eq: string } | { isNull: true };
+    } {
+        const filterObject: { [key: string]: { eq: string } | { isNull: true } } = {};
         for (const key in data) {
             if (Object.prototype.hasOwnProperty.call(data, key)) {
                 const value = data[key];
-                filterObject[key] = { eq: value };
+                if (value !== null && value !== undefined) {
+                    filterObject[key] = { eq: value };
+                }
             }
         }
         return filterObject;

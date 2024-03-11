@@ -8,6 +8,7 @@ import { StrategiesMiddleware } from "./strategies.middleware";
 import { UserpassStrategyService } from "./userpass/userpass.service";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { GithubStrategyService } from "./github/github.service";
+import { JiraStrategyService } from "./jira/jira.service";
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { GithubStrategyService } from "./github/github.service";
         PerformAuthFunctionService,
         UserpassStrategyService,
         GithubStrategyService,
+        JiraStrategyService,
         { provide: "PassportStateJwt", useExisting: JwtService },
         ModeExtractorMiddleware,
         StrategiesMiddleware,

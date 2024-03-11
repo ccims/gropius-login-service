@@ -2,7 +2,7 @@ package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.issue.Issue
 import gropius.model.template.BaseTemplate
 import gropius.model.template.IMSIssueTemplate
@@ -23,7 +23,7 @@ class IMSIssue(
     @property:GraphQLIgnore
     @CompositeProperty
     override val templatedFields: MutableMap<String, String>
-) : ExtensibleNode(), TemplatedNode {
+) : BaseNode(), TemplatedNode {
 
     companion object {
         const val PROJECT = "PROJECT"

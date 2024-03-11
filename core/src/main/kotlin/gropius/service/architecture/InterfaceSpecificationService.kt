@@ -87,7 +87,6 @@ class InterfaceSpecificationService(
         val interfaceSpecification = InterfaceSpecification(input.name, input.description, templatedFields)
         interfaceSpecification.template().value = template
         interfaceSpecification.component().value = component
-        createdExtensibleNode(interfaceSpecification, input)
         input.versions.ifPresent { inputs ->
             interfaceSpecification.versions() += inputs.map {
                 interfaceSpecificationVersionService.createInterfaceSpecificationVersion(

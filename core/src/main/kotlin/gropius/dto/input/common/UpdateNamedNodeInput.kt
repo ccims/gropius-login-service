@@ -9,7 +9,7 @@ import kotlin.properties.Delegates
 /**
  * Fragment for update mutation inputs for classes extending [NamedNode]
  */
-abstract class UpdateNamedNodeInput : UpdateExtensibleNodeInput() {
+abstract class UpdateNamedNodeInput : UpdateNodeInput() {
 
     @GraphQLDescription("The new name of the NamedNode, must not be empty")
     var name: OptionalInput<String> by Delegates.notNull()

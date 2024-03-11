@@ -572,8 +572,6 @@ export type BodyFilterInput = {
   and?: InputMaybe<Array<BodyFilterInput>>;
   /** Filter by answeredBy */
   answeredBy?: InputMaybe<IssueCommentListFilterInput>;
-  /** Filter by body */
-  body?: InputMaybe<StringFilterInput>;
   /** Filter by bodyLastEditedAt */
   bodyLastEditedAt?: InputMaybe<DateTimeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -614,8 +612,6 @@ export type CommentFilterInput = {
   and?: InputMaybe<Array<CommentFilterInput>>;
   /** Filter by answeredBy */
   answeredBy?: InputMaybe<IssueCommentListFilterInput>;
-  /** Filter by body */
-  body?: InputMaybe<StringFilterInput>;
   /** Filter by bodyLastEditedAt */
   bodyLastEditedAt?: InputMaybe<DateTimeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -989,8 +985,6 @@ export type CreateGropiusUserInput = {
   displayName: Scalars['String'];
   /** The email of the created User if present */
   email?: InputMaybe<Scalars['String']>;
-  /** The initial value of the extension fields */
-  extensionFields?: InputMaybe<Array<JsonFieldInput>>;
   /** If true, the created GropiusUser is a global admin */
   isAdmin: Scalars['Boolean'];
   /** The username of the created GropiusUser, must be unique, must match /^[a-zA-Z0-9_-]+$/ */
@@ -1003,8 +997,6 @@ export type CreateImsUserInput = {
   displayName: Scalars['String'];
   /** The email of the created User if present */
   email?: InputMaybe<Scalars['String']>;
-  /** The initial value of the extension fields */
-  extensionFields?: InputMaybe<Array<JsonFieldInput>>;
   /** If present, the id of the GropiusUser the created IMSUser is associated with */
   gropiusUser?: InputMaybe<Scalars['ID']>;
   /** The id of the IMS the created IMSUser is part of */
@@ -1073,6 +1065,10 @@ export type GropiusUserFilterInput = {
   and?: InputMaybe<Array<GropiusUserFilterInput>>;
   /** Filter by assignments */
   assignments?: InputMaybe<AssignmentListFilterInput>;
+  /** Filter by canSyncOthers */
+  canSyncOthers?: InputMaybe<SyncPermissionTargetListFilterInput>;
+  /** Filter by canSyncSelf */
+  canSyncSelf?: InputMaybe<SyncPermissionTargetListFilterInput>;
   /** Filter by createdNodes */
   createdNodes?: InputMaybe<AuditedNodeListFilterInput>;
   /** Filter by displayName */
@@ -1153,6 +1149,10 @@ export type ImsFilterInput = {
   permissions?: InputMaybe<ImsPermissionListFilterInput>;
   /** Filter by projects */
   projects?: InputMaybe<ImsProjectListFilterInput>;
+  /** Filter by syncOthersAllowedBy */
+  syncOthersAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+  /** Filter by syncSelfAllowedBy */
+  syncSelfAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<ImsTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1314,16 +1314,24 @@ export enum ImsPermissionOrderField {
 export type ImsProjectFilterInput = {
   /** Connects all subformulas via and */
   and?: InputMaybe<Array<ImsProjectFilterInput>>;
+  /** Filter by description */
+  description?: InputMaybe<StringFilterInput>;
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
   /** Filters for nodes where the related node match this filter */
   ims?: InputMaybe<ImsFilterInput>;
   /** Filter by imsIssues */
   imsIssues?: InputMaybe<ImsIssueListFilterInput>;
+  /** Filter by name */
+  name?: InputMaybe<StringFilterInput>;
   /** Negates the subformula */
   not?: InputMaybe<ImsProjectFilterInput>;
   /** Connects all subformulas via or */
   or?: InputMaybe<Array<ImsProjectFilterInput>>;
+  /** Filter by syncOthersAllowedBy */
+  syncOthersAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+  /** Filter by syncSelfAllowedBy */
+  syncSelfAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
   /** Filters for nodes where the related node match this filter */
   template?: InputMaybe<ImsProjectTemplateFilterInput>;
   /** Filter for templated fields with matching key and values. Entries are joined by AND */
@@ -1353,7 +1361,9 @@ export type ImsProjectOrder = {
 /** Fields a list of IMSProject can be sorted by */
 export enum ImsProjectOrderField {
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by name */
+  Name = 'NAME'
 }
 
 /** Filter used to filter IMSProjectTemplate */
@@ -2070,8 +2080,6 @@ export type IssueCommentFilterInput = {
   answeredBy?: InputMaybe<IssueCommentListFilterInput>;
   /** Filters for nodes where the related node match this filter */
   answers?: InputMaybe<CommentFilterInput>;
-  /** Filter by body */
-  body?: InputMaybe<StringFilterInput>;
   /** Filter by bodyLastEditedAt */
   bodyLastEditedAt?: InputMaybe<DateTimeFilterInput>;
   /** Filters for nodes where the related node match this filter */
@@ -2360,6 +2368,8 @@ export type IssueRelationTypeFilterInput = {
   description?: InputMaybe<StringFilterInput>;
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
+  /** Filter by inverseName */
+  inverseName?: InputMaybe<StringFilterInput>;
   /** Filter by name */
   name?: InputMaybe<StringFilterInput>;
   /** Negates the subformula */
@@ -2394,6 +2404,8 @@ export type IssueRelationTypeOrder = {
 export enum IssueRelationTypeOrderField {
   /** Order by id */
   Id = 'ID',
+  /** Order by inverseName */
+  InverseName = 'INVERSE_NAME',
   /** Order by name */
   Name = 'NAME'
 }
@@ -3217,6 +3229,52 @@ export type StringFilterInput = {
   startsWith?: InputMaybe<Scalars['String']>;
 };
 
+/** Filter used to filter SyncPermissionTarget */
+export type SyncPermissionTargetFilterInput = {
+  /** Connects all subformulas via and */
+  and?: InputMaybe<Array<SyncPermissionTargetFilterInput>>;
+  /** Filter by description */
+  description?: InputMaybe<StringFilterInput>;
+  /** Filter by id */
+  id?: InputMaybe<IdFilterInput>;
+  /** Filter by name */
+  name?: InputMaybe<StringFilterInput>;
+  /** Negates the subformula */
+  not?: InputMaybe<SyncPermissionTargetFilterInput>;
+  /** Connects all subformulas via or */
+  or?: InputMaybe<Array<SyncPermissionTargetFilterInput>>;
+  /** Filter by syncOthersAllowedBy */
+  syncOthersAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+  /** Filter by syncSelfAllowedBy */
+  syncSelfAllowedBy?: InputMaybe<GropiusUserListFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type SyncPermissionTargetListFilterInput = {
+  /** Filters for nodes where all of the related nodes match this filter */
+  all?: InputMaybe<SyncPermissionTargetFilterInput>;
+  /** Filters for nodes where any of the related nodes match this filter */
+  any?: InputMaybe<SyncPermissionTargetFilterInput>;
+  /** Filters for nodes where none of the related nodes match this filter */
+  none?: InputMaybe<SyncPermissionTargetFilterInput>;
+};
+
+/** Defines the order of a SyncPermissionTarget list */
+export type SyncPermissionTargetOrder = {
+  /** The direction to order by, defaults to ASC */
+  direction?: InputMaybe<OrderDirection>;
+  /** The field to order by, defaults to ID */
+  field?: InputMaybe<SyncPermissionTargetOrderField>;
+};
+
+/** Fields a list of SyncPermissionTarget can be sorted by */
+export enum SyncPermissionTargetOrderField {
+  /** Order by id */
+  Id = 'ID',
+  /** Order by name */
+  Name = 'NAME'
+}
+
 /** Filter used to filter TimelineItem */
 export type TimelineItemFilterInput = {
   /** Connects all subformulas via and */
@@ -3417,8 +3475,6 @@ export type UpdateImsUserInput = {
   displayName?: InputMaybe<Scalars['String']>;
   /** The new email of the User to update */
   email?: InputMaybe<Scalars['String']>;
-  /** Extension fields to update. To remove, provide no value */
-  extensionFields?: InputMaybe<Array<JsonFieldInput>>;
   /**
    * The id of the GropiusUser the updated IMSUser is associated with, replaces existing association
    *         or removes it if null is provided.

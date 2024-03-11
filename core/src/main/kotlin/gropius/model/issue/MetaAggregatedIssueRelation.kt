@@ -3,6 +3,7 @@ package gropius.model.issue
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
 import gropius.model.architecture.Component
+import gropius.model.common.BaseNode
 import gropius.model.issue.timeline.IssueRelation
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
@@ -13,7 +14,7 @@ import io.github.graphglue.model.*
     IssueRelations are aggregated by both start and end Issue.
     """
 )
-class MetaAggregatedIssueRelation(var count: Int) : Node() {
+class MetaAggregatedIssueRelation(var count: Int) : BaseNode() {
 
     companion object {
         const val META_ISSUE_RELATION = "META_ISSUE_RELATION"

@@ -1,7 +1,7 @@
 package gropius.model.template
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.user.permission.NodePermission
 import io.github.graphglue.model.*
 
@@ -32,7 +32,7 @@ class InterfaceSpecificationDerivationCondition(
     @property:GraphQLDescription("If true InterfaceSpecifications are invisible derived")
     @FilterProperty
     val isInvisibleDerived: Boolean
-) : ExtensibleNode() {
+) : BaseNode() {
 
     companion object {
         const val PART_OF = "PART_OF"

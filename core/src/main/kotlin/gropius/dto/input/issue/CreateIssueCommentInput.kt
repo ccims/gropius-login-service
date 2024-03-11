@@ -3,7 +3,7 @@ package gropius.dto.input.issue
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
-import gropius.dto.input.common.CreateExtensibleNodeInput
+import gropius.dto.input.common.Input
 
 @GraphQLDescription("Input for the createIssueComment mutation")
 class CreateIssueCommentInput(
@@ -15,4 +15,4 @@ class CreateIssueCommentInput(
     val body: String,
     @GraphQLDescription("Ids of initially referenced artefacts")
     val referencedArtefacts: OptionalInput<List<ID>>
-) : CreateExtensibleNodeInput()
+) : Input()
