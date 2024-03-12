@@ -38,7 +38,6 @@ import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.OffsetDateTime

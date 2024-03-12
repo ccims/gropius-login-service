@@ -3,3 +3,11 @@ graphql:
     - "gropius"
 graphglue:
   includeSkipField: true
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          neo4j:
+            cypher:
+              unrecognized: ERROR
