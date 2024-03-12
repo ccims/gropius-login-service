@@ -471,8 +471,8 @@ class IssueService(
         }
         val aggregationUpdater = IssueAggregationUpdater()
         aggregationUpdater.deletedIssue(issue)
+        aggregationUpdater.deletedNodes += prepareIssueDeletion(issue)
         aggregationUpdater.save(nodeRepository)
-        nodeRepository.deleteAll(prepareIssueDeletion(issue)).awaitSingleOrNull()
     }
 
     /**

@@ -10,6 +10,7 @@ import gropius.model.template.IssueState
 import gropius.model.template.IssueType
 import gropius.service.NodeBatchUpdateContext
 import gropius.service.NodeBatchUpdater
+import gropius.service.architecture.GraphUpdater
 
 /**
  * Helper class to handle anything AggregatedIssue related.
@@ -17,7 +18,7 @@ import gropius.service.NodeBatchUpdater
  */
 class IssueAggregationUpdater(
     updateContext: NodeBatchUpdater = NodeBatchUpdateContext()
-) : NodeBatchUpdater by updateContext {
+) : GraphUpdater(updateContext) {
 
     /**
      * Should be called when the state or type of an issue was changed.
@@ -159,6 +160,20 @@ class IssueAggregationUpdater(
             val other = relation.relatedIssue(cache).value
             other?.trackables?.let { it(cache) }?.forEach {
                 removeFromMetaAggregatedRelation(trackable, it, relation)
+            }
+        }
+    }
+
+    /**
+     * Should be called when a [ComponentVersion] is created.
+     *
+     * @param componentVersion the created component version
+     */
+    suspend fun createdComponentVersion(componentVersion: ComponentVersion) {
+        val component = componentVersion.component(cache).value
+        component.issues(cache).forEach {
+            if (!doesIssueAffectComponentRelatedEntity(it, component)) {
+                createOrUpdateAggregatedIssue(componentVersion, it)
             }
         }
     }
@@ -925,46 +940,6 @@ class IssueAggregationUpdater(
     }
 
     /**
-     * Finds all [RelationPartner]s that are connected to a [RelationPartner] via outgoing [Relation]s.
-     * Also considers [Interface]s of [ComponentVersion]s.
-     *
-     * @param relationPartner the relation partner to start from
-     * @return a set of all connected relation partners
-     */
-    private suspend fun findOutgoingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
-        val result = mutableSetOf<RelationPartner>()
-        val toExplore = ArrayDeque(listOf(relationPartner))
-        while (toExplore.isNotEmpty()) {
-            val next = toExplore.removeFirst()
-            if (result.add(next)) {
-                toExplore += next.outgoingRelations(cache).map { it.end(cache).value }
-                expandRelationPartner(next, toExplore)
-            }
-        }
-        return result
-    }
-
-    /**
-     * Finds all [RelationPartner]s that are connected to a [RelationPartner] via incoming [Relation]s.
-     * Also considers [Interface]s of [ComponentVersion]s.
-     *
-     * @param relationPartner the relation partner to start from
-     * @return a set of all connected relation partners
-     */
-    private suspend fun findIncomingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
-        val result = mutableSetOf<RelationPartner>()
-        val toExplore = ArrayDeque(listOf(relationPartner))
-        while (toExplore.isNotEmpty()) {
-            val next = toExplore.removeFirst()
-            if (result.add(next)) {
-                toExplore += next.incomingRelations(cache).map { it.start(cache).value }
-                expandRelationPartner(next, toExplore)
-            }
-        }
-        return result
-    }
-
-    /**
      * Finds the subset of [RelationPartner]s in [ends] that are connected to [start] via incoming or outgoing [Relation]s.
      * Also considers [Interface]s of [ComponentVersion]s.
      *
@@ -1006,28 +981,6 @@ class IssueAggregationUpdater(
             }
         }
         return result
-    }
-
-    /**
-     * Helper to
-     * - add the [ComponentVersion] of an [Interface] to the stack
-     * - add the [Interface]s of a [ComponentVersion] to the stack
-     *
-     * @param relationPartner the relation partner to expand
-     * @param stack the stack to add the expanded relation partners to
-     */
-    private suspend fun expandRelationPartner(relationPartner: RelationPartner, stack: ArrayDeque<RelationPartner>) {
-        when (relationPartner) {
-            is ComponentVersion -> {
-                stack += relationPartner.component(cache).value.versions(cache)
-            }
-
-            is Interface -> {
-                stack += relationPartner.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value.versions(
-                    cache
-                )
-            }
-        }
     }
 
     /**

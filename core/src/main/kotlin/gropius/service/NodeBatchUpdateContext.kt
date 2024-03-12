@@ -12,7 +12,6 @@ class NodeBatchUpdateContext : NodeBatchUpdater {
 
     override val deletedNodes = mutableSetOf<Node>()
 
-    override  val internalUpdatedNodes: MutableSet<Node> = mutableSetOf()
+    override val internalUpdatedNodes: MutableSet<Node> = mutableSetOf()
 
-    override val updatedNodes: Set<Node> get() = internalUpdatedNodes - deletedNodes
 }

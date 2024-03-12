@@ -17,6 +17,7 @@ import gropius.repository.architecture.RelationRepository
 import gropius.repository.common.NodeRepository
 import gropius.repository.findById
 import gropius.repository.template.RelationTemplateRepository
+import gropius.service.NodeBatchUpdateContext
 import gropius.service.common.NodeService
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
@@ -71,9 +72,7 @@ class RelationService(
         relation.template().value = template
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.createRelation(relation)
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-        val updatedNodes = graphUpdater.updatedNodes + relation
-        return nodeRepository.saveAll(updatedNodes).collectList().awaitSingle().first { it == relation } as Relation
+        return graphUpdater.save(relation, nodeRepository)
     }
 
     /**
@@ -159,14 +158,14 @@ class RelationService(
             Permission(ComponentPermission.RELATE_FROM_COMPONENT, authorizationContext),
             "update the Relation"
         )
-        val nodesToSave = mutableSetOf<Node>(relation)
-        nodesToSave += updateRelationTemplate(input, relation)
+        val updateContext = NodeBatchUpdateContext()
+        updateRelationTemplate(input, relation, updateContext)
         input.addedStartParts.ifPresent { relation.startParts() += getInterfaceParts(relation.start().value, it) }
         input.addedEndParts.ifPresent { relation.endParts() += getInterfaceParts(relation.end().value, it) }
         input.removedStartParts.ifPresent { relation.startParts() -= getInterfaceParts(relation.start().value, it) }
         input.removedEndParts.ifPresent { relation.endParts() -= getInterfaceParts(relation.end().value, it) }
         templatedNodeService.updateTemplatedFields(relation, input, input.template.isPresent)
-        return nodeRepository.saveAll(nodesToSave).collectList().awaitSingle().first { it == relation } as Relation
+        return updateContext.save(relation, nodeRepository)
     }
 
     /**
@@ -175,19 +174,17 @@ class RelationService(
      *
      * @param input defines how to update the template
      * @param relation the [Relation] to update
+     * @param updateContext the context used to save the updated nodes
      * @return the updated nodes to save
      */
-    private suspend fun updateRelationTemplate(input: UpdateRelationInput, relation: Relation): Set<Node> {
+    private suspend fun updateRelationTemplate(input: UpdateRelationInput, relation: Relation, updateContext: NodeBatchUpdateContext) {
         input.template.ifPresent { templateId ->
             val template = relationTemplateRepository.findById(templateId)
             validateRelationStartAndEnd(relation.start().value, relation.end().value, template)
             relation.template().value = template
-            val graphUpdater = ComponentGraphUpdater()
+            val graphUpdater = ComponentGraphUpdater(updateContext)
             graphUpdater.updateRelationTemplate(relation)
-            nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-            return graphUpdater.updatedNodes
         }
-        return emptySet()
     }
 
     /**
@@ -209,8 +206,7 @@ class RelationService(
         )
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.deleteRelation(relation)
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-        nodeRepository.saveAll(graphUpdater.updatedNodes).collectList().awaitSingle()
+        graphUpdater.save(nodeRepository)
     }
 
 }

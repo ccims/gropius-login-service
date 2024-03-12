@@ -36,9 +36,33 @@ interface NodeBatchUpdater {
 
     /**
      * Deletes all [deletedNodes] and saves all [updatedNodes] to the database
+     *
+     * @param nodeRepository the repository to use for saving and deleting
      */
     suspend fun save(nodeRepository: NodeRepository) {
         nodeRepository.deleteAll(deletedNodes).awaitSingleOrNull()
         nodeRepository.saveAll(updatedNodes).collectList().awaitSingle()
+    }
+
+    /**
+     * Deletes all [deletedNodes] and saves all [updatedNodes] to the database
+     *
+     * @param node an additional node to save, which the saved version of should be returned
+     * @param nodeRepository the repository to use for saving and deleting
+     * @return the saved version of [node]
+     */
+    suspend fun <T : Node> save(node: T, nodeRepository: NodeRepository): T {
+        require(node.rawId != null || internalUpdatedNodes.filter { it::class.isInstance(node) }.all { it === node }) {
+            "The provided node must be identifiable among all nodes to update (either using id or type information)"
+        }
+
+        nodeRepository.deleteAll(deletedNodes).awaitSingleOrNull()
+        val updatedNodes = nodeRepository.saveAll(updatedNodes + node).collectList().awaitSingle()
+        @Suppress("UNCHECKED_CAST")
+        return if (node.rawId != null) {
+            updatedNodes.first { it.rawId == node.rawId } as T
+        } else {
+            updatedNodes.first { it::class.isInstance(node) } as T
+        }
     }
 }
