@@ -59,6 +59,19 @@ class JiraDataService(
     final val logger = LoggerFactory.getLogger(JiraDataService::class.java)
 
     /**
+     * Http Client for Jira API requests
+     */
+    val client = HttpClient() {
+        expectSuccess = true
+        install(Logging)
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+            }, contentType = ContentType.parse("application/json; charset=utf-8"))
+        }
+    }
+
+    /**
      * Get the default issue template
      * @return the default issue template
      */
@@ -131,30 +144,31 @@ class JiraDataService(
     suspend fun mapLabel(imsProject: IMSProject, label: String): Label {
         val trackable = imsProject.trackable().value
         val labels = trackable.labels().filter { it.name == label }
-        if (labels.isEmpty()) {
+        return if (labels.isEmpty()) {
             val label = Label(OffsetDateTime.now(), OffsetDateTime.now(), label, "Jira Label", "000000")
             label.createdBy().value =
                 gropiusUserRepository.findByUsername("jira") ?: GropiusUser("Jira", null, null, "jira", true)
             label.lastModifiedBy().value = label.createdBy().value
             label.trackables() += trackable
-            return neoOperations.save(label).awaitSingle()
+            neoOperations.save(label).awaitSingle()
         } else if (labels.size == 1) {
-            return labels.single()
+            labels.single()
         } else {
-            return labels.first()
+            labels.first()
         }
     }
 
-    val client = HttpClient() {
-        expectSuccess = true
-        install(Logging)
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-            }, contentType = ContentType.parse("application/json; charset=utf-8"))
-        }
-    }
-
+    /**
+     * Process the request for a single token
+     *
+     * @param imsProject the project to work on
+     * @param requestMethod The HTTP method to use
+     * @param body the body to send
+     * @param urlBuilder the URL to send the request to
+     * @param token the token to use
+     *
+     * @return an optional containing the response or empty if the request failed
+     */
     final suspend inline fun <reified T> sendRequest(
         imsProject: IMSProject,
         requestMethod: HttpMethod,
@@ -187,7 +201,7 @@ class JiraDataService(
                 }
                 logger.info("Response Code for request with token token is ${res.status}(${res.status.isSuccess()}): $body is ${res.bodyAsText()}")
                 return if (res.status.isSuccess()) {
-                    logger.trace("Response for ${res.request.url} ${res.bodyAsText()}")
+                    logger.trace("Response for {} {}", res.request.url, res.bodyAsText())
                     Optional.of(res)
                 } else Optional.empty()
             } catch (e: ClientRequestException) {
@@ -197,6 +211,17 @@ class JiraDataService(
         } else return Optional.empty()
     }
 
+    /**
+     * Process a request for a given set of users
+     *
+     * @param imsProject the project to work on
+     * @param users the list of users to process, sorted with best first
+     * @param requestMethod The HTTP method to use
+     * @param body the body to send
+     * @param urlBuilder the URL to send the request to
+     *
+     * @return an optional containing the response or empty if the request failed
+     */
     final suspend inline fun <reified T> request(
         imsProject: IMSProject,
         users: List<User>,

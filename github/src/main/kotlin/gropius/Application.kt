@@ -62,6 +62,7 @@ class Application : CommandLineRunner {
 
     override fun run(vararg args: String?) {
         try {
+            System.getProperties().stringPropertyNames().forEach(System.out::println);
             runBlocking {
                 try {
                     githubSync.sync()

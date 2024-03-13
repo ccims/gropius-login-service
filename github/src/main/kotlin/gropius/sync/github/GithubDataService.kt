@@ -79,7 +79,7 @@ class GithubDataService(
     /**
      * Get a IMSUser for a GitHub user
      * @param imsProject the project to map the user to
-     * @param user the Jira user
+     * @param userData the Jira user
      */
     suspend fun mapUser(imsProject: IMSProject, userData: UserData?): User {
         val databaseId = userData?.asUser()?.databaseId
@@ -164,10 +164,17 @@ class GithubDataService(
         return label
     }
 
+    /**
+     * Send a mutation to the IMS
+     *
+     * @param D The type of the mutation to send
+     * @param imsProject The IMSProject to work on
+     * @param users The users sorted with best first
+     * @param body The content of the mutation
+     */
     final suspend inline fun <reified D : Mutation.Data> mutation(
         imsProject: IMSProject, users: List<User>, body: Mutation<D>
     ): Pair<IMSUser, ApolloResponse<D>> {
-        val imsProjectConfig = IMSProjectConfig(helper, imsProject)
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         val userList = users.toMutableList()
         if (imsConfig.readUser != null) {
@@ -188,6 +195,14 @@ class GithubDataService(
         }
     }
 
+    /**
+     * Send a query to the IMS
+     *
+     * @param D The type of the query to send
+     * @param imsProject The IMSProject to work on
+     * @param users The users sorted with best first
+     * @param body The content of the query
+     */
     final suspend inline fun <reified D : Query.Data> query(
         imsProject: IMSProject, users: List<User>, body: Query<D>
     ): Pair<IMSUser, ApolloResponse<D>> {

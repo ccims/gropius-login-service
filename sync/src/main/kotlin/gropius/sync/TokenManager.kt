@@ -59,7 +59,10 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
      */
     private val logger = LoggerFactory.getLogger(TokenManager::class.java)
 
-    val client = HttpClient() {
+    /**
+     * Http Client for Login Service requests
+     */
+    private val client = HttpClient() {
         expectSuccess = true
         install(ContentNegotiation) {
             json(Json {
@@ -76,7 +79,7 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
      * @param imsUser The IMSUser the token should be for
      * @return token if available
      */
-    suspend fun getUserToken(imsUser: IMSUser): ResponseType? {
+    private suspend fun getUserToken(imsUser: IMSUser): ResponseType? {
         val tokenResponse: ResponseType? =
             parseHttpBody(client.get(syncConfigurationProperties.loginServiceBase.toString()) {
                 url {
@@ -90,6 +93,12 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
         return tokenResponse
     }
 
+    /**
+     * Parse the response of a token query
+     *
+     * @param response The response to parse
+     * @return The parsed response
+     */
     abstract suspend fun parseHttpBody(response: HttpResponse): ResponseType?
 
     /**
@@ -116,7 +125,14 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
         return tokenData
     }
 
-    suspend fun getPossibleUsersForUser(ims: IMS, user: User): List<IMSUser> {
+    /**
+     * Collect neighboring users for a given ims and user combo
+     *
+     * @param ims The IMS to work with
+     * @param user The user to get the neighbors for
+     * @return The list of users, empty if none found
+     */
+    private suspend fun getPossibleUsersForUser(ims: IMS, user: User): List<IMSUser> {
         val ret = mutableListOf<IMSUser>()
         if (user is IMSUser) {
             if (user.ims().value == ims) {
@@ -134,7 +150,15 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
         return ret
     }
 
-    suspend fun <T> executeUntilWorking(
+    /**
+     * Attempt a query for a list of users until it works
+     *
+     * @param users The list of users, sorted with best first
+     * @param executor The function to execute
+     *
+     * @return The user it worked with and the result of the executor
+     */
+    private suspend fun <T> executeUntilWorking(
         users: List<IMSUser>, executor: suspend (token: ResponseType) -> Optional<T>
     ): Pair<IMSUser, T> {
         for (user in users) {
@@ -149,6 +173,15 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
         TODO("Error Message")
     }
 
+    /**
+     * Attempt a query for a list of users until it works
+     *
+     * @param ims The IMS to work with
+     * @param user The list of users, sorted with best first
+     * @param executor The function to execute
+     *
+     * @return The user it worked with and the result of the executor
+     */
     suspend fun <T> executeUntilWorking(
         ims: IMS, user: List<User>, executor: suspend (token: ResponseType) -> Optional<T>
     ): Pair<IMSUser, T> {
