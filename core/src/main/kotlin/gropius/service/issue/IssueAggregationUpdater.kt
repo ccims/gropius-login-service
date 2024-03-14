@@ -1019,13 +1019,11 @@ class IssueAggregationUpdater(
     private suspend fun expandRelationPartner(relationPartner: RelationPartner, stack: ArrayDeque<RelationPartner>) {
         when (relationPartner) {
             is ComponentVersion -> {
-                stack += relationPartner.component(cache).value.versions(cache)
+                stack += relationPartner.interfaceDefinitions(cache).mapNotNull { it.visibleInterface(cache).value }
             }
 
             is Interface -> {
-                stack += relationPartner.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value.versions(
-                    cache
-                )
+                stack += relationPartner.interfaceDefinition(cache).value.componentVersion(cache).value
             }
         }
     }
