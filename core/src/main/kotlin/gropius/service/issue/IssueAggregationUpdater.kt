@@ -4,7 +4,6 @@ import gropius.model.architecture.*
 import gropius.model.issue.AggregatedIssue
 import gropius.model.issue.AggregatedIssueRelation
 import gropius.model.issue.Issue
-import gropius.model.issue.MetaAggregatedIssueRelation
 import gropius.model.issue.timeline.IssueRelation
 import gropius.model.template.IssueState
 import gropius.model.template.IssueType
@@ -68,17 +67,6 @@ class IssueAggregationUpdater(
     }
 
     /**
-     * Should be called when a [Component] is deleted.
-     * Must be called BEFORE the component is deleted from the database.
-     *
-     * @param component the component that was deleted
-     */
-    suspend fun deletedComponent(component: Component) {
-        deletedNodes += component.incomingMetaAggregatedIssueRelations(cache)
-        deletedNodes += component.outgoingMetaAggregatedIssueRelations(cache)
-    }
-
-    /**
      * Should be called when an [Issue] is added to a [Trackable].
      * Must be called AFTER the issue was added to the trackable.
      *
@@ -107,18 +95,6 @@ class IssueAggregationUpdater(
         }
         interfaces.forEach {
             createOrUpdateAggregatedIssue(it, issue)
-        }
-        issue.incomingRelations(cache).forEach { relation ->
-            val other = relation.issue(cache).value
-            other.trackables(cache).forEach {
-                addToMetaAggregatedRelation(it, trackable, relation)
-            }
-        }
-        issue.outgoingRelations(cache).forEach { relation ->
-            val other = relation.relatedIssue(cache).value
-            other?.trackables?.let { it(cache) }?.forEach {
-                addToMetaAggregatedRelation(trackable, it, relation)
-            }
         }
     }
 
@@ -150,18 +126,6 @@ class IssueAggregationUpdater(
             }
         }
         aggregatedBy.removeAll(removed)
-        issue.incomingRelations(cache).forEach { relation ->
-            val other = relation.issue(cache).value
-            other.trackables(cache).forEach {
-                removeFromMetaAggregatedRelation(it, trackable, relation)
-            }
-        }
-        issue.outgoingRelations(cache).forEach { relation ->
-            val other = relation.relatedIssue(cache).value
-            other?.trackables?.let { it(cache) }?.forEach {
-                removeFromMetaAggregatedRelation(trackable, it, relation)
-            }
-        }
     }
 
     /**
@@ -251,20 +215,12 @@ class IssueAggregationUpdater(
     suspend fun createdIssueRelation(issueRelation: IssueRelation) {
         val issue = issueRelation.issue(cache).value
         val relatedIssue = issueRelation.relatedIssue(cache).value
-        val trackables = issue.trackables(cache)
-        val relatedTrackables = relatedIssue?.trackables?.let { it(cache) } ?: emptySet()
-        for (trackable in trackables) {
-            for (relatedTrackable in relatedTrackables) {
-                addToMetaAggregatedRelation(trackable, relatedTrackable, issueRelation)
-            }
-        }
         if (relatedIssue != null) {
-            val endAggregatedIssues = relatedIssue.aggregatedBy(cache).associateBy { it.relationPartner(cache).value }
-            for (aggregatedIssue in issue.aggregatedBy(cache)) {
-                val startRelationPartner = aggregatedIssue.relationPartner(cache).value
-                val connected = connectedRelationPartners(startRelationPartner, endAggregatedIssues.keys)
-                connected.forEach {
-                    createOrUpdateAggregatedIssueRelation(aggregatedIssue, endAggregatedIssues[it]!!, issueRelation)
+            val startAggregatedIssues = issue.aggregatedBy(cache)
+            val endAggregatedIssues = relatedIssue.aggregatedBy(cache)
+            startAggregatedIssues.forEach { start ->
+                endAggregatedIssues.forEach { end ->
+                    createOrUpdateAggregatedIssueRelation(start, end, issueRelation)
                 }
             }
         }
@@ -276,135 +232,8 @@ class IssueAggregationUpdater(
      * @param issueRelation the deleted issue relation
      */
     suspend fun deletedIssueRelation(issueRelation: IssueRelation) {
-        val issue = issueRelation.issue(cache).value
-        val relatedIssue = issueRelation.relatedIssue(cache).value
-        val trackables = issue.trackables(cache)
-        val relatedTrackables = relatedIssue?.trackables?.let { it(cache) } ?: emptySet()
-        for (trackable in trackables) {
-            for (relatedTrackable in relatedTrackables) {
-                removeFromMetaAggregatedRelation(trackable, relatedTrackable, issueRelation)
-            }
-        }
         issueRelation.aggregatedBy(cache).forEach { aggregatedBy ->
             removeIssueRelationFromAggregatedIssueRelation(issueRelation, aggregatedBy)
-        }
-    }
-
-    /**
-     * Should be called when an [Relation] is created.
-     *
-     * @param relation the created relation
-     */
-    suspend fun createdRelation(relation: Relation) {
-        val start = relation.start(cache).value
-        val end = relation.end(cache).value
-        val outgoingRelationPartners = findOutgoingRelationPartners(end) + end
-        val outgoingComponents =
-            outgoingRelationPartners.filterIsInstance<ComponentVersion>().map { it.component(cache).value }.toSet()
-        val incomingRelationPartners = findIncomingRelationPartners(start) + start
-        val incomingComponents =
-            incomingRelationPartners.filterIsInstance<ComponentVersion>().map { it.component(cache).value }.toSet()
-        for (component in incomingComponents) {
-            for (metaRelation in component.outgoingMetaAggregatedIssueRelations(cache)) {
-                val metaEnd = metaRelation.end(cache).value
-                if (metaEnd in outgoingComponents) {
-                    updateAggregatedRelationBasedOnMetaRelations(
-                        metaRelation, component, metaEnd
-                    )
-                }
-            }
-            for (metaRelation in component.incomingMetaAggregatedIssueRelations(cache)) {
-                val metaStart = metaRelation.start(cache).value
-                if (metaStart in outgoingComponents) {
-                    updateAggregatedRelationBasedOnMetaRelations(
-                        metaRelation, metaStart, component
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Updates [AggregatedIssueRelation]s based on information in a [MetaAggregatedIssueRelation].
-     * Should be called when a [Relation] is created and thus new [AggregatedIssueRelation]s may be created.
-     * Does currently NOT check if the aggregation is required.
-     *
-     * @param metaRelation the [MetaAggregatedIssueRelation] providing which [IssueRelation]s may now be aggregated
-     * @param startComponent the start component of the [metaRelation]
-     * @param endComponent the end component of the [metaRelation]
-     */
-    private suspend fun updateAggregatedRelationBasedOnMetaRelations(
-        metaRelation: MetaAggregatedIssueRelation, startComponent: Component, endComponent: Component
-    ) {
-        for (issueRelation in metaRelation.issueRelations(cache)) {
-            val startIssue = issueRelation.issue(cache).value
-            val endIssue = issueRelation.relatedIssue(cache).value
-            if (endIssue != null) {
-                startIssue.aggregatedBy(cache)
-                    .filter { isPartOfComponent(it.relationPartner(cache).value, startComponent) }
-                    .forEach { startAggregatedBy ->
-                        endIssue.aggregatedBy(cache)
-                            .filter { isPartOfComponent(it.relationPartner(cache).value, endComponent) }
-                            .forEach { endAggregatedBy ->
-                                createOrUpdateAggregatedIssueRelation(
-                                    startAggregatedBy, endAggregatedBy, issueRelation
-                                )
-                            }
-                    }
-            }
-        }
-    }
-
-    /**
-     * Should be called when an [Relation] is deleted.
-     * Must be called BEFORE the relation is deleted from the database.
-     *
-     * @param relation the deleted relation
-     */
-    suspend fun deletedRelation(relation: Relation) {
-        val start = relation.start(cache).value
-        val end = relation.end(cache).value
-        val outgoingRelationPartners = findOutgoingRelationPartners(end) + end
-        val incomingRelationPartners = findIncomingRelationPartners(start) + start
-        deleteUnconnectedAggregatedIssueRelations(outgoingRelationPartners, incomingRelationPartners)
-        deleteUnconnectedAggregatedIssueRelations(incomingRelationPartners, outgoingRelationPartners)
-    }
-
-    /**
-     * Helper to delete [AggregatedIssueRelation]s when a [Relation] is deleted.
-     * Deletes all [AggregatedIssueRelation]s originating at a [RelationPartner] in [startRelationPartners]
-     * and ending at a [RelationPartner] in [endRelationPartners] that are not connected to each other.
-     * Considers both incoming and outgoing [AggregatedIssueRelation]s.
-     *
-     * @param startRelationPartners the [RelationPartner]s to start from
-     * @param endRelationPartners the [RelationPartner]s to end at
-     */
-    private suspend fun deleteUnconnectedAggregatedIssueRelations(
-        startRelationPartners: Set<RelationPartner>, endRelationPartners: Set<RelationPartner>
-    ) {
-        for (relationPartner in startRelationPartners) {
-            val aggregatedIssues = relationPartner.aggregatedIssues(cache)
-            val outgoingAggregatedRelationsByRelationPartner =
-                aggregatedIssues.flatMap { it.outgoingRelations(cache) }.groupBy {
-                    it.end(cache).value.relationPartner(cache).value
-                }
-            val incomingAggregatedRelationsByRelationPartner =
-                aggregatedIssues.flatMap { it.incomingRelations(cache) }.groupBy {
-                    it.start(cache).value.relationPartner(cache).value
-                }
-            val relevantRelationPartners =
-                (outgoingAggregatedRelationsByRelationPartner.keys + incomingAggregatedRelationsByRelationPartner.keys) intersect endRelationPartners
-            val connected = connectedRelationPartners(relationPartner, relevantRelationPartners)
-            incomingAggregatedRelationsByRelationPartner.forEach { (toRelationPartner, aggregatedRelations) ->
-                if (toRelationPartner !in connected) {
-                    deletedNodes += aggregatedRelations
-                }
-            }
-            outgoingAggregatedRelationsByRelationPartner.forEach { (toRelationPartner, aggregatedRelations) ->
-                if (toRelationPartner !in connected) {
-                    deletedNodes += aggregatedRelations
-                }
-            }
         }
     }
 
@@ -677,26 +506,6 @@ class IssueAggregationUpdater(
     }
 
     /**
-     * Checks if an [Issue] is still aggregated by a [ComponentVersion].
-     *
-     * @param issue the issue to check
-     * @param componentVersion the component version to check
-     */
-    private suspend fun isIssueStillAggregatedByComponentVersion(
-        issue: Issue, componentVersion: ComponentVersion
-    ): Boolean {
-        val affected = issue.affects(cache)
-        if (componentVersion in affected || componentVersion.component(cache).value in affected) {
-            return true
-        }
-        val component = componentVersion.component(cache).value
-        if (component in issue.trackables(cache)) {
-            return !doesIssueAffectComponentRelatedEntity(issue, component)
-        }
-        return false
-    }
-
-    /**
      * Checks if an [Issue] is still aggregated by an [Interface].
      *
      * @param issue the issue to check
@@ -760,7 +569,7 @@ class IssueAggregationUpdater(
     }
 
     /**
-     * Aggregates a set of [Issue]s on a [RelationPartner].
+     * Aggregates an [Issue] on a [RelationPartner].
      * Handles the case of an [Issue] already being aggregated on the [RelationPartner].
      *
      * @param relationPartner the relation partner to aggregate the issues on
@@ -779,23 +588,16 @@ class IssueAggregationUpdater(
             aggregatedIssue.count++
         }
         internalUpdatedNodes += aggregatedIssue
-        val incomingRelationPartners = findOutgoingRelationPartners(relationPartner)
-        val outgoingRelationPartners = findIncomingRelationPartners(relationPartner)
-        val graphRelationPartners = incomingRelationPartners + outgoingRelationPartners
         issue.outgoingRelations(cache).forEach { relation ->
             val relatedIssue = relation.relatedIssue(cache).value ?: return@forEach
             for (relatedAggregatedIssue in relatedIssue.aggregatedBy(cache)) {
-                if (relatedAggregatedIssue.relationPartner(cache).value in graphRelationPartners) {
-                    createOrUpdateAggregatedIssueRelation(aggregatedIssue, relatedAggregatedIssue, relation)
-                }
+                createOrUpdateAggregatedIssueRelation(aggregatedIssue, relatedAggregatedIssue, relation)
             }
         }
         issue.incomingRelations(cache).forEach { relation ->
             val relatedIssue = relation.issue(cache).value
             for (relatedAggregatedIssue in relatedIssue.aggregatedBy(cache)) {
-                if (relatedAggregatedIssue.relationPartner(cache).value in graphRelationPartners) {
-                    createOrUpdateAggregatedIssueRelation(relatedAggregatedIssue, aggregatedIssue, relation)
-                }
+                createOrUpdateAggregatedIssueRelation(relatedAggregatedIssue, aggregatedIssue, relation)
             }
         }
     }
@@ -889,119 +691,6 @@ class IssueAggregationUpdater(
                 if (componentVersion !in issue.affects(cache)) {
                     removeIssueFromAggregatedIssueOnRelationPartner(issue, componentVersion)
                 }
-            }
-        }
-    }
-
-    /**
-     * Adds an [IssueRelation] to a [MetaAggregatedIssueRelation].
-     *
-     * @param from the start of the meta aggregated issue relation
-     * @param to the end of the meta aggregated issue relation
-     * @param issueRelation the issue relation to add
-     */
-    private suspend fun addToMetaAggregatedRelation(from: Trackable, to: Trackable, issueRelation: IssueRelation) {
-        if (from !is Component || to !is Component || from == to) {
-            return
-        }
-        val metaAggregatedRelation = from.outgoingMetaAggregatedIssueRelations(cache).find {
-            it.end(cache).value == to
-        } ?: MetaAggregatedIssueRelation(0).also {
-            it.start(cache).value = from
-            it.end(cache).value = to
-        }
-        internalUpdatedNodes += metaAggregatedRelation
-        if (metaAggregatedRelation.issueRelations(cache).add(issueRelation)) {
-            metaAggregatedRelation.count++
-        }
-    }
-
-    /**
-     * Removes an [IssueRelation] from a [MetaAggregatedIssueRelation].
-     * Deletes the [MetaAggregatedIssueRelation] if it is no longer required.
-     *
-     * @param from the start of the meta aggregated issue relation
-     * @param to the end of the meta aggregated issue relation
-     * @param issueRelation the issue relation to remove from the meta aggregated issue relation
-     */
-    private suspend fun removeFromMetaAggregatedRelation(from: Trackable, to: Trackable, issueRelation: IssueRelation) {
-        if (from !is Component || to !is Component || from == to) {
-            return
-        }
-        val metaAggregatedRelation = from.outgoingMetaAggregatedIssueRelations(cache).find {
-            it.end(cache).value == to
-        } ?: return
-        if (metaAggregatedRelation.issueRelations(cache).remove(issueRelation)) {
-            metaAggregatedRelation.count--
-        }
-        if (metaAggregatedRelation.issueRelations(cache).isEmpty()) {
-            deletedNodes += metaAggregatedRelation
-        }
-    }
-
-    /**
-     * Finds the subset of [RelationPartner]s in [ends] that are connected to [start] via incoming or outgoing [Relation]s.
-     * Also considers [Interface]s of [ComponentVersion]s.
-     *
-     * @param start the relation partner to start from
-     * @param ends the relation partners to check
-     * @return a set of all connected relation partners
-     */
-    private suspend fun connectedRelationPartners(
-        start: RelationPartner, ends: Set<RelationPartner>
-    ): Set<RelationPartner> {
-        val result = mutableSetOf<RelationPartner>()
-        val incomingToExplore = ArrayDeque(listOf(start))
-        val incomingExplored = mutableSetOf<RelationPartner>()
-        val outgoingToExplore = ArrayDeque(listOf(start))
-        val outgoingExplored = mutableSetOf<RelationPartner>()
-        val remainingEnds = ends.toMutableSet()
-        while ((incomingToExplore.isNotEmpty() || outgoingToExplore.isNotEmpty()) && remainingEnds.isNotEmpty()) {
-            if (incomingToExplore.isNotEmpty()) {
-                val next = incomingToExplore.removeFirst()
-                if (incomingExplored.add(next)) {
-                    if (next in remainingEnds) {
-                        result += next
-                        remainingEnds.remove(next)
-                    }
-                    incomingToExplore += next.incomingRelations(cache).map { it.start(cache).value }
-                    expandRelationPartner(next, incomingToExplore)
-                }
-            }
-            if (outgoingToExplore.isNotEmpty()) {
-                val next = outgoingToExplore.removeFirst()
-                if (outgoingExplored.add(next)) {
-                    if (next in remainingEnds) {
-                        result += next
-                        remainingEnds.remove(next)
-                    }
-                    outgoingToExplore += next.outgoingRelations(cache).map { it.end(cache).value }
-                    expandRelationPartner(next, outgoingToExplore)
-                }
-            }
-        }
-        return result
-    }
-
-    /**
-     * Checks if a [RelationPartner] is part of a [Component].
-     *
-     * @param relationPartner the relation partner to check
-     * @param component the component to check
-     * @return true if the relation partner is part of the component, false otherwise
-     */
-    private suspend fun isPartOfComponent(relationPartner: RelationPartner, component: Component): Boolean {
-        return when (relationPartner) {
-            is ComponentVersion -> {
-                relationPartner.component(cache).value == component
-            }
-
-            is Interface -> {
-                relationPartner.interfaceDefinition(cache).value.componentVersion(cache).value.component(cache).value == component
-            }
-
-            else -> {
-                false
             }
         }
     }
