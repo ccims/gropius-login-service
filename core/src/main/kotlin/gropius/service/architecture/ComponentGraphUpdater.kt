@@ -41,7 +41,6 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun deleteComponent(component: Component) {
         cache.add(component)
         deletedNodes += component
-        issueAggregationUpdater.deletedComponent(component)
         component.interfaceSpecifications(cache).forEach {
             deleteInterfaceSpecification(it)
         }
@@ -91,7 +90,6 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
             if (startNode is ComponentVersion) {
                 validateComponentVersion(startNode)
             }
-            issueAggregationUpdater.deletedRelation(relation)
         }
     }
 
@@ -248,7 +246,6 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
      */
     suspend fun createRelation(relation: Relation) {
         cache.add(relation)
-        issueAggregationUpdater.createdRelation(relation)
         lockIncomingAndOutgoingRelationPartners(relation.start(cache).value)
         lockIncomingAndOutgoingRelationPartners(relation.end(cache).value)
         addForUpdatedRelationTransitive(relation)

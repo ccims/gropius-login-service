@@ -18,7 +18,7 @@ abstract class GraphUpdater(updateContext: NodeBatchUpdater) : NodeBatchUpdater 
      * @param relationPartner the relation partner to start from
      * @return a set of all connected relation partners
      */
-    protected suspend fun findOutgoingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
+    private suspend fun findOutgoingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
         val result = mutableSetOf<RelationPartner>()
         val toExplore = ArrayDeque(listOf(relationPartner))
         while (toExplore.isNotEmpty()) {
@@ -38,7 +38,7 @@ abstract class GraphUpdater(updateContext: NodeBatchUpdater) : NodeBatchUpdater 
      * @param relationPartner the relation partner to start from
      * @return a set of all connected relation partners
      */
-    protected suspend fun findIncomingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
+    private suspend fun findIncomingRelationPartners(relationPartner: RelationPartner): Set<RelationPartner> {
         val result = mutableSetOf<RelationPartner>()
         val toExplore = ArrayDeque(listOf(relationPartner))
         while (toExplore.isNotEmpty()) {
@@ -71,7 +71,7 @@ abstract class GraphUpdater(updateContext: NodeBatchUpdater) : NodeBatchUpdater 
      * @param relationPartner the relation partner to expand
      * @param stack the stack to add the expanded relation partners to
      */
-    protected suspend fun expandRelationPartner(relationPartner: RelationPartner, stack: ArrayDeque<RelationPartner>) {
+    private suspend fun expandRelationPartner(relationPartner: RelationPartner, stack: ArrayDeque<RelationPartner>) {
         when (relationPartner) {
             is ComponentVersion -> {
                 stack += relationPartner.interfaceDefinitions(cache).mapNotNull { it.visibleInterface(cache).value }
