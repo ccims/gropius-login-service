@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findById
 import org.springframework.stereotype.Component
-import java.net.URI
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -160,14 +159,9 @@ class GithubDataService(
             "GitHub Label",
             labelData.color
         )
-        label.createdBy().value =
-            gropiusUserRepository.findByUsername(fallbackUserName) ?: GropiusUser(
-                "GitHub",
-                null,
-                null,
-                fallbackUserName,
-                true
-            )
+        label.createdBy().value = gropiusUserRepository.findByUsername(fallbackUserName) ?: GropiusUser(
+            "GitHub", null, null, fallbackUserName, true
+        )
         label.lastModifiedBy().value = label.createdBy().value
         label.trackables() += imsProject.trackable().value
         label = neoOperations.save(label).awaitSingle()
@@ -197,7 +191,8 @@ class GithubDataService(
         }
         logger.info("Requesting with users: $userList")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
-            val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
+            val apolloClient = ApolloClient.Builder()
+                .serverUrl(imsConfig.graphQLUrl.toString())
                 .addHttpHeader("Authorization", "Bearer ${token.token}").build()
             val res = apolloClient.mutation(body).execute()
             logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
@@ -232,7 +227,7 @@ class GithubDataService(
         }
         logger.info("Requesting with users: $userList ")
         return tokenManager.executeUntilWorking(imsProject.ims().value, userList) { token ->
-            val apolloClient = ApolloClient.Builder().serverUrl(URI("https://api.github.com/graphql").toString())
+            val apolloClient = ApolloClient.Builder().serverUrl(imsConfig.graphQLUrl.toString())
                 .addHttpHeader("Authorization", "Bearer ${token.token}").build()
             val res = apolloClient.query(body).execute()
             logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
