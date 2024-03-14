@@ -61,6 +61,11 @@ class GithubDataService(
     val jsonNodeMapper: JsonNodeMapper,
     val gropiusUserRepository: GropiusUserRepository
 ) : SyncDataService {
+
+    companion object {
+        const val fallbackUserName = "github"
+    }
+
     /**
      * Logger used to print notifications
      */
@@ -93,7 +98,7 @@ class GithubDataService(
             }
         } else {
             val foundImsUser =
-                imsProject.ims().value.users().firstOrNull { it.username == (userData?.login ?: "github") }
+                imsProject.ims().value.users().firstOrNull { it.username == (userData?.login ?: fallbackUserName) }
             if (foundImsUser != null) {
                 return foundImsUser
             }
@@ -101,10 +106,10 @@ class GithubDataService(
         val encodedAccountId =
             jsonNodeMapper.jsonNodeToDeterministicString(objectMapper.valueToTree<JsonNode>(userData?.asUser()?.databaseId))
         val imsUser = IMSUser(
-            userData?.asUser()?.name ?: userData?.login ?: "github",
+            userData?.asUser()?.name ?: userData?.login ?: fallbackUserName,
             userData?.asUser()?.email,
             null,
-            userData?.login ?: "github",
+            userData?.login ?: fallbackUserName,
             mutableMapOf("github_id" to encodedAccountId)
         )
         imsUser.ims().value = imsProject.ims().value
@@ -156,7 +161,13 @@ class GithubDataService(
             labelData.color
         )
         label.createdBy().value =
-            gropiusUserRepository.findByUsername("github") ?: GropiusUser("GitHub", null, null, "github", true)
+            gropiusUserRepository.findByUsername(fallbackUserName) ?: GropiusUser(
+                "GitHub",
+                null,
+                null,
+                fallbackUserName,
+                true
+            )
         label.lastModifiedBy().value = label.createdBy().value
         label.trackables() += imsProject.trackable().value
         label = neoOperations.save(label).awaitSingle()
