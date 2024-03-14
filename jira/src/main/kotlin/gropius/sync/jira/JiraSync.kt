@@ -83,6 +83,11 @@ final class JiraSync(
     }
 
     override suspend fun fetchData(imsProjects: List<IMSProject>) {
+        jiraDataService.issueTemplate()
+        jiraDataService.issueType()
+        jiraDataService.issueState(true)
+        jiraDataService.issueState(false)
+
         for (imsProject in imsProjects) {
             val issueList = mutableListOf<String>()
             fetchIssueList(imsProject, issueList)

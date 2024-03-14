@@ -24,6 +24,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -150,7 +151,8 @@ class JiraDataService(
                 gropiusUserRepository.findByUsername("jira") ?: GropiusUser("Jira", null, null, "jira", true)
             label.lastModifiedBy().value = label.createdBy().value
             label.trackables() += trackable
-            neoOperations.save(label).awaitSingle()
+            //neoOperations.save(label).awaitSingle() //TODO: Cache created labels on per transaction basis
+            label
         } else if (labels.size == 1) {
             labels.single()
         } else {
@@ -232,7 +234,8 @@ class JiraDataService(
         val imsConfig = IMSConfig(helper, imsProject.ims().value, imsProject.ims().value.template().value)
         val rawUserList = users.toMutableList()
         if (imsConfig.readUser != null) {
-            val imsUser = neoOperations.findById(imsConfig.readUser, IMSUser::class.java).awaitSingle()
+            val imsUser = neoOperations.findById(imsConfig.readUser, IMSUser::class.java).awaitSingleOrNull()
+                ?: throw IllegalArgumentException("Read user not found")
             if (imsUser.ims().value != imsProject.ims().value) {
                 TODO("Error handling")
             }
