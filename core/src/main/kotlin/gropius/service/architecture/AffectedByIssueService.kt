@@ -11,5 +11,6 @@ import gropius.service.common.NamedNodeService
  * @param T the type of Node this service is used for
  * @param R Repository type associated with [T]
  */
-abstract class AffectedByIssueService<T : AffectedByIssue, R : GropiusRepository<T, String>>(repository: R) :
-    NamedNodeService<T, R>(repository)
+abstract class AffectedByIssueService<T : AffectedByIssue, R : GropiusRepository<T, String>>(
+    repository: R
+) : NamedNodeService<T, R>(repository)

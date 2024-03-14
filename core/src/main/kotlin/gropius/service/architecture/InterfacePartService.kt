@@ -121,9 +121,9 @@ class InterfacePartService(
             interfacePart, Permission(NodePermission.ADMIN, authorizationContext), "delete the InterfacePart"
         )
         val issueAggregationUpdater = IssueAggregationUpdater()
+        issueAggregationUpdater.deletedNodes += interfacePart
         issueAggregationUpdater.deletedInterfacePart(interfacePart)
         issueAggregationUpdater.save(nodeRepository)
-        repository.delete(interfacePart).awaitSingle()
     }
 
 }

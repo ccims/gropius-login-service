@@ -38,7 +38,6 @@ import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -471,8 +470,8 @@ class IssueService(
         }
         val aggregationUpdater = IssueAggregationUpdater()
         aggregationUpdater.deletedIssue(issue)
+        aggregationUpdater.deletedNodes += prepareIssueDeletion(issue)
         aggregationUpdater.save(nodeRepository)
-        nodeRepository.deleteAll(prepareIssueDeletion(issue)).awaitSingleOrNull()
     }
 
     /**
@@ -1836,8 +1835,8 @@ class IssueService(
             val event = changeIssueRelationType(
                 issueRelation, oldType, newType, OffsetDateTime.now(), getUser(authorizationContext)
             )
-            repository.save(issueRelation.relatedIssue().value!!).awaitSingle()
-            timelineItemRepository.save(event).awaitSingle()
+            nodeRepository.saveAll(listOf(event, issueRelation.relatedIssue().value!!)).collectList().awaitSingle()
+                .first { it is OutgoingRelationTypeChangedEvent } as OutgoingRelationTypeChangedEvent
         } else {
             null
         }
@@ -2104,7 +2103,9 @@ class IssueService(
     ) {
         if (comment.createdBy().value != user) {
             checkPermission(
-                comment.issue().value, Permission(TrackablePermission.MODERATOR, authorizationContext), "update the IssueComment"
+                comment.issue().value,
+                Permission(TrackablePermission.MODERATOR, authorizationContext),
+                "update the IssueComment"
             )
         } else {
             checkPermission(

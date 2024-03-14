@@ -14,6 +14,8 @@ import gropius.repository.architecture.ComponentVersionRepository
 import gropius.repository.architecture.InterfaceSpecificationVersionRepository
 import gropius.repository.common.NodeRepository
 import gropius.repository.findById
+import gropius.service.NodeBatchUpdateContext
+import gropius.service.issue.IssueAggregationUpdater
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import kotlinx.coroutines.reactor.awaitSingle
@@ -52,9 +54,11 @@ class ComponentVersionService(
         input: AddInterfaceSpecificationVersionToComponentVersionInput
     ): ComponentVersion {
         input.validate()
+        val graphUpdater = ComponentGraphUpdater()
+        val componentVersion = repository.findById(input.componentVersion)
         updateInterfaceSpecificationOnComponentVersion(
-            authorizationContext, input.componentVersion, input.interfaceSpecificationVersion
-        ) { graphUpdater, componentVersion, component, interfaceSpecificationVersion ->
+            authorizationContext, componentVersion, input.interfaceSpecificationVersion
+        ) { component, interfaceSpecificationVersion ->
             val componentTemplate = component.template().value
             val interfaceSpecificationTemplate = interfaceSpecificationVersion.interfaceSpecification().value.template().value
             if (input.visible && componentTemplate !in interfaceSpecificationTemplate.canBeVisibleOnComponents()) {
@@ -71,7 +75,7 @@ class ComponentVersionService(
                 interfaceSpecificationVersion, componentVersion, input.visible, input.invisible
             )
         }
-        return repository.findById(input.componentVersion)
+        return graphUpdater.save(componentVersion, nodeRepository)
     }
 
     /**
@@ -88,14 +92,16 @@ class ComponentVersionService(
         input: RemoveInterfaceSpecificationVersionFromComponentVersionInput
     ): ComponentVersion {
         input.validate()
+        val componentVersion = repository.findById(input.componentVersion)
+        val graphUpdater = ComponentGraphUpdater()
         updateInterfaceSpecificationOnComponentVersion(
-            authorizationContext, input.componentVersion, input.interfaceSpecificationVersion
-        ) { graphUpdater, componentVersion, _, interfaceSpecificationVersion ->
+            authorizationContext, componentVersion, input.interfaceSpecificationVersion
+        ) { _, interfaceSpecificationVersion ->
             graphUpdater.removeInterfaceSpecificationVersionFromComponentVersion(
                 interfaceSpecificationVersion, componentVersion, input.visible, input.invisible
             )
         }
-        return repository.findById(input.componentVersion)
+        return graphUpdater.save(componentVersion, nodeRepository)
     }
 
     /**
@@ -106,17 +112,16 @@ class ComponentVersionService(
      * Saves the updatedNodes and deletes the deletedNodes
      *
      * @param authorizationContext used to check for the required permission
-     * @param componentVersionId the id of the [ComponentVersion] to update
+     * @param componentVersion the [ComponentVersion] to update
      * @param interfaceSpecificationId the id of the [InterfaceSpecificationVersion] to pass to [updateFunction]
-     * @param updateFunction called with the [ComponentGraphUpdater], [ComponentVersion] and [InterfaceSpecificationVersion]
+     * @param updateFunction called with the [InterfaceSpecificationVersion]
      */
     private suspend fun updateInterfaceSpecificationOnComponentVersion(
         authorizationContext: GropiusAuthorizationContext,
-        componentVersionId: ID,
+        componentVersion: ComponentVersion,
         interfaceSpecificationId: ID,
-        updateFunction: suspend (ComponentGraphUpdater, ComponentVersion, Component, InterfaceSpecificationVersion) -> Any
+        updateFunction: suspend (Component, InterfaceSpecificationVersion) -> Any
     ) {
-        val componentVersion = repository.findById(componentVersionId)
         checkPermission(
             componentVersion,
             Permission(NodePermission.ADMIN, authorizationContext),
@@ -129,9 +134,7 @@ class ComponentVersionService(
                 "InterfaceSpecificationVersion ${interfaceSpecificationVersion.rawId} is not part of Component ${component.rawId}"
             )
         }
-        val graphUpdater = ComponentGraphUpdater()
-        updateFunction(graphUpdater, componentVersion, component, interfaceSpecificationVersion)
-        graphUpdater.save(nodeRepository)
+        updateFunction(component, interfaceSpecificationVersion)
     }
 
     /**
@@ -152,9 +155,9 @@ class ComponentVersionService(
             Permission(NodePermission.ADMIN, authorizationContext),
             "create ComponentVersions on the Component"
         )
-        val componentVersion = createComponentVersion(component, input)
-        componentVersion.component().value = component
-        return repository.save(componentVersion).awaitSingle()
+        val updateContext = NodeBatchUpdateContext()
+        val componentVersion = createComponentVersion(component, input, updateContext)
+        return updateContext.save(componentVersion, nodeRepository)
     }
 
     /**
@@ -164,10 +167,11 @@ class ComponentVersionService(
      *
      * @param component the [Component] the created [ComponentVersion] is part of
      * @param input defines the [ComponentVersion]
+     * @param updateContext the context used to update the nodes
      * @return the created [ComponentVersion]
      */
     suspend fun createComponentVersion(
-        component: Component, input: ComponentVersionInput
+        component: Component, input: ComponentVersionInput, updateContext: NodeBatchUpdateContext
     ): ComponentVersion {
         input.validate()
         val template = component.template().value.componentVersionTemplate().value
@@ -175,6 +179,9 @@ class ComponentVersionService(
         val componentVersion =
             ComponentVersion(input.name, input.description, input.version, templatedFields)
         componentVersion.template().value = template
+        componentVersion.component().value = component
+        val aggregationUpdater = IssueAggregationUpdater(updateContext)
+        aggregationUpdater.createdComponentVersion(componentVersion)
         return componentVersion
     }
 
@@ -223,9 +230,7 @@ class ComponentVersionService(
         )
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.deleteComponentVersion(componentVersion)
-        nodeRepository.saveAll(graphUpdater.updatedNodes).collectList().awaitSingle()
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-        repository.delete(componentVersion).awaitSingle()
+        graphUpdater.save(nodeRepository)
     }
 
 }
