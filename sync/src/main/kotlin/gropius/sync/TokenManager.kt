@@ -14,20 +14,9 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findById
-import java.net.URI
 import java.util.*
-
-/**
- * Configuration properties for the GitHub API
- *
- * @param loginServiceBase Base url for login service
- * @param apiSecret API Secret for login service
- */
-@ConfigurationProperties("gropius.sync")
-data class SyncConfigurationProperties(val loginServiceBase: URI, val apiSecret: String)
 
 /**
  * Base class for Login Service API responses
