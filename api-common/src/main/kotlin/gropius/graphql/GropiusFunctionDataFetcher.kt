@@ -17,6 +17,9 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.*
 
+/**
+ * Delay before the next retry
+ */
 private val MUTATION_REPETITION_DELAYS = listOf(150L, 500L, 500L)
 
 /**
@@ -56,8 +59,19 @@ class GropiusFunctionDataFetcher(
      * @return the result of the mutation
      */
     private fun runMutationFunction(environment: DataFetchingEnvironment): CompletableFuture<Any?> {
+        val res = runMutationFunctionWithRetries(environment)
+        return handleAutoPayloadType(res)
+    }
+
+    /**
+     * Invokes the mutation function and handles transient exceptions
+     *
+     * @param environment the DataFetchingEnvironment
+     * @return the result of the mutation
+     */
+    private fun runMutationFunctionWithRetries(environment: DataFetchingEnvironment): CompletableFuture<Any?> {
         val parameterValues = getParameters(function, environment) + Pair(function.instanceParameter!!, target!!)
-        val res = environment.graphQlContext.getOrDefault(CoroutineScope(EmptyCoroutineContext)).future {
+        return environment.graphQlContext.getOrDefault(CoroutineScope(EmptyCoroutineContext)).future {
             repeat(MUTATION_REPETITION_DELAYS.size + 1) {
                 try {
                     try {
@@ -71,6 +85,15 @@ class GropiusFunctionDataFetcher(
                 }
             }
         }
+    }
+
+    /**
+     * Handles the [AutoPayloadType] annotation if present
+     *
+     * @param res the result of the mutation
+     * @return the result of the mutation, possibly wrapped due to [AutoPayloadType]
+     */
+    private fun handleAutoPayloadType(res: CompletableFuture<Any?>): CompletableFuture<Any?> {
         return if (function.hasAnnotation<AutoPayloadType>()) {
             res.thenApply { PayloadWrapper(it) }
         } else {
