@@ -6,6 +6,7 @@ plugins {
     id("org.springframework.boot")
     kotlin("plugin.spring")
     id("com.apollographql.apollo3")
+    kotlin("plugin.serialization")
 }
 
 dependencies {
@@ -13,6 +14,7 @@ dependencies {
     implementation("com.apollographql.apollo3", "apollo-runtime", apolloVersion)
     implementation("com.apollographql.apollo3", "apollo-adapters", apolloVersion)
     implementation("com.lectra", "koson", kosonVersion)
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", "1.4.0")
 }
 
 
