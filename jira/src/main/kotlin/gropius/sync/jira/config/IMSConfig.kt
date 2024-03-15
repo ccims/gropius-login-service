@@ -1,6 +1,5 @@
 package gropius.sync.jira.config
 
-import com.lectra.koson.arr
 import com.lectra.koson.obj
 import gropius.model.architecture.IMS
 import gropius.model.template.IMSTemplate
@@ -9,14 +8,13 @@ import java.net.URI
 
 /**
  * Config read out from a single IMS node
- * @param ims the Gropius ims to use as input
  * @param botUser the bot user string extracted from the template
  * @param readUser the read user string extracted from the template
  * @param rootUrl the read url extracted from the template
  * @param imsTemplate the template of the current IMS
  */
 data class IMSConfig(
-    val botUser: String, val readUser: String, val rootUrl: URI, val imsTemplate: IMSTemplate
+    val botUser: String, val readUser: String?, val rootUrl: URI, val imsTemplate: IMSTemplate
 ) {
     /**
      * @param ims the Gropius ims to use as input
@@ -27,7 +25,7 @@ data class IMSConfig(
         helper: JsonHelper, ims: IMS, imsTemplate: IMSTemplate
     ) : this(
         botUser = helper.parseString(ims.templatedFields["bot-user"]) ?: "jira-bot",
-        readUser = helper.parseString(ims.templatedFields["read-user"])!!,
+        readUser = helper.parseString(ims.templatedFields["read-user"]),
         rootUrl = URI(helper.parseString(ims.templatedFields["root-url"])!!),
         imsTemplate = imsTemplate
     )

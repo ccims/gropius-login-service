@@ -4,7 +4,7 @@ import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
 import gropius.dto.input.common.JSONFieldInput
-import gropius.dto.input.common.UpdateExtensibleNodeInput
+import gropius.dto.input.common.UpdateNodeInput
 import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.ensureDisjoint
 import gropius.dto.input.ifPresent
@@ -30,7 +30,7 @@ class UpdateRelationInput(
     val addedEndParts: OptionalInput<List<ID>>,
     @GraphQLDescription("Ids of InterfaceParts of the `end` Interface to remove from `endParts`")
     val removedEndParts: OptionalInput<List<ID>>
-): UpdateExtensibleNodeInput(), UpdateTemplatedNodeInput {
+): UpdateNodeInput(), UpdateTemplatedNodeInput {
 
     override fun validate() {
         super.validate()

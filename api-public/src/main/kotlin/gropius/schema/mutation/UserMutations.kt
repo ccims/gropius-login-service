@@ -22,6 +22,8 @@ import gropius.service.user.permission.IMSPermissionService
 import gropius.service.user.permission.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * Contains all User-related mutations
@@ -32,6 +34,7 @@ import org.springframework.stereotype.Component
  * @param globalPermissionService used for all GlobalPermission-related mutations
  */
 @Component
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 class UserMutations(
     private val componentPermissionService: ComponentPermissionService,
     private val projectPermissionService: ProjectPermissionService,

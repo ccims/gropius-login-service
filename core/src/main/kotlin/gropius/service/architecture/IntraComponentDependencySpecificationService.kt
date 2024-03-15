@@ -57,7 +57,6 @@ class IntraComponentDependencySpecificationService(
             "create IntraComponentDependencySpecifications on the specified ComponentVersion"
         )
         val intraComponentDependencySpecification = IntraComponentDependencySpecification(input.name, input.description)
-        createdExtensibleNode(intraComponentDependencySpecification, input)
         intraComponentDependencySpecification.componentVersion().value = componentVersion
         intraComponentDependencySpecification.incomingParticipants() += input.incomingParticipants.map {
             createIntraComponentDependencyParticipant(it, componentVersion)

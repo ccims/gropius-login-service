@@ -18,6 +18,7 @@ import gropius.repository.architecture.InterfaceSpecificationRepository
 import gropius.repository.common.NodeRepository
 import gropius.repository.findById
 import gropius.repository.template.InterfaceSpecificationTemplateRepository
+import gropius.service.NodeBatchUpdateContext
 import gropius.service.template.TemplatedNodeService
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
@@ -87,7 +88,6 @@ class InterfaceSpecificationService(
         val interfaceSpecification = InterfaceSpecification(input.name, input.description, templatedFields)
         interfaceSpecification.template().value = template
         interfaceSpecification.component().value = component
-        createdExtensibleNode(interfaceSpecification, input)
         input.versions.ifPresent { inputs ->
             interfaceSpecification.versions() += inputs.map {
                 interfaceSpecificationVersionService.createInterfaceSpecificationVersion(
@@ -116,12 +116,11 @@ class InterfaceSpecificationService(
             Permission(NodePermission.ADMIN, authorizationContext),
             "update the InterfaceSpecification"
         )
-        val nodesToSave = mutableSetOf<Node>(interfaceSpecification)
-        nodesToSave += updateInterfaceSpecificationTemplate(input, interfaceSpecification)
+        val updateContext = NodeBatchUpdateContext()
+        updateInterfaceSpecificationTemplate(input, interfaceSpecification, updateContext)
         templatedNodeService.updateTemplatedFields(interfaceSpecification, input, input.template.isPresent)
         updateNamedNode(interfaceSpecification, input)
-        return nodeRepository.saveAll(nodesToSave).collectList().awaitSingle()
-            .first { it == interfaceSpecification } as InterfaceSpecification
+        return updateContext.save(interfaceSpecification, nodeRepository)
     }
 
     /**
@@ -130,18 +129,18 @@ class InterfaceSpecificationService(
      *
      * @param input defines how to update the template
      * @param interfaceSpecification the [InterfaceSpecification] to update
+     * @param updateContext the context used to update the nodes
      * @return the updated nodes to save
      */
     private suspend fun updateInterfaceSpecificationTemplate(
-        input: UpdateInterfaceSpecificationInput, interfaceSpecification: InterfaceSpecification
+        input: UpdateInterfaceSpecificationInput, interfaceSpecification: InterfaceSpecification, updateContext: NodeBatchUpdateContext
     ): Set<Node> {
         input.template.ifPresent { templateId ->
             val template = interfaceSpecificationTemplateRepository.findById(templateId)
             interfaceSpecification.template().value = template
             updateInterfaceSpecificationVersionTemplate(interfaceSpecification, input, template)
-            val graphUpdater = ComponentGraphUpdater()
+            val graphUpdater = ComponentGraphUpdater(updateContext)
             graphUpdater.updateInterfaceSpecificationTemplate(interfaceSpecification)
-            nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
             return graphUpdater.updatedNodes
         }
         return emptySet()
@@ -201,9 +200,7 @@ class InterfaceSpecificationService(
         )
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.deleteInterfaceSpecification(interfaceSpecification)
-        nodeRepository.saveAll(graphUpdater.updatedNodes).collectList().awaitSingle()
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-        repository.delete(interfaceSpecification).awaitSingle()
+        graphUpdater.save(nodeRepository)
     }
 
 }

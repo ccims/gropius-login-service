@@ -2,6 +2,7 @@ package gropius.model.issue
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
+import gropius.model.common.BaseNode
 import gropius.model.issue.timeline.IssueRelation
 import gropius.model.template.IssueRelationType
 import gropius.model.template.IssueType
@@ -15,7 +16,7 @@ import io.github.graphglue.model.*
     """
 )
 @Authorization(NodePermission.READ, allowFromRelated = ["start"])
-class AggregatedIssueRelation(var count: Int) : Node() {
+class AggregatedIssueRelation(var count: Int) : BaseNode() {
 
     companion object {
         const val ISSUE_RELATION = "ISSUE_RELATION"

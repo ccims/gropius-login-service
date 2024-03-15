@@ -11,6 +11,8 @@ import gropius.model.user.IMSUser
 import gropius.service.user.GropiusUserService
 import gropius.service.user.IMSUserService
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * Contains all User-related mutations
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component
  * @param imsUserService used for IMSUser-related mutations
  */
 @Component
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 class UserMutations(
     private val gropiusUserService: GropiusUserService,
     private val imsUserService: IMSUserService

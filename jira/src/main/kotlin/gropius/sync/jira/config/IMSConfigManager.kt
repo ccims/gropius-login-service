@@ -1,6 +1,5 @@
 package gropius.sync.jira.config
 
-import com.lectra.koson.arr
 import com.lectra.koson.obj
 import gropius.model.template.*
 import kotlinx.coroutines.flow.filter
@@ -85,7 +84,7 @@ class IMSConfigManager(
          * Fields of the required IMSIssueTemplate
          */
         private val IMS_USER_TEMPLATE_FIELDS = mapOf(
-            "github_id" to obj {
+            "jira_id" to obj {
                 "nullable" to true
                 "type" to "string"
             }.toString()

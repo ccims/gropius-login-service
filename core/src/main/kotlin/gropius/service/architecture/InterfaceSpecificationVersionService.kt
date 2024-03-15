@@ -95,7 +95,6 @@ class InterfaceSpecificationVersionService(
                 )
             }
         }
-        createdExtensibleNode(interfaceSpecificationVersion, input)
         return interfaceSpecificationVersion
     }
 
@@ -120,8 +119,6 @@ class InterfaceSpecificationVersionService(
         input.version.ifPresent { interfaceSpecificationVersion.version = it }
         templatedNodeService.updateTemplatedFields(interfaceSpecificationVersion, input, false)
         updateNamedNode(interfaceSpecificationVersion, input)
-        val issueAggregationUpdater = IssueAggregationUpdater()
-        issueAggregationUpdater.save(nodeRepository)
         return repository.save(interfaceSpecificationVersion).awaitSingle()
     }
 
@@ -144,9 +141,7 @@ class InterfaceSpecificationVersionService(
         )
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.deleteInterfaceSpecificationVersion(interfaceSpecificationVersion)
-        nodeRepository.saveAll(graphUpdater.updatedNodes).collectList().awaitSingle()
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-        repository.delete(interfaceSpecificationVersion).awaitSingle()
+        graphUpdater.save(nodeRepository)
     }
 
 }

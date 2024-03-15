@@ -82,7 +82,7 @@ data class IssuePileData(
     var lastUpdate: OffsetDateTime,
     var createdAt: OffsetDateTime,
     val timelineItems: MutableList<GithubTimelineItem>,
-    val createdBy: String,
+    val createdBy: UserData?,
     @Indexed
     var needsTimelineRequest: Boolean = true,
     @Indexed
@@ -112,13 +112,24 @@ data class IssuePileData(
 
     override suspend fun createIssue(imsProject: IMSProject, service: SyncDataService): Issue {
         val githubService = (service as GithubDataService)
-        val issue = Issue(createdAt, lastUpdate, mutableMapOf(), initialTitle, lastUpdate, null, null, null, null)
-        issue.body().value = Body(createdAt, lastUpdate, initialDescription, lastUpdate)
-        issue.body().value.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-        issue.body().value.bodyLastEditedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-        issue.body().value.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-        issue.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-        issue.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+        val issue = Issue(
+            createdAt,
+            lastUpdate,
+            mutableMapOf(),
+            initialTitle,
+            initialDescription,
+            lastUpdate,
+            null,
+            null,
+            null,
+            null
+        )
+        issue.body().value = Body(createdAt, lastUpdate, lastUpdate)
+        issue.body().value.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
+        issue.body().value.bodyLastEditedBy().value = githubService.mapUser(imsProject, createdBy)
+        issue.body().value.createdBy().value = githubService.mapUser(imsProject, createdBy)
+        issue.createdBy().value = githubService.mapUser(imsProject, createdBy)
+        issue.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
         issue.body().value.issue().value = issue
         issue.state().value = githubService.issueState(true)
         issue.template().value = githubService.issueTemplate()
@@ -209,7 +220,7 @@ class IssuePileService(val issuePileRepository: IssuePileRepository) : IssuePile
             data.updatedAt,
             data.createdAt,
             mutableListOf(),
-            data.author?.login ?: "ghost"
+            data.author
         )
         pile.lastUpdate = data.updatedAt
         pile.needsTimelineRequest = true;
@@ -350,7 +361,11 @@ class TODOTimelineItemConversionInformation(
  * @param newTitle new title
  */
 class RenamedTitleEventTimelineItem(
-    githubId: String, createdAt: OffsetDateTime, val createdBy: String?, val oldTitle: String, val newTitle: String
+    githubId: String,
+    createdAt: OffsetDateTime,
+    val createdBy: UserData?,
+    val oldTitle: String,
+    val newTitle: String
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
@@ -358,7 +373,11 @@ class RenamedTitleEventTimelineItem(
      * @param data The API data
      */
     constructor(data: RenamedTitleEventTimelineItemData) : this(
-        data.id, data.createdAt, data.actor?.login, data.previousTitle, data.currentTitle
+        data.id,
+        data.createdAt,
+        data.actor,
+        data.previousTitle,
+        data.currentTitle
     ) {
     }
 
@@ -378,8 +397,8 @@ class RenamedTitleEventTimelineItem(
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
             return listOf<TimelineItem>(event) to convInfo;
         }
         return listOf<TimelineItem>() to convInfo;
@@ -395,14 +414,14 @@ class RenamedTitleEventTimelineItem(
  * @param label The label that was removed
  */
 class UnlabeledEventTimelineItem(
-    githubId: String, createdAt: OffsetDateTime, val createdBy: String?, val label: LabelData
+    githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?, val label: LabelData
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
      * Parse API data
      * @param data The API data
      */
-    constructor(data: UnlabeledEventTimelineItemData) : this(data.id, data.createdAt, data.actor?.login, data.label) {}
+    constructor(data: UnlabeledEventTimelineItemData) : this(data.id, data.createdAt, data.actor, data.label) {}
 
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
@@ -420,8 +439,8 @@ class UnlabeledEventTimelineItem(
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
             event.removedLabel().value = githubService.mapLabel(imsProject, label)
             return listOf<TimelineItem>(event) to convInfo;
         }
@@ -437,14 +456,8 @@ class UnlabeledEventTimelineItem(
  * @param label The label that was added
  */
 class LabeledEventTimelineItem(
-    githubId: String, createdAt: OffsetDateTime, val createdBy: String?, val label: LabelData
+    githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?, val label: LabelData
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
-
-    /**
-     * Parse API data
-     * @param data The API data
-     */
-    constructor(data: LabeledEventTimelineItemData) : this(data.id, data.createdAt, data.actor?.login, data.label) {}
 
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
@@ -462,13 +475,19 @@ class LabeledEventTimelineItem(
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
             event.addedLabel().value = githubService.mapLabel(imsProject, label)
             return listOf<TimelineItem>(event) to convInfo;
         }
         return listOf<TimelineItem>() to convInfo;
     }
+
+    /**
+     * Parse API data
+     * @param data The API data
+     */
+    constructor(data: LabeledEventTimelineItemData) : this(data.id, data.createdAt, data.actor, data.label) {}
 }
 
 /**
@@ -479,7 +498,7 @@ class LabeledEventTimelineItem(
  * @param user The user to unassign
  */
 class UnassignedTimelineItem(
-    githubId: String, createdAt: OffsetDateTime, val createdBy: String?, val user: String
+    githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?, val user: String
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
@@ -487,7 +506,7 @@ class UnassignedTimelineItem(
      * @param data The API data
      */
     constructor(data: UnassignedEventTimelineItemData) : this(
-        data.id, data.createdAt, data.actor?.login, data.assignee?.userData()?.login ?: "ghost"
+        data.id, data.createdAt, data.actor, data.assignee?.userData()?.login ?: "ghost"
     ) {
     }
 
@@ -507,8 +526,8 @@ class UnassignedTimelineItem(
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
             event.removedAssignment().value = TODO()
             return listOf<TimelineItem>(event) to convInfo;
         }
@@ -524,7 +543,7 @@ class UnassignedTimelineItem(
  * @param user The user to assign
  */
 class AssignedTimelineItem(
-    githubId: String, createdAt: OffsetDateTime, val createdBy: String?, val user: String
+    githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?, val user: UserData?
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
@@ -532,7 +551,7 @@ class AssignedTimelineItem(
      * @param data The API data
      */
     constructor(data: AssignedEventTimelineItemData) : this(
-        data.id, data.createdAt, data.actor?.login, data.assignee?.userData()?.login ?: "ghost"
+        data.id, data.createdAt, data.actor, data.assignee?.userData()
     ) {
     }
 
@@ -552,9 +571,9 @@ class AssignedTimelineItem(
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.user().value = githubService.userMapper.mapUser(imsProject, user)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
+            event.user().value = githubService.mapUser(imsProject, user)
             return listOf<TimelineItem>(event) to convInfo;
         }
         return listOf<TimelineItem>() to convInfo;
@@ -567,14 +586,14 @@ class AssignedTimelineItem(
  * @param createdAt The creation date of the timeline item
  * @param createdBy The GitHub user that created the timeline item
  */
-class ReopenedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val createdBy: String?) :
+class ReopenedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?) :
     OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
      * Parse API data
      * @param data The API data
      */
-    constructor(data: ReopenedEventTimelineItemData) : this(data.id, data.createdAt, data.actor?.login) {}
+    constructor(data: ReopenedEventTimelineItemData) : this(data.id, data.createdAt, data.actor) {}
 
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
@@ -592,8 +611,8 @@ class ReopenedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
             event.newState().value = githubService.issueState(true)
             event.oldState().value = githubService.issueState(false)
             return listOf<TimelineItem>(event) to convInfo;
@@ -608,14 +627,14 @@ class ReopenedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val
  * @param createdAt The creation date of the timeline item
  * @param createdBy The GitHub user that created the timeline item
  */
-class ClosedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val createdBy: String?) :
+class ClosedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?) :
     OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
      * Parse API data
      * @param data The API data
      */
-    constructor(data: ClosedEventTimelineItemData) : this(data.id, data.createdAt, data.actor?.login) {}
+    constructor(data: ClosedEventTimelineItemData) : this(data.id, data.createdAt, data.actor) {}
 
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
@@ -633,8 +652,8 @@ class ClosedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val c
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
             event.newState().value = githubService.issueState(false)
             event.oldState().value = githubService.issueState(true)
             return listOf<TimelineItem>(event) to convInfo;
@@ -655,7 +674,7 @@ class IssueCommentTimelineItem(
     githubId: String,
     createdAt: OffsetDateTime,
     var body: String,
-    val createdBy: String?,
+    val createdBy: UserData?,
     var recheckDone: Boolean = false
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
 
@@ -664,7 +683,7 @@ class IssueCommentTimelineItem(
      * @param data The API data
      */
     constructor(data: IssueCommentTimelineItemData) : this(
-        data.id, data.createdAt, data.body, data.author?.login
+        data.id, data.createdAt, data.body, data.author
     ) {
     }
 
@@ -684,9 +703,9 @@ class IssueCommentTimelineItem(
             if (event == null) {
                 return listOf<TimelineItem>() to convInfo;
             }
-            event.createdBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.lastModifiedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
-            event.bodyLastEditedBy().value = githubService.userMapper.mapUser(imsProject, createdBy)
+            event.createdBy().value = githubService.mapUser(imsProject, createdBy)
+            event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
+            event.bodyLastEditedBy().value = githubService.mapUser(imsProject, createdBy)
             return listOf<TimelineItem>(event) to convInfo;
         }
         return listOf<TimelineItem>() to convInfo;

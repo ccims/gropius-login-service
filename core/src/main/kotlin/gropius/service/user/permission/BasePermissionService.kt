@@ -8,7 +8,7 @@ import gropius.dto.input.user.permission.UpdateBasePermissionInput
 import gropius.model.user.permission.BasePermission
 import gropius.repository.GropiusRepository
 import gropius.repository.findAllById
-import gropius.service.common.NodeService
+import gropius.service.common.NamedNodeService
 
 /**
  * Base class for services for subclasses of [BasePermission]
@@ -19,7 +19,7 @@ import gropius.service.common.NodeService
  */
 abstract class BasePermissionService<T : BasePermission, R : GropiusRepository<T, String>>(
     repository: R
-) : NodeService<T, R>(repository) {
+) : NamedNodeService<T, R>(repository) {
 
     /**
      * Updates [node] based on [input]
@@ -40,6 +40,7 @@ abstract class BasePermissionService<T : BasePermission, R : GropiusRepository<T
      * @param input defines how to update the provided [node]
      */
     suspend fun updateBasePermission(node: T, input: UpdateBasePermissionInput) {
+        updateNamedNode(node, input)
         input.name.ifPresent {
             node.name = it
         }

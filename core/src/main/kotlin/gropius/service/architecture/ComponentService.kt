@@ -15,6 +15,8 @@ import gropius.model.user.permission.NodePermission
 import gropius.repository.architecture.ComponentRepository
 import gropius.repository.findById
 import gropius.repository.template.ComponentTemplateRepository
+import gropius.service.NodeBatchUpdateContext
+import gropius.service.issue.IssueAggregationUpdater
 import gropius.service.template.TemplatedNodeService
 import gropius.service.user.permission.ComponentPermissionService
 import io.github.graphglue.authorization.Permission
@@ -68,14 +70,15 @@ class ComponentService(
                 interfaceSpecificationService.createInterfaceSpecification(component, it)
             }
         }
+        componentPermissionService.createDefaultPermission(user, component)
+        val savedComponent = nodeRepository.save(component).awaitSingle()
+        val updateContext = NodeBatchUpdateContext()
         input.versions.ifPresent { inputs ->
-            component.versions() += inputs.map {
-                componentVersionService.createComponentVersion(component, it)
+            savedComponent.versions() += inputs.map {
+                componentVersionService.createComponentVersion(component, it, updateContext)
             }
         }
-        createdExtensibleNode(component, input)
-        componentPermissionService.createDefaultPermission(user, component)
-        return repository.save(component).awaitSingle()
+        return updateContext.save(savedComponent, nodeRepository)
     }
 
     /**
@@ -94,14 +97,14 @@ class ComponentService(
         checkPermission(
             component, Permission(NodePermission.ADMIN, authorizationContext), "update the Component"
         )
-        val nodesToSave = mutableSetOf<Node>(component)
-        nodesToSave += updateComponentTemplate(input, component)
+        val updateContext = NodeBatchUpdateContext()
+        updateComponentTemplate(input, component, updateContext)
         templatedNodeService.updateTemplatedFields(component, input, input.template.isPresent)
         componentPermissionService.updatePermissionsOfNode(
             component, input.addedPermissions, input.removedPermissions, authorizationContext
         )
         updateTrackable(component, input)
-        return nodeRepository.saveAll(nodesToSave).collectList().awaitSingle().first { it == component } as Component
+        return updateContext.save(component, nodeRepository)
     }
 
     /**
@@ -110,12 +113,14 @@ class ComponentService(
      *
      * @param input maybe defines a new template
      * @param component the [Component] to update
+     * @param updateContext the context used to update the nodes
      * @return a set of updated nodes, must be saved
      */
     private suspend fun updateComponentTemplate(
         input: UpdateComponentInput,
-        component: Component
-    ): Set<Node> {
+        component: Component,
+        updateContext: NodeBatchUpdateContext
+    ) {
         input.template.ifPresent { templateId ->
             component.template().value = componentTemplateRepository.findById(templateId)
             val componentVersionTemplate = component.template().value.componentVersionTemplate().value
@@ -123,12 +128,9 @@ class ComponentService(
                 it.template().value = componentVersionTemplate
                 templatedNodeService.updateTemplatedFields(it, input.componentVersionTemplatedFields, true)
             }
-            val graphUpdater = ComponentGraphUpdater()
+            val graphUpdater = ComponentGraphUpdater(updateContext)
             graphUpdater.updateComponentTemplate(component)
-            nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-            return graphUpdater.updatedNodes
         }
-        return emptySet()
     }
 
     /**
@@ -149,8 +151,7 @@ class ComponentService(
         val graphUpdater = ComponentGraphUpdater()
         graphUpdater.deleteComponent(component)
         beforeDeleteTrackable(component)
-        nodeRepository.deleteAll(graphUpdater.deletedNodes).awaitSingleOrNull()
-        nodeRepository.saveAll(graphUpdater.updatedNodes).collectList().awaitSingle()
+        graphUpdater.save(nodeRepository)
     }
 
 }

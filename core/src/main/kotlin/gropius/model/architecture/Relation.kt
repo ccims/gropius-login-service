@@ -2,7 +2,7 @@ package gropius.model.architecture
 
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.annotations.GraphQLIgnore
-import gropius.model.common.ExtensibleNode
+import gropius.model.common.BaseNode
 import gropius.model.template.BaseTemplate
 import gropius.model.template.MutableTemplatedNode
 import gropius.model.template.RelationTemplate
@@ -27,7 +27,7 @@ class Relation(
     @property:GraphQLIgnore
     @CompositeProperty
     override val templatedFields: MutableMap<String, String>
-) : ExtensibleNode(), MutableTemplatedNode {
+) : BaseNode(), MutableTemplatedNode {
 
     companion object {
         const val START_PART = "START_PART"

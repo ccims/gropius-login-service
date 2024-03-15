@@ -7,7 +7,7 @@ import kotlin.properties.Delegates
 /**
  * Fragment for create mutation inputs for classes extending [NamedNode]
  */
-abstract class CreateNamedNodeInput : CreateExtensibleNodeInput() {
+abstract class CreateNamedNodeInput : Input() {
 
     @GraphQLDescription("The name of the NamedNode, must not be blank")
     var name: String by Delegates.notNull()

@@ -7,7 +7,7 @@ import io.github.graphglue.model.OrderProperty
 import io.github.graphglue.model.SearchProperty
 
 @DomainNode
-@GraphQLDescription("ExtensibleNode with a name and description")
+@GraphQLDescription("Node with a name and description")
 abstract class NamedNode(
     @property:GraphQLDescription("The name of this entity.")
     @FilterProperty
@@ -18,4 +18,4 @@ abstract class NamedNode(
     @FilterProperty
     @SearchProperty
     override var description: String
-) : ExtensibleNode(), Named
+) : BaseNode(), Named

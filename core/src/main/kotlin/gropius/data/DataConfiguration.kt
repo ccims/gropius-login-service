@@ -1,8 +1,10 @@
 package gropius.data
 
+import org.neo4j.cypherdsl.core.renderer.Dialect
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.neo4j.core.convert.Neo4jConversions
+import org.neo4j.cypherdsl.core.renderer.Configuration as CypherDslConfiguration
 import java.time.OffsetDateTime
 
 /**
@@ -20,6 +22,16 @@ class DataConfiguration {
     @Bean
     fun neo4jConversion(): Neo4jConversions {
         return Neo4jConversions(setOf(OffsetDateTimeConverter()))
+    }
+
+    /**
+     * Provides the Cypher DSL configuration
+     *
+     * @return the Cypher DSL configuration
+     */
+    @Bean
+    fun cypherDslConfiguration(): CypherDslConfiguration {
+        return CypherDslConfiguration.newConfig().withDialect(Dialect.NEO4J_5).build()
     }
 
 }

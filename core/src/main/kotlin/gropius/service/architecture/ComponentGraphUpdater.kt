@@ -26,7 +26,7 @@ import gropius.service.issue.IssueAggregationUpdater
  *
  * @param updateContext the [NodeBatchUpdater] to use for updating/deleting nodes
  */
-class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateContext()) : NodeBatchUpdater by updateContext {
+class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateContext()) : GraphUpdater(updateContext) {
 
     /**
      * Helper for updating aggregated issues
@@ -41,7 +41,6 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun deleteComponent(component: Component) {
         cache.add(component)
         deletedNodes += component
-        issueAggregationUpdater.deletedComponent(component)
         component.interfaceSpecifications(cache).forEach {
             deleteInterfaceSpecification(it)
         }
@@ -57,6 +56,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
      */
     suspend fun deleteComponentVersion(componentVersion: ComponentVersion) {
         cache.add(componentVersion)
+        lockIncomingAndOutgoingRelationPartners(componentVersion)
         deletedNodes += componentVersion
         componentVersion.outgoingRelations(cache).forEach {
             deleteRelation(it)
@@ -75,6 +75,8 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun deleteRelation(relation: Relation) {
         if (relation !in deletedNodes) {
             cache.add(relation)
+            lockIncomingAndOutgoingRelationPartners(relation.start(cache).value)
+            lockIncomingAndOutgoingRelationPartners(relation.end(cache).value)
             deletedNodes += relation
             val startNode = relation.start(cache).value
             startNode.outgoingRelations(cache) -= relation
@@ -88,7 +90,6 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
             if (startNode is ComponentVersion) {
                 validateComponentVersion(startNode)
             }
-            issueAggregationUpdater.deletedRelation(relation)
         }
     }
 
@@ -128,6 +129,9 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
      */
     suspend fun updateComponentTemplate(component: Component) {
         cache.add(component)
+        component.versions(cache).forEach {
+            lockIncomingAndOutgoingRelationPartners(it)
+        }
         component.versions(cache).forEach { componentVersion ->
             val updatedDefinitions = componentVersion.incomingRelations(cache).flatMap { relation ->
                 addForUpdatedRelation(relation)
@@ -157,6 +161,9 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     suspend fun updateInterfaceSpecificationTemplate(interfaceSpecification: InterfaceSpecification) {
         cache.add(interfaceSpecification)
         val definitions = interfaceSpecification.versions(cache).flatMap { it.interfaceDefinitions(cache) }
+        definitions.mapNotNull { it.visibleInterface(cache).value }.forEach {
+            lockIncomingAndOutgoingRelationPartners(it)
+        }
         for (definition in definitions) {
             val componentVersion = definition.componentVersion(cache).value
             val template = componentVersion.component(cache).value.template(cache).value
@@ -185,6 +192,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     ) {
         cache.add(interfaceSpecificationVersion)
         cache.add(componentVersion)
+        lockIncomingAndOutgoingRelationPartners(componentVersion)
         val definition = componentVersion.interfaceDefinitions(cache).firstOrNull {
             it.interfaceSpecificationVersion(cache).value == interfaceSpecificationVersion
         }
@@ -217,6 +225,7 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
     ) {
         cache.add(interfaceSpecificationVersion)
         cache.add(componentVersion)
+        lockIncomingAndOutgoingRelationPartners(componentVersion)
         val definition = getOrCreateInterfaceDefinition(componentVersion, interfaceSpecificationVersion)
         if (visible) {
             definition.visibleSelfDefined = true
@@ -237,7 +246,8 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
      */
     suspend fun createRelation(relation: Relation) {
         cache.add(relation)
-        issueAggregationUpdater.createdRelation(relation)
+        lockIncomingAndOutgoingRelationPartners(relation.start(cache).value)
+        lockIncomingAndOutgoingRelationPartners(relation.end(cache).value)
         addForUpdatedRelationTransitive(relation)
     }
 
@@ -250,6 +260,8 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
      */
     suspend fun updateRelationTemplate(relation: Relation) {
         cache.add(relation)
+        lockIncomingAndOutgoingRelationPartners(relation.start(cache).value)
+        lockIncomingAndOutgoingRelationPartners(relation.end(cache).value)
         addForUpdatedRelationTransitive(relation)
         val startNode = relation.start(cache).value
         if (startNode is ComponentVersion) {

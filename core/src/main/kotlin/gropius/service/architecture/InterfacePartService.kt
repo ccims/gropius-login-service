@@ -81,7 +81,6 @@ class InterfacePartService(
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
         val interfacePart = InterfacePart(input.name, input.description, templatedFields)
         interfacePart.template().value = template
-        createdExtensibleNode(interfacePart, input)
         return interfacePart
     }
 
@@ -122,9 +121,9 @@ class InterfacePartService(
             interfacePart, Permission(NodePermission.ADMIN, authorizationContext), "delete the InterfacePart"
         )
         val issueAggregationUpdater = IssueAggregationUpdater()
+        issueAggregationUpdater.deletedNodes += interfacePart
         issueAggregationUpdater.deletedInterfacePart(interfacePart)
         issueAggregationUpdater.save(nodeRepository)
-        repository.delete(interfacePart).awaitSingle()
     }
 
 }

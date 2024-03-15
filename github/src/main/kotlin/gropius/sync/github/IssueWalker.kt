@@ -1,6 +1,5 @@
 package gropius.sync.github
 
-import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.exception.ApolloException
 import gropius.model.architecture.IMSProject
 import gropius.sync.CursorResourceWalker
@@ -20,7 +19,7 @@ class IssueWalker(
     imsProject: IMSProject,
     val config: GitHubResourceWalkerConfig,
     budget: GithubResourceWalkerBudget,
-    val apolloClient: ApolloClient,
+    val githubDataService: GithubDataService,
     val issuePileService: IssuePileService,
     cursorResourceWalkerDataService: CursorResourceWalkerDataService
 ) : CursorResourceWalker<GithubGithubResourceWalkerBudgetUsageType, GithubGithubResourceWalkerEstimatedBudgetUsageType, GithubResourceWalkerBudget>(
@@ -40,7 +39,7 @@ class IssueWalker(
                     cursor = cursor,
                     issueCount = config.count
                 )
-                val response = apolloClient.query(query).execute()
+                val response = githubDataService.query(imsProject, listOf(), query).second
                 cursor = if (response.data?.repository?.issues?.pageInfo?.hasNextPage == true) {
                     response.data?.repository?.issues?.pageInfo?.endCursor
                 } else null;

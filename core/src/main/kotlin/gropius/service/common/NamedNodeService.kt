@@ -14,18 +14,16 @@ import gropius.repository.GropiusRepository
  */
 abstract class NamedNodeService<T : NamedNode, R : GropiusRepository<T, String>>(
     repository: R
-) : AbstractExtensibleNodeService<T, R>(repository) {
+) : NodeService<T, R>(repository) {
 
     /**
      * Updates [node] based on [input]
-     * Calls [updateExtensibleNode]
      * Updates name and description
      *
      * @param node the node to update
      * @param input defines how to update the provided [node]
      */
     fun updateNamedNode(node: NamedNode, input: UpdateNamedNodeInput) {
-        updateExtensibleNode(node, input)
         input.name.ifPresent {
             node.name = it
         }

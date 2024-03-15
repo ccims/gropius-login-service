@@ -38,7 +38,6 @@ import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -124,7 +123,7 @@ class IssueService(
             OffsetDateTime.now(),
             byUser
         )
-        createdAuditedNode(issue, input, byUser)
+        createdAuditedNode(issue, byUser)
         return repository.save(issue).awaitSingle()
     }
 
@@ -161,14 +160,14 @@ class IssueService(
             throw IllegalStateException("An Issue must be created on at least one Trackable")
         }
         val fields = templatedNodeService.validateInitialTemplatedFields(template, templatedFields)
-        val issue = Issue(atTime, atTime, fields, title, atTime, null, null, null, null)
+        val issue = Issue(atTime, atTime, fields, title, body, atTime, null, null, null, null)
         issue.template().value = template
         checkIssueTypeCompatibility(issue, type)
         checkIssueStateCompatibility(issue, state)
         issue.type().value = type
         issue.state().value = state
         createdAuditedNode(issue, byUser)
-        val bodyItem = Body(atTime, atTime, body, atTime)
+        val bodyItem = Body(atTime, atTime, atTime)
         bodyItem.bodyLastEditedBy().value = byUser
         createdTimelineItem(issue, bodyItem, atTime, byUser)
         issue.body().value = bodyItem
@@ -471,8 +470,8 @@ class IssueService(
         }
         val aggregationUpdater = IssueAggregationUpdater()
         aggregationUpdater.deletedIssue(issue)
+        aggregationUpdater.deletedNodes += prepareIssueDeletion(issue)
         aggregationUpdater.save(nodeRepository)
-        nodeRepository.deleteAll(prepareIssueDeletion(issue)).awaitSingleOrNull()
     }
 
     /**
@@ -1571,7 +1570,7 @@ class IssueService(
         val byUser = getUser(authorizationContext)
         val atTime = OffsetDateTime.now()
         val assignment = createAssignment(issue, user, assignmentType, atTime, byUser)
-        createdAuditedNode(assignment, input, byUser)
+        createdAuditedNode(assignment, byUser)
         return assignmentRepository.save(assignment).awaitSingle()
     }
 
@@ -1757,7 +1756,7 @@ class IssueService(
         val issueRelationType = input.issueRelationType?.let { issueRelationTypeRepository.findById(it) }
         val byUser = getUser(authorizationContext)
         val issueRelation = createIssueRelation(issue, relatedIssue, issueRelationType, OffsetDateTime.now(), byUser)
-        createdAuditedNode(issueRelation, input, byUser)
+        createdAuditedNode(issueRelation, byUser)
         return issueRelationRepository.save(issueRelation).awaitSingle()
     }
 
@@ -1836,8 +1835,8 @@ class IssueService(
             val event = changeIssueRelationType(
                 issueRelation, oldType, newType, OffsetDateTime.now(), getUser(authorizationContext)
             )
-            repository.save(issueRelation.relatedIssue().value!!).awaitSingle()
-            timelineItemRepository.save(event).awaitSingle()
+            nodeRepository.saveAll(listOf(event, issueRelation.relatedIssue().value!!)).collectList().awaitSingle()
+                .first { it is OutgoingRelationTypeChangedEvent } as OutgoingRelationTypeChangedEvent
         } else {
             null
         }
@@ -1975,7 +1974,7 @@ class IssueService(
         val answers = input.answers?.let { commentRepository.findById(it) }
         val byUser = getUser(authorizationContext)
         val issueComment = createIssueComment(issue, answers, input.body, artefacts, OffsetDateTime.now(), byUser)
-        createdAuditedNode(issueComment, input, byUser)
+        createdAuditedNode(issueComment, byUser)
         return timelineItemRepository.save(issueComment).awaitSingle()
     }
 
@@ -2055,7 +2054,7 @@ class IssueService(
         val byUser = getUser(authorizationContext)
         val atTime = OffsetDateTime.now()
         updateIssueComment(issueComment, input.body.orElse(null), addedArtefacts, removedArtefacts, atTime, byUser)
-        updateAuditedNode(issueComment, input, byUser, atTime)
+        updateAuditedNode(issueComment, byUser, atTime)
         return timelineItemRepository.save(issueComment).awaitSingle()
     }
 
@@ -2104,7 +2103,9 @@ class IssueService(
     ) {
         if (comment.createdBy().value != user) {
             checkPermission(
-                comment.issue().value, Permission(TrackablePermission.MODERATOR, authorizationContext), "update the IssueComment"
+                comment.issue().value,
+                Permission(TrackablePermission.MODERATOR, authorizationContext),
+                "update the IssueComment"
             )
         } else {
             checkPermission(
@@ -2131,7 +2132,8 @@ class IssueService(
         val byUser = getUser(authorizationContext)
         val atTime = OffsetDateTime.now()
         updateBody(body, input.body.orElse(null), atTime, byUser)
-        updateAuditedNode(body, input, byUser, atTime)
+        updateAuditedNode(body, byUser, atTime)
+        repository.save(body.issue().value).awaitSingle()
         return timelineItemRepository.save(body).awaitSingle()
     }
 
@@ -2149,8 +2151,9 @@ class IssueService(
     suspend fun updateBody(
         body: Body, newBodyValue: String?, atTime: OffsetDateTime, byUser: User
     ) {
-        if (newBodyValue != null && newBodyValue != body.body && atTime >= body.bodyLastEditedAt) {
-            body.body = newBodyValue
+        val issue = body.issue().value
+        if (newBodyValue != null && newBodyValue != issue.bodyBody && atTime >= body.bodyLastEditedAt) {
+            issue.bodyBody = newBodyValue
             body.bodyLastEditedAt = atTime
             body.bodyLastEditedBy().value = byUser
         }

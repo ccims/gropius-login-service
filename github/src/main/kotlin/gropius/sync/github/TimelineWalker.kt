@@ -1,6 +1,5 @@
 package gropius.sync.github
 
-import com.apollographql.apollo3.ApolloClient
 import com.apollographql.apollo3.exception.ApolloException
 import gropius.model.architecture.IMSProject
 import gropius.sync.CursorResourceWalker
@@ -26,7 +25,7 @@ class TimelineWalker(
     val issue: ObjectId,
     val config: GitHubResourceWalkerConfig,
     budget: GithubResourceWalkerBudget,
-    val apolloClient: ApolloClient,
+    val githubDataService: GithubDataService,
     val issuePileService: IssuePileService,
     cursorResourceWalkerDataService: CursorResourceWalkerDataService
 ) : CursorResourceWalker<GithubGithubResourceWalkerBudgetUsageType, GithubGithubResourceWalkerEstimatedBudgetUsageType, GithubResourceWalkerBudget>(
@@ -47,7 +46,7 @@ class TimelineWalker(
                 val query = TimelineReadQuery(
                     issue = issuePile.githubId, since = since, cursor = cursor, issueCount = config.count
                 )
-                val response = apolloClient.query(query).execute()
+                val response = githubDataService.query(imsProject, listOf(), query).second
                 cursor = if (response.data?.node?.asIssue()?.timelineItems?.pageInfo?.hasNextPage == true) {
                     response.data?.node?.asIssue()?.timelineItems?.pageInfo?.endCursor
                 } else null;

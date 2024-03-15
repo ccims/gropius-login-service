@@ -6,6 +6,7 @@ plugins {
     id("org.springframework.boot")
     kotlin("plugin.spring")
     id("com.apollographql.apollo3")
+    kotlin("plugin.serialization")
 }
 
 dependencies {

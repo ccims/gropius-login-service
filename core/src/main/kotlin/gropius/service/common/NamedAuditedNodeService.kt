@@ -31,7 +31,7 @@ abstract class NamedAuditedNodeService<T : NamedAuditedNode, R : GropiusReposito
     suspend fun updateNamedAuditedNode(
         node: NamedAuditedNode, input: UpdateNamedNodeInput, lastModifiedBy: User, lastModifiedAt: OffsetDateTime
     ) {
-        updateAuditedNode(node, input, lastModifiedBy, lastModifiedAt)
+        updateAuditedNode(node, lastModifiedBy, lastModifiedAt)
         input.name.ifPresent {
             node.name = it
         }

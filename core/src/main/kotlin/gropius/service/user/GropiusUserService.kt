@@ -9,7 +9,7 @@ import gropius.dto.input.user.UpdateGropiusUserInput
 import gropius.model.user.GropiusUser
 import gropius.repository.findById
 import gropius.repository.user.GropiusUserRepository
-import gropius.service.common.AbstractExtensibleNodeService
+import gropius.service.common.NodeService
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -24,7 +24,7 @@ import java.net.URI
 class GropiusUserService(
     repository: GropiusUserRepository,
     private val gropiusCoreConfigurationProperties: GropiusCoreConfigurationProperties
-) : AbstractExtensibleNodeService<GropiusUser, GropiusUserRepository>(repository) {
+) : NodeService<GropiusUser, GropiusUserRepository>(repository) {
 
     /**
      * Updates a [GropiusUser] based on the provided [input]
@@ -58,7 +58,6 @@ class GropiusUserService(
             checkIsAdmin(authorizationContext, "update isAdmin of a GropiusUser")
             gropiusUser.isAdmin = it
         }
-        updateExtensibleNode(gropiusUser, input)
         return repository.save(gropiusUser).awaitSingle()
     }
 
@@ -80,7 +79,6 @@ class GropiusUserService(
             validateAvatar(input.avatar)
         }
         val gropiusUser = GropiusUser(input.displayName, input.email, input.avatar, input.username, input.isAdmin)
-        createdExtensibleNode(gropiusUser, input)
         return repository.save(gropiusUser).awaitSingle()
     }
 

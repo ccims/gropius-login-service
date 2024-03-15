@@ -3,7 +3,7 @@ package gropius.dto.input.architecture
 import com.expediagroup.graphql.generator.annotations.GraphQLDescription
 import com.expediagroup.graphql.generator.execution.OptionalInput
 import com.expediagroup.graphql.generator.scalars.ID
-import gropius.dto.input.common.CreateExtensibleNodeInput
+import gropius.dto.input.common.Input
 import gropius.dto.input.common.JSONFieldInput
 import gropius.dto.input.common.validateAndEnsureNoDuplicates
 import gropius.dto.input.template.CreateTemplatedNodeInput
@@ -22,7 +22,7 @@ class CreateRelationInput(
     override val templatedFields: List<JSONFieldInput>,
     @GraphQLDescription("The template of the created Relation")
     val template: ID
-): CreateExtensibleNodeInput(), CreateTemplatedNodeInput {
+): Input(), CreateTemplatedNodeInput {
 
     override fun validate() {
         super.validate()

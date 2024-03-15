@@ -60,7 +60,7 @@ export class SyncImsUserController {
         const strategyInstance = await loginData.strategyInstance;
         const strategy = this.strategyService.getStrategyByName(strategyInstance.type);
         return {
-            token: await strategy.getSyncTokenForLoginData(loginData),
+            ...(await strategy.getSyncDataForLoginData(loginData)),
             isImsUserKnown: true,
             message: null,
         };

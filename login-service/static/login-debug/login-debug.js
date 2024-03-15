@@ -160,6 +160,18 @@ export default {
             createGithubInstanceDoesImplicitRegister: false,
             createGithubInstanceName: "",
 
+            createJiraInstanceMethod: "POST",
+            createJiraInstanceEditId: "",
+            createJiraInstanceClientId: "",
+            createJiraInstanceClientSecret: "",
+            createJiraInstanceIsLoginActive: false,
+            createJiraInstanceIsSelfRegisterActive: false,
+            createJiraInstanceIsSyncActive: false,
+            createJiraInstanceDoesImplicitRegister: false,
+            createJiraInstanceName: "",
+            createJiraInstanceRootURL: "",
+            createJiraInstanceCallbackRoot: "",
+
             createClientMethod: "PUT",
             createClientEditId: "",
             createClientUrls: [window.location.href],
