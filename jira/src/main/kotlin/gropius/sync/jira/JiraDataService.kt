@@ -205,12 +205,16 @@ class JiraDataService(
                 return if (res.status.isSuccess()) {
                     logger.trace("Response for {} {}", res.request.url, res.bodyAsText())
                     Optional.of(res)
-                } else Optional.empty()
+                } else {
+                    Optional.empty()
+                }
             } catch (e: ClientRequestException) {
                 e.printStackTrace()
                 return Optional.empty()
             }
-        } else return Optional.empty()
+        } else {
+            return Optional.empty()
+        }
     }
 
     /**

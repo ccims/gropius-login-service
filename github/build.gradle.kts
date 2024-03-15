@@ -1,7 +1,3 @@
-import kotlinx.coroutines.DEBUG_PROPERTY_NAME
-import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
-import org.gradle.internal.classpath.Instrumented.systemProperty
-
 val graphglueVersion: String by project
 val apolloVersion: String by project
 val kosonVersion: String by project
@@ -37,8 +33,4 @@ apollo {
         generateOptionalOperationVariables.set(false)
         codegenModels.set("responseBased")
     }
-}
-
-run {
-    systemProperty(DEBUG_PROPERTY_NAME, DEBUG_PROPERTY_VALUE_ON)
 }

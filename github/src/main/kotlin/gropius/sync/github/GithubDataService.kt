@@ -62,7 +62,7 @@ class GithubDataService(
 ) : SyncDataService {
 
     companion object {
-        const val fallbackUserName = "github"
+        const val FALLBACK_USER_NAME = "github"
     }
 
     /**
@@ -84,6 +84,7 @@ class GithubDataService(
      * Get a IMSUser for a GitHub user
      * @param imsProject the project to map the user to
      * @param userData the Jira user
+     * @return The gropius user
      */
     suspend fun mapUser(imsProject: IMSProject, userData: UserData?): User {
         val databaseId = userData?.asUser()?.databaseId
@@ -97,7 +98,7 @@ class GithubDataService(
             }
         } else {
             val foundImsUser =
-                imsProject.ims().value.users().firstOrNull { it.username == (userData?.login ?: fallbackUserName) }
+                imsProject.ims().value.users().firstOrNull { it.username == (userData?.login ?: FALLBACK_USER_NAME) }
             if (foundImsUser != null) {
                 return foundImsUser
             }
@@ -105,10 +106,10 @@ class GithubDataService(
         val encodedAccountId =
             jsonNodeMapper.jsonNodeToDeterministicString(objectMapper.valueToTree<JsonNode>(userData?.asUser()?.databaseId))
         val imsUser = IMSUser(
-            userData?.asUser()?.name ?: userData?.login ?: fallbackUserName,
+            userData?.asUser()?.name ?: userData?.login ?: FALLBACK_USER_NAME,
             userData?.asUser()?.email,
             null,
-            userData?.login ?: fallbackUserName,
+            userData?.login ?: FALLBACK_USER_NAME,
             mutableMapOf("github_id" to encodedAccountId)
         )
         imsUser.ims().value = imsProject.ims().value
@@ -159,8 +160,8 @@ class GithubDataService(
             "GitHub Label",
             labelData.color
         )
-        label.createdBy().value = gropiusUserRepository.findByUsername(fallbackUserName) ?: GropiusUser(
-            "GitHub", null, null, fallbackUserName, true
+        label.createdBy().value = gropiusUserRepository.findByUsername(FALLBACK_USER_NAME) ?: GropiusUser(
+            "GitHub", null, null, FALLBACK_USER_NAME, true
         )
         label.lastModifiedBy().value = label.createdBy().value
         label.trackables() += imsProject.trackable().value
@@ -176,6 +177,7 @@ class GithubDataService(
      * @param imsProject The IMSProject to work on
      * @param users The users sorted with best first
      * @param body The content of the mutation
+     * @return The selected user and the response for the mutation
      */
     final suspend inline fun <reified D : Mutation.Data> mutation(
         imsProject: IMSProject, users: List<User>, body: Mutation<D>
@@ -196,8 +198,11 @@ class GithubDataService(
                 .addHttpHeader("Authorization", "Bearer ${token.token}").build()
             val res = apolloClient.mutation(body).execute()
             logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
-            if (res.errors?.isNotEmpty() != true) Optional.of(res)
-            else Optional.empty()
+            if (res.errors?.isNotEmpty() != true) {
+                Optional.of(res)
+            } else {
+                Optional.empty()
+            }
         }
     }
 
@@ -208,6 +213,7 @@ class GithubDataService(
      * @param imsProject The IMSProject to work on
      * @param users The users sorted with best first
      * @param body The content of the query
+     * @return The selected user and the response for the query
      */
     final suspend inline fun <reified D : Query.Data> query(
         imsProject: IMSProject, users: List<User>, body: Query<D>
@@ -231,8 +237,11 @@ class GithubDataService(
                 .addHttpHeader("Authorization", "Bearer ${token.token}").build()
             val res = apolloClient.query(body).execute()
             logger.info("Response Code for request with token $token is ${res.data} ${res.errors}")
-            if (res.errors?.isNotEmpty() != true) Optional.of(res)
-            else Optional.empty()
+            if (res.errors?.isNotEmpty() != true) {
+                Optional.of(res)
+            } else {
+                Optional.empty()
+            }
         }
     }
 }

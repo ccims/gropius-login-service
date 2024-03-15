@@ -103,17 +103,17 @@ final class JiraSync(
         for (issueId in issueList) {
             var startAt = 0
             while (true) {
-                val q = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
+                val issueCommentList = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
                     appendPathSegments("issue")
                     appendPathSegments(issueId)
                     appendPathSegments("comment")
                     parameters.append("startAt", "$startAt")
                 }.second.body<CommentQuery>()
-                q.comments.forEach {
+                issueCommentList.comments.forEach {
                     issueDataService.insertComment(imsProject, issueId, it)
                 }
-                startAt = q.startAt + q.comments.size
-                if (startAt >= q.total) break
+                startAt = issueCommentList.startAt + issueCommentList.comments.size
+                if (startAt >= issueCommentList.total) break
             }
         }
     }
@@ -125,18 +125,18 @@ final class JiraSync(
         var startAt = 0
         while (true) {
             val imsProjectConfig = IMSProjectConfig(helper, imsProject)
-            val q = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
+            val issueResponse = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
                 appendPathSegments("search")
                 parameters.append("jql", "project=${imsProjectConfig.repo}")
                 parameters.append("expand", "names,schema,editmeta,changelog")
                 parameters.append("startAt", "$startAt")
             }.second.body<ProjectQuery>()
-            q.issues(imsProject).forEach {
+            issueResponse.issues(imsProject).forEach {
                 issueList.add(it.jiraId)
                 issueDataService.insertIssue(imsProject, it)
             }
-            startAt = q.startAt + q.issues.size
-            if (startAt >= q.total) break
+            startAt = issueResponse.startAt + issueResponse.issues.size
+            if (startAt >= issueResponse.total) break
         }
     }
 
@@ -147,7 +147,9 @@ final class JiraSync(
     override suspend fun syncComment(
         imsProject: IMSProject, issueId: String, issueComment: IssueComment, users: List<User>
     ): TimelineItemConversionInformation? {
-        if (issueComment.body.isNullOrEmpty()) return null;
+        if (issueComment.body.isNullOrEmpty()) {
+            return null
+        }
         val iid = jiraDataService.request(
             imsProject, users, HttpMethod.Post, JsonObject(mapOf("body" to JsonPrimitive(issueComment.body)))
         ) {
@@ -241,8 +243,10 @@ final class JiraSync(
 
     /**
      * Scape a Gropius Label name for Jira
+     * @param gropiusName The name of the Label onb gropius side
+     * @return the cleaned label
      */
-    fun jirafyLabelName(gropiusName: String): String {
+    private fun jirafyLabelName(gropiusName: String): String {
         return gropiusName.replace("[^A-Za-z0-9]+".toRegex(), "_").replace("^_*".toRegex(), "")
             .replace("_*$".toRegex(), "")
     }
