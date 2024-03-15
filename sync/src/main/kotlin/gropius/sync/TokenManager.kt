@@ -43,6 +43,11 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
     private val neoOperations: ReactiveNeo4jOperations,
     private val syncConfigurationProperties: SyncConfigurationProperties
 ) {
+
+    companion object {
+        const val JSON_CHARSET_MIME_TYPE = "application/json; charset=utf-8"
+    }
+
     /**
      * Logger used to print notifications
      */
@@ -59,7 +64,7 @@ abstract class TokenManager<ResponseType : BaseResponseType>(
             })
             json(Json {
                 ignoreUnknownKeys = true
-            }, contentType = ContentType.parse("application/json; charset=utf-8"))
+            }, contentType = ContentType.parse(JSON_CHARSET_MIME_TYPE))
         }
     }
 

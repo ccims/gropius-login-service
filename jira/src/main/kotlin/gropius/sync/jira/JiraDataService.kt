@@ -54,6 +54,10 @@ class JiraDataService(
     val gropiusUserRepository: GropiusUserRepository
 ) : SyncDataService {
 
+    companion object {
+        const val JSON_CHARSET_MIME_TYPE = "application/json; charset=utf-8"
+    }
+
     /**
      * Logger used to print notifications
      */
@@ -68,7 +72,7 @@ class JiraDataService(
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
-            }, contentType = ContentType.parse("application/json; charset=utf-8"))
+            }, contentType = ContentType.parse(JSON_CHARSET_MIME_TYPE))
         }
     }
 
@@ -113,6 +117,7 @@ class JiraDataService(
      * Get a IMSUser for a Jira user
      * @param imsProject the project to map the user to
      * @param user the Jira user
+     * @return the IMSUser for the Jira user
      */
     suspend fun mapUser(imsProject: IMSProject, user: JsonElement): User {
         val encodedAccountId =
@@ -141,6 +146,7 @@ class JiraDataService(
      * Map a label from Jira to Gropius
      * @param imsProject the project to map the label to
      * @param label the label to map
+     * @return The label maped from the name
      */
     suspend fun mapLabel(imsProject: IMSProject, label: String): Label {
         val trackable = imsProject.trackable().value
@@ -197,7 +203,7 @@ class JiraDataService(
                         )
                     }
                     if (body != null) {
-                        contentType(ContentType.parse("application/json; charset=utf-8"))
+                        contentType(ContentType.parse(JSON_CHARSET_MIME_TYPE))
                         setBody(body)
                     }
                 }
