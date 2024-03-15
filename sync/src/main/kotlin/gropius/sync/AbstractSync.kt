@@ -104,6 +104,7 @@ abstract class AbstractSync(
      * @param imsProject IMS project to sync
      * @param issueId GitHub ID of the issue
      * @param issueComment Comment to sync
+     * @param users List of users involved in this timeline item, sorted with most relevant first
      * @return Conversion information
      */
     abstract suspend fun syncComment(
@@ -115,6 +116,7 @@ abstract class AbstractSync(
      * @param imsProject IMS project to sync
      * @param issueId GitHub ID of the issue
      * @param newTitle New title of the issue
+     * @param users List of users involved in this timeline item, sorted with most relevant first
      * @return Conversion information
      */
     abstract suspend fun syncTitleChange(
@@ -126,6 +128,7 @@ abstract class AbstractSync(
      * @param imsProject IMS project to sync
      * @param issueId GitHub ID of the issue
      * @param newState New state of the issue
+     * @param users List of users involved in this timeline item, sorted with most relevant first
      * @return Conversion information
      */
     abstract suspend fun syncStateChange(
@@ -137,6 +140,7 @@ abstract class AbstractSync(
      * @param imsProject IMS project to sync
      * @param issueId GitHub ID of the issue
      * @param label Label to sync
+     * @param users List of users involved in this timeline item, sorted with most relevant first
      * @return Conversion information
      */
     abstract suspend fun syncAddedLabel(
@@ -148,6 +152,7 @@ abstract class AbstractSync(
      * @param imsProject IMS project to sync
      * @param issueId GitHub ID of the issue
      * @param label Label to sync
+     * @param users List of users involved in this timeline item, sorted with most relevant first
      * @return Conversion information
      */
     abstract suspend fun syncRemovedLabel(
