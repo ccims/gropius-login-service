@@ -14,7 +14,6 @@ dependencies {
     implementation("com.apollographql.apollo3", "apollo-runtime", apolloVersion)
     implementation("com.apollographql.apollo3", "apollo-adapters", apolloVersion)
     implementation("com.lectra", "koson", kosonVersion)
-    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-debug", "1.4.0")
 }
 
 
