@@ -163,7 +163,7 @@ final class JiraSync(
     override suspend fun syncTitleChange(
         imsProject: IMSProject, issueId: String, newTitle: String, users: List<User>
     ): TimelineItemConversionInformation? {
-        jiraDataService.request(
+        val response = jiraDataService.request(
             imsProject, users, HttpMethod.Put, JsonObject(
                 mapOf(
                     "fields" to JsonObject(
@@ -176,9 +176,13 @@ final class JiraSync(
         ) {
             appendPathSegments("issue")
             appendPathSegments(issueId)
+            parameters.append("returnIssue", "true")
+            parameters.append("expand", "names,schema,editmeta,changelog")
+
         }
+        val changelogEntry = response.second.body<IssueBean>().changelog.histories.lastOrNull()
         return JiraTimelineItemConversionInformation(
-            imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
+            imsProject.rawId!!, if (changelogEntry?.items?.singleOrNull()?.field == "summary") changelogEntry.id else ""
         )
     }
 
@@ -205,14 +209,14 @@ final class JiraSync(
             appendPathSegments(issueId)
         }
         return JiraTimelineItemConversionInformation(
-            imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
+            imsProject.rawId!!, TODO("Program State Changes")
         )
     }
 
     override suspend fun syncAddedLabel(
         imsProject: IMSProject, issueId: String, label: Label, users: List<User>
     ): TimelineItemConversionInformation? {
-        jiraDataService.request(
+        val response = jiraDataService.request(
             imsProject, users, HttpMethod.Put, JsonObject(
                 mapOf(
                     "update" to JsonObject(
@@ -235,9 +239,12 @@ final class JiraSync(
         ) {
             appendPathSegments("issue")
             appendPathSegments(issueId)
+            parameters.append("returnIssue", "true")
+            parameters.append("expand", "names,schema,editmeta,changelog")
         }
+        val changelogEntry = response.second.body<IssueBean>().changelog.histories.lastOrNull()
         return JiraTimelineItemConversionInformation(
-            imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
+            imsProject.rawId!!, if (changelogEntry?.items?.singleOrNull()?.field == "labels") changelogEntry.id else ""
         )
     }
 
@@ -254,7 +261,7 @@ final class JiraSync(
     override suspend fun syncRemovedLabel(
         imsProject: IMSProject, issueId: String, label: Label, users: List<User>
     ): TimelineItemConversionInformation? {
-        jiraDataService.request(
+        val response = jiraDataService.request(
             imsProject, users, HttpMethod.Put, JsonObject(
                 mapOf(
                     "update" to JsonObject(
@@ -277,9 +284,12 @@ final class JiraSync(
         ) {
             appendPathSegments("issue")
             appendPathSegments(issueId)
+            parameters.append("returnIssue", "true")
+            parameters.append("expand", "names,schema,editmeta,changelog")
         }
+        val changelogEntry = response.second.body<IssueBean>().changelog.histories.lastOrNull()
         return JiraTimelineItemConversionInformation(
-            imsProject.rawId!!, "TODO: Get changelog id to prevent duplicate TimelineItem"
+            imsProject.rawId!!, if (changelogEntry?.items?.singleOrNull()?.field == "labels") changelogEntry.id else ""
         )
     }
 
