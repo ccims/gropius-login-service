@@ -5,11 +5,10 @@ slug: /github-sync
 
 # GitHub sync
 
-The GitHub sync binary runs one cycle and then exits.
-For automatical sync schedule executions of the module with cron or similar.
+The GitHub sync binary runs cycles scheduled with a default value of 10min.
 Currently supported are titles, desriptions, comments and labels
 
-## Single Execution
+## Single Cycle
 
 Each cycle consists of two parts: Incoming and Outgoing.
 The incoming phase only syncs data from GitHub to gropius while the outgoing phase syncs only from gropius to GitHub.
