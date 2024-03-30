@@ -10,4 +10,8 @@ import java.net.URI
  * @param apiSecret API Secret for login service
  */
 @ConfigurationProperties("gropius.sync")
-data class SyncConfigurationProperties(val loginServiceBase: URI, val apiSecret: String)
+data class SyncConfigurationProperties(
+    val schedulerFallbackTime: Long = 600_000,
+    val loginServiceBase: URI,
+    val apiSecret: String
+)
