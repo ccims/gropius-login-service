@@ -1,12 +1,8 @@
 package gropius
 
-import gropius.sync.jira.JiraSync
 import io.github.graphglue.data.repositories.EnableGraphglueRepositories
-import kotlinx.coroutines.runBlocking
 import org.neo4j.driver.Driver
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
@@ -17,7 +13,6 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import org.springframework.data.neo4j.core.ReactiveDatabaseSelectionProvider
 import org.springframework.data.neo4j.core.transaction.ReactiveNeo4jTransactionManager
-import kotlin.system.exitProcess
 
 /**
  * Configuration provider for the neo4j transaction manager
@@ -54,42 +49,7 @@ class SyncConfiguration(
 @ConfigurationPropertiesScan
 @EnableGraphglueRepositories
 @EnableReactiveMongoRepositories
-class Application : CommandLineRunner {
-    /**
-     * Reference for the spring instance of GithubSync
-     */
-    @Autowired
-    lateinit var jiraSync: JiraSync
-
-    /**
-     * Logger used to print notifications
-     */
-    private val logger = LoggerFactory.getLogger(Application::class.java)
-
-    override fun run(vararg args: String?) {
-        try {
-            runBlocking {
-                try {
-                    jiraSync.sync()
-                } catch (e: Exception) {
-                    println("ERROR")
-                    e.printStackTrace()
-                    throw e;
-                } finally {
-                    println("END")
-                }
-            }
-        } catch (e: Exception) {
-            logger.error("Error in sync", e)
-        } catch (e: Error) {
-            e.printStackTrace()
-            logger.error("Throwable in sync", e)
-            exitProcess(1)//TODO: remove ASAP
-        } finally {
-            exitProcess(0)//TODO: remove ASAP
-        }
-    }
-}
+class Application {}
 
 fun main(args: Array<String>) {
     runApplication<Application>(*args)
