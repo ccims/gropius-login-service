@@ -8,6 +8,7 @@ import java.net.URI
  *
  * @param loginServiceBase Base url for login service
  * @param apiSecret API Secret for login service
+ * @param schedulerFallbackTime Time in milliseconds to wait before the next sync
  */
 @ConfigurationProperties("gropius.sync")
 data class SyncConfigurationProperties(
