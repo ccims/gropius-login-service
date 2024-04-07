@@ -211,7 +211,7 @@ class JiraTimelineItem(val id: String, val created: String, val author: JsonObje
  */
 class JiraCommentTimelineItem(val issueId: String, val comment: JiraComment) : IncomingTimelineItem() {
     override suspend fun identification(): String {
-        return issueId + ":::" + comment.id
+        return comment.id
     }
 
     override suspend fun gropiusTimelineItem(
