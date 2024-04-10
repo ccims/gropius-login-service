@@ -44,7 +44,8 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
         component.interfaceSpecifications(cache).forEach {
             deleteInterfaceSpecification(it)
         }
-        component.versions(cache).forEach {
+        val versions = component.versions(cache).toList()
+        versions.forEach {
             deleteComponentVersion(it)
         }
     }
