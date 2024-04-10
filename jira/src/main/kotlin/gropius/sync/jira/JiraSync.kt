@@ -113,7 +113,9 @@ final class JiraSync(
                     issueDataService.insertChangelogEntry(imsProject, issueId, it)
                 }
                 startAt = issueCommentList.startAt + issueCommentList.values.size
-                if (startAt >= issueCommentList.total) break
+                if (startAt >= issueCommentList.total) {
+                    break
+                }
             }
         }
         for (issueId in issueList) {
@@ -130,7 +132,9 @@ final class JiraSync(
                     issueDataService.insertComment(imsProject, issueId, it)
                 }
                 startAt = issueCommentList.startAt + issueCommentList.comments.size
-                if (startAt >= issueCommentList.total) break
+                if (startAt >= issueCommentList.total) {
+                    break
+                }
             }
         }
     }
