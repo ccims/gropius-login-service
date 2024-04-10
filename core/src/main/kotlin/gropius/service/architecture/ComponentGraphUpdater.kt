@@ -59,10 +59,8 @@ class ComponentGraphUpdater(updateContext: NodeBatchUpdater = NodeBatchUpdateCon
         cache.add(componentVersion)
         lockIncomingAndOutgoingRelationPartners(componentVersion)
         deletedNodes += componentVersion
-        componentVersion.outgoingRelations(cache).forEach {
-            deleteRelation(it)
-        }
-        componentVersion.incomingRelations(cache).forEach {
+        val relations = componentVersion.outgoingRelations(cache) + componentVersion.incomingRelations(cache)
+        relations.forEach {
             deleteRelation(it)
         }
         issueAggregationUpdater.deletedComponentVersion(componentVersion)
