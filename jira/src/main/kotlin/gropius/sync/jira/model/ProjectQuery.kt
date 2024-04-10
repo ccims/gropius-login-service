@@ -22,8 +22,8 @@ data class ChangelogFieldEntry(
     val field: String,
     val fieldtype: String,
     val fieldId: String? = null,
-    val from: JsonElement,
-    val to: JsonElement,
+    val from: String?,
+    val to: String?,
     val fromString: String?,
     val toString: String?
 )
