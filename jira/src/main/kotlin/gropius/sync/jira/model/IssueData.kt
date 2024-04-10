@@ -1,5 +1,6 @@
 package gropius.sync.jira.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import gropius.model.architecture.IMSProject
 import gropius.model.architecture.Project
 import gropius.model.issue.Issue
@@ -52,10 +53,27 @@ class JiraTimelineItem(val id: String, val created: String, val author: JsonObje
         return id
     }
 
+    fun isStringAndNullTemplate(encodedTypes: String): Pair<Boolean, Boolean> {
+        val typedef = Json.parseToJsonElement(encodedTypes).jsonObject
+        return when {
+            typedef.containsKey("type") -> (typedef["type"]!!.jsonPrimitive.content == "string") to (typedef.containsKey(
+                "nullable"
+            ) && typedef["nullable"]!!.jsonPrimitive.content == "true")
+
+            typedef.containsKey("enum") -> false to false
+            typedef.containsKey("elements") -> false to false
+            typedef.containsKey("properties") -> false to false
+            typedef.containsKey("values") -> false to false
+            typedef.containsKey("discriminator") -> false to false
+            else -> true to true
+        }
+    }
+
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
         service: SyncDataService,
-        timelineItemConversionInformation: TimelineItemConversionInformation?
+        timelineItemConversionInformation: TimelineItemConversionInformation?,
+        issue: Issue
     ): Pair<List<TimelineItem>, TimelineItemConversionInformation> {
         val jiraService = (service as JiraDataService)
         if (data.fieldId == "summary") {
@@ -65,13 +83,59 @@ class JiraTimelineItem(val id: String, val created: String, val author: JsonObje
                 timelineItemConversionInformation, imsProject, service, jiraService
             )
         } else if (data.fieldId == "labels") {
-            gropiusLabels(
+            return gropiusLabels(
                 timelineItemConversionInformation, imsProject, service, jiraService
             )
+        }
+        if (issue.template().value.templateFieldSpecifications.containsKey(data.field)) {
+            val (isString, isNull) = isStringAndNullTemplate(issue.template().value.templateFieldSpecifications[data.field]!!)
+            if (isString) {
+                return gropiusTemplatedField(
+                    timelineItemConversionInformation, imsProject, service, jiraService, isNull
+                )
+            }
         }
         val convInfo =
             timelineItemConversionInformation ?: JiraTimelineItemConversionInformation(imsProject.rawId!!, id);
         return listOf<TimelineItem>() to convInfo;
+    }
+
+    private suspend fun gropiusTemplatedField(
+        timelineItemConversionInformation: TimelineItemConversionInformation?,
+        imsProject: IMSProject,
+        service: JiraDataService,
+        jiraService: JiraDataService,
+        isNull: Boolean
+    ): Pair<List<TimelineItem>, TimelineItemConversionInformation> {
+        val convInfo =
+            timelineItemConversionInformation ?: JiraTimelineItemConversionInformation(imsProject.rawId!!, id);
+        val timelineId = timelineItemConversionInformation?.gropiusId
+        val source = data.from
+        val destination = data.to
+        logger.info("GOING FROM $source to $destination")
+        val templateEvent: TemplatedFieldChangedEvent =
+            (if (timelineId != null) service.neoOperations.findById<TemplatedFieldChangedEvent>(
+                timelineId
+            ) else null) ?: TemplatedFieldChangedEvent(
+                OffsetDateTime.parse(
+                    created, IssueData.formatter
+                ), OffsetDateTime.parse(
+                    created, IssueData.formatter
+                ), data.field, service.jsonNodeMapper.jsonNodeToDeterministicString(
+                    service.objectMapper.valueToTree<JsonNode>(
+                        data.from ?: data.fromString ?: (if (!isNull) "" else null)
+                    )
+                ), service.jsonNodeMapper.jsonNodeToDeterministicString(
+                    service.objectMapper.valueToTree<JsonNode>(
+                        data.to ?: data.toString ?: (if (!isNull) "" else null)
+                    )
+                )
+            )
+        templateEvent.createdBy().value = jiraService.mapUser(imsProject, author)
+        templateEvent.lastModifiedBy().value = jiraService.mapUser(imsProject, author)
+        return listOf<TimelineItem>(
+            templateEvent
+        ) to convInfo;
     }
 
     /**
@@ -217,7 +281,8 @@ class JiraCommentTimelineItem(val issueId: String, val comment: JiraComment) : I
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
         service: SyncDataService,
-        timelineItemConversionInformation: TimelineItemConversionInformation?
+        timelineItemConversionInformation: TimelineItemConversionInformation?,
+        issue: Issue
     ): Pair<List<TimelineItem>, TimelineItemConversionInformation> {
         val jiraService = (service as JiraDataService)
         val convInfo = timelineItemConversionInformation ?: JiraTimelineItemConversionInformation(
