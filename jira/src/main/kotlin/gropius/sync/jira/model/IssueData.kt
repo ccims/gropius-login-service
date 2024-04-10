@@ -315,7 +315,16 @@ data class IssueData(
             fields["updated"]!!.jsonPrimitive.content, formatter
         )
         val issue = Issue(
-            created, updated, mutableMapOf(), fields["summary"]!!.jsonPrimitive.content, fields["description"]!!.jsonPrimitive.content, updated, null, null, null, null
+            created,
+            updated,
+            mutableMapOf(),
+            fields["summary"]!!.jsonPrimitive.content,
+            fields["description"]!!.jsonPrimitive.content,
+            updated,
+            null,
+            null,
+            null,
+            null
         )
         issue.body().value = Body(
             created, updated, updated
@@ -429,6 +438,21 @@ class IssueDataService(val issuePileRepository: IssueDataRepository) : IssueData
         val issueData = findByImsProjectAndJiraId(imsProject.rawId!!, jiraId)!!
         if (!issueData.comments.containsKey(comment.id)) {
             issueData.comments.put(comment.id, comment)
+            issuePileRepository.save(issueData).awaitSingle()
+        }
+    }
+
+    /**
+     * Insert a comment into the database
+     * @param imsProject the IMSProject the comment belongs to
+     * @param jiraId the JiraId of the issue the comment belongs to
+     * @param comment the comment
+     */
+    @Transactional
+    suspend fun insertChangelogEntry(imsProject: IMSProject, jiraId: String, changeLogEntry: ChangeLogEntry) {
+        val issueData = findByImsProjectAndJiraId(imsProject.rawId!!, jiraId)!!
+        if (issueData.changelog.histories.none { it.id == changeLogEntry.id }) {
+            issueData.changelog.histories.add(changeLogEntry)
             issuePileRepository.save(issueData).awaitSingle()
         }
     }

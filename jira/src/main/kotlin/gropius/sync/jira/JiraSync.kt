@@ -106,6 +106,22 @@ final class JiraSync(
                 val issueCommentList = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
                     appendPathSegments("issue")
                     appendPathSegments(issueId)
+                    appendPathSegments("changelog")
+                    parameters.append("startAt", "$startAt")
+                }.second.body<ValueChangeLogContainer>()
+                issueCommentList.values.forEach {
+                    issueDataService.insertChangelogEntry(imsProject, issueId, it)
+                }
+                startAt = issueCommentList.startAt + issueCommentList.values.size
+                if (startAt >= issueCommentList.total) break
+            }
+        }
+        for (issueId in issueList) {
+            var startAt = 0
+            while (true) {
+                val issueCommentList = jiraDataService.request<Unit>(imsProject, listOf(), HttpMethod.Get) {
+                    appendPathSegments("issue")
+                    appendPathSegments(issueId)
                     appendPathSegments("comment")
                     parameters.append("startAt", "$startAt")
                 }.second.body<CommentQuery>()
