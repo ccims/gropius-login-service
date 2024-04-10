@@ -123,6 +123,7 @@ final class JiraSync(
                     appendPathSegments("issue")
                     appendPathSegments(issueId)
                     appendPathSegments("comment")
+                    parameters.append("expand", "names,schema,editmeta,changelog")
                     parameters.append("startAt", "$startAt")
                 }.second.body<CommentQuery>()
                 issueCommentList.comments.forEach {
