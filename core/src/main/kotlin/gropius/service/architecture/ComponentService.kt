@@ -93,7 +93,7 @@ class ComponentService(
      * @param user the user who created the [Component]
      * @return the saved created [Component]
      */
-    private suspend fun createComponentInternal(input: CreateComponentInput, user: GropiusUser, ): Component {
+    private suspend fun createComponentInternal(input: CreateComponentInput, user: GropiusUser): Component {
         val template = componentTemplateRepository.findById(input.template)
         val templatedFields = templatedNodeService.validateInitialTemplatedFields(template, input)
         val component = Component(input.name, input.description, input.repositoryURL, templatedFields)
