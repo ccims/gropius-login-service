@@ -64,7 +64,7 @@ class ArchitectureMutations(
         Automatically generates a default ComponentPermission which grants the authenticated user READ and ADMIN
         """
     )
-    @AutoPayloadType("The created Components")
+    @AutoPayloadType("The created Components", "components")
     suspend fun bulkCreateComponent(
         @GraphQLDescription("Defines the created Components")
         input: BulkCreateComponentInput, dfe: DataFetchingEnvironment
@@ -334,7 +334,7 @@ class ArchitectureMutations(
         """Creates multiple Relations, requires RELATE_FROM_COMPONENT on the Component associated with start.
         """
     )
-    @AutoPayloadType("The created Relations")
+    @AutoPayloadType("The created Relations", "relations")
     suspend fun bulkCreateRelation(
         @GraphQLDescription("Defines the created Relations")
         input: BulkCreateRelationInput, dfe: DataFetchingEnvironment
