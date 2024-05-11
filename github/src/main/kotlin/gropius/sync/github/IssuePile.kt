@@ -125,10 +125,10 @@ data class IssuePileData(
         issue.createdBy().value = githubService.mapUser(imsProject, createdBy)
         issue.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
         issue.body().value.issue().value = issue
-        issue.state().value = githubService.issueState(true)
-        issue.template().value = githubService.issueTemplate()
+        issue.state().value = githubService.issueState(imsProject, true)
+        issue.template().value = githubService.issueTemplate(imsProject)
         issue.trackables() += githubService.neoOperations.findAll(Project::class.java).awaitFirst()
-        issue.type().value = githubService.issueType()
+        issue.type().value = githubService.issueType(imsProject)
         return issue
     }
 
@@ -627,8 +627,8 @@ class ReopenedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val
             }
             event.createdBy().value = githubService.mapUser(imsProject, createdBy)
             event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
-            event.newState().value = githubService.issueState(true)
-            event.oldState().value = githubService.issueState(false)
+            event.newState().value = githubService.issueState(imsProject, true)
+            event.oldState().value = githubService.issueState(imsProject, false)
             return listOf<TimelineItem>(event) to convInfo;
         }
         return listOf<TimelineItem>() to convInfo;
@@ -668,8 +668,8 @@ class ClosedEventTimelineItem(githubId: String, createdAt: OffsetDateTime, val c
             }
             event.createdBy().value = githubService.mapUser(imsProject, createdBy)
             event.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
-            event.newState().value = githubService.issueState(false)
-            event.oldState().value = githubService.issueState(true)
+            event.newState().value = githubService.issueState(imsProject, false)
+            event.oldState().value = githubService.issueState(imsProject, true)
             return listOf<TimelineItem>(event) to convInfo;
         }
         return listOf<TimelineItem>() to convInfo;
