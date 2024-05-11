@@ -306,6 +306,12 @@ data class IssueData(
         //TODO("Not yet implemented")
     }
 
+    override suspend fun fillImsIssueTemplatedFields(
+        templatedFields: MutableMap<String, String>,
+        service: SyncDataService
+    ) {
+    }
+
     override suspend fun createIssue(imsProject: IMSProject, service: SyncDataService): Issue {
         val jiraService = (service as JiraDataService)
         val created = OffsetDateTime.parse(
@@ -315,7 +321,16 @@ data class IssueData(
             fields["updated"]!!.jsonPrimitive.content, formatter
         )
         val issue = Issue(
-            created, updated, mutableMapOf(), fields["summary"]!!.jsonPrimitive.content, fields["description"]!!.jsonPrimitive.content, updated, null, null, null, null
+            created,
+            updated,
+            mutableMapOf(),
+            fields["summary"]!!.jsonPrimitive.content,
+            fields["description"]!!.jsonPrimitive.content,
+            updated,
+            null,
+            null,
+            null,
+            null
         )
         issue.body().value = Body(
             created, updated, updated

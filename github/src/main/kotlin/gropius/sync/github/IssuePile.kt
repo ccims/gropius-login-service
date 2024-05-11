@@ -1,5 +1,6 @@
 package gropius.sync.github
 
+import com.fasterxml.jackson.databind.JsonNode
 import gropius.model.architecture.IMSProject
 import gropius.model.architecture.Project
 import gropius.model.issue.Issue
@@ -83,6 +84,8 @@ data class IssuePileData(
     var createdAt: OffsetDateTime,
     val timelineItems: MutableList<GithubTimelineItem>,
     val createdBy: UserData?,
+    var number: Int = 0,
+    var url: String = "",
     @Indexed
     var needsTimelineRequest: Boolean = true,
     @Indexed
@@ -113,16 +116,7 @@ data class IssuePileData(
     override suspend fun createIssue(imsProject: IMSProject, service: SyncDataService): Issue {
         val githubService = (service as GithubDataService)
         val issue = Issue(
-            createdAt,
-            lastUpdate,
-            mutableMapOf(),
-            initialTitle,
-            initialDescription,
-            lastUpdate,
-            null,
-            null,
-            null,
-            null
+            createdAt, lastUpdate, mutableMapOf(), initialTitle, initialDescription, lastUpdate, null, null, null, null
         )
         issue.body().value = Body(createdAt, lastUpdate, lastUpdate)
         issue.body().value.lastModifiedBy().value = githubService.mapUser(imsProject, createdBy)
@@ -136,6 +130,32 @@ data class IssuePileData(
         issue.trackables() += githubService.neoOperations.findAll(Project::class.java).awaitFirst()
         issue.type().value = githubService.issueType()
         return issue
+    }
+
+    override suspend fun fillImsIssueTemplatedFields(
+        templatedFields: MutableMap<String, String>, service: SyncDataService
+    ) {
+        val githubService = (service as GithubDataService)
+        val encodedNumber = githubService.jsonNodeMapper.jsonNodeToDeterministicString(
+            githubService.objectMapper.valueToTree<JsonNode>(
+                number
+            )
+        )
+        templatedFields["number"] = encodedNumber
+
+        val encodedUrl = githubService.jsonNodeMapper.jsonNodeToDeterministicString(
+            githubService.objectMapper.valueToTree<JsonNode>(
+                url
+            )
+        )
+        templatedFields["url"] = encodedUrl
+
+        val encodedId = githubService.jsonNodeMapper.jsonNodeToDeterministicString(
+            githubService.objectMapper.valueToTree<JsonNode>(
+                githubId
+            )
+        )
+        templatedFields["id"] = encodedId
     }
 }
 
@@ -220,7 +240,9 @@ class IssuePileService(val issuePileRepository: IssuePileRepository) : IssuePile
             data.updatedAt,
             data.createdAt,
             mutableListOf(),
-            data.author
+            data.author,
+            data.number,
+            data.url.toString()
         )
         pile.lastUpdate = data.updatedAt
         pile.needsTimelineRequest = true;
@@ -361,11 +383,7 @@ class TODOTimelineItemConversionInformation(
  * @param newTitle new title
  */
 class RenamedTitleEventTimelineItem(
-    githubId: String,
-    createdAt: OffsetDateTime,
-    val createdBy: UserData?,
-    val oldTitle: String,
-    val newTitle: String
+    githubId: String, createdAt: OffsetDateTime, val createdBy: UserData?, val oldTitle: String, val newTitle: String
 ) : OwnedGithubTimelineItem(githubId, createdAt) {
 
     /**
@@ -373,11 +391,7 @@ class RenamedTitleEventTimelineItem(
      * @param data The API data
      */
     constructor(data: RenamedTitleEventTimelineItemData) : this(
-        data.id,
-        data.createdAt,
-        data.actor,
-        data.previousTitle,
-        data.currentTitle
+        data.id, data.createdAt, data.actor, data.previousTitle, data.currentTitle
     ) {
     }
 

@@ -1,6 +1,7 @@
 package gropius.sync
 
 import gropius.model.architecture.IMS
+import gropius.model.architecture.IMSIssue
 import gropius.model.architecture.IMSProject
 import gropius.model.issue.Issue
 import gropius.model.issue.Label
@@ -258,6 +259,15 @@ abstract class AbstractSync(
         ) ?: IssueConversionInformation(imsProject.rawId!!, incomingIssue.identification(), null)
         var issue = if (issueInfo.gropiusId != null) collectedSyncInfo.issueRepository.findById(issueInfo.gropiusId!!)
             .awaitSingle() else incomingIssue.createIssue(imsProject, syncDataService())
+        if (issue.imsIssues().none { it.imsProject().value == imsProject }) {
+            val imsIssue = IMSIssue(mutableMapOf())
+            imsIssue.issue().value = issue
+            imsIssue.imsProject().value = imsProject
+            imsIssue.template().value = imsProject.template().value.partOf().value.imsIssueTemplate().value
+            issue.imsIssues() += imsIssue
+        }
+        val imsIssue = issue.imsIssues().single { it.imsProject().value == imsProject }
+        incomingIssue.fillImsIssueTemplatedFields(imsIssue.templatedFields, syncDataService())
         val nodesToSave = mutableListOf<Node>(issue)
         val savedNodeHandlers = mutableListOf<suspend (node: Node) -> Unit>()
         val timelineItems = incomingIssue.incomingTimelineItems(syncDataService())
@@ -521,8 +531,7 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, true
                 )
             ) {
-                val conversionInformation = syncRemovedLabel(
-                    imsProject,
+                val conversionInformation = syncRemovedLabel(imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -537,8 +546,7 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, false
                 )
             ) {
-                val conversionInformation = syncAddedLabel(
-                    imsProject,
+                val conversionInformation = syncAddedLabel(imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -596,8 +604,7 @@ abstract class AbstractSync(
                     imsProject.rawId!!, it.rawId!!
                 ) != null
             }) {
-            syncTitleChange(
-                imsProject,
+            syncTitleChange(imsProject,
                 issueInfo.githubId,
                 finalBlock.first().newTitle,
                 finalBlock.map { it.createdBy().value })
