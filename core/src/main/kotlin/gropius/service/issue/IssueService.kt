@@ -1613,6 +1613,7 @@ class IssueService(
         val event = Assignment(atTime, atTime)
         event.user().value = user
         event.type().value = assignmentType
+        event.initialType().value = assignmentType
         createdTimelineItem(issue, event, atTime, byUser)
         issue.assignments() += event
         return event
@@ -1800,6 +1801,7 @@ class IssueService(
         val relation = IssueRelation(atTime, atTime)
         relation.relatedIssue().value = relatedIssue
         relation.type().value = issueRelationType
+        relation.initialType().value = issueRelationType
         createdTimelineItem(issue, relation, atTime, byUser)
         issue.outgoingRelations() += relation
         val relatedEvent = RelatedByIssueEvent(atTime, atTime)
