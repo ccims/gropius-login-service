@@ -377,6 +377,8 @@ export type AssignmentFilterInput = {
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
   /** Filters for nodes where the related node match this filter */
+  initialType?: InputMaybe<AssignmentTypeFilterInput>;
+  /** Filters for nodes where the related node match this filter */
   issue?: InputMaybe<IssueFilterInput>;
   /** Filter by lastModifiedAt */
   lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
@@ -2330,6 +2332,8 @@ export type IssueRelationFilterInput = {
   createdBy?: InputMaybe<UserFilterInput>;
   /** Filter by id */
   id?: InputMaybe<IdFilterInput>;
+  /** Filters for nodes where the related node match this filter */
+  initialType?: InputMaybe<IssueRelationTypeFilterInput>;
   /** Filters for nodes where the related node match this filter */
   issue?: InputMaybe<IssueFilterInput>;
   /** Filter by lastModifiedAt */
