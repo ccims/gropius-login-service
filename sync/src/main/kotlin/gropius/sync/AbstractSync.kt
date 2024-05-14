@@ -8,6 +8,7 @@ import gropius.model.issue.Label
 import gropius.model.issue.timeline.*
 import gropius.model.template.IMSTemplate
 import gropius.model.template.IssueState
+import gropius.model.template.IssueType
 import gropius.model.user.GropiusUser
 import gropius.model.user.User
 import gropius.repository.common.NodeRepository
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findAll
+import org.springframework.data.neo4j.core.findById
 import org.springframework.stereotype.Component
 
 /**
@@ -262,6 +264,8 @@ abstract class AbstractSync(
         ) ?: IssueConversionInformation(imsProject.rawId!!, incomingIssue.identification(), null)
         var issue = if (issueInfo.gropiusId != null) collectedSyncInfo.issueRepository.findById(issueInfo.gropiusId!!)
             .awaitSingle() else incomingIssue.createIssue(imsProject, syncDataService())
+        val oldType = issue.type().value
+        val oldState = issue.state().value
         val isNewIssue = issue.rawId == null
         if (issue.imsIssues().none { it.imsProject().value == imsProject }) {
             val imsIssue = IMSIssue(mutableMapOf())
@@ -302,6 +306,13 @@ abstract class AbstractSync(
         if (isNewIssue) {
             updater.addedIssueToTrackable(issue, imsProject.trackable().value)
         }
+        updater.changedIssueStateOrType(
+            issue,
+            (if (oldState.rawId != null) collectedSyncInfo.neoOperations.findById<IssueState>(oldState.rawId!!) else null)
+                ?: oldState,
+            (if (oldType.rawId != null) collectedSyncInfo.neoOperations.findById<IssueType>(oldType.rawId!!) else null)
+                ?: oldType
+        )
         savedList.zip(savedNodeHandlers).forEach { (savedNode, savedNodeHandler) ->
             savedNodeHandler(savedNode)
         }
@@ -542,7 +553,8 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, true
                 )
             ) {
-                val conversionInformation = syncRemovedLabel(imsProject,
+                val conversionInformation = syncRemovedLabel(
+                    imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -557,7 +569,8 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, false
                 )
             ) {
-                val conversionInformation = syncAddedLabel(imsProject,
+                val conversionInformation = syncAddedLabel(
+                    imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -615,7 +628,8 @@ abstract class AbstractSync(
                     imsProject.rawId!!, it.rawId!!
                 ) != null
             }) {
-            syncTitleChange(imsProject,
+            syncTitleChange(
+                imsProject,
                 issueInfo.githubId,
                 finalBlock.first().newTitle,
                 finalBlock.map { it.createdBy().value })
