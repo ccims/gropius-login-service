@@ -291,11 +291,11 @@ abstract class AbstractSync(
             for (fakeSyncedItem in dereplicationResult.fakeSyncedItems) {
                 nodesToSave.add(fakeSyncedItem)
                 savedNodeHandlers.add { updatedNode ->
-                    val tici = DummyTimelineItemConversionInformation(
+                    val conversionInfo = DummyTimelineItemConversionInformation(
                         imsProject.rawId!!, (updatedNode as TimelineItem).rawId!!
                     )
-                    tici.gropiusId = (updatedNode as TimelineItem).rawId
-                    collectedSyncInfo.timelineItemConversionInformationService.save(tici).awaitSingle()
+                    conversionInfo.gropiusId = (updatedNode as TimelineItem).rawId
+                    collectedSyncInfo.timelineItemConversionInformationService.save(conversionInfo).awaitSingle()
                 }
             }
         }
@@ -308,10 +308,8 @@ abstract class AbstractSync(
         }
         updater.changedIssueStateOrType(
             issue,
-            (if (oldState.rawId != null) collectedSyncInfo.neoOperations.findById<IssueState>(oldState.rawId!!) else null)
-                ?: oldState,
-            (if (oldType.rawId != null) collectedSyncInfo.neoOperations.findById<IssueType>(oldType.rawId!!) else null)
-                ?: oldType
+            collectedSyncInfo.neoOperations.findById<IssueState>(oldState.rawId!!)!!,
+            collectedSyncInfo.neoOperations.findById<IssueType>(oldType.rawId!!)!!
         )
         savedList.zip(savedNodeHandlers).forEach { (savedNode, savedNodeHandler) ->
             savedNodeHandler(savedNode)
