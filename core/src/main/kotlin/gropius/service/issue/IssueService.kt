@@ -1616,6 +1616,7 @@ class IssueService(
         event.initialType().value = assignmentType
         createdTimelineItem(issue, event, atTime, byUser)
         issue.assignments() += event
+        issue.participants() += user
         return event
     }
 
