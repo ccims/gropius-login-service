@@ -8,9 +8,12 @@ import gropius.model.issue.Label
 import gropius.model.issue.timeline.*
 import gropius.model.template.IMSTemplate
 import gropius.model.template.IssueState
+import gropius.model.template.IssueType
 import gropius.model.user.GropiusUser
 import gropius.model.user.User
+import gropius.repository.common.NodeRepository
 import gropius.repository.issue.IssueRepository
+import gropius.service.issue.IssueAggregationUpdater
 import io.github.graphglue.model.Node
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactor.awaitSingle
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.neo4j.core.ReactiveNeo4jOperations
 import org.springframework.data.neo4j.core.findAll
+import org.springframework.data.neo4j.core.findById
 import org.springframework.stereotype.Component
 
 /**
@@ -57,7 +61,8 @@ class CollectedSyncInfo(
     val issueRepository: IssueRepository,
     val timelineItemConversionInformationService: TimelineItemConversionInformationService,
     val syncNotificator: SyncNotificator,
-    val issueCleaner: IssueCleaner
+    val issueCleaner: IssueCleaner,
+    val nodeRepository: NodeRepository
 ) {}
 
 /**
@@ -259,6 +264,9 @@ abstract class AbstractSync(
         ) ?: IssueConversionInformation(imsProject.rawId!!, incomingIssue.identification(), null)
         var issue = if (issueInfo.gropiusId != null) collectedSyncInfo.issueRepository.findById(issueInfo.gropiusId!!)
             .awaitSingle() else incomingIssue.createIssue(imsProject, syncDataService())
+        val oldType = issue.type().value
+        val oldState = issue.state().value
+        val isNewIssue = issue.rawId == null
         if (issue.imsIssues().none { it.imsProject().value == imsProject }) {
             val imsIssue = IMSIssue(mutableMapOf())
             imsIssue.issue().value = issue
@@ -282,16 +290,27 @@ abstract class AbstractSync(
             issue = dereplicationResult.resultingIssue
             for (fakeSyncedItem in dereplicationResult.fakeSyncedItems) {
                 nodesToSave.add(fakeSyncedItem)
-                savedNodeHandlers.add {
-                    val tici = DummyTimelineItemConversionInformation(imsProject.rawId!!, (it as TimelineItem).rawId!!)
-                    tici.gropiusId = (it as TimelineItem).rawId
-                    collectedSyncInfo.timelineItemConversionInformationService.save(tici).awaitSingle()
+                savedNodeHandlers.add { updatedNode ->
+                    val conversionInfo = DummyTimelineItemConversionInformation(
+                        imsProject.rawId!!, (updatedNode as TimelineItem).rawId!!
+                    )
+                    conversionInfo.gropiusId = (updatedNode as TimelineItem).rawId
+                    collectedSyncInfo.timelineItemConversionInformationService.save(conversionInfo).awaitSingle()
                 }
             }
         }
         val savedList = collectedSyncInfo.neoOperations.saveAll(nodesToSave).collectList().awaitSingle()
         val savedIssue = savedList.removeFirst()
         if (issue.rawId == null) issue = savedIssue as Issue
+        val updater = IssueAggregationUpdater()
+        if (isNewIssue) {
+            updater.addedIssueToTrackable(issue, imsProject.trackable().value)
+        }
+        updater.changedIssueStateOrType(
+            issue,
+            collectedSyncInfo.neoOperations.findById<IssueState>(oldState.rawId!!)!!,
+            collectedSyncInfo.neoOperations.findById<IssueType>(oldType.rawId!!)!!
+        )
         savedList.zip(savedNodeHandlers).forEach { (savedNode, savedNodeHandler) ->
             savedNodeHandler(savedNode)
         }
@@ -301,6 +320,7 @@ abstract class AbstractSync(
         collectedSyncInfo.issueConversionInformationService.save(issueInfo).awaitSingle()
         collectedSyncInfo.issueCleaner.cleanIssue(issue.rawId!!)
         incomingIssue.markDone(syncDataService())
+        updater.save(collectedSyncInfo.nodeRepository)
     }
 
     /**
@@ -337,8 +357,8 @@ abstract class AbstractSync(
             issue.timelineItems() += timelineItem
             issue.issueComments() += timelineItem.mapNotNull { it as? IssueComment }
             nodesToSave.add(timelineItem.single())
-            savedNodeHandlers.add {
-                newInfo.gropiusId = (it as TimelineItem).rawId
+            savedNodeHandlers.add { savedNode ->
+                newInfo.gropiusId = (savedNode as TimelineItem).rawId
                 if (oldInfo?.id != null) {
                     newInfo.id = oldInfo.id;
                 }
@@ -531,7 +551,8 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, true
                 )
             ) {
-                val conversionInformation = syncRemovedLabel(imsProject,
+                val conversionInformation = syncRemovedLabel(
+                    imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -546,7 +567,8 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, false
                 )
             ) {
-                val conversionInformation = syncAddedLabel(imsProject,
+                val conversionInformation = syncAddedLabel(
+                    imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -604,7 +626,8 @@ abstract class AbstractSync(
                     imsProject.rawId!!, it.rawId!!
                 ) != null
             }) {
-            syncTitleChange(imsProject,
+            syncTitleChange(
+                imsProject,
                 issueInfo.githubId,
                 finalBlock.first().newTitle,
                 finalBlock.map { it.createdBy().value })
