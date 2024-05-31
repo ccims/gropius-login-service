@@ -10,6 +10,8 @@ import gropius.sync.IncomingTimelineItem
 import gropius.sync.SyncDataService
 import gropius.sync.TimelineItemConversionInformation
 import gropius.sync.jira.JiraDataService
+import gropius.util.schema.Schema
+import gropius.util.schema.Type
 import jakarta.transaction.Transactional
 import kotlinx.coroutines.reactive.awaitFirst
 import kotlinx.coroutines.reactor.awaitSingle
@@ -53,22 +55,6 @@ class JiraTimelineItem(val id: String, val created: String, val author: JsonObje
         return id
     }
 
-    fun isStringAndNullTemplate(encodedTypes: String): Pair<Boolean, Boolean> {
-        val typedef = Json.parseToJsonElement(encodedTypes).jsonObject
-        return when {
-            typedef.containsKey("type") -> (typedef["type"]!!.jsonPrimitive.content == "string") to (typedef.containsKey(
-                "nullable"
-            ) && typedef["nullable"]!!.jsonPrimitive.content == "true")
-
-            typedef.containsKey("enum") -> false to false
-            typedef.containsKey("elements") -> false to false
-            typedef.containsKey("properties") -> false to false
-            typedef.containsKey("values") -> false to false
-            typedef.containsKey("discriminator") -> false to false
-            else -> true to true
-        }
-    }
-
     override suspend fun gropiusTimelineItem(
         imsProject: IMSProject,
         service: SyncDataService,
@@ -88,10 +74,12 @@ class JiraTimelineItem(val id: String, val created: String, val author: JsonObje
             )
         }
         if (issue.template().value.templateFieldSpecifications.containsKey(data.field)) {
-            val (isString, isNull) = isStringAndNullTemplate(issue.template().value.templateFieldSpecifications[data.field]!!)
-            if (isString) {
+            val schema = issue.template().value.templateFieldSpecifications[data.field]!!
+            val parsedSchema = jiraService.objectMapper.readValue(schema, Schema::class.java)
+
+            if (parsedSchema.type == Type.STRING) {
                 return gropiusTemplatedField(
-                    timelineItemConversionInformation, imsProject, service, jiraService, isNull
+                    timelineItemConversionInformation, imsProject, service, jiraService, parsedSchema.nullable
                 )
             }
         }
