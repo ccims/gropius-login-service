@@ -37,10 +37,8 @@ import gropius.service.template.TemplatedNodeService
 import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
-import io.github.graphglue.model.property.NodeCache
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.reflect.KMutableProperty0
