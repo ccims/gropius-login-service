@@ -37,6 +37,7 @@ import gropius.service.template.TemplatedNodeService
 import gropius.util.JsonNodeMapper
 import io.github.graphglue.authorization.Permission
 import io.github.graphglue.model.Node
+import io.github.graphglue.model.property.NodeCache
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -1596,6 +1597,7 @@ class IssueService(
         input.validate()
         val issue = repository.findById(input.issue)
         val relatedIssue = repository.findById(input.relatedIssue)
+        require(issue != relatedIssue) { "An Issue cannot be related to itself" }
         checkManageIssuesPermission(issue, authorizationContext)
         checkPermission(
             relatedIssue,
@@ -1784,8 +1786,9 @@ class IssueService(
     suspend fun removeIssueRelation(
         issueRelation: IssueRelation, atTime: OffsetDateTime, byUser: User
     ): RemovedOutgoingRelationEvent {
-        val issue = issueRelation.issue().value
-        val relatedIssue = issueRelation.relatedIssue().value
+        val aggregationUpdater = IssueAggregationUpdater()
+        val issue = issueRelation.issue(aggregationUpdater.cache).value
+        val relatedIssue = issueRelation.relatedIssue(aggregationUpdater.cache).value
         val event = RemovedOutgoingRelationEvent(atTime, atTime)
         event.removedRelation().value = issueRelation
         createdTimelineItem(issue, event, atTime, byUser)
@@ -1795,7 +1798,6 @@ class IssueService(
         issue.outgoingRelations() -= issueRelation
         relatedIssue.incomingRelations() -= issueRelation
 
-        val aggregationUpdater = IssueAggregationUpdater()
         aggregationUpdater.deletedIssueRelation(issueRelation)
         aggregationUpdater.save(nodeRepository)
 
