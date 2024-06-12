@@ -672,6 +672,7 @@ abstract class AbstractSync(
      * Sync all data
      */
     suspend fun sync() {
+        logger.info("Starting Sync Cycle")
         val imsTemplates = findTemplates()
         logger.info("Found ${imsTemplates.size} IMSTemplate")
         val imss = mutableListOf<IMS>()
@@ -685,5 +686,6 @@ abstract class AbstractSync(
             doIncoming(imsProject)
             doOutgoing(imsProject)
         }
+        logger.info("Finished Sync Cycle")
     }
 }
