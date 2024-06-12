@@ -346,7 +346,7 @@ abstract class AbstractSync(
             imsProject.rawId!!, timelineItem.identification()
         )
         var (timelineItem, newInfo) = timelineItem.gropiusTimelineItem(
-            imsProject, syncDataService(), oldInfo
+            imsProject, syncDataService(), oldInfo, issue
         )
         if (issue.rawId != null) {
             val dereplicationResult = issueDereplicator.validateTimelineItem(issue, timelineItem, dereplicatorRequest)
@@ -551,8 +551,7 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, true
                 )
             ) {
-                val conversionInformation = syncRemovedLabel(
-                    imsProject,
+                val conversionInformation = syncRemovedLabel(imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -567,8 +566,7 @@ abstract class AbstractSync(
                     imsProject, finalBlock, relevantTimeline, false
                 )
             ) {
-                val conversionInformation = syncAddedLabel(
-                    imsProject,
+                val conversionInformation = syncAddedLabel(imsProject,
                     issueInfo.githubId,
                     label!!,
                     finalBlock.map { it.lastModifiedBy().value })
@@ -626,8 +624,7 @@ abstract class AbstractSync(
                     imsProject.rawId!!, it.rawId!!
                 ) != null
             }) {
-            syncTitleChange(
-                imsProject,
+            syncTitleChange(imsProject,
                 issueInfo.githubId,
                 finalBlock.first().newTitle,
                 finalBlock.map { it.createdBy().value })

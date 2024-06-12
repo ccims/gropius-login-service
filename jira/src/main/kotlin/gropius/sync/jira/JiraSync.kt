@@ -152,13 +152,14 @@ final class JiraSync(
         if (issueComment.body.isNullOrEmpty()) {
             return null
         }
-        val iid = jiraDataService.request(
+        val response = jiraDataService.request(
             imsProject, users, HttpMethod.Post, JsonObject(mapOf("body" to JsonPrimitive(issueComment.body)))
         ) {
             appendPathSegments("issue")
             appendPathSegments(issueId)
             appendPathSegments("comment")
-        }.second.body<JsonObject>()["id"]!!.jsonPrimitive.content
+        }.second.body<JsonObject>()
+        val iid = response["id"]!!.jsonPrimitive.content
         return JiraTimelineItemConversionInformation(imsProject.rawId!!, iid)
     }
 
