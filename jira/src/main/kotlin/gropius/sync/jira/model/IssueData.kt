@@ -483,6 +483,12 @@ class IssueDataService(val issuePileRepository: IssueDataRepository) : IssueData
         logger.info("LOOKING FOR ${imsProject.rawId!!} AND ${rawIssueData.jiraId}")
         val issueData = findByImsProjectAndJiraId(imsProject.rawId!!, rawIssueData.jiraId) ?: rawIssueData
         logger.info("ISSUE ${issueData.id}")
+        val knownParts = issueData.changelog.histories.map { it.id }.toSet()
+        rawIssueData.changelog.histories.forEach {
+            if (!knownParts.contains(it.id)) {
+                issueData.changelog.histories.add(it)
+            }
+        }
         issuePileRepository.save(issueData).awaitSingle()
     }
 
