@@ -8,18 +8,13 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-allprojects {
-    val javaVersion: String by project
+kotlin {
+    jvmToolchain(21)
+}
 
+allprojects {
     repositories {
         mavenCentral()
-    }
-    tasks.withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = javaVersion
-    }
-    tasks.withType<JavaCompile> {
-        sourceCompatibility = javaVersion
-        targetCompatibility = javaVersion
     }
 }
 
