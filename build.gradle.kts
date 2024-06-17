@@ -1,4 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 description = "A Cross-Component Issue Management System for Component-based Architectures"
@@ -8,13 +9,15 @@ plugins {
     id("org.jetbrains.dokka")
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
 allprojects {
     repositories {
         mavenCentral()
+    }
+
+    tasks.withType<KotlinCompile> {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 }
 
