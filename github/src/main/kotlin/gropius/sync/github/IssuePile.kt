@@ -536,7 +536,8 @@ class UnassignedTimelineItem(
         val convInfo =
             timelineItemConversionInformation ?: TODOTimelineItemConversionInformation(imsProject.rawId!!, githubId);
         val githubService = service as GithubDataService
-        if (TODO() && (createdBy != null)) {
+        // TODO
+        if ((createdBy != null)) {
             val gropiusId = convInfo.gropiusId
             val event = if (gropiusId != null) githubService.neoOperations.findById<RemovedAssignmentEvent>(
                 gropiusId
