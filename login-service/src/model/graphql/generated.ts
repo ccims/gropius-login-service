@@ -705,7 +705,11 @@ export enum ComponentOrderField {
   /** Order by id */
   Id = 'ID',
   /** Order by name */
-  Name = 'NAME'
+  Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** ComponentPermission entry enum type. */
@@ -959,6 +963,10 @@ export enum ComponentVersionOrderField {
   Id = 'ID',
   /** Order by name */
   Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME',
   /** Order by version */
   Version = 'VERSION'
 }
@@ -1222,7 +1230,11 @@ export type ImsIssueOrder = {
 /** Fields a list of IMSIssue can be sorted by */
 export enum ImsIssueOrderField {
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** Filter used to filter IMSIssueTemplate */
@@ -1264,7 +1276,11 @@ export enum ImsOrderField {
   /** Order by id */
   Id = 'ID',
   /** Order by name */
-  Name = 'NAME'
+  Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** IMSPermission entry enum type. */
@@ -1383,7 +1399,11 @@ export enum ImsProjectOrderField {
   /** Order by id */
   Id = 'ID',
   /** Order by name */
-  Name = 'NAME'
+  Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** Filter used to filter IMSProjectTemplate */
@@ -1598,6 +1618,10 @@ export enum InterfaceDefinitionOrderField {
   Id = 'ID',
   /** Order by invisibleSelfDefined */
   InvisibleSelfDefined = 'INVISIBLE_SELF_DEFINED',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME',
   /** Order by visibleSelfDefined */
   VisibleSelfDefined = 'VISIBLE_SELF_DEFINED'
 }
@@ -1667,7 +1691,11 @@ export enum InterfaceOrderField {
   /** Order by id */
   Id = 'ID',
   /** Order by name */
-  Name = 'NAME'
+  Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** Filter used to filter InterfacePart */
@@ -1725,7 +1753,11 @@ export enum InterfacePartOrderField {
   /** Order by id */
   Id = 'ID',
   /** Order by name */
-  Name = 'NAME'
+  Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** Filter used to filter InterfacePartTemplate */
@@ -1847,7 +1879,11 @@ export enum InterfaceSpecificationOrderField {
   /** Order by id */
   Id = 'ID',
   /** Order by name */
-  Name = 'NAME'
+  Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** Filter used to filter InterfaceSpecificationTemplate */
@@ -1964,6 +2000,10 @@ export enum InterfaceSpecificationVersionOrderField {
   Id = 'ID',
   /** Order by name */
   Name = 'NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME',
   /** Order by version */
   Version = 'VERSION'
 }
@@ -2262,12 +2302,32 @@ export enum IssueOrderField {
   LastModifiedAt = 'LAST_MODIFIED_AT',
   /** Order by lastUpdatedAt */
   LastUpdatedAt = 'LAST_UPDATED_AT',
+  /** Order by priority_id */
+  PriorityId = 'PRIORITY_ID',
+  /** Order by priority_name */
+  PriorityName = 'PRIORITY_NAME',
+  /** Order by priority_value */
+  PriorityValue = 'PRIORITY_VALUE',
   /** Order by spentTime */
   SpentTime = 'SPENT_TIME',
   /** Order by startDate */
   StartDate = 'START_DATE',
+  /** Order by state_id */
+  StateId = 'STATE_ID',
+  /** Order by state_isOpen */
+  StateIsOpen = 'STATE_IS_OPEN',
+  /** Order by state_name */
+  StateName = 'STATE_NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME',
   /** Order by title */
-  Title = 'TITLE'
+  Title = 'TITLE',
+  /** Order by type_id */
+  TypeId = 'TYPE_ID',
+  /** Order by type_name */
+  TypeName = 'TYPE_NAME'
 }
 
 /** Filter used to filter IssuePriority */
@@ -3081,8 +3141,20 @@ export type RelationOrder = {
 
 /** Fields a list of Relation can be sorted by */
 export enum RelationOrderField {
+  /** Order by end_id */
+  EndId = 'END_ID',
+  /** Order by end_name */
+  EndName = 'END_NAME',
   /** Order by id */
-  Id = 'ID'
+  Id = 'ID',
+  /** Order by start_id */
+  StartId = 'START_ID',
+  /** Order by start_name */
+  StartName = 'START_NAME',
+  /** Order by template_id */
+  TemplateId = 'TEMPLATE_ID',
+  /** Order by template_name */
+  TemplateName = 'TEMPLATE_NAME'
 }
 
 /** Filter used to filter RelationPartner */
