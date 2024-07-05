@@ -8,7 +8,7 @@ import { ModelModule } from "./model/model.module";
 import { StrategiesModule } from "./strategies/strategies.module";
 import { BackendServicesModule } from "./backend-services/backend-services.module";
 import { validationSchema } from "./configuration-validator";
-import { OauthServerModule } from "./oauth-server/oauth-server.module";
+import { AuthServerModule } from "./api-internal/auth-server.module";
 import { DefaultReturn } from "./default-return.dto";
 import { InitializationModule } from "./initialization/initialization.module";
 import * as path from "path";
@@ -57,12 +57,12 @@ import { ServeStaticModule } from "@nestjs/serve-static";
         ApiLoginModule,
         ApiSyncModule,
         StrategiesModule,
-        OauthServerModule,
+        AuthServerModule,
         RouterModule.register([
             { path: "login", module: ApiLoginModule },
             { path: "login", module: StrategiesModule },
-            { path: "syncApi", module: ApiSyncModule },
-            { path: "authenticate", module: OauthServerModule },
+            { path: "sync", module: ApiSyncModule },
+            { path: "internal", module: AuthServerModule },
         ]),
         BackendServicesModule,
         InitializationModule,

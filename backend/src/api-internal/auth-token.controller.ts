@@ -13,7 +13,7 @@ import { ensureState } from "src/strategies/utils";
 import { OauthServerStateData } from "./oauth-autorize.middleware";
 import { OauthHttpException } from "./OauthHttpException";
 
-export interface OauthTokenEdnpointResponseDto {
+export interface OauthTokenEndpointResponseDto {
     access_token: string;
     token_type: "bearer";
     expires_in: number;
@@ -21,10 +21,10 @@ export interface OauthTokenEdnpointResponseDto {
     scope: string;
 }
 
-@Controller("oauth")
-@ApiTags(OpenApiTag.CREDENTIALS)
-export class OauthTokenController {
-    private readonly logger = new Logger(OauthTokenController.name);
+@Controller("auth")
+@ApiTags(OpenApiTag.INTERNAL_API)
+export class AuthTokenController {
+    private readonly logger = new Logger(AuthTokenController.name);
     constructor(
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
@@ -99,7 +99,7 @@ export class OauthTokenController {
         loginData: UserLoginData,
         activeLogin: ActiveLogin,
         currentClient: AuthClient,
-    ): Promise<OauthTokenEdnpointResponseDto> {
+    ): Promise<OauthTokenEndpointResponseDto> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
         let accessToken: string;
@@ -134,7 +134,7 @@ export class OauthTokenController {
     }
 
     @Post(":id?/token/:mode?")
-    async token(@Res({ passthrough: true }) res: Response): Promise<OauthTokenEdnpointResponseDto> {
+    async token(@Res({ passthrough: true }) res: Response): Promise<OauthTokenEndpointResponseDto> {
         ensureState(res);
         const currentClient = (res.locals.state as OauthServerStateData).client;
         if (!currentClient) {

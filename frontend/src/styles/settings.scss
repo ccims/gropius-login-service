@@ -1,0 +1,45 @@
+/**
+ * src/styles/settings.scss
+ *
+ * Configures SASS variables and Vuetify overwrites
+ */
+
+// https://vuetifyjs.com/features/sass-variables/`
+@use "vuetify/settings" with (
+    $color-pack: false,
+    $rounded: (
+        "lger": 16px
+    ),
+    $typography: (
+        'button': (
+            'text-transform': none
+        ),
+        'subtitle-1': (
+            'weight': 500
+        ),
+    ),
+    $icon-sizes: (
+        "x-large": 2.5em
+    ),
+
+    $border-color-root: rgb(var(--v-theme-outline)),
+
+    $tooltip-background-color: rgb(var(--v-theme-inverse-surface)),
+    $tooltip-text-color: rgb(var(--v-theme-on-inverse-surface)),
+
+    $divider-border-color: rgb(var(--v-theme-outline-variant)),
+    $divider-opacity: 1,
+
+    $field-outline-opacity: 1,
+
+    $switch-track-opacity: 1,
+    $switch-track-background: rgb(var(--v-theme-surface-container-highest)),
+
+    $stepper-header-elevation: 0,
+
+    $sheet-border-color: rgb(var(--v-theme-outline-variant)),
+);
+
+$icon-with-number-width: 70px;
+
+$side-bar-width: 80px;

@@ -28,7 +28,7 @@ export class OauthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    @ApiTags(OpenApiTag.CREDENTIALS)
+    @ApiTags(OpenApiTag.INTERNAL_API)
     authorizeEndpoint(@Param("id") id: string, @Param("mode") mode?: AuthFunctionInput) {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
@@ -48,7 +48,7 @@ export class OauthEndpointsController {
         name: "id",
         description: "The id of the strategy instance which initiated the funcation calling the callback.",
     })
-    @ApiTags(OpenApiTag.CREDENTIALS)
+    @ApiTags(OpenApiTag.INTERNAL_API)
     redirectEndpoint() {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",

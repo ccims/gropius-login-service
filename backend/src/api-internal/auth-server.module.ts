@@ -8,7 +8,7 @@ import { StrategiesModule } from "../strategies/strategies.module";
 import { OauthAutorizeMiddleware } from "./oauth-autorize.middleware";
 import { OauthEndpointsController } from "./oauth-endpoints.controller";
 import { OauthRedirectMiddleware } from "./oauth-redirect.middleware";
-import { OauthTokenController } from "./oauth-token.controller";
+import { AuthTokenController } from "./auth-token.controller";
 import { OauthTokenMiddleware } from "./oauth-token.middleware";
 import { PostCredentialsMiddleware } from "./post-credentials.middleware";
 import { TokenAuthorizationCodeMiddleware } from "./token-authorization-code.middleware";
@@ -22,9 +22,9 @@ import { TokenAuthorizationCodeMiddleware } from "./token-authorization-code.mid
         TokenAuthorizationCodeMiddleware,
         PostCredentialsMiddleware,
     ],
-    controllers: [OauthTokenController, OauthEndpointsController],
+    controllers: [AuthTokenController, OauthEndpointsController],
 })
-export class OauthServerModule {
+export class AuthServerModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
 
     constructor(
@@ -46,17 +46,17 @@ export class OauthServerModule {
                 // its just to make absolutely sure, no unauthorized request gets through
                 this.errorHandler,
             ],
-            path: "authenticate/oauth/:id/authorize/:mode?",
+            path: "internal/auth/redirect/:id/:mode",
         });
 
         this.middlewares.push({
             middlewares: [this.strategies, this.oauthRedirect, this.errorHandler],
-            path: "authenticate/oauth/:id/callback",
+            path: "internal/auth/callback/:id",
         });
 
         this.middlewares.push({
             middlewares: [this.modeExtractor, this.oauthToken, this.errorHandler],
-            path: "authenticate/oauth/:id?/token/:mode?",
+            path: "internal/auth/submit/:id/:mode",
         });
     }
 
