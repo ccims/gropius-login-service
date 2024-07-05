@@ -5,7 +5,7 @@ import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { ensureState } from "src/strategies/utils";
-import { OauthServerStateData } from "./oauth-autorize.middleware";
+import { OauthServerStateData } from "../api-internal/auth-autorize.middleware";
 
 @Injectable()
 export class TokenAuthorizationCodeMiddleware implements NestMiddleware {

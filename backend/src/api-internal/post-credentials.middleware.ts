@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { StrategiesMiddleware } from "src/strategies/strategies.middleware";
 import { ensureState } from "src/strategies/utils";
-import { OauthHttpException } from "./OauthHttpException";
+import { OauthHttpException } from "../api-oauth/OAuthHttpException";
 
 @Injectable()
 export class PostCredentialsMiddleware implements NestMiddleware {

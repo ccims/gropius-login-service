@@ -6,6 +6,8 @@ export enum AuthFunction {
     LOGIN = "LOGIN",
     REGISTER = "REG",
     REGISTER_WITH_SYNC = "REG_SYNC",
+    REGISTER_ADDITIONAL = "REG_ADD",
+    REGISTER_ADDITIONAL_WITH_SYNC = "REG_ADD_SYNC",
 }
 
 export interface AuthStateData {

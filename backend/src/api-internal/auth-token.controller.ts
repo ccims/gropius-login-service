@@ -10,8 +10,8 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { ensureState } from "src/strategies/utils";
-import { OauthServerStateData } from "./oauth-autorize.middleware";
-import { OauthHttpException } from "./OauthHttpException";
+import { OauthServerStateData } from "./auth-autorize.middleware";
+import { OauthHttpException } from "../api-oauth/OAuthHttpException";
 
 export interface OauthTokenEndpointResponseDto {
     access_token: string;

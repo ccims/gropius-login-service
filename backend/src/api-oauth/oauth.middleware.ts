@@ -1,27 +1,20 @@
 import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
-import { TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { StrategiesMiddleware } from "src/strategies/strategies.middleware";
-import { StrategiesService } from "src/model/services/strategies.service";
 import { TokenAuthorizationCodeMiddleware } from "./token-authorization-code.middleware";
 import * as bcrypt from "bcrypt";
 import { ensureState } from "src/strategies/utils";
-import { OauthServerStateData } from "./oauth-autorize.middleware";
-import { PostCredentialsMiddleware } from "./post-credentials.middleware";
-import { OauthHttpException } from "./OauthHttpException";
+import { OauthServerStateData } from "./auth-autorize.middleware";
+import { OauthHttpException } from "./OAuthHttpException";
 
 @Injectable()
 export class OauthTokenMiddleware implements NestMiddleware {
     private readonly logger = new Logger(OauthTokenMiddleware.name);
 
     constructor(
-        private readonly tokenService: TokenService,
         private readonly authClientService: AuthClientService,
         private readonly tokenResponseCodeMiddleware: TokenAuthorizationCodeMiddleware,
-        private readonly strategiesMiddleware: StrategiesMiddleware,
-        private readonly postCredentialsMiddleware: PostCredentialsMiddleware,
     ) {}
 
     private async checkGivenClientSecretValidOrNotRequired(client: AuthClient, givenSecret?: string): Promise<boolean> {
@@ -47,12 +40,10 @@ export class OauthTokenMiddleware implements NestMiddleware {
      *
      * Flag can be set to return any client without secrets if desired to allow logins without client
      * @param req The request object
-     * @param findAnyWithoutSecret Set to `true` to find any client that has no secret
-     * => allowing for login without a known client
      * @returns The auth client that requested (or any without secret if flag ist set)
      *  or `null` if credentials invalid or none given
      */
-    private async getCallingClient(req: Request, findAnyWithoutSecret = false): Promise<AuthClient | null> {
+    private async getCallingClient(req: Request,): Promise<AuthClient | null> {
         const auth_head = req.headers["authorization"];
         if (auth_head && auth_head.startsWith("Basic ")) {
             const clientIdSecret = Buffer.from(auth_head.substring(6), "base64")
@@ -85,20 +76,6 @@ export class OauthTokenMiddleware implements NestMiddleware {
             return null;
         }
 
-        if (findAnyWithoutSecret) {
-            this.logger.log(
-                "Any client password authentication is enabled. Returning any client without client secret",
-            );
-            const client = await this.authClientService.findOneBy({
-                requiresSecret: false,
-                isValid: true,
-            });
-            if (client && client.isValid) {
-                if (this.checkGivenClientSecretValidOrNotRequired(client, "")) {
-                    return client;
-                }
-            }
-        }
         return null;
     }
 
@@ -107,12 +84,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
 
         const grant_type = req.body.grant_type;
 
-        const allowNoClient: unknown = process.env.GROPIUS_ALLOW_PASSWORD_TOKEN_MODE_WITHOUT_OAUTH_CLIENT;
-        const mayOmitClientId =
-            (allowNoClient === true || allowNoClient === "true") &&
-            (grant_type == "password" || grant_type == "post_credentials");
-
-        const client = await this.getCallingClient(req, mayOmitClientId);
+        const client = await this.getCallingClient(req);
         if (!client) {
             throw new OauthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
@@ -126,13 +98,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
                     next();
                 });
                 break;
-            case "password": //Request for token immediately containing username + password
-            //Fallthrough to custom grant where all credentials are acceptd
-            case "post_credentials": //Extension/Non standard: Request for token immediately containing credentials
-                await this.postCredentialsMiddleware.use(req, res, () => {
-                    next();
-                });
-                break;
+            case "password": // Deprecated => not supported
             case "client_credentials": //Request for token for stuff on client => not supported
             default:
                 throw new HttpException(

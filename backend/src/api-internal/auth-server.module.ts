@@ -5,21 +5,19 @@ import { ErrorHandlerMiddleware } from "../strategies/error-handler.middleware";
 import { ModeExtractorMiddleware } from "../strategies/mode-extractor.middleware";
 import { StrategiesMiddleware } from "../strategies/strategies.middleware";
 import { StrategiesModule } from "../strategies/strategies.module";
-import { OauthAutorizeMiddleware } from "./oauth-autorize.middleware";
-import { OauthEndpointsController } from "./oauth-endpoints.controller";
-import { OauthRedirectMiddleware } from "./oauth-redirect.middleware";
+import { AuthAutorizeMiddleware } from "./auth-autorize.middleware";
+import { OauthEndpointsController } from "./auth-endpoints.controller";
+import { OauthRedirectMiddleware } from "./auth-redirect.middleware";
 import { AuthTokenController } from "./auth-token.controller";
-import { OauthTokenMiddleware } from "./oauth-token.middleware";
+import { OauthTokenMiddleware } from "./auth-token.middleware";
 import { PostCredentialsMiddleware } from "./post-credentials.middleware";
-import { TokenAuthorizationCodeMiddleware } from "./token-authorization-code.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
     providers: [
-        OauthAutorizeMiddleware,
+        AuthAutorizeMiddleware,
         OauthRedirectMiddleware,
         OauthTokenMiddleware,
-        TokenAuthorizationCodeMiddleware,
         PostCredentialsMiddleware,
     ],
     controllers: [AuthTokenController, OauthEndpointsController],
@@ -28,10 +26,9 @@ export class AuthServerModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
 
     constructor(
-        private readonly oauthAutorize: OauthAutorizeMiddleware,
+        private readonly oauthAutorize: AuthAutorizeMiddleware,
         private readonly oauthRedirect: OauthRedirectMiddleware,
         private readonly oauthToken: OauthTokenMiddleware,
-        private readonly tokenAuthorizationCode: TokenAuthorizationCodeMiddleware,
         private readonly modeExtractor: ModeExtractorMiddleware,
         private readonly strategies: StrategiesMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,

@@ -6,7 +6,7 @@ import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { AuthStateData } from "../strategies/AuthResult";
-import { OauthServerStateData } from "./oauth-autorize.middleware";
+import { OauthServerStateData } from "./auth-autorize.middleware";
 
 @Injectable()
 export class OauthRedirectMiddleware implements NestMiddleware {

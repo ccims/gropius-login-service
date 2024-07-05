@@ -13,7 +13,7 @@ export interface OauthServerStateData {
 }
 
 @Injectable()
-export class OauthAutorizeMiddleware implements NestMiddleware {
+export class AuthAutorizeMiddleware implements NestMiddleware {
     constructor(private readonly authClientService: AuthClientService) {}
 
     async use(req: Request, res: Response, next: () => void) {
