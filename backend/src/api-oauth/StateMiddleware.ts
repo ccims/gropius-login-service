@@ -8,12 +8,12 @@ export abstract class StateMiddleware<S extends Record<string, any> = {}, T exte
     async use(req: Request, res: Response, next: (error?: Error | any) => any) {
         ensureState(res);
         if (res.locals.state.error) {
-            this.useWithError(req, res, res.locals.state.error, next);
+            this.useWithError(req, res, res.locals.state, res.locals.state.error, next);
         } else {
             try {
                 await this.useWithState(req, res, res.locals.state, next);
             } catch (error) {
-                this.appendState(res, { error } as any);
+                this.appendState(res, { error });
                 next();
             }
         }
@@ -29,11 +29,11 @@ export abstract class StateMiddleware<S extends Record<string, any> = {}, T exte
     /**
      * Overwrite this to handle errors
      */
-    protected useWithError(req: Request, res: Response, error: any, next: (error?: Error | any) => void) {
+    protected useWithError(req: Request, res: Response, state: S & { error?: any }, error: any, next: (error?: Error | any) => void) {
         next();
     }
 
-    protected appendState(res: Response, appendedState: Partial<T> & { error?: any }) {
+    protected appendState(res: Response, appendedState: Partial<T> & { error?: any } | { error?: any }) {
         res.locals.state = { ...res.locals.state, ...appendedState };
     }
 }

@@ -5,16 +5,19 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
 import * as bcrypt from "bcrypt";
 import { ensureState } from "src/strategies/utils";
-import { OauthHttpException } from "./OAuthHttpException";
+import { OAuthHttpException } from "./OAuthHttpException";
+import { StateMiddleware } from "./StateMiddleware";
 
 @Injectable()
-export class OauthTokenMiddleware implements NestMiddleware {
+export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClient }> {
     private readonly logger = new Logger(OauthTokenMiddleware.name);
 
     constructor(
         private readonly authClientService: AuthClientService,
         private readonly tokenResponseCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
-    ) {}
+    ) {
+        super();
+    }
 
     private async checkGivenClientSecretValidOrNotRequired(client: AuthClient, givenSecret?: string): Promise<boolean> {
         if (!client.requiresSecret && (!givenSecret || givenSecret.length == 0)) {
@@ -42,7 +45,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
      * @returns The auth client that requested (or any without secret if flag ist set)
      *  or `null` if credentials invalid or none given
      */
-    private async getCallingClient(req: Request,): Promise<AuthClient | null> {
+    private async getCallingClient(req: Request): Promise<AuthClient | null> {
         const auth_head = req.headers["authorization"];
         if (auth_head && auth_head.startsWith("Basic ")) {
             const clientIdSecret = Buffer.from(auth_head.substring(6), "base64")
@@ -78,16 +81,19 @@ export class OauthTokenMiddleware implements NestMiddleware {
         return null;
     }
 
-    async use(req: Request, res: Response, next: () => void) {
-        ensureState(res);
-
+    protected async useWithState(
+        req: Request,
+        res: Response,
+        state: { error?: any },
+        next: (error?: Error | any) => void,
+    ): Promise<any> {
         const grant_type = req.body.grant_type;
 
         const client = await this.getCallingClient(req);
         if (!client) {
-            throw new OauthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
+            throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
-        res.locals.state.client = client;
+        this.appendState(res, { client });
 
         switch (grant_type) {
             case "refresh_token": //Request for new token using refresh token

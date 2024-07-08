@@ -1,8 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { ModelModule } from "src/model/model.module";
-import { ErrorHandlerMiddleware } from "./error-handler.middleware";
-import { ModeExtractorMiddleware } from "../api-internal/mode-extractor.middleware";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesMiddleware } from "./strategies.middleware";
 import { UserpassStrategyService } from "./userpass/userpass.service";
@@ -35,10 +33,8 @@ import { JiraStrategyService } from "./jira/jira.service";
         GithubStrategyService,
         JiraStrategyService,
         { provide: "PassportStateJwt", useExisting: JwtService },
-        ModeExtractorMiddleware,
         StrategiesMiddleware,
-        ErrorHandlerMiddleware,
     ],
-    exports: [ModeExtractorMiddleware, StrategiesMiddleware, ErrorHandlerMiddleware],
+    exports: [StrategiesMiddleware],
 })
 export class StrategiesModule {}

@@ -9,8 +9,8 @@ import { AuthStateData } from "../strategies/AuthResult";
 import { OauthServerStateData } from "./auth-autorize.middleware";
 
 @Injectable()
-export class OauthRedirectMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(OauthRedirectMiddleware.name);
+export class AuthRedirectMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(AuthRedirectMiddleware.name);
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,

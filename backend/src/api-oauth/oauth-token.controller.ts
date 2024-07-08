@@ -10,7 +10,7 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { ensureState } from "src/strategies/utils";
-import { OauthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
 export interface OauthTokenEndpointResponseDto {
     access_token: string;
@@ -33,11 +33,11 @@ export class OAuthTokenController {
     private async checkLoginDataIsVaild(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
         if (!loginData) {
             this.logger.warn("Login data not found");
-            throw new OauthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
+            throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
         if (loginData.expires != null && loginData.expires <= new Date()) {
             this.logger.warn("Login data has expired", loginData);
-            throw new OauthHttpException(
+            throw new OAuthHttpException(
                 "invalid_grant",
                 "Login has expired. Try restarting login/register/link process.",
             );
@@ -45,37 +45,37 @@ export class OAuthTokenController {
         switch (loginData.state) {
             case LoginState.VALID:
                 if (!(await loginData.user)) {
-                    throw new OauthHttpException("invalid_state", "No user for valid login");
+                    throw new OAuthHttpException("invalid_state", "No user for valid login");
                 }
                 break;
             case LoginState.WAITING_FOR_REGISTER:
                 if (await loginData.user) {
-                    throw new OauthHttpException(
+                    throw new OAuthHttpException(
                         "invalid_state",
                         "Login still in register state but user already existing",
                     );
                 }
                 break;
             default:
-                throw new OauthHttpException(
+                throw new OAuthHttpException(
                     "invalid_grant",
                     "Login for given grant is not valid any more; Please re-login",
                 );
         }
         if (!activeLogin) {
             this.logger.warn("Active login not found");
-            throw new OauthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
+            throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
             this.logger.warn("Active login has expired", activeLogin.id);
-            throw new OauthHttpException(
+            throw new OAuthHttpException(
                 "invalid_grant",
                 "Login has expired. Try restarting login/register/link process.",
             );
         }
         if (!activeLogin.isValid) {
             this.logger.warn("Active login is set invalid", activeLogin.id);
-            throw new OauthHttpException("invalid_grant", "Login is set invalid/disabled");
+            throw new OAuthHttpException("invalid_grant", "Login is set invalid/disabled");
         }
     }
 
@@ -137,7 +137,7 @@ export class OAuthTokenController {
         ensureState(res);
         const currentClient = res.locals.state.client as AuthClient;
         if (!currentClient) {
-            throw new OauthHttpException(
+            throw new OAuthHttpException(
                 "invalid_client",
                 "No client id/authentication given or authentication invalid",
             );

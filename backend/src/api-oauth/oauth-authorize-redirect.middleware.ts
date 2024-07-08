@@ -1,18 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
-import { StateMiddleware } from "./state.middleware";
-import { OAuthAuthorizeServerStateData } from "./OAuthAuthorizeServerStateData";
+import { StateMiddleware } from "./StateMiddleware";
+import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 import { TokenScope } from "src/backend-services/token.service";
 
 @Injectable()
 export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
-    OAuthAuthorizeServerStateData,
-    OAuthAuthorizeServerStateData
+    OAuthAuthorizeServerState,
+    OAuthAuthorizeServerState
 > {
     protected async useWithState(
         req: Request,
         res: Response,
-        state: OAuthAuthorizeServerStateData & { error?: any },
+        state: OAuthAuthorizeServerState & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
         const target = state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)

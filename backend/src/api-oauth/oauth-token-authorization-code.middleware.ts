@@ -1,29 +1,34 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthStateData } from "src/strategies/AuthResult";
-import { ensureState } from "src/strategies/utils";
-import { OauthHttpException } from "./OAuthHttpException";
+import { OAuthHttpException } from "./OAuthHttpException";
+import { StateMiddleware } from "./StateMiddleware";
 
 @Injectable()
-export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
+export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }, AuthStateData> {
     private readonly logger = new Logger(OAuthTokenAuthorizationCodeMiddleware.name);
-    constructor(private readonly activeLoginService: ActiveLoginService, private readonly tokenService: TokenService) {}
-
-    private throwGenericCodeError() {
-        throw new OauthHttpException("invalid_grant", "Given code was invalid or expired");
+    constructor(
+        private readonly activeLoginService: ActiveLoginService,
+        private readonly tokenService: TokenService,
+    ) {
+        super();
     }
 
-    async use(req: Request, res: Response, next: () => void) {
-        ensureState(res);
+    private throwGenericCodeError() {
+        throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
+    }
+
+    protected async useWithState(
+        req: Request,
+        res: Response,
+        state: { client: AuthClient } & { error?: any },
+        next: (error?: Error | any) => void,
+    ): Promise<any> {
         let tokenData: ActiveLoginTokenResult;
-        const currentClient = res.locals.state.client as AuthClient;
-        if (!currentClient) {
-            this.logger.warn("No client logged in");
-            throw new OauthHttpException("invalid_client", "Client unknown or unauthorized");
-        }
+        const currentClient = state.client;
         try {
             tokenData = await this.tokenService.verifyActiveLoginToken(
                 req.body.code ?? req.body.refresh_token,
@@ -64,9 +69,9 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
                     "Active login has been made invalid",
                 tokenData.activeLoginId,
             );
-            throw new OauthHttpException("invalid_grant", "Given code was liekely reused. Login and codes invalidated");
+            throw new OAuthHttpException("invalid_grant", "Given code was liekely reused. Login and codes invalidated");
         }
-        (res.locals.state as AuthStateData).activeLogin = activeLogin;
+        this.appendState(res, { activeLogin });
         next();
     }
 }

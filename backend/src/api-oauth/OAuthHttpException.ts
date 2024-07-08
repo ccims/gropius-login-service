@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
-export class OauthHttpException extends HttpException {
-    constructor(private readonly error_type: string, private readonly error_message: string) {
+export class OAuthHttpException extends HttpException {
+    constructor(readonly error_type: string, readonly error_message: string) {
         super(
             {
                 statusCode: HttpStatus.BAD_REQUEST,

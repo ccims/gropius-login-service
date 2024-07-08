@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { StrategiesMiddleware } from "src/strategies/strategies.middleware";
 import { ensureState } from "src/strategies/utils";
-import { OauthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
 @Injectable()
 export class PostCredentialsMiddleware implements NestMiddleware {
@@ -37,9 +37,9 @@ export class PostCredentialsMiddleware implements NestMiddleware {
 
         if (!state.activeLogin) {
             if (state.authErrorMessage) {
-                throw new OauthHttpException(state.authErrorType || "invalid_request", state.authErrorMessage);
+                throw new OAuthHttpException(state.authErrorType || "invalid_request", state.authErrorMessage);
             }
-            throw new OauthHttpException("invalid_request", "Unauthorized");
+            throw new OAuthHttpException("invalid_request", "Unauthorized");
         }
 
         next();

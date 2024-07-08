@@ -10,11 +10,11 @@ import * as bcrypt from "bcrypt";
 import { ensureState } from "src/strategies/utils";
 import { OauthServerStateData } from "./auth-autorize.middleware";
 import { PostCredentialsMiddleware } from "./post-credentials.middleware";
-import { OauthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
 @Injectable()
-export class OauthTokenMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(OauthTokenMiddleware.name);
+export class AuthTokenMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(AuthTokenMiddleware.name);
 
     constructor(
         private readonly tokenService: TokenService,
@@ -114,7 +114,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
 
         const client = await this.getCallingClient(req, mayOmitClientId);
         if (!client) {
-            throw new OauthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
+            throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
         (res.locals.state as OauthServerStateData).client = client;
 

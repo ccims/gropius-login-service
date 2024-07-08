@@ -1,6 +1,6 @@
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 
-export interface OAuthAuthorizeRequestData {
+export interface OAuthAuthorizeRequest {
     state?: string;
     redirect: string;
     clientId: string;
@@ -10,7 +10,7 @@ export interface OAuthAuthorizeRequestData {
     responseType: "code";
 }
 
-export interface OAuthAuthorizeServerStateData {
-    request: OAuthAuthorizeRequestData;
+export interface OAuthAuthorizeServerState {
+    request: OAuthAuthorizeRequest;
     client: AuthClient;
 }

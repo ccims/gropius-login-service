@@ -7,6 +7,8 @@ import { OauthAuthorizeController as OAuthAuthorizeController } from "./oauth-au
 import { OAuthTokenController } from "./oauth-token.controller";
 import { OAuthAuthorizeValidateMiddleware } from "./oauth-authorize-validate.middleware";
 import { OAuthAuthorizeRedirectMiddleware } from "./oauth-authorize-redirect.middleware";
+import { ErrorHandlerMiddleware } from "./error-handler.middleware";
+import { OAuthErrorRedirectMiddleware } from "./oauth-error-redirect.middleware";
 
 @Module({
     imports: [ModelModule],
@@ -16,8 +18,11 @@ import { OAuthAuthorizeRedirectMiddleware } from "./oauth-authorize-redirect.mid
         OAuthAuthorizeRedirectMiddleware,
         OAuthTokenMiddleware,
         OAuthTokenAuthorizationCodeMiddleware,
+        ErrorHandlerMiddleware,
+        OAuthErrorRedirectMiddleware,
     ],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
+    exports: [OAuthAuthorizeValidateMiddleware, ErrorHandlerMiddleware, OAuthErrorRedirectMiddleware],
 })
 export class ApiOauthModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
@@ -28,14 +33,22 @@ export class ApiOauthModule {
         private readonly oauthAuthorizeRedirect: OAuthAuthorizeRedirectMiddleware,
         private readonly oauthToken: OAuthTokenMiddleware,
         private readonly oauthTokenAuthorizationCode: OAuthTokenAuthorizationCodeMiddleware,
+        private readonly errorHandler: ErrorHandlerMiddleware,
+        private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
     ) {
         this.middlewares.push({
-            middlewares: [this.oauthAuthorizeExtract, this.oauthAuthorizeValidate, this.oauthAuthorizeRedirect],
+            middlewares: [
+                this.oauthAuthorizeExtract,
+                this.oauthAuthorizeValidate,
+                this.oauthAuthorizeRedirect,
+                this.oauthErrorRedirect,
+                this.errorHandler,
+            ],
             path: "oauth/authorize",
         });
 
         this.middlewares.push({
-            middlewares: [this.oauthToken, this.oauthTokenAuthorizationCode],
+            middlewares: [this.oauthToken, this.oauthTokenAuthorizationCode, this.errorHandler],
             path: "oauth/token",
         });
     }
