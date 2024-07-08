@@ -16,8 +16,10 @@ export enum TokenScope {
     LOGIN_SERVICE = "login",
     LOGIN_SERVICE_REGISTER = "login-register",
     BACKEND = "backend",
+}
+
+enum RefreshTokenScope {
     REFRESH_TOKEN = "token",
-    NONE = "none",
 }
 
 @Injectable()
@@ -118,7 +120,7 @@ export class TokenService {
                 ...expiresInObject,
                 jwtid: uniqueId.toString(),
                 secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
-                audience: [TokenScope.REFRESH_TOKEN],
+                audience: [RefreshTokenScope.REFRESH_TOKEN],
             },
         );
     }
@@ -126,7 +128,7 @@ export class TokenService {
     async verifyActiveLoginToken(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
         const payload = await this.backendJwtService.verifyAsync(token, {
             secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
-            audience: [TokenScope.REFRESH_TOKEN],
+            audience: [RefreshTokenScope.REFRESH_TOKEN],
         });
         if (payload.client_id !== requiredClientId) {
             throw new JsonWebTokenError("Token is not for current client");
@@ -139,5 +141,25 @@ export class TokenService {
             clientId: payload.client_id,
             tokenUniqueId: payload.jti,
         };
+    }
+
+    /**
+     * Verifies that the given combination of scopes is valid.
+     * 
+     * @param scopes the scopes to verify
+     */
+    verifyScope(scopes: string[]) {
+        const validScopes: string[] = Object.values(TokenScope);
+        for (const scope of scopes) {
+            if (!validScopes.includes(scope)) {
+                throw new JsonWebTokenError("Invalid scope: " + scope);
+            }
+        }
+        if (scopes.length === 0) {
+            throw new JsonWebTokenError("No scope given");
+        }
+        if (scopes.includes(TokenScope.LOGIN_SERVICE_REGISTER) && scopes.length > 1) {
+            throw new JsonWebTokenError("Register scope must be the only scope");
+        }
     }
 }

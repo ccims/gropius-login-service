@@ -25,4 +25,4 @@ import { UsersController } from "./users.controller";
     ],
     providers: [CheckRegistrationTokenService],
 })
-export class ApiLoginModule {}
+export class AuthModule {}

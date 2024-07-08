@@ -2,9 +2,9 @@ import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthFunction, AuthStateData } from "./AuthResult";
+import { AuthFunction, AuthStateData } from "../strategies/AuthResult";
 import { StrategiesService } from "../model/services/strategies.service";
-import { ensureState } from "./utils";
+import { ensureState } from "../strategies/utils";
 
 @Injectable()
 export class ModeExtractorMiddleware implements NestMiddleware {

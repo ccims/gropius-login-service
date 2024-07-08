@@ -5,13 +5,6 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { AuthStateData } from "../strategies/AuthResult";
 import { ensureState } from "../strategies/utils";
 
-export interface OauthServerStateData {
-    state?: string;
-    redirect?: string;
-    clientId?: string;
-    client?: AuthClient;
-}
-
 @Injectable()
 export class AuthAutorizeMiddleware implements NestMiddleware {
     constructor(private readonly authClientService: AuthClientService) {}

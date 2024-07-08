@@ -1,18 +1,19 @@
-import { DynamicModule, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { LazyModuleLoader, RouterModule } from "@nestjs/core";
+import { RouterModule } from "@nestjs/core";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { ApiLoginModule } from "./api-login/api-login.module";
+import { AuthModule } from "./api-login/api-login.module";
 import { ApiSyncModule } from "./api-sync/api-sync.module";
 import { ModelModule } from "./model/model.module";
 import { StrategiesModule } from "./strategies/strategies.module";
 import { BackendServicesModule } from "./backend-services/backend-services.module";
 import { validationSchema } from "./configuration-validator";
-import { AuthServerModule } from "./api-internal/auth-server.module";
+import { ApiInternalModule } from "./api-internal/auth.module";
 import { DefaultReturn } from "./default-return.dto";
 import { InitializationModule } from "./initialization/initialization.module";
 import * as path from "path";
 import { ServeStaticModule } from "@nestjs/serve-static";
+import { ApiOauthModule } from "./api-oauth/api-oauth.module";
 
 @Module({
     imports: [
@@ -54,15 +55,17 @@ import { ServeStaticModule } from "@nestjs/serve-static";
             exclude: ["/login", "/syncApi", "/authenticate"],
         }),
         ModelModule,
-        ApiLoginModule,
+        AuthModule,
         ApiSyncModule,
         StrategiesModule,
-        AuthServerModule,
+        ApiInternalModule,
+        ApiOauthModule,
         RouterModule.register([
-            { path: "login", module: ApiLoginModule },
-            { path: "login", module: StrategiesModule },
-            { path: "sync", module: ApiSyncModule },
-            { path: "internal", module: AuthServerModule },
+            { path: "auth/login", module: AuthModule },
+            { path: "auth/login", module: StrategiesModule },
+            { path: "auth/sync", module: ApiSyncModule },
+            { path: "auth/internal", module: ApiInternalModule },
+            { path: "auth/oauth", module: ApiOauthModule}
         ]),
         BackendServicesModule,
         InitializationModule,

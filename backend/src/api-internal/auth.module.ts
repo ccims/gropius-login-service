@@ -2,13 +2,12 @@ import { MiddlewareConsumer, Module, NestMiddleware } from "@nestjs/common";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { ModelModule } from "src/model/model.module";
 import { ErrorHandlerMiddleware } from "../strategies/error-handler.middleware";
-import { ModeExtractorMiddleware } from "../strategies/mode-extractor.middleware";
+import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
 import { StrategiesMiddleware } from "../strategies/strategies.middleware";
 import { StrategiesModule } from "../strategies/strategies.module";
 import { AuthAutorizeMiddleware } from "./auth-autorize.middleware";
-import { OauthEndpointsController } from "./auth-endpoints.controller";
+import { AuthEndpointsController } from "./auth-endpoints.controller";
 import { OauthRedirectMiddleware } from "./auth-redirect.middleware";
-import { AuthTokenController } from "./auth-token.controller";
 import { OauthTokenMiddleware } from "./auth-token.middleware";
 import { PostCredentialsMiddleware } from "./post-credentials.middleware";
 
@@ -20,9 +19,9 @@ import { PostCredentialsMiddleware } from "./post-credentials.middleware";
         OauthTokenMiddleware,
         PostCredentialsMiddleware,
     ],
-    controllers: [AuthTokenController, OauthEndpointsController],
+    controllers: [AuthEndpointsController],
 })
-export class AuthServerModule {
+export class ApiInternalModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
 
     constructor(

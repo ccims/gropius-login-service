@@ -10,7 +10,6 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthStateData } from "src/strategies/AuthResult";
 import { ensureState } from "src/strategies/utils";
-import { OauthServerStateData } from "./auth-autorize.middleware";
 import { OauthHttpException } from "../api-oauth/OAuthHttpException";
 
 export interface OauthTokenEndpointResponseDto {
@@ -21,10 +20,10 @@ export interface OauthTokenEndpointResponseDto {
     scope: string;
 }
 
-@Controller("auth")
-@ApiTags(OpenApiTag.INTERNAL_API)
-export class AuthTokenController {
-    private readonly logger = new Logger(AuthTokenController.name);
+@Controller()
+@ApiTags(OpenApiTag.OAUTH_API)
+export class OAuthTokenController {
+    private readonly logger = new Logger(OAuthTokenController.name);
     constructor(
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
@@ -133,10 +132,10 @@ export class AuthTokenController {
         };
     }
 
-    @Post(":id?/token/:mode?")
+    @Post("token")
     async token(@Res({ passthrough: true }) res: Response): Promise<OauthTokenEndpointResponseDto> {
         ensureState(res);
-        const currentClient = (res.locals.state as OauthServerStateData).client;
+        const currentClient = res.locals.state.client as AuthClient;
         if (!currentClient) {
             throw new OauthHttpException(
                 "invalid_client",

@@ -2,10 +2,9 @@ import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@
 import { Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { TokenAuthorizationCodeMiddleware } from "./token-authorization-code.middleware";
+import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
 import * as bcrypt from "bcrypt";
 import { ensureState } from "src/strategies/utils";
-import { OauthServerStateData } from "./auth-autorize.middleware";
 import { OauthHttpException } from "./OAuthHttpException";
 
 @Injectable()
@@ -14,7 +13,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
 
     constructor(
         private readonly authClientService: AuthClientService,
-        private readonly tokenResponseCodeMiddleware: TokenAuthorizationCodeMiddleware,
+        private readonly tokenResponseCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
     ) {}
 
     private async checkGivenClientSecretValidOrNotRequired(client: AuthClient, givenSecret?: string): Promise<boolean> {
@@ -88,11 +87,11 @@ export class OauthTokenMiddleware implements NestMiddleware {
         if (!client) {
             throw new OauthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
-        (res.locals.state as OauthServerStateData).client = client;
+        res.locals.state.client = client;
 
         switch (grant_type) {
             case "refresh_token": //Request for new token using refresh token
-            //Fallthrough as resfrehsh token works the same as the initial code (both used to obtain new access token)
+            //Fallthrough as resfresh token works the same as the initial code (both used to obtain new access token)
             case "authorization_code": //Request for token based on obtained code
                 await this.tokenResponseCodeMiddleware.use(req, res, () => {
                     next();

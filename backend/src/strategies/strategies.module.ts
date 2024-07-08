@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { ModelModule } from "src/model/model.module";
 import { ErrorHandlerMiddleware } from "./error-handler.middleware";
-import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
+import { ModeExtractorMiddleware } from "../api-internal/mode-extractor.middleware";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesMiddleware } from "./strategies.middleware";
 import { UserpassStrategyService } from "./userpass/userpass.service";

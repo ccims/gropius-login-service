@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, HttpStatus, Param } from "@nestjs/common";
+import { Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
@@ -10,8 +10,8 @@ import { AuthFunctionInput } from "./dto/auth-function.dto";
  * - Authorize endpoint
  * - Redirect/Callback endpoint
  */
-@Controller("oauth")
-export class OauthEndpointsController {
+@Controller("auth")
+export class AuthEndpointsController {
     /**
      * Authorize endpoint for strategy instance of the given id.
      * Functionality performed is determined by mode parameter.
@@ -19,7 +19,7 @@ export class OauthEndpointsController {
      * For defined behaviour of the authorize endpoint see {@link https://www.rfc-editor.org/rfc/rfc6749}
      *
      */
-    @Get(":id/authorize/:mode?")
+    @Get("redirect/:id/:mode")
     @ApiOperation({ summary: "Authorize endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to initiate" })
     @ApiParam({
@@ -42,7 +42,7 @@ export class OauthEndpointsController {
      * Not meant to be called by a client.
      * Meant as callback for oauth flows started by the login-service
      */
-    @Get(":id/callback")
+    @Get("callback/:id")
     @ApiOperation({ summary: "Redirect/Callback endpoint for a strategy instance" })
     @ApiParam({
         name: "id",
@@ -50,6 +50,23 @@ export class OauthEndpointsController {
     })
     @ApiTags(OpenApiTag.INTERNAL_API)
     redirectEndpoint() {
+        throw new HttpException(
+            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+    }
+
+    @Post("submit/:id/:mode")
+    @ApiOperation({ summary: "Submit endpoint for a strategy instance" })
+    @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to submit" })
+    @ApiParam({
+        name: "mode",
+        enum: AuthFunctionInput,
+        required: false,
+        description: "The function/mode how to authenticate. Defaults to 'login'",
+    })
+    @ApiTags(OpenApiTag.INTERNAL_API)
+    submitEndpoint() {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,

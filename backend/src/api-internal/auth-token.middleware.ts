@@ -5,7 +5,7 @@ import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { StrategiesMiddleware } from "src/strategies/strategies.middleware";
 import { StrategiesService } from "src/model/services/strategies.service";
-import { TokenAuthorizationCodeMiddleware } from "../api-oauth/token-authorization-code.middleware";
+import { OAuthTokenAuthorizationCodeMiddleware } from "../api-oauth/oauth-token-authorization-code.middleware";
 import * as bcrypt from "bcrypt";
 import { ensureState } from "src/strategies/utils";
 import { OauthServerStateData } from "./auth-autorize.middleware";
@@ -19,7 +19,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
     constructor(
         private readonly tokenService: TokenService,
         private readonly authClientService: AuthClientService,
-        private readonly tokenResponseCodeMiddleware: TokenAuthorizationCodeMiddleware,
+        private readonly tokenResponseCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
         private readonly strategiesMiddleware: StrategiesMiddleware,
         private readonly postCredentialsMiddleware: PostCredentialsMiddleware,
     ) {}
