@@ -14,7 +14,7 @@ import { JiraStrategyService } from "./jira/jira.service";
         JwtModule.registerAsync({
             useFactory(...args) {
                 return {
-                    secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET || "blabla",
+                    secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET || "keyboard cat",
                     signOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,
                     },

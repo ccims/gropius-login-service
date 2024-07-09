@@ -1,11 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { AuthFunction, AuthStateServerData } from "../strategies/AuthResult";
+import { AuthStateServerData } from "../strategies/AuthResult";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
@@ -86,9 +85,10 @@ export class AuthRedirectMiddleware extends StateMiddleware<
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(state, expiresIn);
             const token = await this.tokenService.signActiveLoginCode(
-                typeof activeLogin == "string" ? activeLogin : activeLogin.id,
+                activeLogin.id,
                 state.client.id,
                 codeJwtId,
+                state.request.scope,
                 expiresIn,
             );
             this.logger.debug("Created token");

@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
-import { OAuthAuthorizeRequest, OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()

@@ -28,7 +28,7 @@ export class OAuthTokenController {
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
-    ) { }
+    ) {}
 
     private async checkLoginDataIsVaild(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
         if (!loginData) {
@@ -98,17 +98,15 @@ export class OAuthTokenController {
         loginData: UserLoginData,
         activeLogin: ActiveLogin,
         currentClient: AuthClient,
+        scope: TokenScope[],
     ): Promise<OauthTokenEndpointResponseDto> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
         let accessToken: string;
-        let tokenScope: TokenScope[];
         if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
-            tokenScope = [TokenScope.LOGIN_SERVICE_REGISTER];
             accessToken = await this.tokenService.signRegistrationToken(activeLogin.id, tokenExpiresInMs);
         } else {
-            tokenScope = [TokenScope.BACKEND, TokenScope.LOGIN_SERVICE];
-            accessToken = await this.tokenService.signBackendAccessToken(await loginData.user, tokenExpiresInMs);
+            accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
         }
 
         activeLogin = await this.updateRefreshTokenIdAndExpirationDate(
@@ -117,18 +115,22 @@ export class OAuthTokenController {
             currentClient,
         );
 
-        const refreshToken = await this.tokenService.signActiveLoginCode(
-            activeLogin.id,
-            currentClient.id,
-            activeLogin.nextExpectedRefreshTokenNumber,
-            activeLogin.expires ?? undefined
-        );
+        const refreshToken =
+            loginData.state != LoginState.WAITING_FOR_REGISTER
+                ? await this.tokenService.signActiveLoginCode(
+                      activeLogin.id,
+                      currentClient.id,
+                      activeLogin.nextExpectedRefreshTokenNumber,
+                      scope,
+                      activeLogin.expires ?? undefined,
+                  )
+                : undefined;
         return {
             access_token: accessToken,
             token_type: "bearer",
             expires_in: Math.floor(tokenExpiresInMs / 1000),
             refresh_token: refreshToken,
-            scope: tokenScope.join(" "),
+            scope: scope.join(" "),
         };
     }
 
@@ -136,12 +138,14 @@ export class OAuthTokenController {
     async token(@Res({ passthrough: true }) res: Response): Promise<OauthTokenEndpointResponseDto> {
         ensureState(res);
         const currentClient = res.locals.state.client as AuthClient;
+        const scope = res.locals.state.scope as TokenScope[];
         if (!currentClient) {
             throw new OAuthHttpException(
                 "invalid_client",
                 "No client id/authentication given or authentication invalid",
             );
         }
+        this.tokenService.verifyScope(scope);
         let activeLogin = (res.locals.state as AuthStateServerData)?.activeLogin;
         if (typeof activeLogin == "string") {
             activeLogin = await this.activeLoginService.findOneByOrFail({
@@ -150,6 +154,6 @@ export class OAuthTokenController {
         }
         const loginData = await activeLogin.loginInstanceFor;
         await this.checkLoginDataIsVaild(loginData, activeLogin);
-        return await this.createAccessToken(loginData, activeLogin, currentClient);
+        return await this.createAccessToken(loginData, activeLogin, currentClient, scope);
     }
 }

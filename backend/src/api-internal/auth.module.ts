@@ -7,15 +7,15 @@ import { StrategiesMiddleware } from "../strategies/strategies.middleware";
 import { StrategiesModule } from "../strategies/strategies.module";
 import { AuthEndpointsController } from "./auth-endpoints.controller";
 import { AuthRedirectMiddleware } from "./auth-redirect.middleware";
-import { PostCredentialsMiddleware } from "./post-credentials.middleware";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
 import { OAuthErrorRedirectMiddleware } from "src/api-oauth/oauth-error-redirect.middleware";
 import { AuthAutorizeExtractMiddleware } from "./auth-autorize-extract.middleware";
 import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/oauth-authorize-validate.middleware";
+import { AuthRegisterMiddleware } from "./auth-register.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule],
-    providers: [AuthAutorizeExtractMiddleware, AuthRedirectMiddleware, PostCredentialsMiddleware],
+    providers: [AuthAutorizeExtractMiddleware, AuthRedirectMiddleware],
     controllers: [AuthEndpointsController],
 })
 export class ApiInternalModule {
@@ -29,6 +29,7 @@ export class ApiInternalModule {
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
         private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
+        private readonly authRegister: AuthRegisterMiddleware,
     ) {
         this.middlewares.push({
             middlewares: [
@@ -69,6 +70,7 @@ export class ApiInternalModule {
             middlewares: [
                 this.authAutorizeExtract,
                 this.oauthAuthorizeValidate,
+                this.authRegister,
                 this.authRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,

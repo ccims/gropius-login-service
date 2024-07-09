@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
-import { ActiveLoginTokenResult, TokenService } from "src/backend-services/token.service";
+import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthStateServerData } from "src/strategies/AuthResult";
@@ -8,7 +8,10 @@ import { OAuthHttpException } from "./OAuthHttpException";
 import { StateMiddleware } from "./StateMiddleware";
 
 @Injectable()
-export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }, AuthStateServerData> {
+export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
+    { client: AuthClient },
+    AuthStateServerData & { scope: TokenScope[] }
+> {
     private readonly logger = new Logger(OAuthTokenAuthorizationCodeMiddleware.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
@@ -71,7 +74,7 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
             );
             throw new OAuthHttpException("invalid_grant", "Given code was liekely reused. Login and codes invalidated");
         }
-        this.appendState(res, { activeLogin });
+        this.appendState(res, { activeLogin, scope: tokenData.scope });
         next();
     }
 }
