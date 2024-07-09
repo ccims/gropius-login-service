@@ -1,68 +1,65 @@
 import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
-import { TokenService } from "src/backend-services/token.service";
+import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { AuthStateData } from "../strategies/AuthResult";
-import { OauthServerStateData } from "./auth-autorize.middleware";
+import { AuthFunction, AuthStateServerData } from "../strategies/AuthResult";
+import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
+import { StateMiddleware } from "src/api-oauth/StateMiddleware";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
+import { JwtService } from "@nestjs/jwt";
+import { Strategy } from "src/strategies/Strategy";
+import { LoginUserService } from "src/model/services/login-user.service";
+
+/**
+ * Return data of the user data sugestion endpoint
+ */
+interface UserDataSuggestion {
+    /**
+     * A potential username to use for the registration.
+     * If one is given, it was free the moment the suggestion is retrieved
+     *
+     * @example "testUser"
+     */
+    username?: string;
+
+    /**
+     * A potential name to display in the UI for the new user.
+     *
+     * @example "Test User"
+     */
+    displayName?: string;
+
+    /**
+     * A potential email of the new user.
+     *
+     * @example "test-user@example.com"
+     */
+    email?: string;
+}
 
 @Injectable()
-export class AuthRedirectMiddleware implements NestMiddleware {
+export class AuthRedirectMiddleware extends StateMiddleware<
+    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy }
+> {
     private readonly logger = new Logger(AuthRedirectMiddleware.name);
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly authClientService: AuthClientService,
-    ) { }
-
-    private handleErrorCases(state: (AuthStateData & OauthServerStateData) | undefined | null, url: URL): boolean {
-        const errorMessage = state?.authErrorMessage;
-        if (errorMessage) {
-            url.searchParams.append("error", encodeURIComponent(state.authErrorType || "invalid_request"));
-            url.searchParams.append(
-                "error_description",
-                encodeURIComponent(state.authErrorMessage?.replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, "")),
-            );
-            return true;
-        } else if (state == undefined || state == null) {
-            url.searchParams.append("error", "server_error");
-            url.searchParams.append(
-                "error_description",
-                encodeURIComponent("State of request was lost. Internal server error"),
-            );
-            return true;
-        } else if (!state.activeLogin) {
-            url.searchParams.append("error", "server_error");
-            url.searchParams.append(
-                "error_description",
-                encodeURIComponent("Login information was lost. Internal server error"),
-            );
-        } else if (!state.client?.id && !state.clientId) {
-            url.searchParams.append("error", "server_error");
-            url.searchParams.append(
-                "error_description",
-                encodeURIComponent("Client id information was lost. Internal server error"),
-            );
-        }
-        return false;
+        private readonly jwtService: JwtService,
+        private readonly userService: LoginUserService,
+    ) {
+        super();
     }
 
     private async assignActiveLoginToClient(
-        state: AuthStateData & OauthServerStateData,
+        state: AuthStateServerData & OAuthAuthorizeServerState,
         expiresIn: number,
     ): Promise<number> {
-        if (typeof state.activeLogin == "string") {
-            state.activeLogin = await this.activeLoginService.findOneByOrFail({
-                id: state.activeLogin,
-            });
-        }
-        if (!state.client && state.clientId) {
-            state.client = await this.authClientService.findOneByOrFail({
-                id: state.clientId,
-            });
-        }
         if (!state.activeLogin.isValid) {
             throw new Error("Active login invalid");
         }
@@ -79,47 +76,86 @@ export class AuthRedirectMiddleware implements NestMiddleware {
         const codeJwtId = ++state.activeLogin.nextExpectedRefreshTokenNumber;
 
         state.activeLogin = await this.activeLoginService.save(state.activeLogin);
-        state.client = await this.authClientService.findOneBy({
-            id: state.client.id,
-        });
 
         return codeJwtId;
     }
 
-    private async generateCode(state: AuthStateData & OauthServerStateData, url: URL) {
-        const activeLogin = state?.activeLogin;
+    private async generateCode(state: AuthStateServerData & OAuthAuthorizeServerState): Promise<string> {
+        const activeLogin = state.activeLogin;
         try {
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(state, expiresIn);
             const token = await this.tokenService.signActiveLoginCode(
                 typeof activeLogin == "string" ? activeLogin : activeLogin.id,
-                state.clientId || state.client.id,
+                state.client.id,
                 codeJwtId,
                 expiresIn,
             );
-            url.searchParams.append("code", token);
-            this.logger.debug("Created token", url.searchParams);
-            if (state.state) {
-                url.searchParams.append("state", state.state);
-            }
+            this.logger.debug("Created token");
+            return token;
         } catch (err) {
             this.logger.warn(err);
-            url.searchParams.append("error", "server_error");
-            url.searchParams.append("error_description", encodeURIComponent("Could not generate code for response"));
+            throw new OAuthHttpException("server_error", "Could not generate code for response");
         }
     }
 
-    async use(req: Request, res: Response, next: () => void) {
-        const state: OauthServerStateData = res.locals.state || {};
-        if (!state.redirect) {
-            throw new HttpException("No redirect address in state for request", HttpStatus.BAD_REQUEST);
-        }
-        const url = new URL(state.redirect);
+    /**
+     * Return username, display name and email suggestions for registering a user
+     * @param input The input data containing the registration token to retrieve suggestions for
+     */
+    async getDataSuggestions(loginData: UserLoginData, strategy: Strategy): Promise<UserDataSuggestion> {
+        const suggestions = strategy.getUserDataSuggestion(loginData);
 
-        const hadErrors = this.handleErrorCases(res.locals?.state, url);
-        if (!hadErrors) {
-            await this.generateCode(res.locals?.state, url);
+        if (suggestions.username) {
+            const numUsers = await this.userService.countBy({ username: suggestions.username.trim() });
+            if (numUsers > 0) {
+                return {
+                    email: suggestions.email,
+                };
+            }
         }
-        res.status(302).setHeader("Location", url.toString()).setHeader("Content-Length", 0).end();
+        if (!suggestions.username && !suggestions.displayName && !suggestions.email) {
+            return {};
+        }
+        return {
+            username: suggestions.username,
+            displayName: suggestions.displayName,
+            email: suggestions.email,
+        };
+    }
+
+    protected override async useWithState(
+        req: Request,
+        res: Response,
+        state: AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy } & { error?: any },
+        next: (error?: Error | any) => void,
+    ): Promise<any> {
+        if (!state.activeLogin) {
+            throw new OAuthHttpException("server_error", "No active login");
+        }
+        const userLoginData = await state.activeLogin.loginInstanceFor;
+        if (state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
+            if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
+                const url = new URL(state.request.redirect);
+                const token = await this.generateCode(state);
+                url.searchParams.append("code", token);
+                res.redirect(url.toString());
+            } else {
+                throw new OAuthHttpException("invalid_request", "Login is not in register state");
+            }
+        } else {
+            const encodedState = encodeURIComponent(
+                this.jwtService.sign({ request: state.request, authState: state.authState }),
+            );
+            const token = await this.generateCode(state);
+            const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);
+            const suggestionQuery = `&email=${encodeURIComponent(
+                suggestions.email ?? "",
+            )}&username=${encodeURIComponent(
+                suggestions.username ?? "",
+            )}&displayName=${encodeURIComponent(suggestions.displayName ?? "")}`;
+            const url = `/auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
+            res.redirect(url);
+        }
     }
 }

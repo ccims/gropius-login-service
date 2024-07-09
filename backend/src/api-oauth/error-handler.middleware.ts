@@ -4,7 +4,7 @@ import { StateMiddleware } from "./StateMiddleware";
 
 @Injectable()
 export class ErrorHandlerMiddleware extends StateMiddleware<{}, {}> {
-    protected async useWithState(
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: { error?: any },
@@ -13,7 +13,7 @@ export class ErrorHandlerMiddleware extends StateMiddleware<{}, {}> {
         next();
     }
 
-    protected useWithError(
+    protected override useWithError(
         req: Request,
         res: Response,
         state: { error?: any },

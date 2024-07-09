@@ -6,9 +6,10 @@ import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.enti
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthStateData, AuthFunction, AuthResult } from "./AuthResult";
+import { AuthStateServerData, AuthFunction, AuthResult } from "./AuthResult";
 import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
+import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 
 /**
  * Contains the logic how the system is supposed to create and link
@@ -24,13 +25,17 @@ export class PerformAuthFunctionService {
         private readonly activeLoginService: ActiveLoginService,
         private readonly userLoginDataService: UserLoginDataService,
         private readonly strategiesService: StrategiesService,
-    ) { }
+    ) {}
 
-    public checkFunctionIsAllowed(state: AuthStateData, instance: StrategyInstance, strategy: Strategy): string | null {
-        switch (state?.function) {
+    public checkFunctionIsAllowed(
+        state: AuthStateServerData,
+        instance: StrategyInstance,
+        strategy: Strategy,
+    ): string | null {
+        switch (state?.authState?.function) {
             case AuthFunction.REGISTER_WITH_SYNC:
                 if (!strategy.canSync) {
-                    state.function = AuthFunction.REGISTER;
+                    state.authState.function = AuthFunction.REGISTER;
                 }
             //Fallthrough to check if registration is possible at all
             case AuthFunction.REGISTER:
@@ -64,23 +69,16 @@ export class PerformAuthFunctionService {
         return this.activeLoginService.save(activeLogin);
     }
 
-    private async loginExistingUser(authResult: AuthResult, instance: StrategyInstance): Promise<AuthStateData> {
+    private async loginExistingUser(authResult: AuthResult, instance: StrategyInstance): Promise<ActiveLogin> {
         this.logger.debug("Logging in user");
-        return {
-            activeLogin: await this.createActiveLogin(
-                instance,
-                authResult.dataActiveLogin,
-                authResult.loginData,
-                false,
-            ),
-        };
+        return this.createActiveLogin(instance, authResult.dataActiveLogin, authResult.loginData, false);
     }
 
     private async continueExistingRegistration(
         authResult: AuthResult,
         instance: StrategyInstance,
         supportsSync: boolean,
-    ): Promise<AuthStateData> {
+    ): Promise<ActiveLogin> {
         let loginData = authResult.loginData;
         loginData.data = authResult.dataUserLoginData;
         const newExpiryDate = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
@@ -88,21 +86,14 @@ export class PerformAuthFunctionService {
             loginData.expires = newExpiryDate;
         }
         loginData = await this.userLoginDataService.save(loginData);
-        return {
-            activeLogin: await this.createActiveLogin(
-                instance,
-                authResult.dataActiveLogin,
-                authResult.loginData,
-                supportsSync,
-            ),
-        };
+        return this.createActiveLogin(instance, authResult.dataActiveLogin, authResult.loginData, supportsSync);
     }
 
     private async registerNewUser(
         authResult: AuthResult,
         instance: StrategyInstance,
         supportsSync: boolean,
-    ): Promise<AuthStateData> {
+    ): Promise<ActiveLogin> {
         this.logger.debug("Registering new user with login data", authResult.dataUserLoginData);
         let loginData = new UserLoginData();
         loginData.data = authResult.dataUserLoginData;
@@ -110,75 +101,67 @@ export class PerformAuthFunctionService {
         loginData.state = LoginState.WAITING_FOR_REGISTER;
         loginData.strategyInstance = Promise.resolve(instance);
         loginData = await this.userLoginDataService.save(loginData);
-        return {
-            activeLogin: await this.createActiveLogin(instance, authResult.dataActiveLogin, loginData, supportsSync),
-        };
+        return this.createActiveLogin(instance, authResult.dataActiveLogin, loginData, supportsSync);
     }
 
     public async performRequestedAction(
         authResult: AuthResult,
-        state: AuthStateData,
+        state: AuthStateServerData,
         instance: StrategyInstance,
         strategy: Strategy,
-    ): Promise<AuthStateData> {
+    ): Promise<ActiveLogin> {
+        const authFunction = state.authState.function;
         const wantsToDoImplicitRegister =
-            strategy.allowsImplicitSignup && instance.doesImplicitRegister && state.function == AuthFunction.LOGIN;
+            strategy.allowsImplicitSignup && instance.doesImplicitRegister && authFunction == AuthFunction.LOGIN;
         if (authResult.loginData) {
             // sucessfully found login data matching the authentication
             if (authResult.loginData.expires != null && authResult.loginData.expires <= new Date()) {
                 // Found login data is expired =>
                 // shouldn't happen as expired login data are filtered when searhcing for them
-                return {
-                    authErrorMessage:
-                        "The login using this strategy instance has expired. " +
-                        "If you were just registering, try starting the registration again. " +
-                        "If this error happens again, something internally went wrong.",
-                };
+                throw new OAuthHttpException("server_error", "Login data expired, please try registering again");
             }
             switch (authResult.loginData.state) {
                 case LoginState.WAITING_FOR_REGISTER:
                     if (
-                        state.function == AuthFunction.REGISTER ||
-                        state.function == AuthFunction.REGISTER_WITH_SYNC ||
+                        authFunction == AuthFunction.REGISTER ||
+                        authFunction == AuthFunction.REGISTER_WITH_SYNC ||
                         wantsToDoImplicitRegister
                     ) {
                         return this.continueExistingRegistration(
                             authResult,
                             instance,
-                            state.function == AuthFunction.REGISTER_WITH_SYNC,
+                            authFunction == AuthFunction.REGISTER_WITH_SYNC,
                         );
-                    } else if (state.function == AuthFunction.LOGIN) {
-                        return {
-                            authErrorMessage:
-                                "For these credentials a registration process is still running. " +
-                                "Complete (or restart) the registration before logging in",
-                        };
+                    } else if (authFunction == AuthFunction.LOGIN) {
+                        throw new OAuthHttpException(
+                            "server_error",
+                            "For these credentials a registration process is still running. Complete (or restart) the registration before logging in",
+                        );
                     }
                 case LoginState.BLOCKED:
-                    return {
-                        authErrorMessage:
-                            "The login to this account using this specific strategy instance " +
-                            "was blocked by the administrator.",
-                    };
+                    throw new OAuthHttpException(
+                        "server_error",
+                        "The login to this account using this specific strategy instance was blocked by the administrator.",
+                    );
                 case LoginState.VALID:
                     return this.loginExistingUser(authResult, instance);
             }
         } else {
             if (
-                state.function == AuthFunction.REGISTER ||
-                state.function == AuthFunction.REGISTER_WITH_SYNC ||
+                authFunction == AuthFunction.REGISTER ||
+                authFunction == AuthFunction.REGISTER_WITH_SYNC ||
                 wantsToDoImplicitRegister
             ) {
                 if (!authResult.mayRegister) {
                     this.logger.warn("Strategy did not provide existing loginData but it did not allow registering");
-                    return { authErrorMessage: "Invalid user credentials." };
+                    throw new OAuthHttpException("server_error", "Invalid user credentials.");
                 }
 
-                return this.registerNewUser(authResult, instance, state.function == AuthFunction.REGISTER_WITH_SYNC);
-            } else if (state.function == AuthFunction.LOGIN && !wantsToDoImplicitRegister) {
-                return { authErrorMessage: "Invalid user credentials." };
+                return this.registerNewUser(authResult, instance, authFunction == AuthFunction.REGISTER_WITH_SYNC);
+            } else if (authFunction == AuthFunction.LOGIN && !wantsToDoImplicitRegister) {
+                throw new OAuthHttpException("server_error", "Invalid user credentials.");
             }
         }
-        return { authErrorMessage: "Unknown error during authentication" };
+        throw new OAuthHttpException("server_error", "Unknown error during authentication");
     }
 }

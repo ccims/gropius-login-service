@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
-import { AuthStateData } from "src/strategies/AuthResult";
+import { AuthStateServerData } from "src/strategies/AuthResult";
 import { StrategiesMiddleware } from "src/strategies/strategies.middleware";
 import { ensureState } from "src/strategies/utils";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
@@ -11,7 +11,7 @@ export class PostCredentialsMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: (error?: any) => void) {
         ensureState(res);
-        let state: AuthStateData = res.locals.state;
+        let state: AuthStateServerData = res.locals.state;
         const mockRes = {};
         for (const key in res) {
             if (Object.prototype.hasOwnProperty.call(res, key)) {

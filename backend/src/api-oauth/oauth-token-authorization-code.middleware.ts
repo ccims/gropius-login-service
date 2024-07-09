@@ -3,12 +3,12 @@ import { Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { AuthStateData } from "src/strategies/AuthResult";
+import { AuthStateServerData } from "src/strategies/AuthResult";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { StateMiddleware } from "./StateMiddleware";
 
 @Injectable()
-export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }, AuthStateData> {
+export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }, AuthStateServerData> {
     private readonly logger = new Logger(OAuthTokenAuthorizationCodeMiddleware.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
@@ -21,7 +21,7 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
         throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
     }
 
-    protected async useWithState(
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: { client: AuthClient } & { error?: any },

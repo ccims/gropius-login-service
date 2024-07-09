@@ -3,13 +3,19 @@ import { Request, Response } from "express";
 import { StateMiddleware } from "./StateMiddleware";
 import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 import { TokenScope } from "src/backend-services/token.service";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
     OAuthAuthorizeServerState,
     OAuthAuthorizeServerState
 > {
-    protected async useWithState(
+
+    constructor(private readonly jwtService: JwtService) {
+        super();
+    }
+
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: OAuthAuthorizeServerState & { error?: any },
@@ -18,10 +24,7 @@ export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
         const target = state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)
             ? "register-additional"
             : "login";
-        const encodedState = encodeURIComponent(JSON.stringify(state.request));
-        res.status(302)
-            .setHeader("Location", `/auth/flow/${target}?state=${encodedState}`)
-            .setHeader("Content-Length", 0)
-            .end();
+        const encodedState = encodeURIComponent(this.jwtService.sign({ request: state.request }));
+        res.redirect(`/auth/flow/${target}?state=${encodedState}`);
     }
 }

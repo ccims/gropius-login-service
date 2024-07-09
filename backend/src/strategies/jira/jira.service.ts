@@ -5,7 +5,7 @@ import * as passportJira from "passport-atlassian-oauth2";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthFunction, AuthResult, AuthStateData } from "../AuthResult";
+import { AuthResult } from "../AuthResult";
 import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";

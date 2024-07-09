@@ -81,7 +81,7 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
         return null;
     }
 
-    protected async useWithState(
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: { error?: any },

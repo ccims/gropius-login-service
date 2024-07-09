@@ -44,12 +44,12 @@ export class ApiOauthModule {
                 this.oauthErrorRedirect,
                 this.errorHandler,
             ],
-            path: "oauth/authorize",
+            path: "auth/oauth/authorize",
         });
 
         this.middlewares.push({
             middlewares: [this.oauthToken, this.oauthTokenAuthorizationCode, this.errorHandler],
-            path: "oauth/token",
+            path: "auth/oauth/token",
         });
     }
 

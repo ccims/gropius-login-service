@@ -69,7 +69,7 @@ export class CreateDefaultUserService {
 
         const result = await strategy.performAuth(
             strategyInstance,
-            {},
+            undefined,
             {
                 body: postBody,
             },

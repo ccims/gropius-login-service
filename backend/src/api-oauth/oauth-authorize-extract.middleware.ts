@@ -10,7 +10,7 @@ export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAu
         super();
     }
 
-    protected async useWithState(
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: { error?: any },

@@ -15,7 +15,7 @@ export class OAuthAuthorizeValidateMiddleware extends StateMiddleware<
         super();
     }
 
-    protected async useWithState(
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: OAuthAuthorizeServerState & { error?: any },

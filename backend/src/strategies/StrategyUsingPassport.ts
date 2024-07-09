@@ -1,11 +1,12 @@
 import * as passport from "passport";
-import { Strategy } from "./Strategy";
+import { PerformAuthResult, Strategy } from "./Strategy";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthStateData, AuthResult } from "./AuthResult";
+import { AuthStateServerData, AuthResult } from "./AuthResult";
 import { JwtService } from "@nestjs/jwt";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -36,7 +37,7 @@ export abstract class StrategyUsingPassport extends Strategy {
 
     protected getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        authStateData: AuthStateData | object,
+        authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
     ): passport.AuthenticateOptions {
         return {};
     }
@@ -56,14 +57,10 @@ export abstract class StrategyUsingPassport extends Strategy {
 
     public override async performAuth(
         strategyInstance: StrategyInstance,
-        authStateData: AuthStateData | object,
+        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
         req: any,
         res: any,
-    ): Promise<{
-        result: AuthResult | null;
-        returnedState: AuthStateData;
-        info: any;
-    }> {
+    ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
             const passportStrategy = this.getPassportStrategyInstanceFor(strategyInstance);
             const jwtService = this.passportJwtService;
@@ -71,8 +68,8 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign(authStateData), // TODO: check if an expiration and/or an additional random value are needed
-                    ...this.getAdditionalPassportOptions(strategyInstance, authStateData),
+                    state: jwtService.sign({ request: state.request, authState: state.authState }), // TODO: check if an expiration and/or an additional random value are needed
+                    ...this.getAdditionalPassportOptions(strategyInstance, state),
                 },
                 (err, user: AuthResult | false, info) => {
                     if (err) {
@@ -83,8 +80,6 @@ export abstract class StrategyUsingPassport extends Strategy {
                             returnedState = jwtService.verify(info.state);
                         } else if (info.state) {
                             reject("State not returned as JWT");
-                        } else if (authStateData) {
-                            returnedState = authStateData;
                         }
                         resolve({ result: user || null, returnedState, info });
                     }

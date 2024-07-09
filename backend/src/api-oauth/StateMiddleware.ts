@@ -34,6 +34,6 @@ export abstract class StateMiddleware<S extends Record<string, any> = {}, T exte
     }
 
     protected appendState(res: Response, appendedState: Partial<T> & { error?: any } | { error?: any }) {
-        res.locals.state = { ...res.locals.state, ...appendedState };
+        Object.assign(res.locals.state, appendedState);
     }
 }

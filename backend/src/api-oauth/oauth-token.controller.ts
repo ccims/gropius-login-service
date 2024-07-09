@@ -8,7 +8,7 @@ import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.enti
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { AuthStateData } from "src/strategies/AuthResult";
+import { AuthStateServerData } from "src/strategies/AuthResult";
 import { ensureState } from "src/strategies/utils";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
@@ -142,7 +142,7 @@ export class OAuthTokenController {
                 "No client id/authentication given or authentication invalid",
             );
         }
-        let activeLogin = (res.locals.state as AuthStateData)?.activeLogin;
+        let activeLogin = (res.locals.state as AuthStateServerData)?.activeLogin;
         if (typeof activeLogin == "string") {
             activeLogin = await this.activeLoginService.findOneByOrFail({
                 id: activeLogin,

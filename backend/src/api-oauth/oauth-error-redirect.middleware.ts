@@ -5,7 +5,7 @@ import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 
 @Injectable()
 export class OAuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorizeServerState, {}> {
-    protected async useWithState(
+    protected override async useWithState(
         req: Request,
         res: Response,
         state: OAuthAuthorizeServerState & { error?: any },
@@ -14,7 +14,7 @@ export class OAuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorize
         next();
     }
 
-    protected useWithError(
+    protected override useWithError(
         req: Request,
         res: Response,
         state: OAuthAuthorizeServerState & { error?: any },

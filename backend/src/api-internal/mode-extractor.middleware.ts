@@ -1,27 +1,31 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthFunction, AuthStateData } from "../strategies/AuthResult";
-import { StrategiesService } from "../model/services/strategies.service";
-import { ensureState } from "../strategies/utils";
+import { AuthFunction, AuthStateServerData } from "../strategies/AuthResult";
+import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 
 @Injectable()
-export class ModeExtractorMiddleware implements NestMiddleware {
-    async use(req: Request, res: Response, next: () => void) {
-        ensureState(res);
+export class ModeExtractorMiddleware extends StateMiddleware<{}, AuthStateServerData> {
+    protected override async useWithState(
+        req: Request,
+        res: Response,
+        state: { error?: any },
+        next: (error?: Error | any) => void,
+    ): Promise<any> {
+        let authFunction: AuthFunction;
         switch (req.params.mode) {
             case "register":
-                (res.locals.state as AuthStateData).function = AuthFunction.REGISTER;
+                authFunction = AuthFunction.REGISTER;
                 break;
             case "register-sync":
-                (res.locals.state as AuthStateData).function = AuthFunction.REGISTER_WITH_SYNC;
+                authFunction = AuthFunction.REGISTER_WITH_SYNC;
                 break;
             case "login":
-            default:
-                (res.locals.state as AuthStateData).function = AuthFunction.LOGIN;
+                authFunction = AuthFunction.LOGIN;
                 break;
+            default:
+                throw new Error("Invalid mode");
         }
+        this.appendState(res, { authState: { function: authFunction } });
         next();
     }
 }

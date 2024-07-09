@@ -1,19 +1,23 @@
-import * as passport from "passport";
 import { CreateStrategyInstanceInput } from "src/api-login/strategy/dto/create-strategy-instance.dto";
 import { UpdateStrategyInstanceInput } from "src/api-login/strategy/dto/update-strategy-instance.dto";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthResult, AuthStateData } from "./AuthResult";
+import { AuthResult, AuthStateServerData } from "./AuthResult";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 
 export interface StrategyVariable {
     name: string;
     displayName?: string;
     type: "boolean" | "number" | "object" | "string" | "password";
     nullable?: boolean;
+}
+
+export interface PerformAuthResult {
+    result: AuthResult | null;
+    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">>;
+    info: any;
 }
 
 export abstract class Strategy {
@@ -237,14 +241,10 @@ export abstract class Strategy {
 
     abstract performAuth(
         strategyInstance: StrategyInstance,
-        authStateData: AuthStateData | object,
+        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
         req: any,
         res: any,
-    ): Promise<{
-        result: AuthResult | null;
-        returnedState: AuthStateData;
-        info: any;
-    }>;
+    ): Promise<PerformAuthResult>;
 
     toJSON() {
         return {

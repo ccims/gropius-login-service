@@ -72,4 +72,14 @@ export class AuthEndpointsController {
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
+
+    @Post("register")
+    @ApiOperation({ summary: "Copmplete a registration" })
+    @ApiTags(OpenApiTag.INTERNAL_API)
+    registerEndpoint() {
+        throw new HttpException(
+            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+    }
 }
