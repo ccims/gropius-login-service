@@ -59,5 +59,4 @@ async function bootstrap() {
     await app.listen(portNumber);
 }
 bootstrap()
-    .then(() => console.log("Application exited"))
     .catch((err) => console.error("NestJS Application exited with error", err));

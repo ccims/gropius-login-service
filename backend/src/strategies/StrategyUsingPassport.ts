@@ -14,7 +14,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
         strategiesService: StrategiesService,
-        protected readonly passportJwtService: JwtService,
+        protected readonly stateJwtService: JwtService,
         canLoginRegister = true,
         canSync = false,
         needsRedirectFlow = false,
@@ -63,12 +63,12 @@ export abstract class StrategyUsingPassport extends Strategy {
     ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
             const passportStrategy = this.getPassportStrategyInstanceFor(strategyInstance);
-            const jwtService = this.passportJwtService;
+            const jwtService = this.stateJwtService;
             passport.authenticate(
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign({ request: state.request, authState: state.authState }), // TODO: check if an expiration and/or an additional random value are needed
+                    state: jwtService.sign({ request: state?.request, authState: state?.authState }), // TODO: check if an expiration and/or an additional random value are needed
                     ...this.getAdditionalPassportOptions(strategyInstance, state),
                 },
                 (err, user: AuthResult | false, info) => {
