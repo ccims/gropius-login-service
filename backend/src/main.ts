@@ -26,7 +26,8 @@ async function bootstrap() {
             .setDescription("API for login, registration and linking Gropius accounts to accounts on IMSs")
             .addTag(OpenApiTag.LOGIN_API, "Endpoints to interact with the model, register and link authentications")
             .addTag(OpenApiTag.SYNC_API, "API to be used by sync services for exchanging IMSUser info")
-            .addTag(OpenApiTag.CREDENTIALS, "Endpoints for actual authentication. Token retrieval, oauth flow, ...")
+            .addTag(OpenApiTag.OAUTH_API, "OAuth endpoints for authorization and token management")
+            .addTag(OpenApiTag.INTERNAL_API, "Internal API, not meant to be used by clients")
             .addOAuth2({
                 type: "oauth2",
                 description: "Access token provided by running the oauth flow (and if needed) registering/linking",

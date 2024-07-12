@@ -10,12 +10,12 @@ import {
 import { Response } from "express";
 import { DefaultReturn } from "src/default-return.dto";
 import { LoginUserService } from "src/model/services/login-user.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { ApiStateData } from "./ApiStateData";
 import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
 import { CheckRegistrationTokenService } from "./check-registration-token.service";
 import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto";
+import { BackendUserService } from "src/backend-services/backend-user.service";
 
 /**
  * Controller for handling self registration of new users as well as linking of existing users to new loginData
@@ -25,8 +25,8 @@ import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto"
 export class RegisterController {
     constructor(
         private readonly checkRegistrationTokenService: CheckRegistrationTokenService,
-        private readonly loginDataService: UserLoginDataService,
         private readonly userService: LoginUserService,
+        private readonly backendUserSerivce: BackendUserService,
     ) {}
 
     /**
@@ -65,7 +65,7 @@ export class RegisterController {
             input.register_token,
             (res.locals.state as ApiStateData).loggedInUser,
         );
-        const { loggedInUser } = await this.loginDataService.linkAccountToUser(
+        const { loggedInUser } = await this.backendUserSerivce.linkAccountToUser(
             (res.locals.state as ApiStateData).loggedInUser,
             loginData,
             activeLogin,
@@ -117,7 +117,7 @@ export class RegisterController {
             input.register_token,
             linkToUser,
         );
-        await this.loginDataService.linkAccountToUser(linkToUser, loginData, activeLogin);
+        await this.backendUserSerivce.linkAccountToUser(linkToUser, loginData, activeLogin);
         return new DefaultReturn("admin-link");
     }
 }

@@ -1,16 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
-import { AuthClientService } from "src/model/services/auth-client.service";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
-import { JwtService } from "@nestjs/jwt";
 import { AuthStateServerData } from "src/strategies/AuthResult";
 import { SelfRegisterUserInput } from "src/api-login/dto/user-inputs.dto";
 import { CheckRegistrationTokenService } from "src/api-login/check-registration-token.service";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
 
 @Injectable()
 export class AuthRegisterMiddleware extends StateMiddleware<
@@ -18,12 +15,9 @@ export class AuthRegisterMiddleware extends StateMiddleware<
     OAuthAuthorizeServerState & AuthStateServerData
 > {
     constructor(
-        private readonly authClientService: AuthClientService,
-        private readonly jwtService: JwtService,
         private readonly checkRegistrationTokenService: CheckRegistrationTokenService,
         private readonly userService: LoginUserService,
         private readonly backendUserSerivce: BackendUserService,
-        private readonly userLoginDataService: UserLoginDataService,
     ) {
         super();
     }
@@ -46,7 +40,7 @@ export class AuthRegisterMiddleware extends StateMiddleware<
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
         }
         const newUser = await this.backendUserSerivce.createNewUser(input, false);
-        await this.userLoginDataService.linkAccountToUser(newUser, loginData, activeLogin);
+        await this.backendUserSerivce.linkAccountToUser(newUser, loginData, activeLogin);
         this.appendState(res, { activeLogin })
         next();
     }

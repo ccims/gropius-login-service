@@ -32,9 +32,9 @@ import { JiraStrategyService } from "./jira/jira.service";
         UserpassStrategyService,
         GithubStrategyService,
         JiraStrategyService,
-        { provide: "PassportStateJwt", useExisting: JwtService },
+        { provide: "StateJwtService", useExisting: JwtService },
         StrategiesMiddleware,
     ],
-    exports: [StrategiesMiddleware],
+    exports: [StrategiesMiddleware, { provide: "StateJwtService", useExisting: JwtService }],
 })
 export class StrategiesModule {}

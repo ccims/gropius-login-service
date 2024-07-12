@@ -20,11 +20,11 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("PassportStateJwt")
-        passportJwtService: JwtService,
+        @Inject("StateJwtService")
+        stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, passportJwtService, true, true, true, true);
+        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true);
     }
 
     /**

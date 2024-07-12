@@ -2,7 +2,7 @@ FROM node:18
 ENV NODE_ENV build
 USER node
 WORKDIR /home/node
-ADD . .
+ADD backend .
 RUN npm ci
 RUN npm run build
 

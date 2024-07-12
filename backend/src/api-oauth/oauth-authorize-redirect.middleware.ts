@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
 import { StateMiddleware } from "./StateMiddleware";
 import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
@@ -10,8 +10,10 @@ export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
     OAuthAuthorizeServerState,
     OAuthAuthorizeServerState
 > {
-
-    constructor(private readonly jwtService: JwtService) {
+    constructor(
+        @Inject("StateJwtService")
+        private readonly stateJwtService: JwtService,
+    ) {
         super();
     }
 
@@ -24,7 +26,7 @@ export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
         const target = state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)
             ? "register-additional"
             : "login";
-        const encodedState = encodeURIComponent(this.jwtService.sign({ request: state.request }));
+        const encodedState = encodeURIComponent(this.stateJwtService.sign({ request: state.request }));
         res.redirect(`/auth/flow/${target}?state=${encodedState}`);
     }
 }

@@ -25,7 +25,7 @@ export class CreateDefaultAuthClientService {
         const clientId = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_ID;
         const redirectUri = process.env.GROPIUS_DEFAULT_AUTH_CLIENT_REDIRECT;
 
-        if (!clientName && !clientId) {
+        if ((!clientName && !clientId) || !redirectUri) {
             return;
         }
         const nameObject = clientName ? { name: clientName } : {}

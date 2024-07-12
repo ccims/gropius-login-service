@@ -73,6 +73,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                 },
                 (err, user: AuthResult | false, info) => {
                     if (err) {
+                        this.logger.error("Error while authenticating with passport", err);
                         reject(err);
                     } else {
                         let returnedState = {};

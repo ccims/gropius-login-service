@@ -22,10 +22,10 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
         private readonly loginUserService: LoginUserService,
-        @Inject("PassportStateJwt")
-        passportJwtService: JwtService,
+        @Inject("StateJwtService")
+        stateJwtService: JwtService,
     ) {
-        super("userpass", strategyInstanceService, strategiesService, passportJwtService, true, false, false, false);
+        super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false);
     }
 
     override get acceptsVariables(): {

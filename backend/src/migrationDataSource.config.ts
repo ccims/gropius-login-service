@@ -2,7 +2,7 @@ import { DataSource } from "typeorm";
 import { randomBytes } from "crypto";
 
 function setEnvVariables() {
-    process.env.GROPIUS_INTERNAL_BACKEND_JWT_SECRET = randomBytes(100).toString("base64");
+    process.env.GROPIUS_OAUTH_JWT_SECRET = randomBytes(100).toString("base64");
     process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET = randomBytes(100).toString("base64");
     process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS = "10";
 }

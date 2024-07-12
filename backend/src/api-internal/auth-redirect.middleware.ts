@@ -1,9 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { AuthClientService } from "src/model/services/auth-client.service";
 import { AuthStateServerData } from "../strategies/AuthResult";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
@@ -48,8 +47,8 @@ export class AuthRedirectMiddleware extends StateMiddleware<
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
-        private readonly authClientService: AuthClientService,
-        private readonly jwtService: JwtService,
+        @Inject("StateJwtService")
+        private readonly stateJwtService: JwtService,
         private readonly userService: LoginUserService,
     ) {
         super();
@@ -145,7 +144,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
             }
         } else {
             const encodedState = encodeURIComponent(
-                this.jwtService.sign({ request: state.request, authState: state.authState }),
+                this.stateJwtService.sign({ request: state.request, authState: state.authState }),
             );
             const token = await this.generateCode(state);
             const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);

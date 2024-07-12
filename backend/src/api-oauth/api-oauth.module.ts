@@ -9,9 +9,11 @@ import { OAuthAuthorizeValidateMiddleware } from "./oauth-authorize-validate.mid
 import { OAuthAuthorizeRedirectMiddleware } from "./oauth-authorize-redirect.middleware";
 import { ErrorHandlerMiddleware } from "./error-handler.middleware";
 import { OAuthErrorRedirectMiddleware } from "./oauth-error-redirect.middleware";
+import { BackendServicesModule } from "src/backend-services/backend-services.module";
+import { StrategiesModule } from "src/strategies/strategies.module";
 
 @Module({
-    imports: [ModelModule],
+    imports: [ModelModule, BackendServicesModule, StrategiesModule],
     providers: [
         OAuthAuthorizeExtractMiddleware,
         OAuthAuthorizeValidateMiddleware,

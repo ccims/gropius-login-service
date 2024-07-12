@@ -19,11 +19,11 @@ export class JiraStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("PassportStateJwt")
-        passportJwtService: JwtService,
+        @Inject("StateJwtService")
+        stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("jira", strategyInstanceService, strategiesService, passportJwtService, true, true, true, true);
+        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true);
     }
 
     /**

@@ -24,5 +24,6 @@ import { UsersController } from "./users.controller";
         AuthClientController,
     ],
     providers: [CheckRegistrationTokenService],
+    exports: [CheckRegistrationTokenService],
 })
 export class AuthModule {}
