@@ -6,7 +6,7 @@ import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerSta
 import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
-export class AuthAutorizeExtractMiddleware extends StateMiddleware<{}, OAuthAuthorizeServerState> {
+export class AuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAuthorizeServerState> {
     constructor(
         private readonly authClientService: AuthClientService,
         @Inject("StateJwtService")
@@ -21,8 +21,8 @@ export class AuthAutorizeExtractMiddleware extends StateMiddleware<{}, OAuthAuth
         state: { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        const newState = this.stateJwtService.verify<Pick<OAuthAuthorizeServerState, "request">>(req.query.state as string);
-        const client = await this.authClientService.findOneBy({ id: newState.request.clientId });
+        const newState = this.stateJwtService.verify<Pick<OAuthAuthorizeServerState, "request">>(req.query.state ?? req.body.state);
+        const client = await this.authClientService.findAuthClient(newState.request.clientId);
         this.appendState(res, { client, ...newState });
         next();
     }

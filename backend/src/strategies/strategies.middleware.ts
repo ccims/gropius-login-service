@@ -10,12 +10,12 @@ import { Strategy } from "./Strategy";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
-import { AuthClientService } from "src/model/services/auth-client.service";
+import { AuthException } from "src/api-internal/AuthException";
 
 @Injectable()
 export class StrategiesMiddleware extends StateMiddleware<
     AuthStateServerData & OAuthAuthorizeServerState,
-    AuthStateServerData & OAuthAuthorizeServerState
+    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy }
 > {
     private readonly logger = new Logger(StrategiesMiddleware.name);
     constructor(
@@ -23,7 +23,6 @@ export class StrategiesMiddleware extends StateMiddleware<
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly performAuthFunctionService: PerformAuthFunctionService,
         private readonly imsUserFindingService: ImsUserFindingService,
-        private readonly authClientService: AuthClientService,
     ) {
         super();
     }
@@ -69,6 +68,7 @@ export class StrategiesMiddleware extends StateMiddleware<
         const id = req.params.id;
         const instance = await this.idToStrategyInstance(id);
         const strategy = await this.strategiesService.getStrategyByName(instance.type);
+        this.appendState(res, { strategy });
 
         const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(state, instance, strategy);
         if (functionError != null) {
@@ -77,9 +77,6 @@ export class StrategiesMiddleware extends StateMiddleware<
 
         const result = await strategy.performAuth(instance, state, req, res);
         this.appendState(res, result.returnedState);
-        if (!state.client && state.request.clientId) {
-            state.client = await this.authClientService.findOneBy({ id: state.request.clientId });
-        }
 
         const authResult = result.result;
         if (authResult) {
@@ -90,11 +87,12 @@ export class StrategiesMiddleware extends StateMiddleware<
                 strategy,
             );
             this.appendState(res, { activeLogin });
+            state.authState.activeLogin = activeLogin.id;
             await this.performImsUserSearchIfNeeded(state, instance, strategy);
         } else {
-            throw new OAuthHttpException(
-                "server_error",
+            throw new AuthException(
                 result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfull",
+                instance.id
             );
         }
         this.logger.debug("Strategy Middleware completed. Calling next");

@@ -8,11 +8,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import("../views/Login.vue"),
     },
     {
-        path: "/logout",
-        name: "logout",
-        component: () => import("../views/Logout.vue")
-    },
-    {
         path: "/register",
         name: "register",
         component: () => import("../views/Register.vue"),
@@ -20,7 +15,7 @@ const routes: RouteRecordRaw[] = [
 ];
 
 const router = createRouter({
-    history: createWebHistory(process.env.BASE_URL),
+    history: createWebHistory("/auth/flow"),
     routes
 });
 

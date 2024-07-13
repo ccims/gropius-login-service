@@ -17,6 +17,7 @@ export enum TokenScope {
     LOGIN_SERVICE = "login",
     LOGIN_SERVICE_REGISTER = "login-register",
     BACKEND = "backend",
+    AUTH = "auth",
 }
 
 enum RefreshTokenScope {

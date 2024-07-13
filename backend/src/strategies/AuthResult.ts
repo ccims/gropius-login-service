@@ -22,4 +22,5 @@ export interface AuthResult {
     dataUserLoginData: object;
     loginData?: UserLoginData;
     mayRegister: boolean;
+    noRegisterMessage?: string;
 }

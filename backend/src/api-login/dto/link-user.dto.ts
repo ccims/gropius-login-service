@@ -2,7 +2,7 @@ import { HttpException, HttpStatus } from "@nestjs/common";
 
 /**
  * Input type for self-linking
- * Only expects the registration_token
+ * Only expects the register_token
  */
 export class RegistrationTokenInput {
     /**

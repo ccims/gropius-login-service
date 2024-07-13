@@ -169,8 +169,10 @@ export class BackendUserService {
         const failedLinks = linkResults.filter(
             (result) =>
                 result.status == "rejected" || (result.status == "fulfilled" && !result.value.updateIMSUser.imsUser.id),
-        ); //.map((result) => (result.status == "fulfilled" ? result.value : result.reason));
-        this.logger.warn("Failures during linking ims user and Gropius user:", failedLinks);
+        );
+        if (failedLinks.length > 0) {
+            this.logger.warn("Failures during linking ims user and Gropius user:", failedLinks);
+        }
     }
 
     /**

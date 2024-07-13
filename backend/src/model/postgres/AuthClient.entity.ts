@@ -4,6 +4,7 @@ import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import { promisify } from "util";
 import { ApiHideProperty } from "@nestjs/swagger";
+import { TokenScope } from "src/backend-services/token.service";
 
 /**
  * The minimum length of the client secret in bytes.
@@ -81,11 +82,10 @@ export class AuthClient {
     requiresSecret: boolean;
 
     /**
-     * A list of all login events that this client caused.
+     * The list of scopes that this client is allowed to request.
      */
-    @OneToMany(() => ActiveLogin, (login) => login.createdByClient)
-    @ApiHideProperty()
-    loginsOfThisClient: Promise<ActiveLogin[]>;
+    @Column("json")
+    validScopes: TokenScope[];
 
     /**
      * Calculated the sha256 hash of the input.

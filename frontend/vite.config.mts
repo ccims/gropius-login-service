@@ -9,13 +9,11 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    base: "/auth/flow",
     plugins: [
         vue({
             template: {
-                transformAssetUrls,
-                compilerOptions: {
-                    isCustomElement: (tag) => ["task-lists", "relative-time"].includes(tag)
-                }
+                transformAssetUrls
             }
         }),
         // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
@@ -44,25 +42,23 @@ export default defineConfig({
         extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"]
     },
     server: {
-        port: 4200,
+        port: 3000,
         proxy: {
-            "/api/graphql": {
-                target: "http://localhost:8080/graphql",
+            "/auth/oauth": {
+                target: "http://localhost:3001",
                 changeOrigin: true,
                 secure: false,
                 ws: true,
-                ignorePath: true
             },
-            "/api/login": {
-                target: "http://localhost:3000",
+            "/auth/api": {
+                target: "http://localhost:3001",
                 changeOrigin: true,
                 secure: false,
                 ws: true,
-                rewrite: (path) => path.replace(/^\/api\/login/, "")
-            }
+            },
         }
     },
     optimizeDeps: {
-        exclude: ["vuetify", "@github/task-lists-element"]
+        exclude: ["vuetify"]
     }
 });

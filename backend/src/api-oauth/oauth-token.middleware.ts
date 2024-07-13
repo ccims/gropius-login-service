@@ -2,9 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@
 import { Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
 import * as bcrypt from "bcrypt";
-import { ensureState } from "src/strategies/utils";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { StateMiddleware } from "./StateMiddleware";
 
@@ -14,7 +12,6 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
 
     constructor(
         private readonly authClientService: AuthClientService,
-        private readonly tokenResponseCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
     ) {
         super();
     }
@@ -54,9 +51,7 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
                 ?.map((text) => decodeURIComponent(text));
 
             if (clientIdSecret && clientIdSecret.length == 2) {
-                const client = await this.authClientService.findOneBy({
-                    id: clientIdSecret[0],
-                });
+                const client = await this.authClientService.findAuthClient(clientIdSecret[0]);
                 if (client && client.isValid) {
                     if (this.checkGivenClientSecretValidOrNotRequired(client, clientIdSecret[1])) {
                         return client;
@@ -67,9 +62,7 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
         }
 
         if (req.body.client_id) {
-            const client = await this.authClientService.findOneBy({
-                id: req.body.client_id,
-            });
+            const client = await this.authClientService.findAuthClient(req.body.client_id);
             if (client && client.isValid) {
                 if (this.checkGivenClientSecretValidOrNotRequired(client, req.body.client_secret)) {
                     return client;
@@ -99,9 +92,7 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
             case "refresh_token": //Request for new token using refresh token
             //Fallthrough as resfresh token works the same as the initial code (both used to obtain new access token)
             case "authorization_code": //Request for token based on obtained code
-                await this.tokenResponseCodeMiddleware.use(req, res, () => {
-                    next();
-                });
+                next();
                 break;
             case "password": // Deprecated => not supported
             case "client_credentials": //Request for token for stuff on client => not supported

@@ -85,8 +85,8 @@ export class UserpassStrategyService extends StrategyUsingPassport {
             const dataUserLoginData = await this.generateLoginDataData(username, password);
             return done(
                 null,
-                { dataActiveLogin, dataUserLoginData, mayRegister: true },
-                { message: "Username or password incorrect" },
+                { dataActiveLogin, dataUserLoginData, mayRegister: true, noRegisterMessage: "Username or password incorrect" },
+                { },
             );
         } else if (loginDataForCorrectUser.length > 1) {
             return done("More than one user with same username", false, undefined);
@@ -98,7 +98,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         if (!hasCorrectPassword) {
             return done(
                 null,
-                { dataActiveLogin, dataUserLoginData: {}, mayRegister: false },
+                false,
                 { message: "Username or password incorrect" },
             );
         }

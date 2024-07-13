@@ -57,7 +57,7 @@ export class AuthEndpointsController {
         );
     }
 
-    @Post("submit/:id/:mode")
+    @Get("submit/:id/:mode")
     @ApiOperation({ summary: "Submit endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to submit" })
     @ApiParam({

@@ -10,6 +10,7 @@ import { AuthStateServerData, AuthFunction, AuthResult } from "./AuthResult";
 import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
+import { AuthException } from "src/api-internal/AuthException";
 
 /**
  * Contains the logic how the system is supposed to create and link
@@ -159,7 +160,7 @@ export class PerformAuthFunctionService {
 
                 return this.registerNewUser(authResult, instance, authFunction == AuthFunction.REGISTER_WITH_SYNC);
             } else if (authFunction == AuthFunction.LOGIN && !wantsToDoImplicitRegister) {
-                throw new OAuthHttpException("server_error", "Invalid user credentials.");
+                throw new AuthException(authResult.noRegisterMessage ?? "Invalid user credentials.", instance.id);
             }
         }
         throw new OAuthHttpException("server_error", "Unknown error during authentication");

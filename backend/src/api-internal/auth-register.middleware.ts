@@ -12,7 +12,7 @@ import { BackendUserService } from "src/backend-services/backend-user.service";
 @Injectable()
 export class AuthRegisterMiddleware extends StateMiddleware<
     OAuthAuthorizeServerState & AuthStateServerData,
-    OAuthAuthorizeServerState & AuthStateServerData
+    OAuthAuthorizeServerState & AuthStateServerData & { secondToken: boolean }
 > {
     constructor(
         private readonly checkRegistrationTokenService: CheckRegistrationTokenService,
@@ -41,7 +41,7 @@ export class AuthRegisterMiddleware extends StateMiddleware<
         }
         const newUser = await this.backendUserSerivce.createNewUser(input, false);
         await this.backendUserSerivce.linkAccountToUser(newUser, loginData, activeLogin);
-        this.appendState(res, { activeLogin })
+        this.appendState(res, { activeLogin, secondToken: true })
         next();
     }
 }

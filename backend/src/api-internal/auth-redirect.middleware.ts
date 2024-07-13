@@ -41,7 +41,7 @@ interface UserDataSuggestion {
 
 @Injectable()
 export class AuthRedirectMiddleware extends StateMiddleware<
-    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy }
+    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy; secondToken?: boolean }
 > {
     private readonly logger = new Logger(AuthRedirectMiddleware.name);
     constructor(
@@ -55,19 +55,21 @@ export class AuthRedirectMiddleware extends StateMiddleware<
     }
 
     private async assignActiveLoginToClient(
-        state: AuthStateServerData & OAuthAuthorizeServerState,
+        state: AuthStateServerData & OAuthAuthorizeServerState & { secondToken?: boolean },
         expiresIn: number,
     ): Promise<number> {
         if (!state.activeLogin.isValid) {
             throw new Error("Active login invalid");
         }
-        if (state.activeLogin.nextExpectedRefreshTokenNumber != ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED) {
+        if (
+            state.activeLogin.nextExpectedRefreshTokenNumber !=
+            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED + (state.secondToken ? 2 : 0)
+        ) {
             throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (state.activeLogin.expires != null && state.activeLogin.expires <= new Date()) {
             throw new Error("Active login expired");
         }
-        state.activeLogin.createdByClient = Promise.resolve(state.client);
         if (state.activeLogin.expires == null) {
             state.activeLogin.expires = new Date(Date.now() + expiresIn);
         }
@@ -78,16 +80,20 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         return codeJwtId;
     }
 
-    private async generateCode(state: AuthStateServerData & OAuthAuthorizeServerState): Promise<string> {
+    private async generateCode(
+        state: AuthStateServerData & OAuthAuthorizeServerState & { secondToken?: boolean },
+        clientId: string,
+        scope: TokenScope[],
+    ): Promise<string> {
         const activeLogin = state.activeLogin;
         try {
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(state, expiresIn);
             const token = await this.tokenService.signActiveLoginCode(
                 activeLogin.id,
-                state.client.id,
+                clientId,
                 codeJwtId,
-                state.request.scope,
+                scope,
                 expiresIn,
             );
             this.logger.debug("Created token");
@@ -135,26 +141,38 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         const userLoginData = await state.activeLogin.loginInstanceFor;
         if (state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                const url = new URL(state.request.redirect);
-                const token = await this.generateCode(state);
-                url.searchParams.append("code", token);
-                res.redirect(url.toString());
+                await this.redirectWithCode(state, res);
             } else {
                 throw new OAuthHttpException("invalid_request", "Login is not in register state");
             }
         } else {
-            const encodedState = encodeURIComponent(
-                this.stateJwtService.sign({ request: state.request, authState: state.authState }),
-            );
-            const token = await this.generateCode(state);
-            const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);
-            const suggestionQuery = `&email=${encodeURIComponent(
-                suggestions.email ?? "",
-            )}&username=${encodeURIComponent(
-                suggestions.username ?? "",
-            )}&displayName=${encodeURIComponent(suggestions.displayName ?? "")}`;
-            const url = `/auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
-            res.redirect(url);
+            if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
+                const encodedState = encodeURIComponent(
+                    this.stateJwtService.sign({ request: state.request, authState: state.authState }),
+                );
+                const token = await this.generateCode(state, "login-auth-client", [TokenScope.LOGIN_SERVICE_REGISTER]);
+                const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);
+                const suggestionQuery = `&email=${encodeURIComponent(
+                    suggestions.email ?? "",
+                )}&username=${encodeURIComponent(
+                    suggestions.username ?? "",
+                )}&displayName=${encodeURIComponent(suggestions.displayName ?? "")}`;
+                const url = `/auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
+                res.redirect(url);
+            } else {
+                await this.redirectWithCode(state, res);
+            }
         }
+    }
+
+    private async redirectWithCode(
+        state: AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy } & { error?: any },
+        res: Response<any, Record<string, any>>,
+    ) {
+        const url = new URL(state.request.redirect);
+        const token = await this.generateCode(state, state.client.id, state.request.scope);
+        url.searchParams.append("code", token);
+        url.searchParams.append("state", state.request.state ?? "");
+        res.redirect(url.toString());
     }
 }

@@ -119,17 +119,6 @@ export class ActiveLogin {
     @ApiHideProperty()
     loginInstanceFor: Promise<UserLoginData | null>;
 
-    /**
-     * The auth client that asked for the user to be authenticated and caused the creation of this login event.
-     *
-     * May be null on creation of the login event and may be set only once token is retrieved.
-     */
-    @ManyToOne(() => AuthClient, (client) => client.loginsOfThisClient, {
-        nullable: true,
-    })
-    @ApiHideProperty()
-    createdByClient: Promise<AuthClient | null>;
-
     toJSON() {
         return {
             id: this.id,

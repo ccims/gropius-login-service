@@ -8,33 +8,22 @@ import {
     Param,
     Post,
     Put,
-    Res,
     UseGuards,
 } from "@nestjs/common";
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
-    ApiConsumes,
     ApiCreatedResponse,
     ApiNotFoundResponse,
-    ApiOAuth2,
     ApiOkResponse,
     ApiOperation,
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { Response } from "express";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { TokenScope } from "src/backend-services/token.service";
 import { DefaultReturn } from "src/default-return.dto";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { ApiStateData } from "./ApiStateData";
 import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
 import { CreateAuthClientSecretResponse } from "./dto/create-auth-client-secret.dto";
 import { CreateOrUpdateAuthClientInput } from "./dto/create-update-auth-client.dto";
@@ -53,9 +42,6 @@ import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-clie
 @ApiTags(OpenApiTag.LOGIN_API)
 export class AuthClientController {
     constructor(
-        private readonly userService: LoginUserService,
-        private readonly backendUserSerice: BackendUserService,
-        private readonly loginDataSerive: UserLoginDataService,
         private readonly authClientService: AuthClientService,
     ) { }
 
@@ -75,7 +61,7 @@ export class AuthClientController {
     })
     @ApiOperation({ summary: "List all existing auth clients." })
     async listAllAuthClients(): Promise<AuthClient[]> {
-        return this.authClientService.find();
+        return [...this.authClientService.defaultAuthClients, ...await this.authClientService.find()];
     }
 
     /**
@@ -93,8 +79,7 @@ export class AuthClientController {
     @ApiParam({
         name: "id",
         type: String,
-        format: "uuid",
-        description: "The uuid string of an existing auth client to return",
+        description: "The id string of an existing auth client to return",
     })
     @ApiOkResponse({
         type: GetAuthClientResponse,
@@ -104,7 +89,7 @@ export class AuthClientController {
         description: "If no id was given or no auth client with the given id was found",
     })
     async getOneAuthClient(@Param("id") id: string): Promise<GetAuthClientResponse> {
-        const authClient = await this.authClientService.findOneBy({ id });
+        const authClient = await this.authClientService.findAuthClient(id);
         if (!authClient) {
             throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
         }
@@ -162,6 +147,12 @@ export class AuthClientController {
         } else {
             newClient.requiresSecret = true;
         }
+        newClient.validScopes = [];
+        if (input.validScopes) {
+            for (const scope of input.validScopes) {
+                newClient.validScopes.push(scope);
+            }
+        }
 
         return this.authClientService.save(newClient);
     }
@@ -196,7 +187,7 @@ export class AuthClientController {
 
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
+            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
         }
 
         if (input.name) {
@@ -213,6 +204,12 @@ export class AuthClientController {
         }
         if (input.requiresSecret != undefined) {
             authClient.requiresSecret = input.requiresSecret;
+        }
+        if (input.validScopes) {
+            authClient.validScopes = [];
+            for (const scope of input.validScopes) {
+                authClient.validScopes.push(scope);
+            }
         }
 
         return this.authClientService.save(authClient);
@@ -243,7 +240,7 @@ export class AuthClientController {
     async deleteAuthClient(@Param("id") id: string): Promise<DefaultReturn> {
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
+            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
         }
 
         await this.authClientService.remove(authClient);
@@ -274,7 +271,7 @@ export class AuthClientController {
         description: "If no id was given or no auth client with the given id was found",
     })
     async getClientSecrets(@Param("id") id: string): Promise<CensoredClientSecret[]> {
-        const authClient = await this.authClientService.findOneBy({ id });
+        const authClient = await this.authClientService.findAuthClient(id);
         if (!authClient) {
             throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
         }
@@ -312,7 +309,7 @@ export class AuthClientController {
     async createClientSecret(@Param("id") id: string): Promise<CreateAuthClientSecretResponse> {
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
+            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
         }
 
         const result = await authClient.addSecret();
@@ -362,7 +359,7 @@ export class AuthClientController {
 
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found", HttpStatus.NOT_FOUND);
+            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
         }
 
         const allSecrets = authClient.getFullHashesPlusCensoredAndFingerprint();

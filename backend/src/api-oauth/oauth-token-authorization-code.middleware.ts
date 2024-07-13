@@ -49,11 +49,6 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
             this.logger.warn("No active login with id", tokenData.activeLoginId);
             return this.throwGenericCodeError();
         }
-        const activeLoginClient = await activeLogin.createdByClient;
-        if (activeLoginClient.id !== currentClient.id) {
-            this.logger.warn("Active login was not created by current client", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
-        }
         if (!activeLogin.isValid) {
             this.logger.warn("Active login set invalid", tokenData.activeLoginId);
             return this.throwGenericCodeError();

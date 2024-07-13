@@ -48,9 +48,12 @@ export class BaseUserInput {
         if (!input.displayName || input.displayName.trim().length == 0) {
             throw new HttpException("Display name must be given and can't be empty", HttpStatus.BAD_REQUEST);
         }
+        if (input.email?.length === 0) {
+            input.email = undefined;
+        }
         if (input.email != undefined) {
             if (input.email.trim().length == 0) {
-                throw new HttpException("If email is given it can't be empty", HttpStatus.BAD_REQUEST);
+                throw new HttpException("If email is given it can't be blank", HttpStatus.BAD_REQUEST);
             }
         }
         return input;

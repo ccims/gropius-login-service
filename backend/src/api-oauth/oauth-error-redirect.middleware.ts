@@ -1,10 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { StateMiddleware } from "./StateMiddleware";
 import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 
 @Injectable()
 export class OAuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorizeServerState, {}> {
+    private readonly logger = new Logger(OAuthErrorRedirectMiddleware.name);
+
     protected override async useWithState(
         req: Request,
         res: Response,
@@ -30,6 +32,7 @@ export class OAuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorize
                     error.error_message.replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, ""),
                 );
             } else {
+                this.logger.error("Unknown error", error);
                 url.searchParams.append("error", "server_error");
                 url.searchParams.append("error_description", encodeURIComponent("An unknown error occurred"));
             }

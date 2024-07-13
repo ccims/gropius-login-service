@@ -81,7 +81,7 @@ export class RegisterController {
      *
      * A (still) valid registration token is needed.
      * After a successful linking, the expiration of the activeLogin and loginData will be updated accoringly
-     * @param input The input with the registration_token and the user id of the user to link
+     * @param input The input with the register_token and the user id of the user to link
      * @param res The response object of the server containing the state with the logged in user
      * @returns The default response with operation 'admin-link'
      */

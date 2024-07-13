@@ -61,10 +61,10 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
         ApiInternalModule,
         ApiOauthModule,
         RouterModule.register([
-            { path: "auth/login", module: AuthModule },
-            { path: "auth/login", module: StrategiesModule },
-            { path: "auth/sync", module: ApiSyncModule },
-            { path: "auth/internal", module: ApiInternalModule },
+            { path: "auth/api/login", module: AuthModule },
+            { path: "auth/api/login", module: StrategiesModule },
+            { path: "auth/api/sync", module: ApiSyncModule },
+            { path: "auth/api/internal", module: ApiInternalModule },
             { path: "auth/oauth", module: ApiOauthModule}
         ]),
         BackendServicesModule,

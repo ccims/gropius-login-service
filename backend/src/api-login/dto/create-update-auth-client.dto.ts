@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { ApiProperty } from "@nestjs/swagger";
+import { TokenScope } from "src/backend-services/token.service";
 
 /**
  * Input to `POST /login/client` and PUT /login/client/:id`
@@ -37,6 +38,14 @@ export class CreateOrUpdateAuthClientInput {
      * @example false
      */
     requiresSecret?: boolean;
+
+    /**
+     * The list of scopes that this client is allowed to request.
+     *
+     * Defaults to `[]` on create
+     * @example ["backend"]
+     */
+    validScopes?: TokenScope[];
 
     /**
      * Checks a given `CreateOrUpdateAuthClientInput` for validity.
@@ -82,6 +91,19 @@ export class CreateOrUpdateAuthClientInput {
         }
         if (input.requiresSecret != undefined && typeof input.requiresSecret !== "boolean") {
             throw new HttpException("If requiresSecret is given, it must be a valid boolean", HttpStatus.BAD_REQUEST);
+        }
+        if (input.validScopes != undefined) {
+            if (!(input.validScopes instanceof Array)) {
+                throw new HttpException("validScopes must be an array of strings", HttpStatus.BAD_REQUEST);
+            }
+        }
+        for (const scope of input.validScopes) {
+            if (scope !== TokenScope.BACKEND && scope !== TokenScope.LOGIN_SERVICE) {
+                throw new HttpException(
+                    `Only ${TokenScope.BACKEND} and ${TokenScope.LOGIN_SERVICE} are valid scopes`,
+                    HttpStatus.BAD_REQUEST,
+                );
+            }
         }
         return input;
     }

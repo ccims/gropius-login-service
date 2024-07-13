@@ -90,7 +90,6 @@ export class OAuthTokenController {
             activeLogin = await this.activeLoginService.setActiveLoginExpiration(activeLogin);
         }
         activeLogin.nextExpectedRefreshTokenNumber++;
-        activeLogin.createdByClient = Promise.resolve(currentClient);
         return await this.activeLoginService.save(activeLogin);
     }
 
@@ -145,7 +144,12 @@ export class OAuthTokenController {
                 "No client id/authentication given or authentication invalid",
             );
         }
-        this.tokenService.verifyScope(scope);
+        for (const requestedScope of scope) {
+            if (!currentClient.validScopes.includes(requestedScope)) {
+                console.log(requestedScope, currentClient.validScopes)
+                throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
+            }
+        }
         let activeLogin = (res.locals.state as AuthStateServerData)?.activeLogin;
         if (typeof activeLogin == "string") {
             activeLogin = await this.activeLoginService.findOneByOrFail({
