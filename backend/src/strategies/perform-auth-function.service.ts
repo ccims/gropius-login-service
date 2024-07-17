@@ -114,6 +114,9 @@ export class PerformAuthFunctionService {
         const authFunction = state.authState.function;
         const wantsToDoImplicitRegister =
             strategy.allowsImplicitSignup && instance.doesImplicitRegister && authFunction == AuthFunction.LOGIN;
+        if (authFunction != AuthFunction.LOGIN && !authResult.mayRegister) {
+            throw new AuthException("Cannot register", instance.id);
+        }
         if (authResult.loginData) {
             // sucessfully found login data matching the authentication
             if (authResult.loginData.expires != null && authResult.loginData.expires <= new Date()) {

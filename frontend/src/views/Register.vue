@@ -2,15 +2,17 @@
     <BaseLayout>
         <template #content>
             <GropiusCard class="register-container mt-5">
-                <v-card-title class="pl-0">Register</v-card-title>
+                <v-card-title class="pl-0">Complete registration</v-card-title>
                 <v-form class="mt-2" method="POST" action="/auth/api/internal/auth/register">
                     <v-text-field
                         v-model="username"
+                        v-if="!forceSuggestedUsername"
                         name="username"
                         v-bind="usernameProps"
                         label="Username"
                         class="mb-1"
                     />
+                    <input v-else type="hidden" name="username" :value="username" />
                     <v-text-field
                         v-model="displayName"
                         name="displayName"
@@ -39,10 +41,11 @@ import * as yup from "yup";
 import { useRoute } from "vue-router";
 import axios from "axios";
 import { fieldConfig } from "@/util/vuetifyFormConfig";
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { asyncComputed } from "@vueuse/core";
 
 const route = useRoute();
+const forceSuggestedUsername = computed(() => route.query.forceSuggestedUsername == "true");
 
 const schema = toTypedSchema(
     yup.object().shape({

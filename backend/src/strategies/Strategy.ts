@@ -29,6 +29,7 @@ export abstract class Strategy {
         public readonly canSync: boolean = false,
         public readonly needsRedirectFlow = false,
         public readonly allowsImplicitSignup = false,
+        public readonly forceSuggestedUsername = false,
     ) {
         strategiesService.addStrategy(typeName, this);
     }
@@ -194,6 +195,16 @@ export abstract class Strategy {
             return loginData.data;
         }
         return null;
+    }
+
+    /**
+     * Gets a description of the login data, e.g. a username or email.
+     * 
+     * @param loginData The login data for which to get the description
+     * @returns A description of the login data
+     */
+    async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return "";
     }
 
     /**

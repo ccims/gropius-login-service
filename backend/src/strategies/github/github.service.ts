@@ -205,4 +205,8 @@ export class GithubStrategyService extends StrategyUsingPassport {
             this.passportUserCallback.bind(this, strategyInstance),
         );
     }
+
+    override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return loginData.data?.username
+    }
 }

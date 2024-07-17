@@ -33,6 +33,8 @@ import { OpenApiTag } from "src/openapi-tag";
 import { ApiStateData } from "./ApiStateData";
 import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
 import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
+import { UserLoginDataResponse } from "./dto/user-login-data.dto";
+import { StrategiesService } from "src/model/services/strategies.service";
 
 /**
  * Controller allowing access to the users in the system
@@ -46,6 +48,7 @@ export class UsersController {
         private readonly userService: LoginUserService,
         private readonly backendUserSerice: BackendUserService,
         private readonly loginDataSerive: UserLoginDataService,
+        private readonly strategiesService: StrategiesService,
     ) {}
 
     /**
@@ -141,57 +144,6 @@ export class UsersController {
     }
 
     /**
-     * **NOTE**: Not implemented yet. Will always fail.
-     *
-     * Updates an existing user object using the given data.
-     * Only the entries that are given in the input will be updated in the user.
-     *
-     * Needs Admin permissions
-     *
-     * @param id The uuid string of the existing user to edit
-     * @param input If sucessful, the updated user object
-     */
-    @Put(":id")
-    @ApiOperation({ summary: "NOT IMPLEMENTED! Update an existing user object" })
-    @ApiParam({ name: "id", type: String, format: "uuid", description: "The uuid string of the existing user to edit" })
-    @ApiOkResponse({ type: LoginUser, description: "If sucessful, the updated user object" })
-    @ApiNotFoundResponse({ description: "If no user with the given id could be found" })
-    @NeedsAdmin()
-    async editUser(@Param("id") id: string, @Body() input: Partial<CreateUserAsAdminInput>): Promise<LoginUser> {
-        throw new HttpException(
-            "Needs to be discussed with backend who stores what and what changes where",
-            HttpStatus.NOT_IMPLEMENTED,
-        );
-        const user = await this.userService.findOneBy({ id });
-        if (!user) {
-            throw new HttpException("User with given id not found", HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * **NOTE**: Not implemented yet. Will always fail.
-     *
-     * Permanently deletes an existing user by its id.
-     *
-     * Needs Admin permissions
-     *
-     * @param id The uuid string of the existing user to delete
-     * @param input The default response with operation 'delete-user'
-     */
-    @Delete(":id")
-    @ApiOperation({ summary: "NOT IMPLEMENTED! Update an existing user object" })
-    @ApiParam({ name: "id", type: String, format: "uuid", description: "The uuid string of the existing user to edit" })
-    @ApiOkResponse({ type: LoginUser, description: "If sucessful, the updated user object" })
-    @ApiNotFoundResponse({ description: "If no user with the given id could be found" })
-    async deleteUser(@Param("id") id: string): Promise<DefaultReturn> {
-        throw new HttpException(
-            "I'm not supposed to say wht I think. But why this isn't yet implemented is difficult to explain.",
-            HttpStatus.NOT_IMPLEMENTED,
-        );
-        return new DefaultReturn("delete-user");
-    }
-
-    /**
      * Gets the list of all login data of a single user specified by id.
      *
      * Needs admin permission for any user other than the one sending the request
@@ -218,7 +170,7 @@ export class UsersController {
     async getLoginDataForUser(
         @Param("id") id: string,
         @Res({ passthrough: true }) res: Response,
-    ): Promise<UserLoginData[]> {
+    ): Promise<UserLoginDataResponse[]> {
         if (!id) {
             throw new HttpException("id must be given", HttpStatus.BAD_REQUEST);
         }
@@ -234,10 +186,27 @@ export class UsersController {
                 );
             }
         }
-        return this.loginDataSerive.findBy({
-            user: {
-                id: loggedInUser.id,
-            },
-        });
+        return Promise.all(
+            (
+                await this.loginDataSerive.find({
+                    where: {
+                        user: {
+                            id,
+                        },
+                    },
+                    relations: ["strategyInstance"],
+                })
+            ).map(async (loginData) => {
+                const instance = await loginData.strategyInstance;
+                const strategy = this.strategiesService.getStrategyByName(instance.type);
+                return {
+                    id: loginData.id,
+                    state: loginData.state,
+                    expires: loginData.expires,
+                    strategyInstance: instance,
+                    description: await strategy.getLoginDataDescription(loginData),
+                } satisfies UserLoginDataResponse;
+            }),
+        );
     }
 }

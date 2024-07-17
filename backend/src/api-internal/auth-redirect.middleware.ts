@@ -154,9 +154,9 @@ export class AuthRedirectMiddleware extends StateMiddleware<
                 const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);
                 const suggestionQuery = `&email=${encodeURIComponent(
                     suggestions.email ?? "",
-                )}&username=${encodeURIComponent(
-                    suggestions.username ?? "",
-                )}&displayName=${encodeURIComponent(suggestions.displayName ?? "")}`;
+                )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
+                    suggestions.displayName ?? "",
+                )}&forceSuggestedUsername=${state.strategy.forceSuggestedUsername}`;
                 const url = `/auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
                 res.redirect(url);
             } else {

@@ -67,7 +67,7 @@ export class StrategiesMiddleware extends StateMiddleware<
     ): Promise<any> {
         const id = req.params.id;
         const instance = await this.idToStrategyInstance(id);
-        const strategy = await this.strategiesService.getStrategyByName(instance.type);
+        const strategy = this.strategiesService.getStrategyByName(instance.type);
         this.appendState(res, { strategy });
 
         const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(state, instance, strategy);

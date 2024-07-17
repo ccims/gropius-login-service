@@ -19,6 +19,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         canSync = false,
         needsRedirectFlow = false,
         allowsImplicitSignup = false,
+        forceSuggestedUsername = false,
     ) {
         super(
             typeName,
@@ -28,6 +29,7 @@ export abstract class StrategyUsingPassport extends Strategy {
             canSync,
             needsRedirectFlow,
             allowsImplicitSignup,
+            forceSuggestedUsername,
         );
     }
 

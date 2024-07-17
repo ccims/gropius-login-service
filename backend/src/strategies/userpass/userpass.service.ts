@@ -21,7 +21,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         @Inject("StateJwtService")
         stateJwtService: JwtService,
     ) {
-        super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false);
+        super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false, true);
     }
 
     override get acceptsVariables(): {
@@ -75,18 +75,23 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         }
 
         const dataActiveLogin = {};
-        const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {});
-        const loginDataForCorrectUser = await this.loginDataService.findForUsernameOutOfSet(
+        const loginDataForCorrectUser = await this.loginDataService.findForStrategyAndUsernameWithDataContaining(
+            strategyInstance,
+            {},
             username || "",
-            loginDataCandidates.map((candidate) => candidate.id),
         );
 
         if (loginDataForCorrectUser.length == 0) {
             const dataUserLoginData = await this.generateLoginDataData(username, password);
             return done(
                 null,
-                { dataActiveLogin, dataUserLoginData, mayRegister: true, noRegisterMessage: "Username or password incorrect" },
-                { },
+                {
+                    dataActiveLogin,
+                    dataUserLoginData,
+                    mayRegister: true,
+                    noRegisterMessage: "Username or password incorrect",
+                },
+                {},
             );
         } else if (loginDataForCorrectUser.length > 1) {
             return done("More than one user with same username", false, undefined);
@@ -96,11 +101,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         const hasCorrectPassword = await bcrypt.compare(password, loginData.data["password"]);
 
         if (!hasCorrectPassword) {
-            return done(
-                null,
-                false,
-                { message: "Username or password incorrect" },
-            );
+            return done(null, false, { message: "Username or password incorrect" });
         }
 
         return done(null, { loginData, dataActiveLogin, dataUserLoginData: {}, mayRegister: false }, {});
@@ -120,5 +121,9 @@ export class UserpassStrategyService extends StrategyUsingPassport {
             displayName: loginData.data?.displayName || undefined,
             email: loginData.data?.email || undefined,
         };
+    }
+
+    override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return loginData.data?.username
     }
 }
