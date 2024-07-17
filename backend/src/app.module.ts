@@ -51,8 +51,7 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
         }),
         ServeStaticModule.forRoot({
             rootPath: path.join(__dirname, "..", "static"),
-            renderPath: "a",
-            exclude: ["/login", "/syncApi", "/authenticate"],
+            serveRoot: "/auth/flow"
         }),
         ModelModule,
         AuthModule,
