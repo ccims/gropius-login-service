@@ -81,6 +81,8 @@ export class StrategyInstancesController {
      * @returns The strategy instance with the given id (and type)
      */
     @Get(["strategyInstance/:id", "strategy/:type/instance/:id"])
+    @UseGuards(CheckAccessTokenGuard)
+    @NeedsAdmin()
     @ApiOperation({ summary: "Get one strategy instance" })
     @ApiParam({
         name: "id",
@@ -113,13 +115,6 @@ export class StrategyInstancesController {
             );
         }
         const strategy = this.strategiesService.getStrategyByName(instance.type);
-        const nonRedirectUrls = strategy.needsRedirectFlow
-            ? {}
-            : {
-                  postLogin: `/strategy/oauth/${instance.id}/token/login`,
-                  postRegister: `/strategy/oauth/${instance.id}/token/register`,
-                  postRegisterSync: `/strategy/oauth/${instance.id}/token/register-sync`,
-              };
         return {
             id: instance.id,
             name: instance.name,
@@ -128,12 +123,7 @@ export class StrategyInstancesController {
             isSelfRegisterActive: instance.isSelfRegisterActive,
             isSyncActive: instance.isSyncActive,
             doesImplicitRegister: instance.doesImplicitRegister,
-            urls: {
-                ...nonRedirectUrls,
-                redirectLogin: `/strategy/oauth/${instance.id}/authorize/login`,
-                redirectRegister: `/strategy/oauth/${instance.id}/authorize/register`,
-                redirectRegisterSync: `/strategy/oauth/${instance.id}/authorize/register-sync`,
-            },
+            instanceConfig: strategy.getCensoredInstanceConfig(instance),
         };
     }
 

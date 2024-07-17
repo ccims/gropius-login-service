@@ -24,9 +24,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false, true);
     }
 
-    override get acceptsVariables(): {
-        [variableName: string]: StrategyVariable;
-    } {
+    override get acceptsVariables(): Record<string, StrategyVariable> {
         return {
             username: {
                 name: "username",

@@ -6,6 +6,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { AuthResult, AuthStateServerData } from "./AuthResult";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { Schema } from "jtd";
 
 export interface StrategyVariable {
     name: string;
@@ -66,13 +67,13 @@ export abstract class Strategy {
         return instanceConfig;
     }
 
-    private updateCapabilityFlags(patrentValue: boolean, useDefault: boolean, inputValue?: boolean | null): boolean {
+    private updateCapabilityFlags(parentValue: boolean, useDefault: boolean, inputValue?: boolean | null): boolean {
         if (inputValue == null || inputValue == undefined) {
             if (useDefault) {
-                return patrentValue;
+                return parentValue;
             }
         } else if (typeof inputValue == "boolean") {
-            return patrentValue && inputValue;
+            return parentValue && inputValue;
         } else {
             throw new Error("Input value must be boolean");
         }
@@ -109,7 +110,7 @@ export abstract class Strategy {
         );
         instance.isSyncActive = this.updateCapabilityFlags(this.canSync, createNew, input.isSyncActive);
         if (createNew || input.name !== undefined) {
-            instance.name = input.name?.replace(/[^a-zA-Z0-9+/\-_= ]/g, "") ?? null;
+            instance.name = input.name ?? null;
         }
         if (createNew || input.instanceConfig) {
             instance.instanceConfig = resultingInstanceConfig ?? {};
@@ -133,9 +134,11 @@ export abstract class Strategy {
         });
     }
 
-    get acceptsVariables(): {
-        [variableName: string]: StrategyVariable;
-    } {
+    get acceptsVariables(): Record<string, StrategyVariable> {
+        return {};
+    }
+
+    get instanceConfigSchema(): Record<string, Schema> {
         return {};
     }
 
@@ -250,12 +253,28 @@ export abstract class Strategy {
         return {};
     }
 
+    /**
+     * Returns the instance config of the strategy instance, but with sensitive data censored.
+     * 
+     * **WARNING**: The result of this function WILL be exposed to the user.
+     * 
+     * @param instance The strategy instance for which to get the censored instance config
+     * @returns The censored instance config
+     */
+    getCensoredInstanceConfig(instance: StrategyInstance): object {
+        return {};
+    }
+
     abstract performAuth(
         strategyInstance: StrategyInstance,
         state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult>;
+
+    protected callbackUrlForStrategyInstance(strategyInstance: StrategyInstance): string {
+        return new URL(`/api/internal/auth/callback/${strategyInstance.id}`, process.env.GROPIUS_LOGIN_SERVICE_ENDPOINT).toString();
+    }
 
     toJSON() {
         return {
@@ -265,6 +284,7 @@ export abstract class Strategy {
             needsRedirectFlow: this.needsRedirectFlow,
             allowsImplicitSignup: this.allowsImplicitSignup,
             acceptsVariables: this.acceptsVariables,
+            instanceConfigSchema: this.instanceConfigSchema,
         };
     }
 }

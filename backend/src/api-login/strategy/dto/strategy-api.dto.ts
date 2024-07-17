@@ -1,3 +1,4 @@
+import { Schema } from "jtd";
 import { StrategyVariable } from "src/strategies/Strategy";
 
 /**
@@ -47,5 +48,10 @@ export class GetStrategyResponse {
      * The specification of the data expected in the post body if not using redirect
      * and sending the credentials directly to the token endpoint
      */
-    acceptsVariables: { [key: string]: StrategyVariable };
+    acceptsVariables: Record<string, StrategyVariable>;
+
+    /**
+     * The schema of the instance configuration
+     */
+    instanceConfigSchema: Record<string, Schema>;
 }
