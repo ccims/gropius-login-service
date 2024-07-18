@@ -1,16 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { LoginUserService } from "src/model/services/login-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { AuthStateServerData, AuthFunction, AuthResult } from "./AuthResult";
-import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 
 /**
  * Contains the logic how the system is supposed to create and link
@@ -22,36 +20,27 @@ import { AuthException } from "src/api-internal/AuthException";
 export class PerformAuthFunctionService {
     private readonly logger = new Logger(PerformAuthFunctionService.name);
     constructor(
-        private readonly loginUserService: LoginUserService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly userLoginDataService: UserLoginDataService,
-        private readonly strategiesService: StrategiesService,
     ) {}
 
     public checkFunctionIsAllowed(
-        state: AuthStateServerData,
+        state: AuthStateServerData & OAuthAuthorizeServerState,
         instance: StrategyInstance,
         strategy: Strategy,
     ): string | null {
-        switch (state?.authState?.function) {
-            case AuthFunction.REGISTER_WITH_SYNC:
-                if (!strategy.canSync) {
-                    state.authState.function = AuthFunction.REGISTER;
-                }
-            //Fallthrough to check if registration is possible at all
-            case AuthFunction.REGISTER:
-                if (!strategy.canLoginRegister && !strategy.canSync) {
-                    return "This strategy does not support either login nor sync";
-                }
-                break;
-            case AuthFunction.LOGIN:
-                if (!strategy.canLoginRegister) {
-                    return "This strategy type does not support login/registration.";
-                }
-                if (!instance.isLoginActive) {
-                    return "Login using this strategy instance not enabled";
-                }
-                break;
+        const authFunction = state.authState.function;
+        if (authFunction == AuthFunction.REGISTER_WITH_SYNC && !strategy.canSync) {
+            state.authState.function = AuthFunction.REGISTER;
+        }
+        if (state.isRegisterAdditional) {
+            return null;
+        }
+        if (!strategy.canLoginRegister) {
+            return "This strategy type does not support login/registration.";
+        }
+        if (!instance.isLoginActive) {
+            return "Login using this strategy instance not enabled";
         }
         return null;
     }

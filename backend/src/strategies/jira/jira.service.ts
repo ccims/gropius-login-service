@@ -24,7 +24,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
         stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true);
+        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {

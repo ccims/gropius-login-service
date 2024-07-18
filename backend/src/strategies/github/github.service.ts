@@ -25,7 +25,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
         stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true);
+        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {

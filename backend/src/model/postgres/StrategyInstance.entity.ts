@@ -73,6 +73,7 @@ export class StrategyInstance {
 
     /**
      * If `true` users can create an account themselves with the registration token they obtained from this instance.
+     * This only affects registration, not linking an additional account.
      * Additionally the strategy must have {@link Strategy.canLoginRegister} set to `true`
      *
      * If `false` accounts cannot be created without being admin.

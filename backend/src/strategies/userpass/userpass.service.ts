@@ -122,6 +122,6 @@ export class UserpassStrategyService extends StrategyUsingPassport {
     }
 
     override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
-        return loginData.data?.username
+        return loginData.data?.username;
     }
 }

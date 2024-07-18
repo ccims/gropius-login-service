@@ -2,9 +2,9 @@
     <BaseLayout>
         <template #content>
             <GropiusCard class="login-container mt-5" v-if="!loadingStrategies">
-                <p class="text-center text-body-1 mt-2">{{ isLogin ? "Login to continue" : "Sign up to continue" }}</p>
+                <p class="text-center text-body-1 mt-2">{{ title }}</p>
                 <v-sheet color="error-container" v-if="errorMessage" rounded="lger" class="pa-3 mt-2">
-                    <v-icon icon="mdi-alert-circle-outline" size="x-large"/>
+                    <v-icon icon="mdi-alert-circle-outline" size="x-large" />
                     {{ errorMessage }}
                 </v-sheet>
                 <v-tabs v-model="credentialTab" align-tabs="center">
@@ -47,13 +47,13 @@
                                     isPwdVisibleAt(strategy.id)[field.name] = !isPwdVisibleAt(strategy.id)[field.name]
                                 "
                             ></v-text-field>
-                            <input type="hidden" name="state" :value="route.query.state"/>
+                            <input type="hidden" name="state" :value="route.query.state" />
                             <input type="submit" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
                 <DefaultButton class="w-100" @click="submitForm"> Continue </DefaultButton>
-                <div v-if="allowModeSwitch" class="mt-2">
+                <div v-if="!isRegisterAdditional" class="mt-2">
                     <p v-if="isLogin">
                         <span class="text-middle">Don't have an account?</span>
                         <v-btn variant="text" density="comfortable" class="px-0" @click="toggleIsLogin">Sign up</v-btn>
@@ -102,8 +102,7 @@ import {
     GroupedStrategyInstances,
     RedirectStrategyInstance,
     LoginStrategy,
-    LoginStrategyInstance,
-    OAuthRespose
+    LoginStrategyInstance
 } from "./model";
 import GropiusCard from "@/components/GropiusCard.vue";
 import { withErrorMessage } from "@/util/withErrorMessage";
@@ -115,8 +114,18 @@ const route = useRoute();
 const forms = ref(new Map<number, any>());
 
 const isLogin = ref(true);
+const isRegisterAdditional = computed(() => route.name == "register-additional");
 const mode = ref<"login" | "register" | "register-sync">("login");
-const allowModeSwitch = ref(true);
+
+const title = computed(() => {
+    if (isRegisterAdditional.value) {
+        return "Register additional account";
+    } else if (isLogin.value) {
+        return "Login to continue";
+    } else {
+        return "Sign up to continue";
+    }
+});
 
 const errorMessage = computed(() => {
     if (route.query.error) {
@@ -173,9 +182,15 @@ const strategies = asyncComputed(
 );
 
 const currentStrategies = computed<GroupedStrategyInstances>(() => {
-    const loginInstances = strategies.value.filter(
-        (strategy) => (strategy.isLoginActive && isLogin.value) || (strategy.isSelfRegisterActive && !isLogin.value)
-    );
+    const loginInstances = strategies.value.filter((strategy) => {
+        if (isRegisterAdditional.value) {
+            return true;
+        }
+        if (!strategy.isLoginActive) {
+            return false;
+        }
+        return isLogin.value || strategy.isSelfRegisterActive;
+    });
     return {
         credential: loginInstances.filter((strategy) => strategy.type === "credential") as CredentialStrategyInstance[],
         redirect: loginInstances.filter((strategy) => strategy.type === "redirect") as RedirectStrategyInstance[]
@@ -210,7 +225,7 @@ function toggleIsLogin() {
 
 function submitForm() {
     const strategy = currentStrategies.value.credential[credentialTab.value];
-    if (isLogin.value) {
+    if (isLogin.value && !isRegisterAdditional.value) {
         submitFormWithMode("login");
     } else {
         if (strategy.isSyncActive) {
@@ -231,7 +246,7 @@ function submitFormWithMode(formMode: "login" | "register" | "register-sync") {
 }
 
 function redirect(strategy: RedirectStrategyInstance) {
-    if (isLogin.value) {
+    if (isLogin.value && !isRegisterAdditional.value) {
         redirectLogin(strategy);
     } else {
         if (strategy.isSyncActive) {
@@ -247,14 +262,14 @@ function redirect(strategy: RedirectStrategyInstance) {
 }
 
 async function redirectLogin(strategyInstance: RedirectStrategyInstance) {
-    // TODO: add oauth state
-    window.location.href = `/api/login/authenticate/oauth/${strategyInstance.id}/authorize/login?client_id=${"TODO"}`;
+    const state = encodeURIComponent(route.query.state as string);
+    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login?state=${state}`;
 }
 
 async function redirectRegister(strategyInstance: RedirectStrategyInstance, sync: boolean) {
-    // TODO: add oauth state
+    const state = encodeURIComponent(route.query.state as string);
     const mode = sync ? "register-sync" : "register";
-    window.location.href = `/api/login/authenticate/oauth/${strategyInstance.id}/authorize/${mode}?client_id=${"TODO"}`;
+    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}?state=${state}`;
 }
 </script>
 <style scoped>

@@ -27,13 +27,17 @@ export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAu
             codeChallengeMethod: req.query.code_challenge_method as string,
             responseType: req.query.response_type as "code",
         };
-        let client: AuthClient | undefined
+        let client: AuthClient | undefined;
         try {
             client = await this.authClientService.findAuthClient(requestParams.clientId);
         } catch {
             client = undefined;
         }
-        this.appendState(res, { request: requestParams, client });
+        this.appendState(res, {
+            request: requestParams,
+            client,
+            isRegisterAdditional: requestParams.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
+        });
         next();
     }
 }

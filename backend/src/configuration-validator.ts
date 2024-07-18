@@ -44,5 +44,4 @@ export const validationSchema = Joi.object({
     GROPIUS_DEFAULT_CHECK_DATABASE_CONSISTENT: Joi.string().allow("none", "check", "fix").default("none"),
 
     GROPIUS_ENDPOINT: Joi.string().uri().required(),
-    GROPIUS_LOGIN_SERVICE_ENDPOINT: Joi.string().uri().required(),
 });

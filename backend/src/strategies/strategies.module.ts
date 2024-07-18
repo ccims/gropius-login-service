@@ -7,6 +7,7 @@ import { UserpassStrategyService } from "./userpass/userpass.service";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { GithubStrategyService } from "./github/github.service";
 import { JiraStrategyService } from "./jira/jira.service";
+import { GithubTokenStrategyService } from "./github-token/github-token.service";
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { JiraStrategyService } from "./jira/jira.service";
         UserpassStrategyService,
         GithubStrategyService,
         JiraStrategyService,
+        GithubTokenStrategyService,
         { provide: "StateJwtService", useExisting: JwtService },
         StrategiesMiddleware,
     ],

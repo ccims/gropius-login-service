@@ -14,4 +14,5 @@ export interface OAuthAuthorizeRequest {
 export interface OAuthAuthorizeServerState {
     request: OAuthAuthorizeRequest;
     client: AuthClient;
+    isRegisterAdditional: boolean;
 }

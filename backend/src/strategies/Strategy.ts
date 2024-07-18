@@ -21,6 +21,18 @@ export interface PerformAuthResult {
     info: any;
 }
 
+/**
+ * Base class for all strategies.
+ * 
+ * @param typeName The name of the strategy
+ * @param strategyInstanceService The service to use for strategy instances
+ * @param strategiesService The service to use for strategies
+ * @param canLoginRegister Whether the strategy can be used for login and registration of new users (does not affect registering additional accounts)
+ * @param canSync Whether the strategy can be used to sync with external services
+ * @param needsRedirectFlow Whether the strategy needs a redirect flow for login
+ * @param allowsImplicitSignup Whether the strategy allows implicit signup
+ * @param forceSuggestedUsername Whether the strategy forces the use of a suggested username
+ */
 export abstract class Strategy {
     constructor(
         public readonly typeName: string,
@@ -273,7 +285,7 @@ export abstract class Strategy {
     ): Promise<PerformAuthResult>;
 
     protected callbackUrlForStrategyInstance(strategyInstance: StrategyInstance): string {
-        return new URL(`/api/internal/auth/callback/${strategyInstance.id}`, process.env.GROPIUS_LOGIN_SERVICE_ENDPOINT).toString();
+        return new URL(`/auth/api/internal/auth/callback/${strategyInstance.id}`, process.env.GROPIUS_ENDPOINT).toString();
     }
 
     toJSON() {

@@ -4,6 +4,7 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { JwtService } from "@nestjs/jwt";
+import { TokenScope } from "src/backend-services/token.service";
 
 @Injectable()
 export class AuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAuthorizeServerState> {
@@ -21,9 +22,15 @@ export class AuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAut
         state: { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        const newState = this.stateJwtService.verify<Pick<OAuthAuthorizeServerState, "request">>(req.query.state ?? req.body.state);
+        const newState = this.stateJwtService.verify<Pick<OAuthAuthorizeServerState, "request">>(
+            req.query.state ?? req.body.state,
+        );
         const client = await this.authClientService.findAuthClient(newState.request.clientId);
-        this.appendState(res, { client, ...newState });
+        this.appendState(res, {
+            client,
+            ...newState,
+            isRegisterAdditional: newState.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
+        });
         next();
     }
 }
