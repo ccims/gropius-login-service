@@ -284,10 +284,6 @@ export abstract class Strategy {
         res: any,
     ): Promise<PerformAuthResult>;
 
-    protected callbackUrlForStrategyInstance(strategyInstance: StrategyInstance): string {
-        return new URL(`/auth/api/internal/auth/callback/${strategyInstance.id}`, process.env.GROPIUS_ENDPOINT).toString();
-    }
-
     toJSON() {
         return {
             typeName: this.typeName,

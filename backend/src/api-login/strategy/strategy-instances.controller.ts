@@ -17,7 +17,6 @@ import { DefaultReturn } from "src/default-return.dto";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
-import { Strategy } from "../../strategies/Strategy";
 import { CreateStrategyInstanceInput } from "./dto/create-strategy-instance.dto";
 import { UpdateStrategyInstanceInput } from "./dto/update-strategy-instance.dto";
 import {

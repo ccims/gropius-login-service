@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { Strategy } from "../../../strategies/Strategy";
 import { UpdateStrategyInstanceInput } from "./update-strategy-instance.dto";
 
 /**

@@ -1,7 +1,5 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { AuthClient } from "./AuthClient.entity";
-import { LoginUser } from "./LoginUser.entity";
 import { StrategyInstance } from "./StrategyInstance.entity";
 import { UserLoginData } from "./UserLoginData.entity";
 

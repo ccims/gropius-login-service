@@ -1,5 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { ActiveLogin } from "./ActiveLogin.entity";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import { promisify } from "util";

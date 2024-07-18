@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";

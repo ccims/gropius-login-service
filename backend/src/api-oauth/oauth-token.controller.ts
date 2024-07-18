@@ -1,4 +1,4 @@
-import { All, Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Post, Res } from "@nestjs/common";
+import { Controller, Logger, Post, Res } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
@@ -82,7 +82,6 @@ export class OAuthTokenController {
     private async updateRefreshTokenIdAndExpirationDate(
         activeLogin: ActiveLogin,
         isRegisterLogin: boolean,
-        currentClient: AuthClient,
     ): Promise<ActiveLogin> {
         const loginExpiresIn = parseInt(process.env.GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS, 10);
         this.logger.debug("Updating active login", isRegisterLogin, loginExpiresIn, activeLogin.supportsSync);
@@ -111,7 +110,6 @@ export class OAuthTokenController {
         activeLogin = await this.updateRefreshTokenIdAndExpirationDate(
             activeLogin,
             loginData.state == LoginState.WAITING_FOR_REGISTER,
-            currentClient,
         );
 
         const refreshToken =

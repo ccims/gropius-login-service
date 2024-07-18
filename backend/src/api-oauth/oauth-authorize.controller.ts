@@ -1,5 +1,5 @@
-import { Controller, Get, HttpException, HttpStatus, Param, Query } from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
+import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 
 /**

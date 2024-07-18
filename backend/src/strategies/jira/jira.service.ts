@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import * as passportJira from "passport-atlassian-oauth2";
@@ -256,7 +256,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
             profileURL: configData["userProfileUrl"],
             clientID: configData["clientId"],
             clientSecret: configData["clientSecret"],
-            callbackURL: this.callbackUrlForStrategyInstance(strategyInstance),
+            callbackURL: strategyInstance.callbackUrl,
             scope: ["offline_access", "read:jira-user", "read:me", "read:jira-work", "write:jira-work"],
             store: {
                 store: (req, state, meta, callback) => callback(null, state),

@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { JsonWebTokenError } from "jsonwebtoken";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";

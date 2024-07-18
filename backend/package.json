@@ -1,5 +1,5 @@
 {
-    "name": "gropius-backend-login-service",
+    "name": "gropius-login-service-backend",
     "version": "0.0.1",
     "description": "",
     "author": "",
@@ -9,7 +9,7 @@
         "build": "nest build",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
         "start": "nest start",
-        "start:dev": "cross-env NODE_ENV=development nest start --watch",
+        "start:dev": "nest start --watch",
         "start:debug": "nest start --debug --watch",
         "start:prod": "node dist/main",
         "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -19,12 +19,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ccims/gropius-backend.git"
+        "url": "git+https://github.com/ccims/gropius-login-service.git"
     },
     "bugs": {
-        "url": "https://github.com/ccims/gropius-backend/issues"
+        "url": "https://github.com/ccims/gropius-login-service/issues"
     },
-    "homepage": "https://github.com/ccims/gropius-backend#readme",
+    "homepage": "https://github.com/ccims/gropius-login-service#readme",
     "dependencies": {
         "@nestjs/common": "^10.3.9",
         "@nestjs/config": "^3.2.2",

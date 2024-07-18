@@ -4,7 +4,6 @@ import { ModelModule } from "src/model/model.module";
 import { TokenService } from "./token.service";
 import { BackendUserService } from "./backend-user.service";
 import { ImsUserFindingService } from "./ims-user-finding.service";
-import { StrategiesModule } from "src/strategies/strategies.module";
 
 @Module({
     imports: [

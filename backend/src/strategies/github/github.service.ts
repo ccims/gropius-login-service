@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import * as passportGithub from "passport-github2";
@@ -212,7 +212,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 userProfileURL: strategyInstance.instanceConfig["userProfileUrl"],
                 clientID: strategyInstance.instanceConfig["clientId"],
                 clientSecret: strategyInstance.instanceConfig["clientSecret"],
-                callbackURL: this.callbackUrlForStrategyInstance(strategyInstance),
+                callbackURL: strategyInstance.callbackUrl,
                 store: {
                     store: (req, state, meta, callback) => callback(null, state),
                     verify: (req, providedState, callback) => callback(null, true, providedState),

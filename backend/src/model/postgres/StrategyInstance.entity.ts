@@ -107,6 +107,13 @@ export class StrategyInstance {
     @Column()
     doesImplicitRegister: boolean;
 
+    /**
+     * Gets the callback url for this instance
+     */
+    get callbackUrl(): string {
+        return new URL(`/auth/api/internal/auth/callback/${this.id}`, process.env.GROPIUS_ENDPOINT).toString();
+    }
+
     toJSON() {
         return {
             id: this.id,
@@ -116,6 +123,7 @@ export class StrategyInstance {
             isSelfRegisterActive: this.isSelfRegisterActive,
             isSyncActive: this.isSyncActive,
             doesImplicitRegister: this.doesImplicitRegister,
+            callbackUrl: this.callbackUrl,
         };
     }
 }
