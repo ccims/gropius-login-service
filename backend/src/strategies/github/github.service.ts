@@ -155,7 +155,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategyInstance: StrategyInstance,
         authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
     ): passport.AuthenticateOptions {
-        const mode = authStateData?.authState.function ?? AuthFunction.LOGIN;
+        const mode = authStateData?.authState?.function ?? AuthFunction.LOGIN;
         if (mode == AuthFunction.REGISTER_WITH_SYNC) {
             return {
                 scope: ["scope", "user:email", "repo"],

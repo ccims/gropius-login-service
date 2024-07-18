@@ -4,14 +4,17 @@ import { StateMiddleware } from "./StateMiddleware";
 import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { TokenService } from "src/backend-services/token.service";
+import { AuthClientService } from "src/model/services/auth-client.service";
 
 @Injectable()
 export class OAuthAuthorizeValidateMiddleware extends StateMiddleware<
     OAuthAuthorizeServerState,
     OAuthAuthorizeServerState
 > {
-
-    constructor(private readonly tokenService: TokenService) {
+    constructor(
+        private readonly tokenService: TokenService,
+        private readonly authClientService: AuthClientService,
+    ) {
         super();
     }
 
@@ -21,6 +24,10 @@ export class OAuthAuthorizeValidateMiddleware extends StateMiddleware<
         state: OAuthAuthorizeServerState & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
+        try {
+            const client = await this.authClientService.findAuthClient(state.request.clientId);
+            this.appendState(res, { client });
+        } catch {}
         if (!state.client || !state.client.isValid) {
             throw new OAuthHttpException("invalid_client", "Client unknown or unauthorized");
         }

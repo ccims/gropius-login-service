@@ -2,13 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
 import { StateMiddleware } from "./StateMiddleware";
 import { OAuthAuthorizeRequest, OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
-import { AuthClientService } from "src/model/services/auth-client.service";
 import { TokenScope } from "src/backend-services/token.service";
-import { AuthClient } from "src/model/postgres/AuthClient.entity";
 
 @Injectable()
-export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAuthorizeServerState> {
-    constructor(private readonly authClientService: AuthClientService) {
+export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, Omit<OAuthAuthorizeServerState, "client">> {
+    constructor() {
         super();
     }
 
@@ -27,15 +25,8 @@ export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, OAuthAu
             codeChallengeMethod: req.query.code_challenge_method as string,
             responseType: req.query.response_type as "code",
         };
-        let client: AuthClient | undefined;
-        try {
-            client = await this.authClientService.findAuthClient(requestParams.clientId);
-        } catch {
-            client = undefined;
-        }
         this.appendState(res, {
             request: requestParams,
-            client,
             isRegisterAdditional: requestParams.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
         });
         next();

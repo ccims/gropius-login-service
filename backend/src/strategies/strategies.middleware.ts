@@ -70,13 +70,13 @@ export class StrategiesMiddleware extends StateMiddleware<
         const strategy = this.strategiesService.getStrategyByName(instance.type);
         this.appendState(res, { strategy });
 
+        const result = await strategy.performAuth(instance, state, req, res);
+        this.appendState(res, result.returnedState);
+
         const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(state, instance, strategy);
         if (functionError != null) {
             throw new OAuthHttpException("server_error", functionError);
         }
-
-        const result = await strategy.performAuth(instance, state, req, res);
-        this.appendState(res, result.returnedState);
 
         const authResult = result.result;
         if (authResult) {
