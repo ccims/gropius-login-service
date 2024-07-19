@@ -6,6 +6,7 @@ import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthStateServerData } from "src/strategies/AuthResult";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { StateMiddleware } from "./StateMiddleware";
+import { EncryptionService } from "./encryption.service";
 
 @Injectable()
 export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
@@ -16,6 +17,7 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
+        private readonly encryptionService: EncryptionService,
     ) {
         super();
     }
@@ -32,6 +34,7 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
     ): Promise<any> {
         let tokenData: ActiveLoginTokenResult;
         const currentClient = state.client;
+        const codeVerifier = req.body.code_verifier;
         try {
             tokenData = await this.tokenService.verifyActiveLoginToken(
                 req.body.code ?? req.body.refresh_token,
@@ -68,6 +71,24 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
                 tokenData.activeLoginId,
             );
             throw new OAuthHttpException("invalid_grant", "Given code was liekely reused. Login and codes invalidated");
+        }
+        console.log(tokenData)
+        if (tokenData.codeChallenge != undefined) {
+            if (codeVerifier == undefined) {
+                this.logger.warn("Code verifier missing");
+                throw new OAuthHttpException("invalid_request", "Code verifier missing");
+            }
+            const decryptedCodeChallenge = this.encryptionService.decrypt(tokenData.codeChallenge);
+            const codeChallenge = this.tokenService.calculateCodeChallenge(codeVerifier);
+            if (decryptedCodeChallenge !== codeChallenge) {
+                this.logger.warn("Code verifier does not match code challenge");
+                throw new OAuthHttpException("invalid_request", "Code verifier does not match code challenge");
+            }
+        } else {
+            if (codeVerifier != undefined) {
+                this.logger.warn("Code verifier not required");
+                throw new OAuthHttpException("invalid_request", "Code verifier not required");
+            }
         }
         this.appendState(res, { activeLogin, scope: tokenData.scope });
         next();

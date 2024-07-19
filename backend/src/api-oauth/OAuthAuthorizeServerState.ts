@@ -6,8 +6,8 @@ export interface OAuthAuthorizeRequest {
     redirect: string;
     clientId: string;
     scope: TokenScope[];
-    codeChallenge?: string;
-    codeChallengeMethod?: string;
+    codeChallenge: string;
+    codeChallengeMethod: string;
     responseType: "code";
 }
 

@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { createHash } from "crypto";
 import { JsonWebTokenError } from "jsonwebtoken";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
@@ -10,6 +11,7 @@ export interface ActiveLoginTokenResult {
     clientId: string;
     tokenUniqueId: string;
     scope: TokenScope[];
+    codeChallenge?: string;
 }
 
 export enum TokenScope {
@@ -30,7 +32,7 @@ export class TokenService {
         private readonly backendJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly loginUserService: LoginUserService,
-    ) { }
+    ) {}
 
     async signAccessToken(user: LoginUser, scope: string[], expiresIn?: number): Promise<string> {
         const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
@@ -68,16 +70,21 @@ export class TokenService {
         clientId: string,
         uniqueId: string | number,
         scope: TokenScope[],
-        expiresInAt?: number | Date,
+        expiresInAt: number | Date | undefined,
+        codeChallenge: string | undefined,
     ): Promise<string> {
         this.verifyScope(scope);
-        const expiresInObject = (typeof expiresInAt == "number") ? { expiresIn: expiresInAt / 1000 } : {};
-        const expiresAtObject = (typeof expiresInAt == "object" && expiresInAt instanceof Date) ? { exp: Math.floor(expiresInAt.getTime() / 1000) } : {};
+        const expiresInObject = typeof expiresInAt == "number" ? { expiresIn: expiresInAt / 1000 } : {};
+        const expiresAtObject =
+            typeof expiresInAt == "object" && expiresInAt instanceof Date
+                ? { exp: Math.floor(expiresInAt.getTime() / 1000) }
+                : {};
         return await this.backendJwtService.signAsync(
             {
                 ...expiresAtObject,
                 client_id: clientId,
                 scope,
+                code_challenge: codeChallenge,
             },
             {
                 subject: activeLoginId,
@@ -133,12 +140,22 @@ export class TokenService {
             clientId: payload.client_id,
             tokenUniqueId: payload.jti,
             scope: payload.scope,
+            codeChallenge: payload.code_challenge,
         };
+    }
+
+    calculateCodeChallenge(codeVerifier: string): string {
+        return createHash("sha256")
+            .update(codeVerifier)
+            .digest("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=/g, "");
     }
 
     /**
      * Verifies that the given combination of scopes is valid.
-     * 
+     *
      * @param scopes the scopes to verify
      */
     verifyScope(scopes: string[]) {

@@ -120,6 +120,7 @@ export class OAuthTokenController {
                       activeLogin.nextExpectedRefreshTokenNumber,
                       scope,
                       activeLogin.expires ?? undefined,
+                      undefined,
                   )
                 : undefined;
         return {

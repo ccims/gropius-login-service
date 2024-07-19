@@ -10,10 +10,12 @@ import { ImsUserFindingService } from "./ims-user-finding.service";
         JwtModule.registerAsync({
             useFactory(...args) {
                 return {
-                    secret: Buffer.from(process.env.GROPIUS_OAUTH_JWT_SECRET, "base64"),
+                    privateKey: atob(process.env.GROPIUS_OAUTH_PRIVATE_KEY),
+                    publicKey: atob(process.env.GROPIUS_OAUTH_PUBLIC_KEY),
                     signOptions: {
                         issuer: process.env.GROPIUS_JWT_ISSUER,
                         audience: ["backend", "login"],
+                        algorithm: "RS256",
                     },
                     verifyOptions: {
                         issuer: process.env.GROPIUS_JWT_ISSUER,

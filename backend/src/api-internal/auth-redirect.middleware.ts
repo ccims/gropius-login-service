@@ -84,6 +84,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         state: AuthStateServerData & OAuthAuthorizeServerState & { secondToken?: boolean },
         clientId: string,
         scope: TokenScope[],
+        pkce: boolean,
     ): Promise<string> {
         const activeLogin = state.activeLogin;
         try {
@@ -95,6 +96,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
                 codeJwtId,
                 scope,
                 expiresIn,
+                pkce ? state.request.codeChallenge : undefined,
             );
             this.logger.debug("Created token");
             return token;
@@ -150,7 +152,12 @@ export class AuthRedirectMiddleware extends StateMiddleware<
                 const encodedState = encodeURIComponent(
                     this.stateJwtService.sign({ request: state.request, authState: state.authState }),
                 );
-                const token = await this.generateCode(state, "login-auth-client", [TokenScope.LOGIN_SERVICE_REGISTER]);
+                const token = await this.generateCode(
+                    state,
+                    "login-auth-client",
+                    [TokenScope.LOGIN_SERVICE_REGISTER],
+                    false,
+                );
                 const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);
                 const suggestionQuery = `&email=${encodeURIComponent(
                     suggestions.email ?? "",
@@ -170,7 +177,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         res: Response<any, Record<string, any>>,
     ) {
         const url = new URL(state.request.redirect);
-        const token = await this.generateCode(state, state.client.id, state.request.scope);
+        const token = await this.generateCode(state, state.client.id, state.request.scope, true);
         url.searchParams.append("code", token);
         url.searchParams.append("state", state.request.state ?? "");
         res.redirect(url.toString());

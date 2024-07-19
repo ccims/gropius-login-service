@@ -43,13 +43,13 @@ export class OauthAuthorizeController {
     })
     @ApiQuery({
         name: "code_challenge",
-        required: false,
+        required: true,
         description: "The code challenge to use for PKCE",
     })
     @ApiQuery({
         name: "code_challenge_method",
-        required: false,
-        description: "The code challenge method to use for PKCE",
+        required: true,
+        description: "The code challenge method to use for PKCE, only S256 is supported",
     })
     @ApiTags(OpenApiTag.OAUTH_API)
     authorizeEndpoint() {

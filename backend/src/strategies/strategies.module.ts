@@ -15,9 +15,11 @@ import { GithubTokenStrategyService } from "./github-token/github-token.service"
         JwtModule.registerAsync({
             useFactory(...args) {
                 return {
-                    secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET || "keyboard cat",
+                    privateKey: atob(process.env.GROPIUS_LOGIN_SPECIFIC_PRIVATE_KEY),
+                    publicKey: atob(process.env.GROPIUS_LOGIN_SPECIFIC_PUBLIC_KEY),
                     signOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,
+                        algorithm: "RS256",
                     },
                     verifyOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,

@@ -3,7 +3,6 @@ import * as Joi from "joi";
 export const validationSchema = Joi.object({
     GROPIUS_INTERNAL_BACKEND_ENDPOINT: Joi.string().uri().default("http://localhost:8081/graphql"),
     GROPIUS_INTERNAL_BACKEND_TOKEN: Joi.string(),
-    GROPIUS_OAUTH_JWT_SECRET: Joi.string().min(1).required(),
 
     GROPIUS_LOGIN_DATABASE_DRIVER: Joi.string().default("postgres"),
     GROPIUS_LOGIN_DATABASE_HOST: Joi.string().default("localhost"),
@@ -13,7 +12,6 @@ export const validationSchema = Joi.object({
     GROPIUS_LOGIN_DATABASE_DATABASE: Joi.string().default("gropius"),
 
     GROPIUS_REGISTRATION_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
-    GROPIUS_LOGIN_SPECIFIC_JWT_SECRET: Joi.string().min(1).required(),
     GROPIUS_JWT_ISSUER: Joi.string().default("gropius-login"),
     GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS: Joi.number()
         .min(0)
@@ -31,8 +29,6 @@ export const validationSchema = Joi.object({
     GROPIUS_BCRYPT_HASH_ROUNDS: Joi.number().min(8).default(10),
     GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
 
-    GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string(),
-
     GROPIUS_DEFAULT_STRATEGY_INSTANCE_TYPE: Joi.string().optional(),
     GROPIUS_DEFAULT_STRATEGY_INSTANCE_CONFIG: Joi.string().optional(),
     GROPIUS_DEFAULT_STRATEGY_INSTANCE_NAME: Joi.string().optional(),
@@ -44,4 +40,10 @@ export const validationSchema = Joi.object({
     GROPIUS_DEFAULT_CHECK_DATABASE_CONSISTENT: Joi.string().allow("none", "check", "fix").default("none"),
 
     GROPIUS_ENDPOINT: Joi.string().uri().required(),
+
+    GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string(),
+    GROPIUS_OAUTH_PUBLIC_KEY: Joi.string().required(),
+    GROPIUS_OAUTH_PRIVATE_KEY: Joi.string().required(),
+    GROPIUS_LOGIN_SPECIFIC_PUBLIC_KEY: Joi.string().required(),
+    GROPIUS_LOGIN_SPECIFIC_PRIVATE_KEY: Joi.string().required(),
 });

@@ -11,6 +11,7 @@ import { ErrorHandlerMiddleware } from "./error-handler.middleware";
 import { OAuthErrorRedirectMiddleware } from "./oauth-error-redirect.middleware";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { StrategiesModule } from "src/strategies/strategies.module";
+import { EncryptionService } from "./encryption.service";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
@@ -22,6 +23,7 @@ import { StrategiesModule } from "src/strategies/strategies.module";
         OAuthTokenAuthorizationCodeMiddleware,
         ErrorHandlerMiddleware,
         OAuthErrorRedirectMiddleware,
+        EncryptionService,
     ],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
     exports: [OAuthAuthorizeValidateMiddleware, ErrorHandlerMiddleware, OAuthErrorRedirectMiddleware],

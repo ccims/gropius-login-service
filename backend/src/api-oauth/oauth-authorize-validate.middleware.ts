@@ -42,8 +42,12 @@ export class OAuthAuthorizeValidateMiddleware extends StateMiddleware<
         } catch (error) {
             throw new OAuthHttpException("invalid_scope", error.message);
         }
-        //TODO validate PKCE
-        //TODO check if PKCE is required
+        if (state.request.codeChallengeMethod !== "S256") {
+            throw new OAuthHttpException("invalid_request", "Only S256 code challenge method is supported");
+        }
+        if (!state.request.codeChallenge) {
+            throw new OAuthHttpException("invalid_request", "Code challenge required");
+        }
         next();
     }
 }
