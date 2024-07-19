@@ -33,8 +33,6 @@ export abstract class StrategyUsingPassport extends Strategy {
         );
     }
 
-    private readonly passportInstances: Map<string, passport.Strategy> = new Map();
-
     abstract createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy;
 
     protected getAdditionalPassportOptions(
@@ -44,19 +42,6 @@ export abstract class StrategyUsingPassport extends Strategy {
         return {};
     }
 
-    getPassportStrategyInstanceFor(strategyInstance: StrategyInstance): passport.Strategy {
-        if (this.passportInstances.has(strategyInstance.id)) {
-            return this.passportInstances.get(strategyInstance.id);
-        } else {
-            const newInstance = this.createPassportStrategyInstance(strategyInstance);
-            this.logger.debug(
-                `Created new passport strategy for strategy ${this.typeName}, instance: ${strategyInstance.id}`,
-            );
-            this.passportInstances.set(strategyInstance.id, newInstance);
-            return newInstance;
-        }
-    }
-
     public override async performAuth(
         strategyInstance: StrategyInstance,
         state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
@@ -64,7 +49,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         res: any,
     ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
-            const passportStrategy = this.getPassportStrategyInstanceFor(strategyInstance);
+            const passportStrategy = this.createPassportStrategyInstance(strategyInstance)
             const jwtService = this.stateJwtService;
             passport.authenticate(
                 passportStrategy,

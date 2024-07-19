@@ -2,19 +2,15 @@
     <div class="root h-100 w-100 d-flex flex-column">
         <div class="header d-flex align-center my-2">
             <div class="ml-5">
-                <router-link to="/">
-                    <v-btn class="d-flex" variant="text" icon size="small">
-                        <img src="@/assets/logo.svg" width="40" />
-                    </v-btn>
-                </router-link>
+                <v-btn class="d-flex" variant="text" icon size="small">
+                    <img src="@/assets/logo.svg" width="40" />
+                </v-btn>
             </div>
             <slot name="header-title">
                 <div class="d-flex align-center">
-                    <router-link to="/">
-                        <v-btn variant="text" class="px-1" min-width="0" rounded="lger">
-                            <span class="text-h6">Gropius</span>
-                        </v-btn>
-                    </router-link>
+                    <v-btn variant="text" class="px-1" min-width="0" rounded="lger">
+                        <span class="text-h6">Gropius</span>
+                    </v-btn>
                 </div>
             </slot>
             <v-spacer />
