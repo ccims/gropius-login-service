@@ -1,19 +1,16 @@
-import { CanActivate, ExecutionContext, Injectable, Logger, SetMetadata, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Logger, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Request, Response } from "express";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { TokenService } from "src/backend-services/token.service";
+import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { ensureState } from "src/strategies/utils";
+import { ensureState } from "src/util/ensureState";
 import { ApiStateData } from "./ApiStateData";
 
-export const NeedsAdmin = () => SetMetadata("needsAdmin", true);
-
 /**
- * Guard for checking the presence of an access token in the request.
+ * Base class for guards for checking the presence of an access token in the request.
  * If needed, checks for admin permissions of the user.
- *
- * Used with `@UseGuards(CheckAccessTokenGuard)`
+ * Required scope can be configured using the requiredScope property.
  *
  * The access token is expected in the "Authorization" header, prefixed with "Bearer ".
  * Not providing a token, a token without prefix or an invalid token will result in a 401 Unauthorized response.
@@ -21,13 +18,13 @@ export const NeedsAdmin = () => SetMetadata("needsAdmin", true);
  * Once access token (and admin permission) were verified sucessfully,
  * the logged in user is written to the request state object
  */
-@Injectable()
 export class CheckAccessTokenGuard implements CanActivate {
     private readonly logger = new Logger(CheckAccessTokenGuard.name);
     constructor(
         private readonly tokenService: TokenService,
         private readonly reflector: Reflector,
         private readonly backendUserService: BackendUserService,
+        private readonly requiredScope: TokenScope,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -42,7 +39,7 @@ export class CheckAccessTokenGuard implements CanActivate {
         const token = authHead.substring(7).trim();
         let user: LoginUser;
         try {
-            user = (await this.tokenService.verifyAccessToken(token)).user;
+            user = (await this.tokenService.verifyAccessToken(token, this.requiredScope)).user;
         } catch (err) {
             this.logger.warn("Invalid access token:", err);
             throw new UnauthorizedException(undefined, "Invalid access token: " + (err.message ?? err));

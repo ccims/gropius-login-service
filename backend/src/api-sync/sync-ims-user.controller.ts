@@ -21,7 +21,7 @@ export class SyncImsUserController {
         private readonly imsUserFindingService: ImsUserFindingService,
     ) {}
 
-    @Get("getIMSToken")
+    @Get("get-ims-token")
     async getIMSToken(@Query("imsUser") imsUserId: string): Promise<GetImsTokenResult> {
         if (!imsUserId || imsUserId.trim().length == 0) {
             throw new HttpException("Missing query parameter imsUser", HttpStatus.BAD_REQUEST);
@@ -53,7 +53,7 @@ export class SyncImsUserController {
     }
 
     //todo: make endpoint accept list of ims users to be linked all at once in order to optimize finding
-    @Put("linkIMSUser")
+    @Put("link-ims-user")
     async linkIMSUser(@Query("imsUser") imsUserId: string): Promise<DefaultReturn> {
         if (!imsUserId || imsUserId.trim().length == 0) {
             throw new HttpException("Missing query parameter imsUser", HttpStatus.BAD_REQUEST);

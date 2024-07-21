@@ -25,28 +25,12 @@
                             :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
                             @submit.prevent="submitForm"
                         >
-                            <v-text-field
+                            <InputField
                                 v-for="(field, idx) in isLogin ? strategy.loginFields : strategy.registerFields"
                                 :key="idx"
-                                :label="field.displayName ?? field.name"
-                                :name="field.name"
                                 v-model="formDataAt(strategy.id)[field.name]"
-                                :type="
-                                    isPwdVisibleAt(strategy.id)[field.name] || field.type != 'password'
-                                        ? 'text'
-                                        : 'password'
-                                "
-                                :append-inner-icon="
-                                    field.type == 'password'
-                                        ? isPwdVisibleAt(strategy.id)[field.name]
-                                            ? 'mdi-eye'
-                                            : 'mdi-eye-off'
-                                        : undefined
-                                "
-                                @click:appendInner="
-                                    isPwdVisibleAt(strategy.id)[field.name] = !isPwdVisibleAt(strategy.id)[field.name]
-                                "
-                            ></v-text-field>
+                                :field="field"
+                            />
                             <input type="hidden" name="state" :value="route.query.state" />
                             <input type="submit" hidden />
                         </v-form>
@@ -108,6 +92,7 @@ import GropiusCard from "@/components/GropiusCard.vue";
 import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
 import axios from "axios";
+import InputField from "@/components/InputField.vue";
 
 const route = useRoute();
 
@@ -142,7 +127,7 @@ const strategies = asyncComputed(
             "Could not fetch available strategies"
         );
         const instances: LoginStrategyInstance[] = await withErrorMessage(
-            async () => (await axios.get(`/auth/api/login/strategyInstance/`, {})).data,
+            async () => (await axios.get(`/auth/api/login/strategy-instance/`, {})).data,
             "Could not fetch available strategy instances"
         );
         const strategiesByName = new Map(strategies.map((s) => [s.typeName, s]));
@@ -160,7 +145,7 @@ const strategies = asyncComputed(
             .filter((instance) => Object.keys(strategiesByName.get(instance.type)?.acceptsVariables ?? {}).length > 0)
             .map((instance) => {
                 const strategy = strategiesByName.get(instance.type);
-                const fields = Object.values(strategy?.acceptsVariables ?? {});
+                const fields = strategy?.acceptsVariables ?? [];
                 return {
                     ...instance,
                     type: "credential",
@@ -200,7 +185,6 @@ const credentialTab = ref(0);
 const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
-const isPwdVisible = ref<Record<string, Record<string, boolean>>>({});
 
 function formDataAt(id: string) {
     if (!(id in formData.value)) {
@@ -209,18 +193,10 @@ function formDataAt(id: string) {
     return formData.value[id];
 }
 
-function isPwdVisibleAt(id: string) {
-    if (!(id in isPwdVisible.value)) {
-        isPwdVisible.value[id] = {};
-    }
-    return isPwdVisible.value[id];
-}
-
 function toggleIsLogin() {
     isLogin.value = !isLogin.value;
     credentialTab.value = 0;
     formData.value = {};
-    isPwdVisible.value = {};
 }
 
 function submitForm() {

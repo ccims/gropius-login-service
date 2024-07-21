@@ -11,7 +11,7 @@ import {
     Put,
     UseGuards,
 } from "@nestjs/common";
-import { CheckAccessTokenGuard, NeedsAdmin } from "src/api-login/check-access-token.guard";
+import { CheckLoginServiceAccessTokenGuard } from "src/api-login/check-login-service-access-token.guard";
 import { DefaultReturn } from "src/default-return.dto";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
@@ -29,6 +29,7 @@ import {
 } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-detail.dto";
+import { NeedsAdmin } from "src/util/NeedsAdmin";
 
 /**
  * Controller for providing crud access to login strategy instances.
@@ -53,7 +54,7 @@ export class StrategyInstancesController {
      * @param type The strategy type of which to request the instances. Optional. If not given, get all instances
      * @returns A list of all instances (of the specified type)
      */
-    @Get(["strategyInstance", "strategy/:type/instance"])
+    @Get(["strategy-instance", "strategy/:type/instance"])
     @ApiOperation({ summary: "List all strategy instances (of type)" })
     @ApiParam({
         name: "type",
@@ -78,8 +79,8 @@ export class StrategyInstancesController {
      * @param type The strategy type name of which to search for the instance. Defaults to all types
      * @returns The strategy instance with the given id (and type)
      */
-    @Get(["strategyInstance/:id", "strategy/:type/instance/:id"])
-    @UseGuards(CheckAccessTokenGuard)
+    @Get(["strategy-instance/:id", "strategy/:type/instance/:id"])
+    @UseGuards(CheckLoginServiceAccessTokenGuard)
     @NeedsAdmin()
     @ApiOperation({ summary: "Get one strategy instance" })
     @ApiParam({
@@ -138,8 +139,8 @@ export class StrategyInstancesController {
      * @param type The type of the new strategy instance. If not given as url parameter, must be given in the body
      * @returns The created strategy instance object
      */
-    @Post(["strategyInstance", "strategy/:type/instance"])
-    @UseGuards(CheckAccessTokenGuard)
+    @Post(["strategy-instance", "strategy/:type/instance"])
+    @UseGuards(CheckLoginServiceAccessTokenGuard)
     @NeedsAdmin()
     @ApiOperation({ summary: "Create new strategy instance" })
     @ApiParam({
@@ -183,9 +184,9 @@ export class StrategyInstancesController {
      * @param type The type the instance to modify is. Can be left out, defaults to all types.
      * @returns If successful, the updated strategy instance.
      */
-    @Put(["strategyInstance/:id", "strategy/:type/instance/:id"])
+    @Put(["strategy-instance/:id", "strategy/:type/instance/:id"])
     @ApiTags(OpenApiTag.LOGIN_API, OpenApiTag.LOGIN_API)
-    @UseGuards(CheckAccessTokenGuard)
+    @UseGuards(CheckLoginServiceAccessTokenGuard)
     @NeedsAdmin()
     @ApiOperation({ summary: "Edit an existing strategy instance" })
     @ApiParam({
@@ -234,8 +235,8 @@ export class StrategyInstancesController {
      * @param type The strategy type name of the strategy instance to delete
      * @returns If successfull, a default response with operation "delete-strategyInstance"
      */
-    @Delete(["strategyInstance/:id", "strategy/:type/instance/:id"])
-    @UseGuards(CheckAccessTokenGuard)
+    @Delete(["strategy-instance/:id", "strategy/:type/instance/:id"])
+    @UseGuards(CheckLoginServiceAccessTokenGuard)
     @NeedsAdmin()
     @ApiOperation({ summary: "Delete a strategy instance" })
     @ApiParam({

@@ -9,7 +9,7 @@ import { ActiveLoginService } from "src/model/services/active-login.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthStateServerData } from "src/strategies/AuthResult";
-import { ensureState } from "src/strategies/utils";
+import { ensureState } from "src/util/ensureState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
 export interface OauthTokenEndpointResponseDto {

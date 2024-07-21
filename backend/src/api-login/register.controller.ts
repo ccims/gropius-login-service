@@ -11,11 +11,12 @@ import { Response } from "express";
 import { DefaultReturn } from "src/default-return.dto";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { ApiStateData } from "./ApiStateData";
-import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
+import { ApiStateData } from "../util/ApiStateData";
+import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 import { CheckRegistrationTokenService } from "./check-registration-token.service";
 import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto";
 import { BackendUserService } from "src/backend-services/backend-user.service";
+import { NeedsAdmin } from "src/util/NeedsAdmin";
 
 /**
  * Controller for handling self registration of new users as well as linking of existing users to new loginData
@@ -40,7 +41,7 @@ export class RegisterController {
      * @returns The default response with operation 'self-link'
      */
     @Post("self-link")
-    @UseGuards(CheckAccessTokenGuard)
+    @UseGuards(CheckLoginServiceAccessTokenGuard)
     @ApiOperation({ summary: "Link new authentication with current user" })
     @ApiOkResponse({
         type: DefaultReturn,
@@ -86,7 +87,7 @@ export class RegisterController {
      * @returns The default response with operation 'admin-link'
      */
     @Post("admin-link")
-    @UseGuards(CheckAccessTokenGuard)
+    @UseGuards(CheckLoginServiceAccessTokenGuard)
     @NeedsAdmin()
     @ApiOperation({ summary: "Links new authentication with any user by id" })
     @ApiOkResponse({

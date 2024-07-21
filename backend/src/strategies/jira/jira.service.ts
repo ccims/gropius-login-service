@@ -10,7 +10,7 @@ import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { checkType } from "../utils";
+import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
 
 @Injectable()

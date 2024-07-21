@@ -15,6 +15,12 @@ export interface StrategyVariable {
     nullable?: boolean;
 }
 
+export interface StrategyUpdateAction {
+    name: string;
+    displayName: string;
+    variables: StrategyVariable[];
+}
+
 export interface PerformAuthResult {
     result: AuthResult | null;
     returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">>;
@@ -146,8 +152,12 @@ export abstract class Strategy {
         });
     }
 
-    get acceptsVariables(): Record<string, StrategyVariable> {
-        return {};
+    get acceptsVariables(): StrategyVariable[] {
+        return [];
+    }
+
+    get updateActions(): StrategyUpdateAction[] {
+        return [];
     }
 
     get instanceConfigSchema(): Record<string, Schema> {
@@ -277,6 +287,18 @@ export abstract class Strategy {
         return {};
     }
 
+    /**
+     * Handles an action that was triggered by the user.
+     * Actions are defined via {@link updateActions}.
+     * 
+     * @param loginData the login data of the user that triggered the action
+     * @param name the name of the action
+     * @param data the data for the action
+     */
+    async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
+        throw new Error("Action not implemented");
+    }
+
     abstract performAuth(
         strategyInstance: StrategyInstance,
         state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
@@ -293,6 +315,7 @@ export abstract class Strategy {
             allowsImplicitSignup: this.allowsImplicitSignup,
             acceptsVariables: this.acceptsVariables,
             instanceConfigSchema: this.instanceConfigSchema,
+            updateActions: this.updateActions,
         };
     }
 }

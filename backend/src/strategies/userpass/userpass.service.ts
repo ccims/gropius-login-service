@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
-import { StrategyVariable } from "../Strategy";
+import { StrategyUpdateAction, StrategyVariable } from "../Strategy";
 import * as passportLocal from "passport-local";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
@@ -24,19 +24,33 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false, true);
     }
 
-    override get acceptsVariables(): Record<string, StrategyVariable> {
-        return {
-            username: {
+    override get acceptsVariables(): StrategyVariable[] {
+        return [
+            {
                 name: "username",
                 displayName: "Username",
                 type: "string",
             },
-            password: {
+            {
                 name: "password",
                 displayName: "Password",
                 type: "password",
             },
-        };
+        ];
+    }
+
+    override get updateActions(): StrategyUpdateAction[] {
+        return [{
+            name: "updatePassword",
+            displayName: "Update password",
+            variables: [
+                {
+                    name: "password",
+                    displayName: "Password",
+                    type: "password",
+                },
+            ],
+        }]
     }
 
     protected override checkAndExtendInstanceConfig(instanceConfig: object): object {
@@ -123,5 +137,18 @@ export class UserpassStrategyService extends StrategyUsingPassport {
 
     override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
         return loginData.data?.username;
+    }
+
+    override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
+        if (name === "updatePassword") {
+            if (!data.password || data.password.trim().length == 0) {
+                throw new Error("Password cannot be empty or blank!");
+            }
+
+            loginData.data = await this.generateLoginDataData(loginData.data["username"], data.password);
+            await this.loginDataService.save(loginData);
+        } else {
+            throw new Error("Unknown action");
+        }
     }
 }

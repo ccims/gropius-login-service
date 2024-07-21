@@ -32,13 +32,20 @@ export interface LoginStrategyVariable {
     nullable?: boolean;
 }
 
+export interface LoginStrategyUpdateAction {
+    name: string;
+    displayName: string;
+    variables: LoginStrategyVariable[];
+}
+
 export interface LoginStrategy {
     typeName: string;
     canLoginRegister: boolean;
     canSync: boolean;
     needsRedirectFlow: boolean;
     allowsImplicitSignup: boolean;
-    acceptsVariables: { [name: string]: LoginStrategyVariable };
+    acceptsVariables: LoginStrategyVariable[];
+    updateActions: LoginStrategyUpdateAction[];
 }
 
 export interface LoginStrategyInstance {

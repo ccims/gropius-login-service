@@ -1,5 +1,5 @@
 import { NestMiddleware } from "@nestjs/common";
-import { ensureState } from "src/strategies/utils";
+import { ensureState } from "src/util/ensureState";
 import { Request, Response } from "express";
 
 export abstract class StateMiddleware<S extends Record<string, any> = {}, T extends Record<string, any> = {}>

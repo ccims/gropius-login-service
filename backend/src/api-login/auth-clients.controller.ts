@@ -24,10 +24,11 @@ import { DefaultReturn } from "src/default-return.dto";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
+import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 import { CreateAuthClientSecretResponse } from "./dto/create-auth-client-secret.dto";
 import { CreateOrUpdateAuthClientInput } from "./dto/create-update-auth-client.dto";
 import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-client.dto";
+import { NeedsAdmin } from "src/util/NeedsAdmin";
 
 /**
  * Controller for all queries related to auth clients and their client secrets
@@ -37,7 +38,7 @@ import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-clie
  * Route prefix: client
  */
 @Controller("client")
-@UseGuards(CheckAccessTokenGuard)
+@UseGuards(CheckLoginServiceAccessTokenGuard)
 @ApiBearerAuth()
 @ApiTags(OpenApiTag.LOGIN_API)
 export class AuthClientController {
@@ -259,7 +260,7 @@ export class AuthClientController {
      * @param id The uuid string of an existing auth client
      * @returns All client secrets of the auth client (censored)
      */
-    @Get(":id/clientSecret")
+    @Get(":id/client-secret")
     @NeedsAdmin()
     @ApiOperation({ summary: "List all client secrets (censored) of auth client" })
     @ApiParam({ name: "id", type: String, format: "uuid", description: "The uuid string of an existing auth client" })
@@ -289,7 +290,7 @@ export class AuthClientController {
      * @param id The uuid string of an existing auth client to create the secret for
      * @returns The generated client secret
      */
-    @Post(":id/clientSecret")
+    @Post(":id/client-secret")
     @NeedsAdmin()
     @ApiOperation({ summary: "Generate and return new client secret for auth client" })
     @ApiParam({
@@ -326,7 +327,7 @@ export class AuthClientController {
      * @param fingerprint The fingerprint returned by the clientSecrets endpoint to identify the client secret to delete
      * @returns The default response
      */
-    @Delete(":id/clientSecret/:fingerprint")
+    @Delete(":id/client-secret/:fingerprint")
     @NeedsAdmin()
     @ApiOperation({ summary: "Delete a client secret of auch client" })
     @ApiParam({

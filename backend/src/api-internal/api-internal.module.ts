@@ -14,6 +14,7 @@ import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/oauth-authorize-
 import { AuthRegisterMiddleware } from "./auth-register.middleware";
 import { AuthModule } from "src/api-login/api-login.module";
 import { AuthErrorRedirectMiddleware } from "./auth-error-redirect.middleware";
+import { UpdateActionController } from "./update-action.controller";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, AuthModule],
@@ -24,7 +25,7 @@ import { AuthErrorRedirectMiddleware } from "./auth-error-redirect.middleware";
         ModeExtractorMiddleware,
         AuthErrorRedirectMiddleware,
     ],
-    controllers: [AuthEndpointsController],
+    controllers: [AuthEndpointsController, UpdateActionController],
 })
 export class ApiInternalModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];

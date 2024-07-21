@@ -1,8 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, SetMetadata, UnauthorizedException } from "@nestjs/common";
 import { Request } from "express";
 
-export const NeedsAdmin = () => SetMetadata("needsAdmin", true);
-
 @Injectable()
 export class CheckSyncSecretGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {

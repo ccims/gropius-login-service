@@ -1,5 +1,6 @@
 // Composables
 import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
+import { checkAuth } from "./navigationGuards";
 
 const routes: RouteRecordRaw[] = [
     {
@@ -16,6 +17,12 @@ const routes: RouteRecordRaw[] = [
         path: "/register",
         name: "register",
         component: () => import("../views/Register.vue")
+    },
+    {
+        path: "/update",
+        name: "update",
+        beforeEnter: checkAuth,
+        component: () => import("../views/Update.vue")
     }
 ];
 

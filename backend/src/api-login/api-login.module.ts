@@ -8,6 +8,7 @@ import { RegisterController } from "./register.controller";
 import { StrategiesController } from "./strategy/strategies.controller";
 import { StrategyInstancesController } from "./strategy/strategy-instances.controller";
 import { UsersController } from "./users.controller";
+import { LoginDataController } from "./login-data.controller";
 
 /**
  * Module that contains all controllers for the regular login-service API
@@ -22,6 +23,7 @@ import { UsersController } from "./users.controller";
         StrategiesController,
         StrategyInstancesController,
         AuthClientController,
+        LoginDataController
     ],
     providers: [CheckRegistrationTokenService],
     exports: [CheckRegistrationTokenService],

@@ -1,17 +1,3 @@
-import { Response } from "express";
-
-export function ensureState(res: Response) {
-    if (res == undefined || res == null) {
-        throw new Error("Res object mustn't be null/undefined");
-    }
-    if (!res.locals) {
-        res.locals = {};
-    }
-    if (!res.locals.state) {
-        res.locals.state = {};
-    }
-}
-
 /**
  * Checks a key if an object for a specified type using the typeof operator.
  * If type is "string" will also check, the value is not empty.

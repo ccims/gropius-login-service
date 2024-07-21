@@ -25,14 +25,14 @@ export class GithubTokenStrategyService extends Strategy {
         };
     }
 
-    override get acceptsVariables(): Record<string, StrategyVariable> {
-        return {
-            token: {
+    override get acceptsVariables(): StrategyVariable[] {
+        return [
+            {
                 name: "token",
                 displayName: "Personal access token",
                 type: "password",
             },
-        };
+        ];
     }
 
     /**

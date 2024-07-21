@@ -24,29 +24,29 @@ import {
 } from "@nestjs/swagger";
 import { Response } from "express";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { DefaultReturn } from "src/default-return.dto";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { ApiStateData } from "./ApiStateData";
-import { CheckAccessTokenGuard, NeedsAdmin } from "./check-access-token.guard";
+import { ApiStateData } from "../util/ApiStateData";
 import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
 import { UserLoginDataResponse } from "./dto/user-login-data.dto";
 import { StrategiesService } from "src/model/services/strategies.service";
+import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
+import { NeedsAdmin } from "src/util/NeedsAdmin";
 
 /**
  * Controller allowing access to the users in the system
  */
 @Controller("user")
-@UseGuards(CheckAccessTokenGuard)
+@UseGuards(CheckLoginServiceAccessTokenGuard)
 @ApiTags(OpenApiTag.LOGIN_API)
 @ApiBearerAuth()
 export class UsersController {
     constructor(
         private readonly userService: LoginUserService,
-        private readonly backendUserSerice: BackendUserService,
+        private readonly backendUserService: BackendUserService,
         private readonly loginDataSerive: UserLoginDataService,
         private readonly strategiesService: StrategiesService,
     ) {}
@@ -105,7 +105,7 @@ export class UsersController {
     async getOneUser(@Param("id") id: string, @Res({ passthrough: true }) res: Response): Promise<LoginUser> {
         const loggedInUser = (res.locals.state as ApiStateData).loggedInUser;
         if (loggedInUser.id != id) {
-            const isAdmin = await this.backendUserSerice.checkIsUserAdmin(loggedInUser);
+            const isAdmin = await this.backendUserService.checkIsUserAdmin(loggedInUser);
             if (!isAdmin) {
                 throw new UnauthorizedException(undefined, "Not sufficient permission to request non self");
             }
@@ -140,7 +140,7 @@ export class UsersController {
         if ((await this.userService.countBy({ username: input.username })) > 0) {
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
         }
-        return this.backendUserSerice.createNewUser(input, input.isAdmin);
+        return this.backendUserService.createNewUser(input, input.isAdmin);
     }
 
     /**
@@ -153,7 +153,7 @@ export class UsersController {
      * @param res The response object containing the request state
      * @returns If user exits, login data for the user with the specified id
      */
-    @Get(":id/loginData")
+    @Get(":id/login-data")
     @ApiOperation({ summary: "List all loginData of one user" })
     @ApiParam({
         name: "id",
@@ -165,7 +165,7 @@ export class UsersController {
         type: [UserLoginData],
         description: "If user exixts, login data for the user with the specified id",
     })
-    @ApiNotFoundResponse({ description: "If no user with the specified it could be found" })
+    @ApiNotFoundResponse({ description: "If no user with the specified id could be found" })
     @ApiUnauthorizedResponse({ description: "If no requesting self and not admin or if login is invalid" })
     async getLoginDataForUser(
         @Param("id") id: string,
@@ -179,7 +179,7 @@ export class UsersController {
             id = loggedInUser.id;
         }
         if (id != loggedInUser.id) {
-            if (!this.backendUserSerice.checkIsUserAdmin(loggedInUser)) {
+            if (!this.backendUserService.checkIsUserAdmin(loggedInUser)) {
                 throw new HttpException(
                     "No permission to access others login data if not admin",
                     HttpStatus.UNAUTHORIZED,

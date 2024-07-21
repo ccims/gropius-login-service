@@ -95,18 +95,17 @@ export class TokenService {
         );
     }
 
-    async verifyAccessToken(token: string): Promise<{ user: LoginUser | null }> {
+    async verifyAccessToken(token: string, scope: TokenScope): Promise<{ user: LoginUser | null }> {
         const payload = await this.backendJwtService.verifyAsync(token, {
-            audience: [TokenScope.LOGIN_SERVICE],
+            audience: [scope],
         });
         const audience: string[] = payload.aud as string[];
         let user: LoginUser | null = null;
-        if (audience.includes(TokenScope.BACKEND)) {
+        if (!audience.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             user = await this.loginUserService.findOneBy({
                 neo4jId: payload.sub,
             });
-        }
-        if (!user) {
+        } else {
             user = await this.loginUserService.findOneBy({ id: payload.sub });
         }
         const tokenIssuedAt = payload.iat as number;

@@ -17,18 +17,22 @@ export class AuthClientService extends Repository<AuthClient> {
         gropiusAuthClient.redirectUrls = [new URL("/login", process.env.GROPIUS_ENDPOINT).toString()];
         gropiusAuthClient.id = "gropius-auth-client";
         gropiusAuthClient.isValid = true;
-        gropiusAuthClient.validScopes = [TokenScope.BACKEND, TokenScope.LOGIN_SERVICE, TokenScope.LOGIN_SERVICE_REGISTER];
+        gropiusAuthClient.validScopes = [
+            TokenScope.BACKEND,
+            TokenScope.LOGIN_SERVICE,
+            TokenScope.LOGIN_SERVICE_REGISTER,
+        ];
 
         const loginAuthClient = new AuthClient();
         loginAuthClient.name = "Login auth client";
         loginAuthClient.redirectUrls = [new URL("/auth/flow/update", process.env.GROPIUS_ENDPOINT).toString()];
         loginAuthClient.id = "login-auth-client";
         loginAuthClient.isValid = true;
-        loginAuthClient.validScopes = [TokenScope.LOGIN_SERVICE_REGISTER, TokenScope.AUTH];
+        loginAuthClient.validScopes = [TokenScope.LOGIN_SERVICE_REGISTER, TokenScope.AUTH, TokenScope.LOGIN_SERVICE];
 
         return [gropiusAuthClient, loginAuthClient];
     }
-    
+
     async findAuthClient(id: string): Promise<AuthClient | undefined> {
         const defaultClient = this.defaultAuthClients.find((client) => client.id === id);
         if (defaultClient) {
