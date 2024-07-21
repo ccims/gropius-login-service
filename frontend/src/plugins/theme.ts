@@ -14,13 +14,6 @@ interface ThemeColors {
     [key: string]: string;
 }
 
-const commonColors = {
-    "issue-open": "#00BA39",
-    "issue-closed": "#FF0036",
-    "issue-incoming": "#00C6EB",
-    "issue-outgoing": "#FF8900"
-};
-
 const mainColorMappings: [string, keyof Scheme][] = [
     ["primary", "primary"],
     ["on-primary", "onPrimary"],
@@ -97,8 +90,5 @@ export function generateThemeColors(color: string, dark: boolean): ThemeColors {
         colors[`on-surface-elevated-${i}`] = colors[`on-surface`];
     }
 
-    return {
-        ...colors,
-        ...commonColors
-    };
+    return colors;
 }

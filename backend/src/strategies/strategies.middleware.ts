@@ -72,14 +72,12 @@ export class StrategiesMiddleware extends StateMiddleware<
 
         const result = await strategy.performAuth(instance, state, req, res);
         this.appendState(res, result.returnedState);
-
-        const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(state, instance, strategy);
-        if (functionError != null) {
-            throw new OAuthHttpException("server_error", functionError);
-        }
-
         const authResult = result.result;
         if (authResult) {
+            const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(state, instance, strategy);
+            if (functionError != null) {
+                throw new OAuthHttpException("server_error", functionError);
+            }
             const activeLogin = await this.performAuthFunctionService.performRequestedAction(
                 authResult,
                 state,
@@ -92,7 +90,7 @@ export class StrategiesMiddleware extends StateMiddleware<
         } else {
             throw new AuthException(
                 result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfull",
-                instance.id
+                instance.id,
             );
         }
         this.logger.debug("Strategy Middleware completed. Calling next");

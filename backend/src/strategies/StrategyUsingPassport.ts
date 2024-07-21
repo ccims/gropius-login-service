@@ -55,7 +55,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign({ request: state?.request, authState: state?.authState }), // TODO: check if an expiration and/or an additional random value are needed
+                    state: jwtService.sign({ request: state?.request, authState: state?.authState }),
                     ...this.getAdditionalPassportOptions(strategyInstance, state),
                 },
                 (err, user: AuthResult | false, info) => {
@@ -64,9 +64,10 @@ export abstract class StrategyUsingPassport extends Strategy {
                         reject(err);
                     } else {
                         let returnedState = {};
-                        if (info.state && typeof info.state == "string") {
-                            returnedState = jwtService.verify(info.state);
-                        } else if (info.state) {
+                        const state = info.state || req.query?.state;
+                        if (state && typeof state == "string") {
+                            returnedState = jwtService.verify(state);
+                        } else if (state) {
                             reject("State not returned as JWT");
                         }
                         resolve({ result: user || null, returnedState, info });

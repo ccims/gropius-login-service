@@ -121,8 +121,9 @@ export class ActiveLogin {
         return {
             id: this.id,
             created: this.created,
-            isValid: this.expires,
-            requiresSecret: this.isValid,
+            expores: this.expires,
+            isValid: this.isValid,
+            supportsSync: this.supportsSync,
         };
     }
 }

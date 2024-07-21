@@ -1,18 +1,12 @@
 <template>
     <div class="root h-100 w-100 d-flex flex-column">
         <div class="header d-flex align-center my-2">
-            <div class="ml-5">
-                <v-btn class="d-flex" variant="text" icon size="small">
-                    <img src="@/assets/logo.svg" width="40" />
-                </v-btn>
-            </div>
-            <slot name="header-title">
-                <div class="d-flex align-center">
-                    <v-btn variant="text" class="px-1" min-width="0" rounded="lger">
-                        <span class="text-h6">Gropius</span>
-                    </v-btn>
-                </div>
-            </slot>
+            <v-btn class="d-flex ml-5" variant="text" icon size="small" href="/">
+                <img src="@/assets/logo.svg" width="40" />
+            </v-btn>
+            <v-btn variant="text" class="px-1" min-width="0" rounded="lger" href="/">
+                <span class="text-h6">Gropius</span>
+            </v-btn>
             <v-spacer />
             <div class="mr-5">
                 <v-btn icon variant="tonal" size="small" @click="toggleDarkMode()">

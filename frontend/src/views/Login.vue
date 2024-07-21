@@ -1,7 +1,7 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="login-container mt-5" v-if="!loadingStrategies">
+            <GropiusCard class="login-container mt-5 pb-4" v-if="!loadingStrategies">
                 <p class="text-center text-body-1 mt-2">{{ title }}</p>
                 <v-sheet color="error-container" v-if="errorMessage" rounded="lger" class="pa-3 mt-2">
                     <v-icon icon="mdi-alert-circle-outline" size="x-large" />
@@ -68,7 +68,7 @@
                     <DefaultButton
                         v-for="strategy in currentStrategies.redirect"
                         :key="strategy.id"
-                        class="w-100 my-2"
+                        class="w-100 mt-2"
                         variant="outlined"
                         density="default"
                         @click="redirect(strategy)"
