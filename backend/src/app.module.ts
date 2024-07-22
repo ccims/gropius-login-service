@@ -9,7 +9,6 @@ import { StrategiesModule } from "./strategies/strategies.module";
 import { BackendServicesModule } from "./backend-services/backend-services.module";
 import { validationSchema } from "./configuration-validator";
 import { ApiInternalModule } from "./api-internal/api-internal.module";
-import { DefaultReturn } from "./default-return.dto";
 import { InitializationModule } from "./initialization/initialization.module";
 import * as path from "path";
 import { ServeStaticModule } from "@nestjs/serve-static";

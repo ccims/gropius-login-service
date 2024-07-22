@@ -12,7 +12,7 @@
         "start:dev": "cross-env NODE_ENV=development nest start --watch",
         "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
         "start:prod": "node dist/main",
-        "lint": "eslint \"{src}/**/*.ts\" --fix",
+        "lint": "eslint \"src/**/*.ts\" --fix",
         "generate-model": "graphql-codegen --config codegen.yml",
         "generate-migration": "npm run build && npx typeorm migration:generate -d ./dist/migrationDataSource.config.js ./src/database-migrations/migration",
         "init-database": "npm run build && npx typeorm migration:run -d ./dist/migrationDataSource.config.js"
