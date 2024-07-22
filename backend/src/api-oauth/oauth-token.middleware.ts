@@ -10,9 +10,7 @@ import { StateMiddleware } from "./StateMiddleware";
 export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClient }> {
     private readonly logger = new Logger(OauthTokenMiddleware.name);
 
-    constructor(
-        private readonly authClientService: AuthClientService,
-    ) {
+    constructor(private readonly authClientService: AuthClientService) {
         super();
     }
 

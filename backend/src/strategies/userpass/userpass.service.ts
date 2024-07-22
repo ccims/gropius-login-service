@@ -40,17 +40,19 @@ export class UserpassStrategyService extends StrategyUsingPassport {
     }
 
     override get updateActions(): StrategyUpdateAction[] {
-        return [{
-            name: "update-password",
-            displayName: "Update password",
-            variables: [
-                {
-                    name: "password",
-                    displayName: "Password",
-                    type: "password",
-                },
-            ],
-        }]
+        return [
+            {
+                name: "update-password",
+                displayName: "Update password",
+                variables: [
+                    {
+                        name: "password",
+                        displayName: "Password",
+                        type: "password",
+                    },
+                ],
+            },
+        ];
     }
 
     protected override checkAndExtendInstanceConfig(instanceConfig: object): object {

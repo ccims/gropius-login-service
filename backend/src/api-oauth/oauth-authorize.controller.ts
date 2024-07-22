@@ -58,5 +58,4 @@ export class OauthAuthorizeController {
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
-
 }

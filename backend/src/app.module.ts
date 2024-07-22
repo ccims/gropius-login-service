@@ -51,7 +51,7 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
         }),
         ServeStaticModule.forRoot({
             rootPath: path.join(__dirname, "..", "static"),
-            serveRoot: "/auth/flow"
+            serveRoot: "/auth/flow",
         }),
         ModelModule,
         AuthModule,
@@ -64,7 +64,7 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
             { path: "auth/api/login", module: StrategiesModule },
             { path: "auth/api/sync", module: ApiSyncModule },
             { path: "auth/api/internal", module: ApiInternalModule },
-            { path: "auth/oauth", module: ApiOauthModule}
+            { path: "auth/oauth", module: ApiOauthModule },
         ]),
         BackendServicesModule,
         InitializationModule,

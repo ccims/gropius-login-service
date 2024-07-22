@@ -23,7 +23,7 @@ import { LoginDataController } from "./login-data.controller";
         StrategiesController,
         StrategyInstancesController,
         AuthClientController,
-        LoginDataController
+        LoginDataController,
     ],
     providers: [CheckRegistrationTokenService],
     exports: [CheckRegistrationTokenService],

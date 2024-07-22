@@ -120,7 +120,10 @@ export class GithubTokenStrategyService extends Strategy {
         };
     }
 
-    private async getUserData(token: string, strategyInstance: StrategyInstance): Promise<{
+    private async getUserData(
+        token: string,
+        strategyInstance: StrategyInstance,
+    ): Promise<{
         github_id: string;
         username: string;
         displayName: string;
@@ -170,7 +173,7 @@ export class GithubTokenStrategyService extends Strategy {
 
         const userLoginData = await this.getUserData(token, strategyInstance);
         if (userLoginData == null) {
-            return { result: null, returnedState: {}, info: { message: "Token invalid" } }
+            return { result: null, returnedState: {}, info: { message: "Token invalid" } };
         }
 
         return {

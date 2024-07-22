@@ -29,7 +29,7 @@ export interface PerformAuthResult {
 
 /**
  * Base class for all strategies.
- * 
+ *
  * @param typeName The name of the strategy
  * @param strategyInstanceService The service to use for strategy instances
  * @param strategiesService The service to use for strategies
@@ -224,7 +224,7 @@ export abstract class Strategy {
 
     /**
      * Gets a description of the login data, e.g. a username or email.
-     * 
+     *
      * @param loginData The login data for which to get the description
      * @returns A description of the login data
      */
@@ -277,9 +277,9 @@ export abstract class Strategy {
 
     /**
      * Returns the instance config of the strategy instance, but with sensitive data censored.
-     * 
+     *
      * **WARNING**: The result of this function WILL be exposed to the user.
-     * 
+     *
      * @param instance The strategy instance for which to get the censored instance config
      * @returns The censored instance config
      */
@@ -290,7 +290,7 @@ export abstract class Strategy {
     /**
      * Handles an action that was triggered by the user.
      * Actions are defined via {@link updateActions}.
-     * 
+     *
      * @param loginData the login data of the user that triggered the action
      * @param name the name of the action
      * @param data the data for the action

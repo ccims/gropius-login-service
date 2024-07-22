@@ -1,8 +1,4 @@
-import {
-    Injectable,
-    Logger,
-    UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";

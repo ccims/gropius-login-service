@@ -1,15 +1,4 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpException,
-    HttpStatus,
-    Param,
-    Post,
-    Put,
-    UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, UseGuards } from "@nestjs/common";
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
@@ -42,9 +31,7 @@ import { NeedsAdmin } from "src/util/NeedsAdmin";
 @ApiBearerAuth()
 @ApiTags(OpenApiTag.LOGIN_API)
 export class AuthClientController {
-    constructor(
-        private readonly authClientService: AuthClientService,
-    ) { }
+    constructor(private readonly authClientService: AuthClientService) {}
 
     /**
      * Gets all auth clients that exist in the system.
@@ -62,7 +49,7 @@ export class AuthClientController {
     })
     @ApiOperation({ summary: "List all existing auth clients." })
     async listAllAuthClients(): Promise<AuthClient[]> {
-        return [...this.authClientService.defaultAuthClients, ...await this.authClientService.find()];
+        return [...this.authClientService.defaultAuthClients, ...(await this.authClientService.find())];
     }
 
     /**
@@ -142,7 +129,7 @@ export class AuthClientController {
         } else {
             newClient.isValid = true;
         }
-        newClient.clientSecrets = []
+        newClient.clientSecrets = [];
         if (input.requiresSecret !== undefined) {
             newClient.requiresSecret = input.requiresSecret;
         } else {
@@ -188,7 +175,10 @@ export class AuthClientController {
 
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
+            throw new HttpException(
+                "Auth client with given id not found or is default auth client",
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         if (input.name) {
@@ -241,7 +231,10 @@ export class AuthClientController {
     async deleteAuthClient(@Param("id") id: string): Promise<DefaultReturn> {
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
+            throw new HttpException(
+                "Auth client with given id not found or is default auth client",
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         await this.authClientService.remove(authClient);
@@ -310,7 +303,10 @@ export class AuthClientController {
     async createClientSecret(@Param("id") id: string): Promise<CreateAuthClientSecretResponse> {
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
+            throw new HttpException(
+                "Auth client with given id not found or is default auth client",
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         const result = await authClient.addSecret();
@@ -360,7 +356,10 @@ export class AuthClientController {
 
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
-            throw new HttpException("Auth client with given id not found or is default auth client", HttpStatus.NOT_FOUND);
+            throw new HttpException(
+                "Auth client with given id not found or is default auth client",
+                HttpStatus.NOT_FOUND,
+            );
         }
 
         const allSecrets = authClient.getFullHashesPlusCensoredAndFingerprint();

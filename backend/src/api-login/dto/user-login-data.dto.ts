@@ -19,7 +19,7 @@ export class UserLoginDataResponse {
      *
      * @example "VALID"
      */
-    state: LoginState
+    state: LoginState;
 
     /**
      * If not `null`, this authentication should be considered *invalid* on any date+time AFTER this.
@@ -28,17 +28,17 @@ export class UserLoginDataResponse {
      *
      * If `null`, the authentication should not expire by date.
      */
-    expires: Date | null
+    expires: Date | null;
 
     /**
      * The strategy instance this authentication uses.
      *
      * For example a UserLoginData containing a password would reference a strategy instance of type userpass
      */
-    strategyInstance: StrategyInstance
+    strategyInstance: StrategyInstance;
 
     /**
      * A description of the authentication
      */
-    description: string
+    description: string;
 }

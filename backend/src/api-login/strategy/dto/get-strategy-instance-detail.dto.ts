@@ -36,9 +36,8 @@ export class StrategyInstanceDetailResponse {
     doesImplicitRegister: boolean;
     /**
      * Instance config with sensitive data removed
-     * 
+     *
      * {@link StrategyInstance.instanceConfig}
      */
     instanceConfig: object;
 }
-

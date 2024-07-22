@@ -147,7 +147,7 @@ export class OAuthTokenController {
         }
         for (const requestedScope of scope) {
             if (!currentClient.validScopes.includes(requestedScope)) {
-                console.log(requestedScope, currentClient.validScopes)
+                console.log(requestedScope, currentClient.validScopes);
                 throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
             }
         }

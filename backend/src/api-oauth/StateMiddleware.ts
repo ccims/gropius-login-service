@@ -29,11 +29,17 @@ export abstract class StateMiddleware<S extends Record<string, any> = {}, T exte
     /**
      * Overwrite this to handle errors
      */
-    protected useWithError(req: Request, res: Response, state: S & { error?: any }, error: any, next: (error?: Error | any) => void) {
+    protected useWithError(
+        req: Request,
+        res: Response,
+        state: S & { error?: any },
+        error: any,
+        next: (error?: Error | any) => void,
+    ) {
         next();
     }
 
-    protected appendState(res: Response, appendedState: Partial<T> & { error?: any } | { error?: any }) {
+    protected appendState(res: Response, appendedState: (Partial<T> & { error?: any }) | { error?: any }) {
         Object.assign(res.locals.state, appendedState);
     }
 }

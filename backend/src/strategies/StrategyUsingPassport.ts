@@ -49,7 +49,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         res: any,
     ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
-            const passportStrategy = this.createPassportStrategyInstance(strategyInstance)
+            const passportStrategy = this.createPassportStrategyInstance(strategyInstance);
             const jwtService = this.stateJwtService;
             passport.authenticate(
                 passportStrategy,

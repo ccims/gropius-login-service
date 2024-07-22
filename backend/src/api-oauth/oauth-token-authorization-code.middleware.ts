@@ -72,7 +72,7 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<
             );
             throw new OAuthHttpException("invalid_grant", "Given code was liekely reused. Login and codes invalidated");
         }
-        console.log(tokenData)
+        console.log(tokenData);
         if (tokenData.codeChallenge != undefined) {
             if (codeVerifier == undefined) {
                 this.logger.warn("Code verifier missing");

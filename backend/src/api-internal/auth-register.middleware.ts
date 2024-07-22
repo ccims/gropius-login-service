@@ -41,7 +41,7 @@ export class AuthRegisterMiddleware extends StateMiddleware<
         }
         const newUser = await this.backendUserSerivce.createNewUser(input, false);
         await this.backendUserSerivce.linkAccountToUser(newUser, loginData, activeLogin);
-        this.appendState(res, { activeLogin, secondToken: true })
+        this.appendState(res, { activeLogin, secondToken: true });
         next();
     }
 }

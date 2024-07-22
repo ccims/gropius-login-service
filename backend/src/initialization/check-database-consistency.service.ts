@@ -62,9 +62,9 @@ export class CheckDatabaseConsistencyService {
 
         const nonExistentUser = (
             await Promise.all(
-                (
-                    await this.loginUserService.find({ select: ["neo4jId"] })
-                ).map(async (u) => ((await this.backendUserService.checkUserExists(u)) ? null : u)),
+                (await this.loginUserService.find({ select: ["neo4jId"] })).map(async (u) =>
+                    (await this.backendUserService.checkUserExists(u)) ? null : u,
+                ),
             )
         ).filter((u) => u !== null);
         if (nonExistentUser.length > 0) {
@@ -146,9 +146,9 @@ export class CheckDatabaseConsistencyService {
     private async checkUserLoginDataImsUser(fixBroken: boolean): Promise<string | undefined> {
         const nonExistentImsUser = (
             await Promise.all(
-                (
-                    await this.userLoginDataImsUserService.find({ select: ["neo4jId"] })
-                ).map(async (u) => ((await this.imsUserFindingService.checkImsUserExists(u)) ? null : u)),
+                (await this.userLoginDataImsUserService.find({ select: ["neo4jId"] })).map(async (u) =>
+                    (await this.imsUserFindingService.checkImsUserExists(u)) ? null : u,
+                ),
             )
         ).filter((u) => u !== null);
         if (nonExistentImsUser.length > 0) {
