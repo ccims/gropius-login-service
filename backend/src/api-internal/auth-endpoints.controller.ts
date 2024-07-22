@@ -12,6 +12,7 @@ import { SelfRegisterUserInput } from "src/api-login/dto/user-inputs.dto";
  * - Redirect/Callback endpoint
  */
 @Controller("auth")
+@ApiTags(OpenApiTag.INTERNAL_API)
 export class AuthEndpointsController {
     /**
      * Authorize endpoint for strategy instance of the given id.
@@ -29,7 +30,6 @@ export class AuthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    @ApiTags(OpenApiTag.INTERNAL_API)
     authorizeEndpoint(@Param("id") id: string, @Param("mode") mode?: AuthFunctionInput) {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
@@ -49,7 +49,6 @@ export class AuthEndpointsController {
         name: "id",
         description: "The id of the strategy instance which initiated the funcation calling the callback.",
     })
-    @ApiTags(OpenApiTag.INTERNAL_API)
     redirectEndpoint() {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
@@ -66,7 +65,6 @@ export class AuthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    @ApiTags(OpenApiTag.INTERNAL_API)
     submitEndpoint() {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
@@ -76,7 +74,6 @@ export class AuthEndpointsController {
 
     @Post("register")
     @ApiOperation({ summary: "Copmplete a registration" })
-    @ApiTags(OpenApiTag.INTERNAL_API)
     registerEndpoint(@Body() input: SelfRegisterUserInput) {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",

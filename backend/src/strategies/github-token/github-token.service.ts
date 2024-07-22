@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { PerformAuthResult, Strategy, StrategyVariable } from "../Strategy";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { PerformAuthResult, Strategy, StrategyUpdateAction, StrategyVariable } from "../Strategy";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { AuthStateServerData } from "../AuthResult";
@@ -7,10 +7,15 @@ import { Schema } from "jtd";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
+import { UserLoginDataService } from "src/model/services/user-login-data.service";
 
 @Injectable()
 export class GithubTokenStrategyService extends Strategy {
-    constructor(strategiesService: StrategiesService, strategyInstanceService: StrategyInstanceService) {
+    constructor(
+        strategiesService: StrategiesService,
+        strategyInstanceService: StrategyInstanceService,
+        private readonly loginDataService: UserLoginDataService,
+    ) {
         super("github-token", strategyInstanceService, strategiesService, false, true, false, false, false);
     }
 
@@ -31,6 +36,22 @@ export class GithubTokenStrategyService extends Strategy {
                 name: "token",
                 displayName: "Personal access token",
                 type: "password",
+            },
+        ];
+    }
+
+    override get updateActions(): StrategyUpdateAction[] {
+        return [
+            {
+                name: "update-token",
+                displayName: "Update personal access token",
+                variables: [
+                    {
+                        name: "token",
+                        displayName: "Personal access token",
+                        type: "password",
+                    },
+                ],
             },
         ];
     }
@@ -99,13 +120,12 @@ export class GithubTokenStrategyService extends Strategy {
         };
     }
 
-    override async performAuth(
-        strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
-        req: any,
-        res: any,
-    ): Promise<PerformAuthResult> {
-        const token = req.query["token"];
+    private async getUserData(token: string, strategyInstance: StrategyInstance): Promise<{
+        github_id: string;
+        username: string;
+        displayName: string;
+        email: string;
+    } | null> {
         const graphqlQuery = `
         {
             viewer {
@@ -126,18 +146,32 @@ export class GithubTokenStrategyService extends Strategy {
         });
 
         if (!response.ok) {
-            return { result: null, returnedState: {}, info: { message: "Token invalid" } };
+            return null;
         }
 
         const data = await response.json();
         const userData = data.data.viewer;
 
-        const userLoginData = {
+        return {
             github_id: userData.id,
             username: userData.login,
             displayName: userData.name,
             email: userData.email,
         };
+    }
+
+    override async performAuth(
+        strategyInstance: StrategyInstance,
+        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        req: any,
+        res: any,
+    ): Promise<PerformAuthResult> {
+        const token = req.query["token"];
+
+        const userLoginData = await this.getUserData(token, strategyInstance);
+        if (userLoginData == null) {
+            return { result: null, returnedState: {}, info: { message: "Token invalid" } }
+        }
 
         return {
             result: {
@@ -148,5 +182,22 @@ export class GithubTokenStrategyService extends Strategy {
             returnedState: {},
             info: {},
         };
+    }
+
+    override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
+        if (name === "update-token") {
+            const accessToken = data["token"];
+            const userLoginData = await this.getUserData(accessToken, await loginData.strategyInstance);
+            if (userLoginData == null) {
+                throw new HttpException("Token invalid", HttpStatus.BAD_REQUEST);
+            }
+            if (loginData.data["github_id"] !== userLoginData.github_id) {
+                throw new HttpException("Token does not match the user", HttpStatus.BAD_REQUEST);
+            }
+            loginData.data["accessToken"] = accessToken;
+            this.loginDataService.save(loginData);
+        } else {
+            throw new HttpException("Unknown action", HttpStatus.BAD_REQUEST);
+        }
     }
 }

@@ -1,5 +1,5 @@
 import { Controller, Logger, Post, Res } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
@@ -12,7 +12,7 @@ import { AuthStateServerData } from "src/strategies/AuthResult";
 import { ensureState } from "src/util/ensureState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
-export interface OauthTokenEndpointResponseDto {
+export class OauthTokenEndpointResponseDto {
     access_token: string;
     token_type: "bearer";
     expires_in: number;
@@ -133,6 +133,8 @@ export class OAuthTokenController {
     }
 
     @Post("token")
+    @ApiOperation({ summary: "Token OAuth Endpoint" })
+    @ApiOkResponse({ type: OauthTokenEndpointResponseDto })
     async token(@Res({ passthrough: true }) res: Response): Promise<OauthTokenEndpointResponseDto> {
         ensureState(res);
         const currentClient = res.locals.state.client as AuthClient;

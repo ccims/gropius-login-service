@@ -28,6 +28,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { DefaultReturn } from "src/default-return.dto";
 
 @Controller("update-action")
+@ApiTags(OpenApiTag.INTERNAL_API)
 @UseGuards(CheckAuthAccessTokenGuard)
 export class UpdateActionController {
     constructor(
@@ -47,7 +48,6 @@ export class UpdateActionController {
     @ApiNotFoundResponse({ description: "If no login data with the given id are found" })
     @ApiBadRequestResponse({ description: "If any of the input values are invalid" })
     @ApiBearerAuth()
-    @ApiTags(OpenApiTag.INTERNAL_API)
     async updateAction(
         @Body() input: object,
         @Param("id") id: string,

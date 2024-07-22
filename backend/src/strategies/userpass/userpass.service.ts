@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import { StrategyUpdateAction, StrategyVariable } from "../Strategy";
@@ -41,7 +41,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
 
     override get updateActions(): StrategyUpdateAction[] {
         return [{
-            name: "updatePassword",
+            name: "update-password",
             displayName: "Update password",
             variables: [
                 {
@@ -140,15 +140,15 @@ export class UserpassStrategyService extends StrategyUsingPassport {
     }
 
     override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
-        if (name === "updatePassword") {
+        if (name === "update-password") {
             if (!data.password || data.password.trim().length == 0) {
-                throw new Error("Password cannot be empty or blank!");
+                throw new HttpException("Password cannot be empty or blank!", HttpStatus.BAD_REQUEST);
             }
 
             loginData.data = await this.generateLoginDataData(loginData.data["username"], data.password);
             await this.loginDataService.save(loginData);
         } else {
-            throw new Error("Unknown action");
+            throw new HttpException("Unknown action", HttpStatus.BAD_REQUEST);
         }
     }
 }

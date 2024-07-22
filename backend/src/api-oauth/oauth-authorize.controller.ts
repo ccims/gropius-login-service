@@ -19,7 +19,7 @@ export class OauthAuthorizeController {
      *
      */
     @Get("authorize")
-    @ApiOperation({ summary: "Authorize endpoint" })
+    @ApiOperation({ summary: "Authorize OAuth endpoint" })
     @ApiQuery({ name: "client_id", type: String, description: "The id of the client to initiate" })
     @ApiQuery({
         name: "response_type",

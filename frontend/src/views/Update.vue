@@ -21,6 +21,15 @@
                         </div>
                     </v-window-item>
                     <v-window-item :value="1">
+                        <v-sheet
+                            color="error-container"
+                            v-if="errorMessage != undefined"
+                            rounded="lger"
+                            class="pa-3 my-2"
+                        >
+                            <v-icon icon="mdi-alert-circle-outline" size="x-large" />
+                            {{ errorMessage }}
+                        </v-sheet>
                         <div class="d-flex align-center">
                             <IconButton @click="goBack">
                                 <v-icon icon="mdi-arrow-left" />
@@ -61,10 +70,11 @@ const router = useRouter();
 
 const actionTab = ref(0);
 const showSuccessMessage = ref(false);
+const errorMessage = ref<string>();
 
 const id = computed(() => (route.query.id as string | undefined) ?? JSON.parse(route.query.state as string).id);
 
-const accessToken = ref<string>();
+const refreshToken = ref<string>();
 
 const strategy = ref<LoginStrategy>();
 
@@ -81,35 +91,53 @@ function chooseAction(action: LoginStrategyUpdateAction) {
 function goBack() {
     actionTab.value = 0;
     showSuccessMessage.value = false;
+    errorMessage.value = undefined;
 }
 
 async function submitForm() {
-    await axios.put(`/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`, formData.value, {
-        headers: {
-            Authorization: `Bearer ${accessToken.value}`
-        }
-    });
-    actionTab.value = 0;
-    showSuccessMessage.value = true;
+    const tokenResponse = (
+        await axios.post("/auth/oauth/token", {
+            grant_type: "refresh_token",
+            client_id: "login-auth-client",
+            refresh_token: refreshToken.value
+        })
+    ).data;
+    const accessToken = tokenResponse.access_token;
+    refreshToken.value = tokenResponse.refresh_token;
+
+    try {
+        await axios.put(`/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`, formData.value, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        });
+        actionTab.value = 0;
+        showSuccessMessage.value = true;
+        errorMessage.value = undefined;
+    } catch (e: any) {
+        errorMessage.value = e.response?.data?.message ?? "An error occurred";
+    }
 }
 
 onMounted(async () => {
     const code = route.query.code!.toString();
     const codeVerifier = localStorage.getItem("loginServiceCodeVerifier");
     router.replace({ query: { id: id.value } });
-    accessToken.value = (
+    const tokenResponse = (
         await axios.post("/auth/oauth/token", {
             grant_type: "authorization_code",
             client_id: "login-auth-client",
             code,
             code_verifier: codeVerifier
         })
-    ).data.access_token as string;
+    ).data;
+    const accessToken = tokenResponse.access_token;
+    refreshToken.value = tokenResponse.refresh_token;
 
     const strategyInstance = (
         await axios.get(`/auth/api/login/login-data/${id.value}`, {
             headers: {
-                Authorization: `Bearer ${accessToken.value}`
+                Authorization: `Bearer ${accessToken}`
             }
         })
     ).data.strategyInstance as LoginStrategyInstance;

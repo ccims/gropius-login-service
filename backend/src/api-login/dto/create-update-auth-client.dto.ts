@@ -68,7 +68,7 @@ export class CreateOrUpdateAuthClientInput {
             }
         }
         if (input.redirectUrls != undefined) {
-            if (!(input.redirectUrls instanceof Array) || input.redirectUrls.length == 0) {
+            if (!Array.isArray(input.redirectUrls) || input.redirectUrls.length == 0) {
                 throw new HttpException(
                     "If redirect URLs are given, they must be an array of valid url strings " +
                         "containing at least one entry",
@@ -93,7 +93,7 @@ export class CreateOrUpdateAuthClientInput {
             throw new HttpException("If requiresSecret is given, it must be a valid boolean", HttpStatus.BAD_REQUEST);
         }
         if (input.validScopes != undefined) {
-            if (!(input.validScopes instanceof Array)) {
+            if (!Array.isArray(input.validScopes)) {
                 throw new HttpException("validScopes must be an array of strings", HttpStatus.BAD_REQUEST);
             }
         }
