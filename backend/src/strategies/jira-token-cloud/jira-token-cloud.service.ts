@@ -10,22 +10,21 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 
 @Injectable()
-export class GithubTokenStrategyService extends Strategy {
+export class JiraTokenCloudStrategyService extends Strategy {
     constructor(
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
     ) {
-        super("github-token", strategyInstanceService, strategiesService, false, true, false, false, false);
+        super("jira-token-cloud", strategyInstanceService, strategiesService, false, true, false, false, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {
         return {
             imsTemplatedFieldsFilter: {
                 properties: {
-                    "graphql-url": { type: "string" },
+                    "root-url": { type: "string" },
                 },
-                nullable: true,
             },
         };
     }
@@ -33,8 +32,13 @@ export class GithubTokenStrategyService extends Strategy {
     override get acceptsVariables(): StrategyVariable[] {
         return [
             {
+                name: "email",
+                displayName: "Email",
+                type: "string",
+            },
+            {
                 name: "token",
-                displayName: "Personal access token",
+                displayName: "API token",
                 type: "password",
             },
         ];
@@ -44,12 +48,18 @@ export class GithubTokenStrategyService extends Strategy {
         return [
             {
                 name: "update-token",
-                displayName: "Update personal access token",
+                displayName: "Update API token",
                 variables: [
                     {
                         name: "token",
-                        displayName: "Personal access token",
+                        displayName: "API token",
                         type: "password",
+                    },
+                    {
+                        name: "email",
+                        displayName: "Email (if changed)",
+                        type: "string",
+                        nullable: true,
                     },
                 ],
             },
@@ -57,28 +67,25 @@ export class GithubTokenStrategyService extends Strategy {
     }
 
     /**
-     * Chechs the given config is valid for a github (or github enterprise)
+     * Chechs the given config is valid for a jira
      *
      * Needed parameters
      * - imsTemplatedFieldsFilter containing:
-     *     - graphql-url: The URL of the github graphql endpoint.
-     *         If imsTemplatedFieldsFilter not given, defaults to "https://api.github.com/graphql"
+     *     - root-url: The URL of the jira root endpoint, must be provided.
      *
-     * @param instanceConfig The instance config for a github-token strategy instance to check
-     * @returns The extended config (with default parameters for the global github) if check successful
+     * @param instanceConfig The instance config for a jira-token-cloud strategy instance to check
+     * @returns The extended config if check successful
      */
     protected override checkAndExtendInstanceConfig(instanceConfig: object): object {
         const resultingConfig = instanceConfig;
 
         if (resultingConfig["imsTemplatedFieldsFilter"]) {
-            const githubUrl = resultingConfig["imsTemplatedFieldsFilter"]["graphql-url"];
-            if (!githubUrl) {
-                throw new Error("At least GitHub URL must be given in imsTemplatedFieldsFilter");
+            const rootUrl = resultingConfig["imsTemplatedFieldsFilter"]["root-url"];
+            if (!rootUrl) {
+                throw new Error("At least Jira URL must be given in imsTemplatedFieldsFilter");
             }
         } else {
-            resultingConfig["imsTemplatedFieldsFilter"] = {
-                "graphql-url": "https://api.github.com/graphql",
-            };
+            throw new Error("At least imsTemplatedFieldsFilter must be given");
         }
 
         return super.checkAndExtendInstanceConfig(instanceConfig);
@@ -87,12 +94,12 @@ export class GithubTokenStrategyService extends Strategy {
     override async getSyncDataForLoginData(
         loginData: UserLoginData,
     ): Promise<{ token: string | null; [key: string]: any }> {
-        return { token: loginData.data["accessToken"] ?? null };
+        return { token: loginData.data["apiToken"] ?? null, type: "PAT" };
     }
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
-            github_id: loginData.data["github_id"],
+            jira_id: loginData.data["jira_id"],
             username: loginData.data["username"],
             displayName: loginData.data["displayName"],
             email: loginData.data["email"],
@@ -101,12 +108,12 @@ export class GithubTokenStrategyService extends Strategy {
 
     override getLoginDataDataForImsUserTemplatedFields(imsUser: object): object | Promise<object> {
         return {
-            github_id: imsUser["github_id"],
+            jira_id: imsUser["jira_id"],
         };
     }
 
     override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
-        return loginData.data?.username;
+        return loginData.data?.email;
     }
 
     override getCensoredInstanceConfig(instance: StrategyInstance): object {
@@ -117,44 +124,36 @@ export class GithubTokenStrategyService extends Strategy {
 
     private async getUserData(
         token: string,
+        email: string,
         strategyInstance: StrategyInstance,
     ): Promise<{
-        github_id: string;
+        jira_id: string;
         username: string;
         displayName: string;
         email: string;
     } | null> {
-        const graphqlQuery = `
-        {
-            viewer {
-                id
-                login
-                name
-                email
-            }
-        }
-        `;
-        const response = await fetch(strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["graphql-url"], {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
+        const response = await fetch(
+            new URL("/rest/api/2/myself", strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["root-url"]),
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Basic ${btoa(`${email}:${token}`)}`,
+                    Accept: "application/json",
+                },
             },
-            body: JSON.stringify({ query: graphqlQuery }),
-        });
+        );
 
         if (!response.ok) {
             return null;
         }
 
-        const data = await response.json();
-        const userData = data.data.viewer;
+        const userData = await response.json();
 
         return {
-            github_id: userData.id,
-            username: userData.login,
-            displayName: userData.name,
-            email: userData.email,
+            jira_id: userData.accountId,
+            username: "",
+            displayName: userData.displayName,
+            email,
         };
     }
 
@@ -165,8 +164,9 @@ export class GithubTokenStrategyService extends Strategy {
         res: any,
     ): Promise<PerformAuthResult> {
         const token = req.query["token"];
+        const email = req.query["email"];
 
-        const userLoginData = await this.getUserData(token, strategyInstance);
+        const userLoginData = await this.getUserData(token, email, strategyInstance);
         if (userLoginData == null) {
             return { result: null, returnedState: {}, info: { message: "Token invalid" } };
         }
@@ -184,15 +184,17 @@ export class GithubTokenStrategyService extends Strategy {
 
     override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
         if (name === "update-token") {
-            const accessToken = data["token"];
-            const userLoginData = await this.getUserData(accessToken, await loginData.strategyInstance);
+            const apiToken = data["token"];
+            const email = data["email"] || loginData.data["email"];
+            const userLoginData = await this.getUserData(apiToken, email, await loginData.strategyInstance);
             if (userLoginData == null) {
                 throw new HttpException("Token invalid", HttpStatus.BAD_REQUEST);
             }
-            if (loginData.data["github_id"] !== userLoginData.github_id) {
+            if (loginData.data["jira_id"] !== userLoginData.jira_id) {
                 throw new HttpException("Token does not match the user", HttpStatus.BAD_REQUEST);
             }
-            loginData.data["accessToken"] = accessToken;
+            loginData.data["apiToken"] = apiToken;
+            loginData.data["email"] = email;
             this.loginDataService.save(loginData);
         } else {
             throw new HttpException("Unknown action", HttpStatus.BAD_REQUEST);

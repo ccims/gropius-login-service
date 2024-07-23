@@ -168,7 +168,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                     } else {
                         this.loggerJira.log("Refreshed token valid");
                         firstLogin = await this.activeLoginService.save(firstLogin);
-                        return { token: firstLogin?.data["accessToken"] ?? null, cloudIds: cloudIds };
+                        return { token: firstLogin?.data["accessToken"] ?? null, cloudIds: cloudIds, type: "OAUTH" };
                     }
                 } else {
                     this.loggerJira.log("Non valid cloud IDs, and no refresh token token");
@@ -269,6 +269,10 @@ export class JiraStrategyService extends StrategyUsingPassport {
             }
         }
         return new passportJira(config, this.passportUserCallback.bind(this, strategyInstance));
+    }
+
+    override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return loginData.data?.email;
     }
 
     override getCensoredInstanceConfig(instance: StrategyInstance): object {
