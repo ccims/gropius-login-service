@@ -3,11 +3,11 @@ import { Request, Response } from "express";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { AuthStateServerData } from "src/strategies/AuthResult";
-import { SelfRegisterUserInput } from "src/api-login/auth/dto/user-inputs.dto";
 import { CheckRegistrationTokenService } from "src/api-login/auth/check-registration-token.service";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
+import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
 
 @Injectable()
 export class AuthRegisterMiddleware extends StateMiddleware<

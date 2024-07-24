@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
-import { SelfRegisterUserInput } from "src/api-login/auth/dto/user-inputs.dto";
+import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handeled exclusively in middleware.
@@ -30,7 +30,7 @@ export class AuthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    authorizeEndpoint(@Param("id") id: string, @Param("mode") mode?: AuthFunctionInput) {
+    loginStrategyRedirect(@Param("id") id: string, @Param("mode") mode?: AuthFunctionInput) {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -49,7 +49,7 @@ export class AuthEndpointsController {
         name: "id",
         description: "The id of the strategy instance which initiated the funcation calling the callback.",
     })
-    redirectEndpoint() {
+    loginStrategyCallback() {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -65,7 +65,7 @@ export class AuthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    submitEndpoint() {
+    loginStrategySubmit() {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -74,7 +74,7 @@ export class AuthEndpointsController {
 
     @Post("register")
     @ApiOperation({ summary: "Copmplete a registration" })
-    registerEndpoint(@Body() input: SelfRegisterUserInput) {
+    register(@Body() input: SelfRegisterUserInput) {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handeled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
