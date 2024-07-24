@@ -11,7 +11,7 @@ import {
     Put,
     UseGuards,
 } from "@nestjs/common";
-import { CheckLoginServiceAccessTokenGuard } from "src/api-login/check-login-service-access-token.guard";
+import { CheckLoginServiceAccessTokenGuard } from "src/api-login/auth/check-login-service-access-token.guard";
 import { DefaultReturn } from "src/default-return.dto";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";

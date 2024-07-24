@@ -6,13 +6,13 @@ import { TokenScope } from "src/backend-services/token.service";
  * Input to `POST /login/client` and PUT /login/client/:id`
  * Contains data to create or modify a auth client
  */
-export class CreateOrUpdateAuthClientInput {
+export class UpdateAuthClientInput {
     /**
      * The name to set for the auth client.
      *
-     * If given, must be non empty and match /^[a-zA-Z0-9+/\-_= ]+$/g
+     * If given, must be non empty
      */
-    name?: string | null;
+    name?: string;
 
     /**
      * A list of url strings containing at least one url.
@@ -48,6 +48,11 @@ export class CreateOrUpdateAuthClientInput {
     validScopes?: TokenScope[];
 
     /**
+     * The user to use as subject for the client credential flow.
+     */
+    clientCredentialFlowUser?: string;
+
+    /**
      * Checks a given `CreateOrUpdateAuthClientInput` for validity.
      *
      * Valid, if:
@@ -55,23 +60,19 @@ export class CreateOrUpdateAuthClientInput {
      * - `redirectUrls` is not given or an array of at least one url
      * - `isValid` is not given or a boolean
      * - `requiresSecret` is not given or a boolean
+     * - `validScopes` is not given or an array of strings containing only `TokenScope.BACKEND` and `TokenScope.LOGIN_SERVICE`
+     * - `clientCredentialFlowUser` is not given or a string (does not check that the user exists)
      * @param input The input instance to check
      * @returns The given instance unchanged
      */
-    static check(input: CreateOrUpdateAuthClientInput): CreateOrUpdateAuthClientInput {
-        if (input.name != undefined) {
-            if (typeof input.name != "string" || input.name.trim().length == 0) {
-                throw new HttpException("If given, name must be a non empty string", HttpStatus.BAD_REQUEST);
-            }
-            if (input.name.match(/[^a-zA-Z0-9+/\-_= ]/g)) {
-                throw new HttpException("If given, name must match /^[a-zA-Z0-9+/\\-_= ]+$/g", HttpStatus.BAD_REQUEST);
-            }
+    static check(input: UpdateAuthClientInput): UpdateAuthClientInput {
+        if (typeof input.name != "string" || input.name.trim().length == 0) {
+            throw new HttpException("If given, name must be a non empty string", HttpStatus.BAD_REQUEST);
         }
         if (input.redirectUrls != undefined) {
-            if (!Array.isArray(input.redirectUrls) || input.redirectUrls.length == 0) {
+            if (!Array.isArray(input.redirectUrls)) {
                 throw new HttpException(
-                    "If redirect URLs are given, they must be an array of valid url strings " +
-                        "containing at least one entry",
+                    "If redirect URLs are given, they must be an array of valid url strings",
                     HttpStatus.BAD_REQUEST,
                 );
             }
@@ -98,11 +99,16 @@ export class CreateOrUpdateAuthClientInput {
             }
         }
         for (const scope of input.validScopes) {
-            if (scope !== TokenScope.BACKEND && scope !== TokenScope.LOGIN_SERVICE) {
+            if (scope !== TokenScope.BACKEND) {
                 throw new HttpException(
-                    `Only ${TokenScope.BACKEND} and ${TokenScope.LOGIN_SERVICE} are valid scopes`,
+                    `Only ${TokenScope.BACKEND} is a valid scopes`,
                     HttpStatus.BAD_REQUEST,
                 );
+            }
+        }
+        if (input.clientCredentialFlowUser != undefined) {
+            if (typeof input.clientCredentialFlowUser !== "string") {
+                throw new HttpException("clientCredentialFlowUser must be a string", HttpStatus.BAD_REQUEST);
             }
         }
         return input;

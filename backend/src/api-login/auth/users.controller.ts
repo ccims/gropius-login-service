@@ -29,7 +29,7 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { ApiStateData } from "../util/ApiStateData";
+import { ApiStateData } from "../../util/ApiStateData";
 import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
 import { UserLoginDataResponse } from "./dto/user-login-data.dto";
 import { StrategiesService } from "src/model/services/strategies.service";

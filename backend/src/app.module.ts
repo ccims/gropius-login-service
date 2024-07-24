@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { RouterModule } from "@nestjs/core";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { AuthModule } from "./api-login/api-login.module";
+import { ApiLoginModule } from "./api-login/api-login.module";
 import { ApiSyncModule } from "./api-sync/api-sync.module";
 import { ModelModule } from "./model/model.module";
 import { StrategiesModule } from "./strategies/strategies.module";
@@ -53,14 +53,13 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
             serveRoot: "/auth/flow",
         }),
         ModelModule,
-        AuthModule,
+        ApiLoginModule,
         ApiSyncModule,
         StrategiesModule,
         ApiInternalModule,
         ApiOauthModule,
         RouterModule.register([
-            { path: "auth/api/login", module: AuthModule },
-            { path: "auth/api/login", module: StrategiesModule },
+            { path: "auth/api/login", module: ApiLoginModule },
             { path: "auth/api/sync", module: ApiSyncModule },
             { path: "auth/api/internal", module: ApiInternalModule },
             { path: "auth/oauth", module: ApiOauthModule },

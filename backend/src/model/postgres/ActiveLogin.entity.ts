@@ -16,7 +16,7 @@ export class ActiveLogin {
     static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED = -1;
 
     constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
-        this.usedStrategyInstnce = Promise.resolve(usedStrategyInstance);
+        this.usedStrategyInstance = Promise.resolve(usedStrategyInstance);
         this.created = new Date();
         this.expires = expires || null;
         this.isValid = true;
@@ -102,7 +102,7 @@ export class ActiveLogin {
      */
     @ManyToOne(() => StrategyInstance)
     @ApiHideProperty()
-    usedStrategyInstnce: Promise<StrategyInstance>;
+    usedStrategyInstance: Promise<StrategyInstance>;
 
     /**
      * The `loginData` that represents the authentication of a user using one strategy.

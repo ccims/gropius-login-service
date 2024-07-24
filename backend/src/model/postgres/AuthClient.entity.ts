@@ -1,9 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import { promisify } from "util";
 import { ApiHideProperty } from "@nestjs/swagger";
 import { TokenScope } from "src/backend-services/token.service";
+import { LoginUser } from "./LoginUser.entity";
 
 /**
  * The minimum length of the client secret in bytes.
@@ -36,10 +37,10 @@ export class AuthClient {
     /**
      * The (human readable) name of the auth client to be able to keep track ofit.
      *
-     * Doesn't need to be unique, can be null
+     * Doesn't need to be unique
      */
-    @Column({ nullable: true })
-    name: string | null;
+    @Column()
+    name: string;
 
     /**
      * The list of valid enpoints to redirect the user back to after authentication has finished.
@@ -85,6 +86,19 @@ export class AuthClient {
      */
     @Column("json")
     validScopes: TokenScope[];
+
+    /**
+     * The user to use as subject for the client credential flow.
+     */
+    @ManyToOne(() => LoginUser, { nullable: true })
+    @ApiHideProperty()
+    clientCredentialFlowUser: Promise<LoginUser | null>;
+
+    /**
+     * If this client is editable.
+     * If not, the client can not be changed or deleted.
+     */
+    isInternal: boolean = false;
 
     /**
      * Calculated the sha256 hash of the input.
@@ -173,9 +187,11 @@ export class AuthClient {
     toJSON() {
         return {
             id: this.id,
+            name: this.name,
             redirectUrls: this.redirectUrls,
             isValid: this.isValid,
             requiresSecret: this.requiresSecret,
+            isInternal: this.isInternal,
         };
     }
 }

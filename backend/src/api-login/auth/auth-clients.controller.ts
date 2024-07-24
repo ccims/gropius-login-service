@@ -15,9 +15,11 @@ import { AuthClientService } from "src/model/services/auth-client.service";
 import { OpenApiTag } from "src/openapi-tag";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 import { CreateAuthClientSecretResponse } from "./dto/create-auth-client-secret.dto";
-import { CreateOrUpdateAuthClientInput } from "./dto/create-update-auth-client.dto";
+import { UpdateAuthClientInput } from "./dto/update-auth-client.dto";
 import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-client.dto";
 import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { LoginUserService } from "src/model/services/login-user.service";
+import { CreateAuthClientInput } from "./dto/create-auth-client.dto";
 
 /**
  * Controller for all queries related to auth clients and their client secrets
@@ -31,7 +33,10 @@ import { NeedsAdmin } from "src/util/NeedsAdmin";
 @ApiBearerAuth()
 @ApiTags(OpenApiTag.LOGIN_API)
 export class AuthClientController {
-    constructor(private readonly authClientService: AuthClientService) {}
+    constructor(
+        private readonly authClientService: AuthClientService,
+        private readonly loginUserService: LoginUserService,
+    ) {}
 
     /**
      * Gets all auth clients that exist in the system.
@@ -84,6 +89,7 @@ export class AuthClientController {
         return {
             ...authClient.toJSON(),
             censoredClientSecrets: authClient.getSecretsShortedAndFingerprint(),
+            clientCredentialFlowUser: (await authClient.clientCredentialFlowUser)?.neo4jId,
         };
     }
 
@@ -110,8 +116,8 @@ export class AuthClientController {
     @ApiBadRequestResponse({
         description: "If the input data didn't match the schema",
     })
-    async createNewAuthClient(@Body() input: CreateOrUpdateAuthClientInput): Promise<AuthClient> {
-        CreateOrUpdateAuthClientInput.check(input);
+    async createNewAuthClient(@Body() input: CreateAuthClientInput): Promise<AuthClient> {
+        CreateAuthClientInput.check(input);
         const newClient = new AuthClient();
         if (input.name) {
             newClient.name = input.name;
@@ -140,6 +146,15 @@ export class AuthClientController {
             for (const scope of input.validScopes) {
                 newClient.validScopes.push(scope);
             }
+        }
+        if (input.clientCredentialFlowUser != undefined) {
+            const user = await this.loginUserService.findOneBy({ neo4jId: input.clientCredentialFlowUser });
+            if (!user) {
+                throw new HttpException("User with given id not found", HttpStatus.NOT_FOUND);
+            }
+            newClient.clientCredentialFlowUser = Promise.resolve(user);
+        } else {
+            newClient.clientCredentialFlowUser = Promise.resolve(null);
         }
 
         return this.authClientService.save(newClient);
@@ -170,8 +185,8 @@ export class AuthClientController {
     @ApiNotFoundResponse({
         description: "If no id was given or no auth client with the given id was found",
     })
-    async editAuthClient(@Param("id") id: string, @Body() input: CreateOrUpdateAuthClientInput): Promise<AuthClient> {
-        CreateOrUpdateAuthClientInput.check(input);
+    async editAuthClient(@Param("id") id: string, @Body() input: UpdateAuthClientInput): Promise<AuthClient> {
+        UpdateAuthClientInput.check(input);
 
         const authClient = await this.authClientService.findOneBy({ id });
         if (!authClient) {
@@ -200,6 +215,17 @@ export class AuthClientController {
             authClient.validScopes = [];
             for (const scope of input.validScopes) {
                 authClient.validScopes.push(scope);
+            }
+        }
+        if (input.clientCredentialFlowUser !== undefined) {
+            if (input.clientCredentialFlowUser !== null) {
+                const user = await this.loginUserService.findOneBy({ neo4jId: input.clientCredentialFlowUser });
+                if (!user) {
+                    throw new HttpException("User with given id not found", HttpStatus.NOT_FOUND);
+                }
+                authClient.clientCredentialFlowUser = Promise.resolve(user);
+            } else {
+                authClient.clientCredentialFlowUser = Promise.resolve(null);
             }
         }
 

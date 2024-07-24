@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
-import { SelfRegisterUserInput } from "src/api-login/dto/user-inputs.dto";
+import { SelfRegisterUserInput } from "src/api-login/auth/dto/user-inputs.dto";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handeled exclusively in middleware.

@@ -33,12 +33,10 @@ export class StrategyInstance {
      * Can be displayes in a UI etc.
      * but is not necesarrily unique.
      *
-     * Can only contain [A-Za-z0-9_\-/+= ]*
-     *
      * @example "Github-Enterprise-Example"
      */
-    @Column({ nullable: true })
-    name: string | null;
+    @Column()
+    name: string;
 
     /**
      * The configuration of the instance needed to perform authentication with it.

@@ -43,6 +43,11 @@ export class GetAuthClientResponse {
      * and a censored version (5 char prefix) of the original secret text for easier idenfication by users
      */
     censoredClientSecrets: CensoredClientSecret[];
+
+    /**
+     * The Gropius UUID of the user to use as subject for the client credential flow.
+     */
+    clientCredentialFlowUser?: string;
 }
 
 /**

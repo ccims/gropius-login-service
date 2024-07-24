@@ -22,6 +22,8 @@ export class AuthClientService extends Repository<AuthClient> {
             TokenScope.LOGIN_SERVICE,
             TokenScope.LOGIN_SERVICE_REGISTER,
         ];
+        gropiusAuthClient.isInternal = true;
+        gropiusAuthClient.requiresSecret = false;
 
         const loginAuthClient = new AuthClient();
         loginAuthClient.name = "Login auth client";
@@ -29,6 +31,8 @@ export class AuthClientService extends Repository<AuthClient> {
         loginAuthClient.id = "login-auth-client";
         loginAuthClient.isValid = true;
         loginAuthClient.validScopes = [TokenScope.LOGIN_SERVICE_REGISTER, TokenScope.AUTH, TokenScope.LOGIN_SERVICE];
+        loginAuthClient.isInternal = true;
+        loginAuthClient.requiresSecret = false;
 
         return [gropiusAuthClient, loginAuthClient];
     }

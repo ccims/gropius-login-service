@@ -12,12 +12,12 @@ import { OAuthErrorRedirectMiddleware } from "src/api-oauth/oauth-error-redirect
 import { AuthAuthorizeExtractMiddleware } from "./auth-authorize-extract.middleware";
 import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/oauth-authorize-validate.middleware";
 import { AuthRegisterMiddleware } from "./auth-register.middleware";
-import { AuthModule } from "src/api-login/api-login.module";
+import { ApiLoginModule } from "src/api-login/api-login.module";
 import { AuthErrorRedirectMiddleware } from "./auth-error-redirect.middleware";
 import { UpdateActionController } from "./update-action.controller";
 
 @Module({
-    imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, AuthModule],
+    imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
     providers: [
         AuthAuthorizeExtractMiddleware,
         AuthRedirectMiddleware,

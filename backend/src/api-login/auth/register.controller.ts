@@ -11,7 +11,7 @@ import { Response } from "express";
 import { DefaultReturn } from "src/default-return.dto";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { OpenApiTag } from "src/openapi-tag";
-import { ApiStateData } from "../util/ApiStateData";
+import { ApiStateData } from "../../util/ApiStateData";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 import { CheckRegistrationTokenService } from "./check-registration-token.service";
 import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto";
