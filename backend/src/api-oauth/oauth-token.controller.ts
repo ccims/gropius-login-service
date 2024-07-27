@@ -11,14 +11,7 @@ import { OpenApiTag } from "src/openapi-tag";
 import { AuthStateServerData } from "src/strategies/AuthResult";
 import { ensureState } from "src/util/ensureState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
-
-export class OauthTokenEndpointResponseDto {
-    access_token: string;
-    token_type: "bearer";
-    expires_in: number;
-    refresh_token: string;
-    scope: string;
-}
+import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
 
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)
@@ -97,7 +90,7 @@ export class OAuthTokenController {
         activeLogin: ActiveLogin,
         currentClient: AuthClient,
         scope: TokenScope[],
-    ): Promise<OauthTokenEndpointResponseDto> {
+    ): Promise<OAuthTokenResponseDto> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
         let accessToken: string;
@@ -134,8 +127,8 @@ export class OAuthTokenController {
 
     @Post("token")
     @ApiOperation({ summary: "Token OAuth Endpoint" })
-    @ApiOkResponse({ type: OauthTokenEndpointResponseDto })
-    async token(@Res({ passthrough: true }) res: Response): Promise<OauthTokenEndpointResponseDto> {
+    @ApiOkResponse({ type: OAuthTokenResponseDto })
+    async token(@Res({ passthrough: true }) res: Response): Promise<OAuthTokenResponseDto> {
         ensureState(res);
         const currentClient = res.locals.state.client as AuthClient;
         const scope = res.locals.state.scope as TokenScope[];
