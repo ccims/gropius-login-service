@@ -29,6 +29,8 @@ export const validationSchema = Joi.object({
     GROPIUS_BCRYPT_HASH_ROUNDS: Joi.number().min(8).default(10),
     GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
 
+    GROPIUS_DEFAULT_ENTITIES_ENABLED: Joi.bool().default(true),
+
     GROPIUS_DEFAULT_STRATEGY_INSTANCE_TYPE: Joi.string().optional(),
     GROPIUS_DEFAULT_STRATEGY_INSTANCE_CONFIG: Joi.string().optional(),
     GROPIUS_DEFAULT_STRATEGY_INSTANCE_NAME: Joi.string().optional(),

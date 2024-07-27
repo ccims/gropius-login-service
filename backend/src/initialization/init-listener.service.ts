@@ -12,6 +12,9 @@ export class InitListenerService implements OnModuleInit {
     ) {}
 
     async onModuleInit() {
+        if (process.env.GROPIUS_DEFAULT_ENTITIES_ENABLED == "false") {
+            return;
+        }
         await this.dbConsistencyService.runDatabaseCheck();
         await this.createInstanceService.createDefaultStrtegyInstance();
         await this.createUserService.createDefaultUser();
