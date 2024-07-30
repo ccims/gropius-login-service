@@ -61,6 +61,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         if (!state.activeLogin.isValid) {
             throw new Error("Active login invalid");
         }
+        // if the login service handles the registration, two tokens were already generated: the code and the access token
         if (
             state.activeLogin.nextExpectedRefreshTokenNumber !=
             ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED + (state.secondToken ? 2 : 0)
