@@ -42,7 +42,11 @@ export class AuthClientService extends Repository<AuthClient> {
         if (defaultClient) {
             return defaultClient;
         } else {
-            return this.findOneBy({ id });
+            try {
+                return await this.findOneBy({ id });
+            } catch {
+                return undefined;
+            }
         }
     }
 }

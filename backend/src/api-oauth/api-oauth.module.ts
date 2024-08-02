@@ -12,6 +12,7 @@ import { OAuthErrorRedirectMiddleware } from "./oauth-error-redirect.middleware"
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { StrategiesModule } from "src/strategies/strategies.module";
 import { EncryptionService } from "./encryption.service";
+import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
@@ -21,6 +22,7 @@ import { EncryptionService } from "./encryption.service";
         OAuthAuthorizeRedirectMiddleware,
         OAuthTokenMiddleware,
         OAuthTokenAuthorizationCodeMiddleware,
+        OAuthTokenClientCredentialsMiddleware,
         ErrorHandlerMiddleware,
         OAuthErrorRedirectMiddleware,
         EncryptionService,
@@ -36,7 +38,6 @@ export class ApiOauthModule {
         private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
         private readonly oauthAuthorizeRedirect: OAuthAuthorizeRedirectMiddleware,
         private readonly oauthToken: OAuthTokenMiddleware,
-        private readonly oauthTokenAuthorizationCode: OAuthTokenAuthorizationCodeMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
     ) {
@@ -52,7 +53,7 @@ export class ApiOauthModule {
         });
 
         this.middlewares.push({
-            middlewares: [this.oauthToken, this.oauthTokenAuthorizationCode, this.errorHandler],
+            middlewares: [this.oauthToken, this.errorHandler],
             path: "auth/oauth/token",
         });
     }

@@ -58,7 +58,6 @@ export class RegisterController {
         @Res({ passthrough: true }) res: Response,
     ): Promise<DefaultReturn> {
         RegistrationTokenInput.check(input);
-        //todo: potentially move to POST user/:id/loginData
         if (!(res.locals.state as ApiStateData).loggedInUser) {
             throw new HttpException("Not logged in", HttpStatus.UNAUTHORIZED);
         }
@@ -105,8 +104,6 @@ export class RegisterController {
         @Body() input: AdminLinkUserInput,
         @Res({ passthrough: true }) res: Response,
     ): Promise<DefaultReturn> {
-        // requires: admin and specification of user id to link with
-        //todo: potentially move to POST user/:id/loginData
         AdminLinkUserInput.check(input);
         const linkToUser = await this.userService.findOneBy({
             id: input.userIdToLink,

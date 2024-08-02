@@ -1,16 +1,22 @@
-import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import * as bcrypt from "bcrypt";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { StateMiddleware } from "./StateMiddleware";
+import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
+import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
 
 @Injectable()
 export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClient }> {
     private readonly logger = new Logger(OauthTokenMiddleware.name);
 
-    constructor(private readonly authClientService: AuthClientService) {
+    constructor(
+        private readonly authClientService: AuthClientService,
+        private readonly oauthTokenAuthorizationCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
+        private readonly oauthTokenClientCredentialsMiddleware: OAuthTokenClientCredentialsMiddleware,
+    ) {
         super();
     }
 
@@ -41,6 +47,9 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
      *  or `null` if credentials invalid or none given
      */
     private async getCallingClient(req: Request): Promise<AuthClient | null> {
+        let clientId: string;
+        let clientSecret: string | undefined;
+
         const auth_head = req.headers["authorization"];
         if (auth_head && auth_head.startsWith("Basic ")) {
             const clientIdSecret = Buffer.from(auth_head.substring(6), "base64")
@@ -49,24 +58,21 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
                 ?.map((text) => decodeURIComponent(text));
 
             if (clientIdSecret && clientIdSecret.length == 2) {
-                const client = await this.authClientService.findAuthClient(clientIdSecret[0]);
-                if (client && client.isValid) {
-                    if (this.checkGivenClientSecretValidOrNotRequired(client, clientIdSecret[1])) {
-                        return client;
-                    }
-                }
-                return null;
+                clientId = clientIdSecret[0];
+                clientSecret = clientIdSecret[1];
             }
         }
 
         if (req.body.client_id) {
-            const client = await this.authClientService.findAuthClient(req.body.client_id);
-            if (client && client.isValid) {
-                if (this.checkGivenClientSecretValidOrNotRequired(client, req.body.client_secret)) {
-                    return client;
-                }
+            clientId = req.body.client_id;
+            clientSecret = req.body.client_secret;
+        }
+
+        const client = await this.authClientService.findAuthClient(clientId);
+        if (client && client.isValid) {
+            if (await this.checkGivenClientSecretValidOrNotRequired(client, clientSecret)) {
+                return client;
             }
-            return null;
         }
 
         return null;
@@ -87,21 +93,14 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
         this.appendState(res, { client });
 
         switch (grant_type) {
-            case "refresh_token": //Request for new token using refresh token
-            //Fallthrough as resfresh token works the same as the initial code (both used to obtain new access token)
-            case "authorization_code": //Request for token based on obtained code
-                next();
-                break;
-            case "password": // Deprecated => not supported
-            case "client_credentials": //Request for token for stuff on client => not supported
+            case "refresh_token":
+                return this.oauthTokenAuthorizationCodeMiddleware.use(req, res, next);
+            case "authorization_code":
+                return this.oauthTokenAuthorizationCodeMiddleware.use(req, res, next);
+            case "client_credentials":
+                return this.oauthTokenClientCredentialsMiddleware.use(req, res, next);
             default:
-                throw new HttpException(
-                    {
-                        error: "unsupported_grant_type",
-                        error_description: "No grant_type given or unsupported type",
-                    },
-                    HttpStatus.BAD_REQUEST,
-                );
+                throw new OAuthHttpException("unsupported_grant_type", "No grant_type given or unsupported type");
         }
     }
 }

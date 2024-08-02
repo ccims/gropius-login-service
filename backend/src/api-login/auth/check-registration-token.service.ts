@@ -4,7 +4,6 @@ import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
 
 /**
  * Service to validate a registration token and retrieve the referenced nodes
@@ -14,7 +13,6 @@ export class CheckRegistrationTokenService {
     private readonly logger = new Logger(CheckRegistrationTokenService.name);
     constructor(
         private readonly tokenService: TokenService,
-        private readonly loginDataService: UserLoginDataService,
         private readonly activeLoginService: ActiveLoginService,
     ) {}
 
