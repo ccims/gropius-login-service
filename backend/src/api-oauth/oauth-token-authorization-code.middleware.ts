@@ -193,6 +193,10 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
                 this.logger.warn("Code verifier missing");
                 throw new OAuthHttpException("invalid_request", "Code verifier missing");
             }
+            if (typeof codeVerifier !== "string") {
+                this.logger.warn("Code verifier is not a string");
+                throw new OAuthHttpException("invalid_request", "Code verifier has invalid format");
+            }
             const decryptedCodeChallenge = this.encryptionService.decrypt(tokenData.codeChallenge);
             const codeChallenge = this.tokenService.calculateCodeChallenge(codeVerifier);
             if (decryptedCodeChallenge !== codeChallenge) {
