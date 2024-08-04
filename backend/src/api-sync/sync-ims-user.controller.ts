@@ -1,27 +1,14 @@
-import {
-    All,
-    Body,
-    Controller,
-    Get,
-    HttpException,
-    HttpStatus,
-    Logger,
-    Post,
-    Put,
-    Query,
-    Res,
-    SetMetadata,
-    UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Put, UseGuards } from "@nestjs/common";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { DefaultReturn } from "src/default-return.dto";
 import { UserLoginDataImsUser } from "src/model/postgres/UserLoginDataImsUser.entity";
 import { UserLoginDataImsUserService } from "src/model/services/user-login-data-ims-user";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { CheckSyncSecretGuard } from "./check-sync-secret.guard";
-import { GetImsTokenResult } from "./dto/GetImsTokenResult";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { GetImsTokenResult } from "./dto/get-ims-token.dto";
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
+import { LinkImsUsersInputDto } from "./dto/link-ims-users-input.dto";
 
 @Controller()
 @UseGuards(CheckSyncSecretGuard)
@@ -35,8 +22,12 @@ export class SyncImsUserController {
         private readonly imsUserFindingService: ImsUserFindingService,
     ) {}
 
-    @Get("getIMSToken")
-    async getIMSToken(@Query("imsUser") imsUserId: string): Promise<GetImsTokenResult> {
+    @Get("get-ims-token/:id")
+    @ApiOperation({ summary: "Get the IMS token for a given IMS user id" })
+    @ApiParam({ name: "id", description: "The neo4j id of the IMS user", required: true })
+    @ApiOkResponse({ type: GetImsTokenResult })
+    @ApiBadRequestResponse({ description: "Missing query parameter imsUser or failed to load referenced IMS user" })
+    async getIMSToken(@Param("id") imsUserId: string): Promise<GetImsTokenResult> {
         if (!imsUserId || imsUserId.trim().length == 0) {
             throw new HttpException("Missing query parameter imsUser", HttpStatus.BAD_REQUEST);
         }
@@ -67,12 +58,14 @@ export class SyncImsUserController {
     }
 
     //todo: make endpoint accept list of ims users to be linked all at once in order to optimize finding
-    @Put("linkIMSUser")
-    async linkIMSUser(@Query("imsUser") imsUserId: string): Promise<DefaultReturn> {
-        if (!imsUserId || imsUserId.trim().length == 0) {
-            throw new HttpException("Missing query parameter imsUser", HttpStatus.BAD_REQUEST);
+    @Put("link-ims-users")
+    @ApiOperation({ summary: "Link IMS users to the system" })
+    @ApiOkResponse({ type: DefaultReturn })
+    async linkIMSUser(@Body() input: LinkImsUsersInputDto): Promise<DefaultReturn> {
+        LinkImsUsersInputDto.check(input);
+        for (const imsUserId of input.imsUserIds) {
+            await this.imsUserFindingService.createAndLinkSingleImsUser(imsUserId);
         }
-        await this.imsUserFindingService.createAndLinkSingleImsUser(imsUserId);
         return new DefaultReturn("linkIMSUser");
     }
 }

@@ -1,14 +1,14 @@
 import { Module } from "@nestjs/common";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { ModelModule } from "src/model/model.module";
-import { ErrorHandlerMiddleware } from "./error-handler.middleware";
-import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesMiddleware } from "./strategies.middleware";
 import { UserpassStrategyService } from "./userpass/userpass.service";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { GithubStrategyService } from "./github/github.service";
 import { JiraStrategyService } from "./jira/jira.service";
+import { GithubTokenStrategyService } from "./github-token/github-token.service";
+import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-cloud.service";
 
 @Module({
     imports: [
@@ -16,9 +16,11 @@ import { JiraStrategyService } from "./jira/jira.service";
         JwtModule.registerAsync({
             useFactory(...args) {
                 return {
-                    secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET || "blabla",
+                    privateKey: atob(process.env.GROPIUS_LOGIN_SPECIFIC_PRIVATE_KEY),
+                    publicKey: atob(process.env.GROPIUS_LOGIN_SPECIFIC_PUBLIC_KEY),
                     signOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,
+                        algorithm: "RS256",
                     },
                     verifyOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,
@@ -34,11 +36,11 @@ import { JiraStrategyService } from "./jira/jira.service";
         UserpassStrategyService,
         GithubStrategyService,
         JiraStrategyService,
-        { provide: "PassportStateJwt", useExisting: JwtService },
-        ModeExtractorMiddleware,
+        GithubTokenStrategyService,
+        JiraTokenCloudStrategyService,
+        { provide: "StateJwtService", useExisting: JwtService },
         StrategiesMiddleware,
-        ErrorHandlerMiddleware,
     ],
-    exports: [ModeExtractorMiddleware, StrategiesMiddleware, ErrorHandlerMiddleware],
+    exports: [StrategiesMiddleware, { provide: "StateJwtService", useExisting: JwtService }],
 })
 export class StrategiesModule {}

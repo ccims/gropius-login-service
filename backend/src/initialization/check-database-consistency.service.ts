@@ -3,7 +3,6 @@ import { BackendUserService } from "src/backend-services/backend-user.service";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { LoginState } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { AuthClientService } from "src/model/services/auth-client.service";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
@@ -16,7 +15,6 @@ export class CheckDatabaseConsistencyService {
     private readonly logger = new Logger(CheckDatabaseConsistencyService.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
-        private readonly authClientService: AuthClientService,
         private readonly loginUserService: LoginUserService,
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly strategyService: StrategiesService,
@@ -64,9 +62,9 @@ export class CheckDatabaseConsistencyService {
 
         const nonExistentUser = (
             await Promise.all(
-                (
-                    await this.loginUserService.find({ select: ["neo4jId"] })
-                ).map(async (u) => ((await this.backendUserService.checkUserExists(u)) ? null : u)),
+                (await this.loginUserService.find({ select: ["neo4jId"] })).map(async (u) =>
+                    (await this.backendUserService.checkUserExists(u)) ? null : u,
+                ),
             )
         ).filter((u) => u !== null);
         if (nonExistentUser.length > 0) {
@@ -148,9 +146,9 @@ export class CheckDatabaseConsistencyService {
     private async checkUserLoginDataImsUser(fixBroken: boolean): Promise<string | undefined> {
         const nonExistentImsUser = (
             await Promise.all(
-                (
-                    await this.userLoginDataImsUserService.find({ select: ["neo4jId"] })
-                ).map(async (u) => ((await this.imsUserFindingService.checkImsUserExists(u)) ? null : u)),
+                (await this.userLoginDataImsUserService.find({ select: ["neo4jId"] })).map(async (u) =>
+                    (await this.imsUserFindingService.checkImsUserExists(u)) ? null : u,
+                ),
             )
         ).filter((u) => u !== null);
         if (nonExistentImsUser.length > 0) {

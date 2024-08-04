@@ -1,16 +1,18 @@
-import { Inject, Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import * as passportGithub from "passport-github2";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthFunction, AuthResult, AuthStateData } from "../AuthResult";
+import { AuthFunction, AuthResult, AuthStateServerData } from "../AuthResult";
 import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { checkType } from "../utils";
+import { checkType } from "../../util/checkType";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { Schema } from "jtd";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
@@ -19,11 +21,27 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("PassportStateJwt")
-        passportJwtService: JwtService,
+        @Inject("StateJwtService")
+        stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, passportJwtService, true, true, true, true);
+        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
+    }
+
+    override get instanceConfigSchema(): Record<string, Schema> {
+        return {
+            imsTemplatedFieldsFilter: {
+                properties: {
+                    "graphql-url": { type: "string" },
+                },
+                nullable: true,
+            },
+            authorizationUrl: { type: "string", nullable: true },
+            tokenUrl: { type: "string", nullable: true },
+            userProfileUrl: { type: "string", nullable: true },
+            clientId: { type: "string", nullable: true },
+            clientSecret: { type: "string", nullable: true },
+        };
     }
 
     /**
@@ -87,7 +105,6 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-            resultingConfig["callbackUrl"] = checkType(instanceConfig, "callbackUrl", "string", true);
         } catch (err) {
             throw new Error("Instance config for github instance invalid: " + err.message);
         }
@@ -136,9 +153,9 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     protected override getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        authStateData: object | AuthStateData,
+        authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
     ): passport.AuthenticateOptions {
-        const mode = (authStateData as AuthStateData).function;
+        const mode = authStateData?.authState?.function ?? AuthFunction.LOGIN;
         if (mode == AuthFunction.REGISTER_WITH_SYNC) {
             return {
                 scope: ["scope", "user:email", "repo"],
@@ -195,7 +212,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 userProfileURL: strategyInstance.instanceConfig["userProfileUrl"],
                 clientID: strategyInstance.instanceConfig["clientId"],
                 clientSecret: strategyInstance.instanceConfig["clientSecret"],
-                callbackURL: strategyInstance.instanceConfig["callbackUrl"],
+                callbackURL: strategyInstance.callbackUrl,
                 store: {
                     store: (req, state, meta, callback) => callback(null, state),
                     verify: (req, providedState, callback) => callback(null, true, providedState),
@@ -203,5 +220,20 @@ export class GithubStrategyService extends StrategyUsingPassport {
             },
             this.passportUserCallback.bind(this, strategyInstance),
         );
+    }
+
+    override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return loginData.data?.username;
+    }
+
+    override getCensoredInstanceConfig(instance: StrategyInstance): object {
+        return {
+            imsTemplatedFieldsFilter: instance.instanceConfig["imsTemplatedFieldsFilter"],
+            authorizationUrl: instance.instanceConfig["authorizationUrl"],
+            tokenUrl: instance.instanceConfig["tokenUrl"],
+            userProfileUrl: instance.instanceConfig["userProfileUrl"],
+            clientId: instance.instanceConfig["clientId"],
+            clientSecret: "**********",
+        };
     }
 }

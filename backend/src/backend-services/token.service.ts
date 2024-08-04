@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { createHash } from "crypto";
 import { JsonWebTokenError } from "jsonwebtoken";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";
@@ -10,14 +10,19 @@ export interface ActiveLoginTokenResult {
     activeLoginId: string;
     clientId: string;
     tokenUniqueId: string;
+    scope: TokenScope[];
+    codeChallenge?: string;
 }
 
 export enum TokenScope {
     LOGIN_SERVICE = "login",
     LOGIN_SERVICE_REGISTER = "login-register",
     BACKEND = "backend",
+    AUTH = "auth",
+}
+
+enum RefreshTokenScope {
     REFRESH_TOKEN = "token",
-    NONE = "none",
 }
 
 @Injectable()
@@ -27,10 +32,14 @@ export class TokenService {
         private readonly backendJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly loginUserService: LoginUserService,
-    ) { }
+    ) {}
 
-    async signBackendAccessToken(user: LoginUser, expiresIn?: number): Promise<string> {
+    async signAccessToken(user: LoginUser, scope: string[], expiresIn?: number): Promise<string> {
         const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
+        this.verifyScope(scope);
+        if (scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
+            throw new Error("Cannot sign access token with register scope");
+        }
         if (!user.neo4jId) {
             throw new Error("Login user without neo4jId: " + user.id);
         }
@@ -39,35 +48,64 @@ export class TokenService {
             {
                 subject: user.neo4jId,
                 ...expiryObject,
-                audience: [TokenScope.LOGIN_SERVICE, TokenScope.BACKEND],
+                audience: scope,
             },
         );
     }
 
-    async signLoginOnlyAccessToken(user: LoginUser, expiresIn?: number): Promise<string> {
+    async signRegistrationToken(activeLoginId: string, expiresIn?: number): Promise<string> {
         const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
-        return this.backendJwtService.sign(
+        return this.backendJwtService.signAsync(
             {},
             {
-                subject: user.id,
+                subject: activeLoginId,
                 ...expiryObject,
-                audience: [TokenScope.LOGIN_SERVICE],
+                audience: [TokenScope.LOGIN_SERVICE_REGISTER],
             },
         );
     }
 
-    async verifyAccessToken(token: string): Promise<{ user: LoginUser | null }> {
+    async signActiveLoginCode(
+        activeLoginId: string,
+        clientId: string,
+        uniqueId: string | number,
+        scope: TokenScope[],
+        expiresInAt: number | Date | undefined,
+        codeChallenge: string | undefined,
+    ): Promise<string> {
+        this.verifyScope(scope);
+        const expiresInObject = typeof expiresInAt == "number" ? { expiresIn: expiresInAt / 1000 } : {};
+        const expiresAtObject =
+            typeof expiresInAt == "object" && expiresInAt instanceof Date
+                ? { exp: Math.floor(expiresInAt.getTime() / 1000) }
+                : {};
+        return await this.backendJwtService.signAsync(
+            {
+                ...expiresAtObject,
+                client_id: clientId,
+                scope,
+                code_challenge: codeChallenge,
+            },
+            {
+                subject: activeLoginId,
+                ...expiresInObject,
+                jwtid: uniqueId.toString(),
+                audience: [RefreshTokenScope.REFRESH_TOKEN],
+            },
+        );
+    }
+
+    async verifyAccessToken(token: string, scope: TokenScope): Promise<{ user: LoginUser | null }> {
         const payload = await this.backendJwtService.verifyAsync(token, {
-            audience: [TokenScope.LOGIN_SERVICE],
+            audience: [scope],
         });
         const audience: string[] = payload.aud as string[];
         let user: LoginUser | null = null;
-        if (audience.includes(TokenScope.BACKEND)) {
+        if (!audience.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             user = await this.loginUserService.findOneBy({
                 neo4jId: payload.sub,
             });
-        }
-        if (!user) {
+        } else {
             user = await this.loginUserService.findOneBy({ id: payload.sub });
         }
         const tokenIssuedAt = payload.iat as number;
@@ -79,54 +117,16 @@ export class TokenService {
         return { user };
     }
 
-    async signRegistrationToken(activeLoginId: string, expiresIn?: number): Promise<string> {
-        const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
-        return this.backendJwtService.signAsync(
-            {},
-            {
-                subject: activeLoginId,
-                ...expiryObject,
-                audience: [TokenScope.LOGIN_SERVICE_REGISTER],
-                secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
-            },
-        );
-    }
-
     async verifyRegistrationToken(token: string): Promise<string> {
         const payload = await this.backendJwtService.verifyAsync(token, {
             audience: [TokenScope.LOGIN_SERVICE_REGISTER],
-            secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
         });
         return payload.sub;
     }
 
-    async signActiveLoginCode(
-        activeLoginId: string,
-        clientId: string,
-        uniqueId: string | number,
-        expiresInAt?: number | Date,
-    ): Promise<string> {
-        const expiresInObject = (typeof expiresInAt == "number") ? { expiresIn: expiresInAt / 1000 } : {};
-        const expiresAtObject = (typeof expiresInAt == "object" && expiresInAt instanceof Date) ? { exp: Math.floor(expiresInAt.getTime() / 1000) } : {};
-        return await this.backendJwtService.signAsync(
-            {
-                ...expiresAtObject,
-                client_id: clientId,
-            },
-            {
-                subject: activeLoginId,
-                ...expiresInObject,
-                jwtid: uniqueId.toString(),
-                secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
-                audience: [TokenScope.REFRESH_TOKEN],
-            },
-        );
-    }
-
     async verifyActiveLoginToken(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
         const payload = await this.backendJwtService.verifyAsync(token, {
-            secret: process.env.GROPIUS_LOGIN_SPECIFIC_JWT_SECRET,
-            audience: [TokenScope.REFRESH_TOKEN],
+            audience: [RefreshTokenScope.REFRESH_TOKEN],
         });
         if (payload.client_id !== requiredClientId) {
             throw new JsonWebTokenError("Token is not for current client");
@@ -138,6 +138,37 @@ export class TokenService {
             activeLoginId: payload.sub,
             clientId: payload.client_id,
             tokenUniqueId: payload.jti,
+            scope: payload.scope,
+            codeChallenge: payload.code_challenge,
         };
+    }
+
+    calculateCodeChallenge(codeVerifier: string): string {
+        return createHash("sha256")
+            .update(codeVerifier)
+            .digest("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=/g, "");
+    }
+
+    /**
+     * Verifies that the given combination of scopes is valid.
+     *
+     * @param scopes the scopes to verify
+     */
+    verifyScope(scopes: string[]) {
+        const validScopes: string[] = Object.values(TokenScope);
+        for (const scope of scopes) {
+            if (!validScopes.includes(scope)) {
+                throw new JsonWebTokenError("Invalid scope: " + scope);
+            }
+        }
+        if (scopes.length === 0) {
+            throw new JsonWebTokenError("No scope given");
+        }
+        if (scopes.includes(TokenScope.LOGIN_SERVICE_REGISTER) && scopes.length > 1) {
+            throw new JsonWebTokenError("Register scope must be the only scope");
+        }
     }
 }

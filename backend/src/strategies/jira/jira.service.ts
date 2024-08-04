@@ -1,16 +1,17 @@
-import { Inject, Injectable, Logger, Type } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "../../model/services/strategies.service";
 import * as passportJira from "passport-atlassian-oauth2";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthFunction, AuthResult, AuthStateData } from "../AuthResult";
+import { AuthResult } from "../AuthResult";
 import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { checkType } from "../utils";
+import { checkType } from "../../util/checkType";
+import { Schema } from "jtd";
 
 @Injectable()
 export class JiraStrategyService extends StrategyUsingPassport {
@@ -19,11 +20,27 @@ export class JiraStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("PassportStateJwt")
-        passportJwtService: JwtService,
+        @Inject("StateJwtService")
+        stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("jira", strategyInstanceService, strategiesService, passportJwtService, true, true, true, true);
+        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
+    }
+
+    override get instanceConfigSchema(): Record<string, Schema> {
+        return {
+            imsTemplatedFieldsFilter: {
+                properties: {
+                    "root-url": { type: "string" },
+                },
+            },
+            authorizationUrl: { type: "string", nullable: true },
+            tokenUrl: { type: "string", nullable: true },
+            cloudIdUrl: { type: "string", nullable: true },
+            userProfileUrl: { type: "string", nullable: true },
+            clientId: { type: "string", nullable: true },
+            clientSecret: { type: "string", nullable: true },
+        };
     }
 
     /**
@@ -31,8 +48,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
      *
      * Needed parameters
      * - imsTemplatedFieldsFilter containing:
-     *     - root-url: The URL of the jira root endpoint.
-     *         If imsTemplatedFieldsFilter not given, defaults to "https://itscalledccims.atlassian.net/rest/api/2"
+     *     - root-url: The URL of the jira root endpoint, must be provided.
      * - authorizationUrl: Oauth authorization URL. Optional, default: "https://jira.com/login/oauth/authorize"
      * - tokenUrl: Oauth token url. Optional, default: "https://jira.com/login/oauth/access_token"
      * - userProfileUrl: API URL to request user profile info from. Needs to be specified for GitHib Enterprise instances. Optional
@@ -92,8 +108,6 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-            resultingConfig["callbackUrl"] = checkType(instanceConfig, "callbackUrl", "string", true);
-            resultingConfig["callbackRoot"] = checkType(instanceConfig, "callbackRoot", "string", false);
         } catch (err) {
             throw new Error("Instance config for jira instance invalid: " + err.message);
         }
@@ -154,7 +168,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                     } else {
                         this.loggerJira.log("Refreshed token valid");
                         firstLogin = await this.activeLoginService.save(firstLogin);
-                        return { token: firstLogin?.data["accessToken"] ?? null, cloudIds: cloudIds };
+                        return { token: firstLogin?.data["accessToken"] ?? null, cloudIds: cloudIds, type: "OAUTH" };
                     }
                 } else {
                     this.loggerJira.log("Non valid cloud IDs, and no refresh token token");
@@ -242,9 +256,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
             profileURL: configData["userProfileUrl"],
             clientID: configData["clientId"],
             clientSecret: configData["clientSecret"],
-            callbackURL:
-                configData["callbackUrl"] ??
-                configData["callbackRoot"] + "/authenticate/oauth/" + strategyInstance.id + "/callback",
+            callbackURL: strategyInstance.callbackUrl,
             scope: ["offline_access", "read:jira-user", "read:me", "read:jira-work", "write:jira-work"],
             store: {
                 store: (req, state, meta, callback) => callback(null, state),
@@ -257,5 +269,21 @@ export class JiraStrategyService extends StrategyUsingPassport {
             }
         }
         return new passportJira(config, this.passportUserCallback.bind(this, strategyInstance));
+    }
+
+    override async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return loginData.data?.email;
+    }
+
+    override getCensoredInstanceConfig(instance: StrategyInstance): object {
+        return {
+            imsTemplatedFieldsFilter: instance.instanceConfig["imsTemplatedFieldsFilter"],
+            authorizationUrl: instance.instanceConfig["authorizationUrl"],
+            tokenUrl: instance.instanceConfig["tokenUrl"],
+            cloudIdUrl: instance.instanceConfig["cloudIdUrl"],
+            userProfileUrl: instance.instanceConfig["userProfileUrl"],
+            clientId: instance.instanceConfig["clientId"],
+            clientSecret: "**********",
+        };
     }
 }

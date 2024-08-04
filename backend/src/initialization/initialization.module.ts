@@ -1,8 +1,6 @@
 import { Module } from "@nestjs/common";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { ModelModule } from "src/model/model.module";
-import { StrategiesModule } from "src/strategies/strategies.module";
-import { CreateDefaultAuthClientService } from "./create-default-auth-client.service";
 import { CreateDefaultStrategyInstanceService } from "./create-default-strategy-instance.service";
 import { CreateDefaultUserService } from "./create-default-user.service";
 import { InitListenerService } from "./init-listener.service";
@@ -21,7 +19,6 @@ import { CheckDatabaseConsistencyService } from "./check-database-consistency.se
         CheckDatabaseConsistencyService,
         CreateDefaultStrategyInstanceService,
         CreateDefaultUserService,
-        CreateDefaultAuthClientService,
         InitListenerService,
     ],
 })

@@ -1,6 +1,5 @@
-import { All, Controller, Get, HttpException, HttpStatus, Param } from "@nestjs/common";
+import { Controller, Get, HttpException, HttpStatus, Param } from "@nestjs/common";
 import { StrategiesService } from "src/model/services/strategies.service";
-import { Strategy } from "../../strategies/Strategy";
 import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { GetStrategyResponse } from "./dto/strategy-api.dto";
 import { OpenApiTag } from "src/openapi-tag";

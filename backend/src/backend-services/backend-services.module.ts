@@ -4,17 +4,18 @@ import { ModelModule } from "src/model/model.module";
 import { TokenService } from "./token.service";
 import { BackendUserService } from "./backend-user.service";
 import { ImsUserFindingService } from "./ims-user-finding.service";
-import { StrategiesModule } from "src/strategies/strategies.module";
 
 @Module({
     imports: [
         JwtModule.registerAsync({
             useFactory(...args) {
                 return {
-                    secret: Buffer.from(process.env.GROPIUS_INTERNAL_BACKEND_JWT_SECRET, "base64"),
+                    privateKey: atob(process.env.GROPIUS_OAUTH_PRIVATE_KEY),
+                    publicKey: atob(process.env.GROPIUS_OAUTH_PUBLIC_KEY),
                     signOptions: {
                         issuer: process.env.GROPIUS_JWT_ISSUER,
                         audience: ["backend", "login"],
+                        algorithm: "RS256",
                     },
                     verifyOptions: {
                         issuer: process.env.GROPIUS_JWT_ISSUER,

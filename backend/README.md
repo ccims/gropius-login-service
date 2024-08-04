@@ -1,4 +1,4 @@
-# Login-Service
+# Login-Service Backend
 
 ## Description
 
@@ -32,9 +32,9 @@ $ npm run start:prod  # Start the production version of the app
 ```
 
 ## Debug/Try out
-The login service deploys a swagger UI on `http://HOSTNAME:3000/login-api-doc#/` which has some ability to interact with the API
+The login service deploys a swagger UI on `http://HOSTNAME:3001/login-api-doc#/` which has some ability to interact with the API
 
-Additionally, for easier and more intuitive debugging and testing of the login API and especially of the OAuth flow etc., an interactive UI is deployed on `http://HOSTNAME:3000/login-debug/`
+Additionally, for easier and more intuitive debugging and testing of the login API and especially of the OAuth flow etc., an interactive UI is deployed on `http://HOSTNAME:3001/login-debug/`
 
 ## Test
 

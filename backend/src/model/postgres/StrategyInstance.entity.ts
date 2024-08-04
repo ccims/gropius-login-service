@@ -33,12 +33,10 @@ export class StrategyInstance {
      * Can be displayes in a UI etc.
      * but is not necesarrily unique.
      *
-     * Can only contain [A-Za-z0-9_\-/+= ]*
-     *
      * @example "Github-Enterprise-Example"
      */
-    @Column({ nullable: true })
-    name: string | null;
+    @Column()
+    name: string;
 
     /**
      * The configuration of the instance needed to perform authentication with it.
@@ -73,6 +71,7 @@ export class StrategyInstance {
 
     /**
      * If `true` users can create an account themselves with the registration token they obtained from this instance.
+     * This only affects registration, not linking an additional account.
      * Additionally the strategy must have {@link Strategy.canLoginRegister} set to `true`
      *
      * If `false` accounts cannot be created without being admin.
@@ -106,6 +105,13 @@ export class StrategyInstance {
     @Column()
     doesImplicitRegister: boolean;
 
+    /**
+     * Gets the callback url for this instance
+     */
+    get callbackUrl(): string {
+        return new URL(`/auth/api/internal/auth/callback/${this.id}`, process.env.GROPIUS_ENDPOINT).toString();
+    }
+
     toJSON() {
         return {
             id: this.id,
@@ -115,6 +121,7 @@ export class StrategyInstance {
             isSelfRegisterActive: this.isSelfRegisterActive,
             isSyncActive: this.isSyncActive,
             doesImplicitRegister: this.doesImplicitRegister,
+            callbackUrl: this.callbackUrl,
         };
     }
 }

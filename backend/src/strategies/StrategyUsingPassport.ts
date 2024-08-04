@@ -1,11 +1,12 @@
 import * as passport from "passport";
-import { Strategy } from "./Strategy";
+import { PerformAuthResult, Strategy } from "./Strategy";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthStateData, AuthResult } from "./AuthResult";
+import { AuthStateServerData, AuthResult } from "./AuthResult";
 import { JwtService } from "@nestjs/jwt";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -13,11 +14,12 @@ export abstract class StrategyUsingPassport extends Strategy {
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
         strategiesService: StrategiesService,
-        protected readonly passportJwtService: JwtService,
+        protected readonly stateJwtService: JwtService,
         canLoginRegister = true,
         canSync = false,
         needsRedirectFlow = false,
         allowsImplicitSignup = false,
+        forceSuggestedUsername = false,
     ) {
         super(
             typeName,
@@ -27,64 +29,46 @@ export abstract class StrategyUsingPassport extends Strategy {
             canSync,
             needsRedirectFlow,
             allowsImplicitSignup,
+            forceSuggestedUsername,
         );
     }
-
-    private readonly passportInstances: Map<string, passport.Strategy> = new Map();
 
     abstract createPassportStrategyInstance(strategyInstance: StrategyInstance): passport.Strategy;
 
     protected getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        authStateData: AuthStateData | object,
+        authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
     ): passport.AuthenticateOptions {
         return {};
     }
 
-    getPassportStrategyInstanceFor(strategyInstance: StrategyInstance): passport.Strategy {
-        if (this.passportInstances.has(strategyInstance.id)) {
-            return this.passportInstances.get(strategyInstance.id);
-        } else {
-            const newInstance = this.createPassportStrategyInstance(strategyInstance);
-            this.logger.debug(
-                `Created new passport strategy for strategy ${this.typeName}, instance: ${strategyInstance.id}`,
-            );
-            this.passportInstances.set(strategyInstance.id, newInstance);
-            return newInstance;
-        }
-    }
-
     public override async performAuth(
         strategyInstance: StrategyInstance,
-        authStateData: AuthStateData | object,
+        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
         req: any,
         res: any,
-    ): Promise<{
-        result: AuthResult | null;
-        returnedState: AuthStateData;
-        info: any;
-    }> {
+    ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
-            const passportStrategy = this.getPassportStrategyInstanceFor(strategyInstance);
-            const jwtService = this.passportJwtService;
+            const passportStrategy = this.createPassportStrategyInstance(strategyInstance);
+            const jwtService = this.stateJwtService;
             passport.authenticate(
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign(authStateData), // TODO: check if an expiration and/or an additional random value are needed
-                    ...this.getAdditionalPassportOptions(strategyInstance, authStateData),
+                    state: jwtService.sign({ request: state?.request, authState: state?.authState }),
+                    ...this.getAdditionalPassportOptions(strategyInstance, state),
                 },
                 (err, user: AuthResult | false, info) => {
                     if (err) {
+                        this.logger.error("Error while authenticating with passport", err);
                         reject(err);
                     } else {
                         let returnedState = {};
-                        if (info.state && typeof info.state == "string") {
-                            returnedState = jwtService.verify(info.state);
-                        } else if (info.state) {
+                        const state = info.state || req.query?.state;
+                        if (state && typeof state == "string") {
+                            returnedState = jwtService.verify(state);
+                        } else if (state) {
                             reject("State not returned as JWT");
-                        } else if (authStateData) {
-                            returnedState = authStateData;
                         }
                         resolve({ result: user || null, returnedState, info });
                     }

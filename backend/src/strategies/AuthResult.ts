@@ -1,5 +1,4 @@
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 
 export enum AuthFunction {
@@ -9,10 +8,13 @@ export enum AuthFunction {
 }
 
 export interface AuthStateData {
-    function?: AuthFunction;
-    activeLogin?: ActiveLogin | string;
-    authErrorMessage?: string;
-    authErrorType?: string;
+    function: AuthFunction;
+    activeLogin?: string;
+}
+
+export interface AuthStateServerData {
+    authState: AuthStateData;
+    activeLogin?: ActiveLogin;
 }
 
 export interface AuthResult {
@@ -20,4 +22,5 @@ export interface AuthResult {
     dataUserLoginData: object;
     loginData?: UserLoginData;
     mayRegister: boolean;
+    noRegisterMessage?: string;
 }

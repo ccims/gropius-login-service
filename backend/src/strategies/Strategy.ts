@@ -1,13 +1,12 @@
-import * as passport from "passport";
 import { CreateStrategyInstanceInput } from "src/api-login/strategy/dto/create-strategy-instance.dto";
 import { UpdateStrategyInstanceInput } from "src/api-login/strategy/dto/update-strategy-instance.dto";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthResult, AuthStateData } from "./AuthResult";
+import { AuthResult, AuthStateServerData } from "./AuthResult";
+import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { Schema } from "jtd";
 
 export interface StrategyVariable {
     name: string;
@@ -16,6 +15,30 @@ export interface StrategyVariable {
     nullable?: boolean;
 }
 
+export interface StrategyUpdateAction {
+    name: string;
+    displayName: string;
+    variables: StrategyVariable[];
+}
+
+export interface PerformAuthResult {
+    result: AuthResult | null;
+    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">>;
+    info: any;
+}
+
+/**
+ * Base class for all strategies.
+ *
+ * @param typeName The name of the strategy
+ * @param strategyInstanceService The service to use for strategy instances
+ * @param strategiesService The service to use for strategies
+ * @param canLoginRegister Whether the strategy can be used for login and registration of new users (does not affect registering additional accounts)
+ * @param canSync Whether the strategy can be used to sync with external services
+ * @param needsRedirectFlow Whether the strategy needs a redirect flow for login
+ * @param allowsImplicitSignup Whether the strategy allows implicit signup
+ * @param forceSuggestedUsername Whether the strategy forces the use of a suggested username
+ */
 export abstract class Strategy {
     constructor(
         public readonly typeName: string,
@@ -25,6 +48,7 @@ export abstract class Strategy {
         public readonly canSync: boolean = false,
         public readonly needsRedirectFlow = false,
         public readonly allowsImplicitSignup = false,
+        public readonly forceSuggestedUsername = false,
     ) {
         strategiesService.addStrategy(typeName, this);
     }
@@ -61,13 +85,13 @@ export abstract class Strategy {
         return instanceConfig;
     }
 
-    private updateCapabilityFlags(patrentValue: boolean, useDefault: boolean, inputValue?: boolean | null): boolean {
+    private updateCapabilityFlags(parentValue: boolean, useDefault: boolean, inputValue?: boolean | null): boolean {
         if (inputValue == null || inputValue == undefined) {
             if (useDefault) {
-                return patrentValue;
+                return parentValue;
             }
         } else if (typeof inputValue == "boolean") {
-            return patrentValue && inputValue;
+            return parentValue && inputValue;
         } else {
             throw new Error("Input value must be boolean");
         }
@@ -104,7 +128,7 @@ export abstract class Strategy {
         );
         instance.isSyncActive = this.updateCapabilityFlags(this.canSync, createNew, input.isSyncActive);
         if (createNew || input.name !== undefined) {
-            instance.name = input.name?.replace(/[^a-zA-Z0-9+/\-_= ]/g, "") ?? null;
+            instance.name = input.name ?? null;
         }
         if (createNew || input.instanceConfig) {
             instance.instanceConfig = resultingInstanceConfig ?? {};
@@ -128,9 +152,15 @@ export abstract class Strategy {
         });
     }
 
-    get acceptsVariables(): {
-        [variableName: string]: StrategyVariable;
-    } {
+    get acceptsVariables(): StrategyVariable[] {
+        return [];
+    }
+
+    get updateActions(): StrategyUpdateAction[] {
+        return [];
+    }
+
+    get instanceConfigSchema(): Record<string, Schema> {
         return {};
     }
 
@@ -193,6 +223,16 @@ export abstract class Strategy {
     }
 
     /**
+     * Gets a description of the login data, e.g. a username or email.
+     *
+     * @param loginData The login data for which to get the description
+     * @returns A description of the login data
+     */
+    async getLoginDataDescription(loginData: UserLoginData): Promise<string> {
+        return "";
+    }
+
+    /**
      * Does the opposite of `getImsUserTemplatedValuesForLoginData`.
      *
      * Returns an object that needs to match the data field of a `LoginData`
@@ -235,16 +275,36 @@ export abstract class Strategy {
         return {};
     }
 
+    /**
+     * Returns the instance config of the strategy instance, but with sensitive data censored.
+     *
+     * **WARNING**: The result of this function WILL be exposed to the user.
+     *
+     * @param instance The strategy instance for which to get the censored instance config
+     * @returns The censored instance config
+     */
+    getCensoredInstanceConfig(instance: StrategyInstance): object {
+        return {};
+    }
+
+    /**
+     * Handles an action that was triggered by the user.
+     * Actions are defined via {@link updateActions}.
+     *
+     * @param loginData the login data of the user that triggered the action
+     * @param name the name of the action
+     * @param data the data for the action
+     */
+    async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
+        throw new Error("Action not implemented");
+    }
+
     abstract performAuth(
         strategyInstance: StrategyInstance,
-        authStateData: AuthStateData | object,
+        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
         req: any,
         res: any,
-    ): Promise<{
-        result: AuthResult | null;
-        returnedState: AuthStateData;
-        info: any;
-    }>;
+    ): Promise<PerformAuthResult>;
 
     toJSON() {
         return {
@@ -254,6 +314,8 @@ export abstract class Strategy {
             needsRedirectFlow: this.needsRedirectFlow,
             allowsImplicitSignup: this.allowsImplicitSignup,
             acceptsVariables: this.acceptsVariables,
+            instanceConfigSchema: this.instanceConfigSchema,
+            updateActions: this.updateActions,
         };
     }
 }

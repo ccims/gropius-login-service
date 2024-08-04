@@ -8,7 +8,7 @@ export class UpdateStrategyInstanceInput {
      * The name for the strategy instance to create.
      * Can be left out.
      *
-     * If given, must be a non empty string matching `/^[a-zA-Z0-9+/\-_= ]+$/`
+     * If given, must be a non empty string
      *
      * @exmple "userpass-local"
      */
@@ -59,7 +59,7 @@ export class UpdateStrategyInstanceInput {
      * Checks, input is a valid {@link UpdateStrategyInstanceInput}
      *
      * Needs:
-     * - If name is given, must be non empty and match `/^[a-zA-Z0-9+/\-_= ]+$/`
+     * - If name is given, must be non empty
      * - If instanceConfig is given it must be an object
      * - If any of the flags is given it must be a valid boolean
      *
@@ -70,14 +70,6 @@ export class UpdateStrategyInstanceInput {
         if (input.name != undefined) {
             if (typeof input.name != "string" || input.name.trim().length == 0) {
                 throw new HttpException("If name is given it must be a non empty string", HttpStatus.BAD_REQUEST);
-            }
-        }
-        if (input.name != undefined) {
-            if (input.name.match(/[^a-zA-Z0-9+/\-_= ]/g)) {
-                throw new HttpException(
-                    "Name of strategy instance may only contain alphanumeric characters, -, _, +, /, = and space",
-                    HttpStatus.BAD_REQUEST,
-                );
             }
         }
         if (input.instanceConfig != undefined && typeof input.instanceConfig != "object") {

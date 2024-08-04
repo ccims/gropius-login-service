@@ -1,10 +1,6 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { UserLoginData, LoginState } from "src/model/postgres/UserLoginData.entity";
-import { LoginUserService } from "src/model/services/login-user.service";
+import { Injectable, Logger } from "@nestjs/common";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
 
 /**
  * Service that creates a new strategy instance as specified in the config variables

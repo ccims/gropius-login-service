@@ -1,4 +1,5 @@
-import { StrategyVariable } from "src/strategies/Strategy";
+import { Schema } from "jtd";
+import { StrategyUpdateAction, StrategyVariable } from "src/strategies/Strategy";
 
 /**
  * Representation of a strategy in the API
@@ -47,5 +48,15 @@ export class GetStrategyResponse {
      * The specification of the data expected in the post body if not using redirect
      * and sending the credentials directly to the token endpoint
      */
-    acceptsVariables: { [key: string]: StrategyVariable };
+    acceptsVariables: StrategyVariable[];
+
+    /**
+     * The actions that can be performed on the strategy instance
+     */
+    updateActions: StrategyUpdateAction[];
+
+    /**
+     * The schema of the instance configuration
+     */
+    instanceConfigSchema: Record<string, Schema>;
 }
