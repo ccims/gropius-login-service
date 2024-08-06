@@ -38,9 +38,8 @@ export class AuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorizeS
                 ? "register-additional"
                 : "login";
             const encodedState = encodeURIComponent(this.stateJwtService.sign({ request: state.request }));
-            res.redirect(
-                `/auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}&state=${encodedState}`,
-            );
+            const url = `/auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}&state=${encodedState}`;
+            res.redirect(new URL(url, process.env.GROPIUS_ENDPOINT).toString());
         } else {
             next();
         }

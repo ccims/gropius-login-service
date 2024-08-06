@@ -166,7 +166,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
                     suggestions.displayName ?? "",
                 )}&forceSuggestedUsername=${state.strategy.forceSuggestedUsername}`;
                 const url = `/auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
-                res.redirect(url);
+                res.redirect(new URL(url, process.env.GROPIUS_ENDPOINT).toString());
             } else {
                 await this.redirectWithCode(state, res);
             }

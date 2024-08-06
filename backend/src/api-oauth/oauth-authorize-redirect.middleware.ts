@@ -27,6 +27,7 @@ export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
             ? "register-additional"
             : "login";
         const encodedState = encodeURIComponent(this.stateJwtService.sign({ request: state.request }));
-        res.redirect(`/auth/flow/${target}?state=${encodedState}`);
+        const url = `/auth/flow/${target}?state=${encodedState}`;
+        res.redirect(new URL(url, process.env.GROPIUS_ENDPOINT).toString());
     }
 }
