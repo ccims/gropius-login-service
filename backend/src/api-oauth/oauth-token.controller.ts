@@ -6,7 +6,6 @@ import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)
 export class OAuthTokenController {
-
     @Post("token")
     @ApiOperation({ summary: "Token OAuth Endpoint" })
     @ApiOkResponse({ type: OAuthTokenResponseDto })
