@@ -100,10 +100,7 @@ export class UpdateAuthClientInput {
         }
         for (const scope of input.validScopes) {
             if (scope !== TokenScope.BACKEND) {
-                throw new HttpException(
-                    `Only ${TokenScope.BACKEND} is a valid scopes`,
-                    HttpStatus.BAD_REQUEST,
-                );
+                throw new HttpException(`Only ${TokenScope.BACKEND} is a valid scopes`, HttpStatus.BAD_REQUEST);
             }
         }
         if (input.clientCredentialFlowUser != undefined) {

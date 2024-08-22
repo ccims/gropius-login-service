@@ -11,11 +11,11 @@ export class CreateAuthClientInput extends UpdateAuthClientInput {
 
     /**
      * Checks whether the input is a valid `CreateAuthClientInput`
-     * 
+     *
      * Needed:
      * - Must be valid {@link UpdateAuthClientInput}
      * - Must have a non empty name
-     * 
+     *
      * @param input The input object to check
      * @returns The original input object
      */

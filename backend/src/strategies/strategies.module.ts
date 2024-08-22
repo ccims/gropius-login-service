@@ -9,6 +9,7 @@ import { GithubStrategyService } from "./github/github.service";
 import { JiraStrategyService } from "./jira/jira.service";
 import { GithubTokenStrategyService } from "./github-token/github-token.service";
 import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-cloud.service";
+import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira-token-datacenter.service";
 
 @Module({
     imports: [
@@ -38,6 +39,7 @@ import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-clo
         JiraStrategyService,
         GithubTokenStrategyService,
         JiraTokenCloudStrategyService,
+        JiraTokenDatacenterStrategyService,
         { provide: "StateJwtService", useExisting: JwtService },
         StrategiesMiddleware,
     ],
