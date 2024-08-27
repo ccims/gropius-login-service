@@ -94,7 +94,7 @@ export class JiraTokenCloudStrategyService extends Strategy {
     override async getSyncDataForLoginData(
         loginData: UserLoginData,
     ): Promise<{ token: string | null; [key: string]: any }> {
-        return { token: loginData.data["apiToken"] ?? null, type: "PAT" };
+        return { token: loginData.data["token"] ?? null, type: "PAT" };
     }
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
@@ -131,6 +131,7 @@ export class JiraTokenCloudStrategyService extends Strategy {
         username: string;
         displayName: string;
         email: string;
+        token: string;
     } | null> {
         const response = await fetch(
             new URL("/rest/api/2/myself", strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["root-url"]),
@@ -154,6 +155,7 @@ export class JiraTokenCloudStrategyService extends Strategy {
             username: "",
             displayName: userData.displayName,
             email,
+            token
         };
     }
 
@@ -184,16 +186,16 @@ export class JiraTokenCloudStrategyService extends Strategy {
 
     override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
         if (name === "update-token") {
-            const apiToken = data["token"];
+            const token = data["token"];
             const email = data["email"] || loginData.data["email"];
-            const userLoginData = await this.getUserData(apiToken, email, await loginData.strategyInstance);
+            const userLoginData = await this.getUserData(token, email, await loginData.strategyInstance);
             if (userLoginData == null) {
                 throw new HttpException("Token invalid", HttpStatus.BAD_REQUEST);
             }
             if (loginData.data["jira_id"] !== userLoginData.jira_id) {
                 throw new HttpException("Token does not match the user", HttpStatus.BAD_REQUEST);
             }
-            loginData.data["apiToken"] = apiToken;
+            loginData.data["token"] = token;
             loginData.data["email"] = email;
             this.loginDataService.save(loginData);
         } else {
