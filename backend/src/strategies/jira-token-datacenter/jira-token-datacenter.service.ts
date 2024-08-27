@@ -83,7 +83,7 @@ export class JiraTokenDatacenterStrategyService extends Strategy {
     override async getSyncDataForLoginData(
         loginData: UserLoginData,
     ): Promise<{ token: string | null; [key: string]: any }> {
-        return { token: loginData.data["apiToken"] ?? null, type: "PAT" };
+        return { token: loginData.data["token"] ?? null, type: "PAT" };
     }
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
@@ -119,6 +119,7 @@ export class JiraTokenDatacenterStrategyService extends Strategy {
         username: string;
         displayName: string;
         email?: string;
+        token: string;
     } | null> {
         const response = await fetch(
             new URL("/rest/api/2/myself", strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["root-url"]),
@@ -142,6 +143,7 @@ export class JiraTokenDatacenterStrategyService extends Strategy {
             username: userData.name,
             displayName: userData.displayName,
             email: userData.emailAddress,
+            token
         };
     }
 
@@ -171,15 +173,15 @@ export class JiraTokenDatacenterStrategyService extends Strategy {
 
     override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
         if (name === "update-token") {
-            const apiToken = data["token"];
-            const userLoginData = await this.getUserData(apiToken, await loginData.strategyInstance);
+            const token = data["token"];
+            const userLoginData = await this.getUserData(token, await loginData.strategyInstance);
             if (userLoginData == null) {
                 throw new HttpException("Token invalid", HttpStatus.BAD_REQUEST);
             }
             if (loginData.data["jira_id"] !== userLoginData.jira_id) {
                 throw new HttpException("Token does not match the user", HttpStatus.BAD_REQUEST);
             }
-            loginData.data["apiToken"] = apiToken;
+            loginData.data["token"] = token;
             this.loginDataService.save(loginData);
         } else {
             throw new HttpException("Unknown action", HttpStatus.BAD_REQUEST);

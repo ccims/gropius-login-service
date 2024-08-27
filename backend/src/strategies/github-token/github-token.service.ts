@@ -87,7 +87,7 @@ export class GithubTokenStrategyService extends Strategy {
     override async getSyncDataForLoginData(
         loginData: UserLoginData,
     ): Promise<{ token: string | null; [key: string]: any }> {
-        return { token: loginData.data["accessToken"] ?? null };
+        return { token: loginData.data["token"] ?? null };
     }
 
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
@@ -123,6 +123,7 @@ export class GithubTokenStrategyService extends Strategy {
         username: string;
         displayName: string;
         email: string;
+        token: string;
     } | null> {
         const graphqlQuery = `
         {
@@ -155,6 +156,7 @@ export class GithubTokenStrategyService extends Strategy {
             username: userData.login,
             displayName: userData.name,
             email: userData.email,
+            token
         };
     }
 
@@ -184,15 +186,15 @@ export class GithubTokenStrategyService extends Strategy {
 
     override async handleAction(loginData: UserLoginData, name: string, data: Record<string, any>): Promise<void> {
         if (name === "update-token") {
-            const accessToken = data["token"];
-            const userLoginData = await this.getUserData(accessToken, await loginData.strategyInstance);
+            const token = data["token"];
+            const userLoginData = await this.getUserData(token, await loginData.strategyInstance);
             if (userLoginData == null) {
                 throw new HttpException("Token invalid", HttpStatus.BAD_REQUEST);
             }
             if (loginData.data["github_id"] !== userLoginData.github_id) {
                 throw new HttpException("Token does not match the user", HttpStatus.BAD_REQUEST);
             }
-            loginData.data["accessToken"] = accessToken;
+            loginData.data["token"] = token;
             this.loginDataService.save(loginData);
         } else {
             throw new HttpException("Unknown action", HttpStatus.BAD_REQUEST);
