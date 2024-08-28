@@ -5,6 +5,7 @@ import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { AuthException } from "./AuthException";
 import { TokenScope } from "src/backend-services/token.service";
 import { JwtService } from "@nestjs/jwt";
+import { combineURL } from "src/util/combineURL";
 
 @Injectable()
 export class AuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorizeServerState, {}> {
@@ -38,8 +39,8 @@ export class AuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorizeS
                 ? "register-additional"
                 : "login";
             const encodedState = encodeURIComponent(this.stateJwtService.sign({ request: state.request }));
-            const url = `/auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}&state=${encodedState}`;
-            res.redirect(new URL(url, process.env.GROPIUS_ENDPOINT).toString());
+            const url = `auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}&state=${encodedState}`;
+            res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
         } else {
             next();
         }

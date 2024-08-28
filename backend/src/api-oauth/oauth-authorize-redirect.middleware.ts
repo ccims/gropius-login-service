@@ -4,6 +4,7 @@ import { StateMiddleware } from "./StateMiddleware";
 import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 import { TokenScope } from "src/backend-services/token.service";
 import { JwtService } from "@nestjs/jwt";
+import { combineURL } from "src/util/combineURL";
 
 @Injectable()
 export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
@@ -27,7 +28,7 @@ export class OAuthAuthorizeRedirectMiddleware extends StateMiddleware<
             ? "register-additional"
             : "login";
         const encodedState = encodeURIComponent(this.stateJwtService.sign({ request: state.request }));
-        const url = `/auth/flow/${target}?state=${encodedState}`;
-        res.redirect(new URL(url, process.env.GROPIUS_ENDPOINT).toString());
+        const url = `auth/flow/${target}?state=${encodedState}`;
+        res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
     }
 }

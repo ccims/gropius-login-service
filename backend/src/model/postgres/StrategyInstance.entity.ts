@@ -1,6 +1,7 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { Strategy } from "../../strategies/Strategy";
+import { combineURL } from "src/util/combineURL";
 
 /**
  * Entity representing an instance of a strategy including its config.
@@ -109,7 +110,7 @@ export class StrategyInstance {
      * Gets the callback url for this instance
      */
     get callbackUrl(): string {
-        return new URL(`/auth/api/internal/auth/callback/${this.id}`, process.env.GROPIUS_ENDPOINT).toString();
+        return combineURL(`auth/api/internal/auth/callback/${this.id}`, process.env.GROPIUS_ENDPOINT).toString();
     }
 
     toJSON() {

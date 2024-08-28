@@ -11,6 +11,7 @@ import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.enti
 import { JwtService } from "@nestjs/jwt";
 import { Strategy } from "src/strategies/Strategy";
 import { LoginUserService } from "src/model/services/login-user.service";
+import { combineURL } from "src/util/combineURL";
 
 /**
  * Return data of the user data sugestion endpoint
@@ -165,8 +166,8 @@ export class AuthRedirectMiddleware extends StateMiddleware<
                 )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
                     suggestions.displayName ?? "",
                 )}&forceSuggestedUsername=${state.strategy.forceSuggestedUsername}`;
-                const url = `/auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
-                res.redirect(new URL(url, process.env.GROPIUS_ENDPOINT).toString());
+                const url = `auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
+                res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
             } else {
                 await this.redirectWithCode(state, res);
             }

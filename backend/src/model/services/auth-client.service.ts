@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
 import { AuthClient } from "../postgres/AuthClient.entity";
 import { TokenScope } from "src/backend-services/token.service";
+import { combineURL } from "src/util/combineURL";
 
 @Injectable()
 export class AuthClientService extends Repository<AuthClient> {
@@ -14,7 +15,7 @@ export class AuthClientService extends Repository<AuthClient> {
     private createDefaultAuthClients(): AuthClient[] {
         const gropiusAuthClient = new AuthClient();
         gropiusAuthClient.name = "Gropius auth client";
-        gropiusAuthClient.redirectUrls = [new URL("/login", process.env.GROPIUS_ENDPOINT).toString()];
+        gropiusAuthClient.redirectUrls = [combineURL("login", process.env.GROPIUS_ENDPOINT).toString()];
         gropiusAuthClient.id = "gropius-auth-client";
         gropiusAuthClient.isValid = true;
         gropiusAuthClient.validScopes = [
@@ -27,7 +28,7 @@ export class AuthClientService extends Repository<AuthClient> {
 
         const loginAuthClient = new AuthClient();
         loginAuthClient.name = "Login auth client";
-        loginAuthClient.redirectUrls = [new URL("/auth/flow/update", process.env.GROPIUS_ENDPOINT).toString()];
+        loginAuthClient.redirectUrls = [combineURL("auth/flow/update", process.env.GROPIUS_ENDPOINT).toString()];
         loginAuthClient.id = "login-auth-client";
         loginAuthClient.isValid = true;
         loginAuthClient.validScopes = [TokenScope.LOGIN_SERVICE_REGISTER, TokenScope.AUTH, TokenScope.LOGIN_SERVICE];

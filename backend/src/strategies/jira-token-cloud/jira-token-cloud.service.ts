@@ -8,6 +8,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
+import { combineURL } from "src/util/combineURL";
 
 @Injectable()
 export class JiraTokenCloudStrategyService extends Strategy {
@@ -134,7 +135,7 @@ export class JiraTokenCloudStrategyService extends Strategy {
         token: string;
     } | null> {
         const response = await fetch(
-            new URL("/rest/api/2/myself", strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["root-url"]),
+            combineURL("rest/api/2/myself", strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["root-url"]),
             {
                 method: "GET",
                 headers: {
