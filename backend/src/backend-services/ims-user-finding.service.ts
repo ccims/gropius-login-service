@@ -85,7 +85,7 @@ export class ImsUserFindingService {
                 if (requiredTemplatedValues[key] != node[key]) {
                     return false;
                 }
-                if (deepEqual(requiredTemplatedValues[key], node[key])) {
+                if (!deepEqual(requiredTemplatedValues[key], node[key])) {
                     return false;
                 }
                 delete requiredTemplatedValues[key];
