@@ -85,7 +85,7 @@ export class ImsUserFindingService {
                 if (requiredTemplatedValues[key] != node[key]) {
                     return false;
                 }
-                if (deepEqual(requiredTemplatedValues[key], node[key])) {
+                if (!deepEqual(requiredTemplatedValues[key], node[key])) {
                     return false;
                 }
                 delete requiredTemplatedValues[key];
@@ -130,7 +130,7 @@ export class ImsUserFindingService {
                 const allInstances = await strategy.getAllInstances();
                 await Promise.all(
                     allInstances.map(async (instance) => {
-                        if (this.checkIfInstanceMatches(strategy, instance, ims, imsTemplatedValues)) {
+                        if (await this.checkIfInstanceMatches(strategy, instance, ims, imsTemplatedValues)) {
                             matchingInstances.push({ instance, strategy });
                         }
                     }),
