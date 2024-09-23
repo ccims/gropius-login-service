@@ -164,6 +164,7 @@ export class CreateDefaultUserService {
                 throw new Error(`Found user with username ${username} but without admin permissions.`);
             }
             this.logger.log(`User with username ${username} already exists. Skipping creation`);
+            return;
         }
 
         const loginData = await this.getLoginDataThroughAuth(strategyInstanceName, {
