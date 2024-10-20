@@ -200,7 +200,6 @@ export class ImsUserFindingService {
             email?: string;
         },
     ): Promise<UserLoginData | null> {
-        console.log(matchingInstance, matchingStrategy, imsUserTemplatedValues, imsUser);
         const requiredLoginDataData = matchingStrategy.getLoginDataDataForImsUserTemplatedFields({
             ...imsUserTemplatedValues,
             id: imsUser.id,

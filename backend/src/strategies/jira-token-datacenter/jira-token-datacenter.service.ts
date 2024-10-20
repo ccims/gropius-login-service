@@ -134,9 +134,6 @@ export class JiraTokenDatacenterStrategyService extends Strategy {
         );
 
         if (!response.ok) {
-console.log(response.status);
-console.log(await response.text());
-console.log(combineURL("rest/api/2/myself", strategyInstance.instanceConfig["imsTemplatedFieldsFilter"]["root-url"]))
             return null;
         }
 
