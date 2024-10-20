@@ -93,6 +93,7 @@ export class GithubTokenStrategyService extends Strategy {
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
             github_id: loginData.data["github_id"],
+            github_node_id: loginData.data["github_node_id"],
             username: loginData.data["username"],
             displayName: loginData.data["displayName"],
             email: loginData.data["email"],
@@ -102,6 +103,7 @@ export class GithubTokenStrategyService extends Strategy {
     override getLoginDataDataForImsUserTemplatedFields(imsUser: object): object | Promise<object> {
         return {
             github_id: imsUser["github_id"],
+            github_node_id: imsUser["github_node_id"],
         };
     }
 
@@ -119,7 +121,8 @@ export class GithubTokenStrategyService extends Strategy {
         token: string,
         strategyInstance: StrategyInstance,
     ): Promise<{
-        github_id: string;
+        github_id: number;
+        github_node_id: string;
         username: string;
         displayName: string;
         email: string;
@@ -129,6 +132,7 @@ export class GithubTokenStrategyService extends Strategy {
         {
             viewer {
                 id
+                databaseId
                 login
                 name
                 email
@@ -152,7 +156,8 @@ export class GithubTokenStrategyService extends Strategy {
         const userData = data.data.viewer;
 
         return {
-            github_id: userData.id,
+            github_id: userData.databaseId,
+            github_node_id: userData.id,
             username: userData.login,
             displayName: userData.name,
             email: userData.email,

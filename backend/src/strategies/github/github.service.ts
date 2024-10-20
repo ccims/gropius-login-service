@@ -117,7 +117,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     override async getSyncDataForLoginData(
         loginData: UserLoginData,
-    ): Promise<{ token: string | null; [key: string]: any }> {
+    ): Promise<{ token: string | null;[key: string]: any }> {
         const syncLogins = (
             await this.activeLoginService.findValidForLoginDataSortedByExpiration(loginData, true)
         ).filter((login) => !!login.data["accessToken"]);
@@ -127,6 +127,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
     override getImsUserTemplatedValuesForLoginData(loginData: UserLoginData): object {
         return {
             github_id: loginData.data["github_id"],
+            github_node_id: loginData.data["github_node_id"],
             username: loginData.data["username"],
             displayName: loginData.data["displayName"],
             email: loginData.data["email"],
@@ -136,6 +137,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
     override getLoginDataDataForImsUserTemplatedFields(imsUser: object): object | Promise<object> {
         return {
             github_id: imsUser["github_id"],
+            github_node_id: imsUser["github_node_id"],
         };
     }
 
@@ -189,11 +191,13 @@ export class GithubStrategyService extends StrategyUsingPassport {
         const dataUserLoginData = {
             username,
             github_id: parseInt(profile.id),
+            github_node_id: profile.nodeId,
             email: profile.emails?.[0]?.value,
             displayName: profile.displayName,
         };
         const loginDataCandidates = await this.loginDataService.findForStrategyWithDataContaining(strategyInstance, {
             github_id: parseInt(profile.id),
+            github_node_id: profile.nodeId,
         });
         if (loginDataCandidates.length != 1) {
             this.loggerGithub.debug("Oauth login didn't find unique login data", loginDataCandidates);
