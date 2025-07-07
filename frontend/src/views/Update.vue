@@ -64,6 +64,7 @@ import { useRoute, useRouter } from "vue-router";
 import { LoginStrategy, LoginStrategyInstance, LoginStrategyUpdateAction } from "./model";
 import { onMounted } from "vue";
 import InputField from "@/components/InputField.vue";
+import * as oauth from '../util/oauth'
 
 const route = useRoute();
 const router = useRouter();
@@ -73,8 +74,6 @@ const showSuccessMessage = ref(false);
 const errorMessage = ref<string>();
 
 const id = computed(() => (route.query.id as string | undefined) ?? JSON.parse(route.query.state as string).id);
-
-const refreshToken = ref<string>();
 
 const strategy = ref<LoginStrategy>();
 
@@ -95,20 +94,10 @@ function goBack() {
 }
 
 async function submitForm() {
-    const tokenResponse = (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "refresh_token",
-            client_id: "login-auth-client",
-            refresh_token: refreshToken.value
-        })
-    ).data;
-    const accessToken = tokenResponse.access_token;
-    refreshToken.value = tokenResponse.refresh_token;
-
     try {
         await axios.put(`/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`, formData.value, {
             headers: {
-                Authorization: `Bearer ${accessToken}`
+                Authorization: `Bearer ${oauth.getAccessToken()}`
             }
         });
         actionTab.value = 0;
@@ -121,18 +110,8 @@ async function submitForm() {
 
 onMounted(async () => {
     const code = route.query.code!.toString();
-    const codeVerifier = localStorage.getItem("loginServiceCodeVerifier");
     router.replace({ query: { id: id.value } });
-    const tokenResponse = (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "authorization_code",
-            client_id: "login-auth-client",
-            code,
-            code_verifier: codeVerifier
-        })
-    ).data;
-    const accessToken = tokenResponse.access_token;
-    refreshToken.value = tokenResponse.refresh_token;
+    const {accessToken} = await oauth.exchangeToken(code)
 
     const strategyInstance = (
         await axios.get(`/auth/api/login/login-data/${id.value}`, {
