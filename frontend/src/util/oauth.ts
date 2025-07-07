@@ -1,4 +1,4 @@
-import JWT from 'jsonwebtoken'
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 
 export type Token = {
@@ -37,7 +37,7 @@ export function getAccessToken() {
     const token = localStorage.getItem(LOCAL_STORAGE_ACCESS_TOKEN)
     if (!token) return
 
-    const decoded = JWT.decode(token) as Token
+    const decoded = jwtDecode(token) as Token
 
     // Check if token expires in the next 30 seconds
     const now = Math.floor(Date.now() / 1000)
@@ -84,6 +84,13 @@ export async function constructAuthorizeUrl(data: {id: string, silent: boolean})
             code_challenge: codeChallenge,
         }).toString()
     );
+}
+
+export function rejectAccess(redirectUrl: string) {
+    const url = new URL(redirectUrl)
+    url.searchParams.append("error", "access_denied")
+    url.searchParams.append("error_description", "The user did not grant permission.")
+    window.location.href = url.toString()
 }
 
 function base64URLEncode(str: string): string {

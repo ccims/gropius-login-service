@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { OpenApiTag } from "./openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
+import * as session from 'cookie-session'
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -56,6 +57,28 @@ async function bootstrap() {
     const portNumber = parseInt(process.env.GROPIUS_LOGIN_LISTEN_PORT, 10) || 3000;
 
     app.enableCors();
+
+    // TODO: configure proxy
+    // app.set('trust proxy', 1) 
+
+    // TODO: session ttl?
+    // TODO: CSRF
+
+    app.use(session({
+        name: 'gropius-login-session',
+        // TODO: secret
+        secret: 'SOME_SECRET',
+        cookie: {
+            // TODO: with path?
+            path: '/auth',
+            httpOnly: true,
+            // TODO: make this 
+            sameSite: '',
+            // TODO: make this true in prod
+            secure: false,
+        },
+    }))
+
     await app.listen(portNumber);
 }
 bootstrap().catch((err) => console.error("NestJS Application exited with error", err));

@@ -9,6 +9,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import("../views/Login.vue")
     },
     {
+        path: '/prompt',
+        name: 'prompt', 
+        component: () => import("../views/Prompt.vue")
+    },
+    {
         path: "/register-additional",
         name: "register-additional",
         component: () => import("../views/Login.vue")

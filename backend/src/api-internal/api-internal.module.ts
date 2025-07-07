@@ -15,6 +15,7 @@ import { AuthRegisterMiddleware } from "./auth-register.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
 import { AuthErrorRedirectMiddleware } from "./auth-error-redirect.middleware";
 import { UpdateActionController } from "./update-action.controller";
+import { AuthSessionMiddleware } from "./auth-session.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
@@ -35,6 +36,7 @@ export class ApiInternalModule {
         private readonly authRedirect: AuthRedirectMiddleware,
         private readonly modeExtractor: ModeExtractorMiddleware,
         private readonly strategies: StrategiesMiddleware,
+        private readonly session: AuthSessionMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
         private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
@@ -72,6 +74,7 @@ export class ApiInternalModule {
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
                 this.strategies,
+                this.session,
                 this.authRedirect,
                 this.authErrorRedirect,
                 this.oauthErrorRedirect,
