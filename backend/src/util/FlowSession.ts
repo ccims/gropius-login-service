@@ -18,6 +18,10 @@ export type FlowSessionData = {
     // user id
     user?: string;
 
+    // active login id
+    // TODO: is this confidential?
+    activeLogin?: string;
+
     // flow
     flow?: string;
 
@@ -108,6 +112,14 @@ export class FlowSession {
         return user;
     }
 
+    getActiveLogin() {
+        const activeLogin = this.req.session.activeLogin;
+        if (!activeLogin) {
+            throw new OAuthHttpException("invalid_request", "Active login id is missing");
+        }
+        return activeLogin;
+    }
+
     getFlow() {
         const flow = this.req.session.flow;
         if (!flow) {
@@ -116,12 +128,13 @@ export class FlowSession {
         return flow;
     }
 
-    setAuthenticated(userId: string) {
+    setAuthenticated(userId: string, activeLoginId: string) {
         if (this.req.session.step !== "started") {
             throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
 
         this.req.session.user = userId;
+        this.req.session.activeLogin = activeLoginId;
         this.req.session.step = "authenticated";
         return this;
     }

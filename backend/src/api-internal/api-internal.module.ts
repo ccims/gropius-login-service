@@ -93,13 +93,7 @@ export class ApiInternalModule {
         });
 
         this.middlewares.push({
-            middlewares: [
-                this.promptCallback,
-                // TODO: no idea how to adapt this
-                this.authRedirect,
-                this.oauthErrorRedirect,
-                this.errorHandler,
-            ],
+            middlewares: [this.promptCallback, this.authRedirect, this.oauthErrorRedirect, this.errorHandler],
             path: "auth/api/internal/auth/prompt/callback",
         });
 

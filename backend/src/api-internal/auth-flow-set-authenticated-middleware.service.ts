@@ -20,7 +20,7 @@ export class AuthFlowSetAuthenticatedMiddleware extends StateMiddleware<
         next: (error?: Error | any) => void,
     ): Promise<any> {
         const user = await (await state.activeLogin.loginInstanceFor).user;
-        req.flow.setAuthenticated(user.id);
+        req.flow.setAuthenticated(user.id, state.activeLogin.id);
         next();
     }
 }

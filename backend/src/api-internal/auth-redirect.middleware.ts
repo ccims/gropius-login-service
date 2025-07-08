@@ -65,7 +65,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         // if the login service handles the registration, two tokens were already generated: the code and the access token
         if (
             state.activeLogin.nextExpectedRefreshTokenNumber !=
-            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED + (state.secondToken ? 2 : 0)
+            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (state.secondToken ? 2 : 0)
         ) {
             throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }

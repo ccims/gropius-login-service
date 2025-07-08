@@ -26,10 +26,6 @@ export function removeCodeVerifier() {
 
 const LOCAL_STORAGE_ACCESS_TOKEN = constructKey("accessToken");
 
-export function setAccessToken(token: string) {
-    localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN, token);
-}
-
 export function removeAccessToken() {
     localStorage.removeItem(LOCAL_STORAGE_ACCESS_TOKEN);
 }
@@ -53,14 +49,15 @@ export function getAccessToken() {
 }
 
 export async function exchangeToken(code: string) {
-    return (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "authorization_code",
-            client_id: "login-auth-client",
-            code,
-            code_verifier: getCodeVerifier()
-        })
-    ).data as OAuthResponse;
+    const response: OAuthResponse = await axios.post("/auth/oauth/token", {
+        grant_type: "authorization_code",
+        client_id: "login-auth-client",
+        code,
+        code_verifier: getCodeVerifier()
+    }).data;
+
+    localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN, response.access_token);
+    removeCodeVerifier();
 }
 
 export async function fetchPromptData() {

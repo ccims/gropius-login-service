@@ -13,14 +13,14 @@ import { UserLoginData } from "./UserLoginData.entity";
  */
 @Entity()
 export class ActiveLogin {
-    static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED = -1;
+    static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED = -1;
 
     constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
         this.usedStrategyInstance = Promise.resolve(usedStrategyInstance);
         this.created = new Date();
         this.expires = expires || null;
         this.isValid = true;
-        this.nextExpectedRefreshTokenNumber = ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED;
+        this.nextExpectedRefreshTokenNumber = ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED;
     }
 
     /**
