@@ -4,7 +4,8 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { OpenApiTag } from "./openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
-import * as session from 'cookie-session'
+import session = require("cookie-session");
+import * as FlowSession from "./util/FlowSession";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -59,26 +60,28 @@ async function bootstrap() {
     app.enableCors();
 
     // TODO: configure proxy
-    // app.set('trust proxy', 1) 
+    // app.set('trust proxy', 1)
 
-    // TODO: session ttl?
     // TODO: CSRF
 
-    app.use(session({
-        name: 'gropius-login-session',
-        // TODO: secret
-        secret: 'SOME_SECRET',
-        cookie: {
+    app.use(
+        session({
+            name: "gropius-login-session",
+            // TODO: secret
+            secret: "SOME_SECRET",
             // TODO: with path?
-            path: '/auth',
+            path: "/auth",
             httpOnly: true,
-            // TODO: make this 
-            sameSite: '',
+            // TODO: make this
+            sameSite: false,
             // TODO: make this true in prod
             secure: false,
-        },
-    }))
+        }),
+    );
+
+    app.use(FlowSession.middleware);
 
     await app.listen(portNumber);
 }
+
 bootstrap().catch((err) => console.error("NestJS Application exited with error", err));

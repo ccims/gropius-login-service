@@ -58,7 +58,7 @@ export interface LoginStrategyInstance {
     doesImplicitRegister: boolean;
 }
 
-export interface OAuthRespose {
+export interface OAuthResponse {
     access_token: string;
     token_type: string;
     expires_in: number;
@@ -86,4 +86,14 @@ export interface UserDataSuggestionResponse {
     username?: string;
     displayName?: string;
     email?: string;
+}
+
+export interface PromptData {
+    userId: string;
+    username: string;
+    flow: string;
+    redirect: string;
+    scope: string[];
+    clientId: string;
+    clientName: string;
 }

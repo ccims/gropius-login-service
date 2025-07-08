@@ -14,7 +14,7 @@ import { LoginUserService } from "src/model/services/login-user.service";
 import { combineURL } from "src/util/combineURL";
 
 /**
- * Return data of the user data sugestion endpoint
+ * Return data of the user data suggestion endpoint
  */
 interface UserDataSuggestion {
     /**

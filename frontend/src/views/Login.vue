@@ -31,7 +31,6 @@
                                 v-model="formDataAt(strategy.id)[field.name]"
                                 :field="field"
                             />
-                            <input type="hidden" name="state" :value="route.query.state" />
                             <input type="submit" hidden />
                         </v-form>
                     </v-window-item>
@@ -238,14 +237,12 @@ function redirect(strategy: RedirectStrategyInstance) {
 }
 
 async function redirectLogin(strategyInstance: RedirectStrategyInstance) {
-    const state = encodeURIComponent(route.query.state as string);
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login?state=${state}`;
+    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login`;
 }
 
 async function redirectRegister(strategyInstance: RedirectStrategyInstance, sync: boolean) {
-    const state = encodeURIComponent(route.query.state as string);
     const mode = sync ? "register-sync" : "register";
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}?state=${state}`;
+    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}`;
 }
 </script>
 <style scoped>

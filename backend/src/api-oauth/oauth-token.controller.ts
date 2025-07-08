@@ -11,7 +11,7 @@ export class OAuthTokenController {
     @ApiOkResponse({ type: OAuthTokenResponseDto })
     async token(): Promise<OAuthTokenResponseDto> {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }

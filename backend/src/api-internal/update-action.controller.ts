@@ -32,8 +32,8 @@ import { DefaultReturn } from "src/default-return.dto";
 @UseGuards(CheckAuthAccessTokenGuard)
 export class UpdateActionController {
     constructor(
-        private readonly backendUserSerice: BackendUserService,
-        private readonly loginDataSerive: UserLoginDataService,
+        private readonly backendUserService: BackendUserService,
+        private readonly loginDataService: UserLoginDataService,
         private readonly strategyService: StrategiesService,
     ) {}
 
@@ -54,13 +54,13 @@ export class UpdateActionController {
         @Param("action") action: string,
         @Res({ passthrough: true }) res: Response,
     ) {
-        const loginData = await this.loginDataSerive.findOneBy({ id });
+        const loginData = await this.loginDataService.findOneBy({ id });
         if (!loginData) {
             throw new HttpException("id is not a valid login data id", HttpStatus.NOT_FOUND);
         }
         const loggedInUser = (res.locals.state as ApiStateData).loggedInUser;
         if (loggedInUser.id != (await loginData.user).id) {
-            const isAdmin = await this.backendUserSerice.checkIsUserAdmin(loggedInUser);
+            const isAdmin = await this.backendUserService.checkIsUserAdmin(loggedInUser);
             if (!isAdmin) {
                 throw new UnauthorizedException(undefined, "Not sufficient permission to request non self");
             }

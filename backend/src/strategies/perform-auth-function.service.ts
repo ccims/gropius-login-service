@@ -107,7 +107,7 @@ export class PerformAuthFunctionService {
             throw new AuthException("Cannot register", instance.id);
         }
         if (authResult.loginData) {
-            // sucessfully found login data matching the authentication
+            // successfully found login data matching the authentication
             if (authResult.loginData.expires != null && authResult.loginData.expires <= new Date()) {
                 // Found login data is expired =>
                 // shouldn't happen as expired login data are filtered when searhcing for them

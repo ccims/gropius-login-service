@@ -21,7 +21,6 @@
                         class="mb-1"
                     />
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
-                    <input type="hidden" name="state" :value="route.query.state" />
                     <input type="hidden" name="register_token" :value="token" />
                     <v-card-actions>
                         <v-spacer />

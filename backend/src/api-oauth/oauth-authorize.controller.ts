@@ -3,7 +3,7 @@ import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 
 /**
- * Controller for the openapi generator to find the oauth server routes that are handeled exclusively in middleware.
+ * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
  *
  * This includes:
  * - Authorize endpoint
@@ -54,7 +54,7 @@ export class OauthAuthorizeController {
     @ApiTags(OpenApiTag.OAUTH_API)
     authorizeEndpoint() {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }

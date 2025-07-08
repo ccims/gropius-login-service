@@ -1,11 +1,15 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
 import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
+import { Request } from "express";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { LoginUserService } from "../model/services/login-user.service";
+import { AuthClientService } from "../model/services/auth-client.service";
 
 /**
- * Controller for the openapi generator to find the oauth server routes that are handeled exclusively in middleware.
+ * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
  *
  * This includes:
  * - Authorize endpoint
@@ -14,6 +18,11 @@ import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
 export class AuthEndpointsController {
+    constructor(
+        private readonly userService: LoginUserService,
+        private readonly authClientService: AuthClientService,
+    ) {}
+
     /**
      * Authorize endpoint for strategy instance of the given id.
      * Functionality performed is determined by mode parameter.
@@ -32,7 +41,7 @@ export class AuthEndpointsController {
     })
     loginStrategyRedirect(@Param("id") id: string, @Param("mode") mode?: AuthFunctionInput) {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
@@ -51,7 +60,7 @@ export class AuthEndpointsController {
     })
     loginStrategyCallback() {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
@@ -67,16 +76,55 @@ export class AuthEndpointsController {
     })
     loginStrategySubmit() {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
+            HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+    }
+
+    @Get("prompt/data")
+    @ApiOperation({ summary: "Endpoint to access data that should be displayed to the user" })
+    async promptData(@Req() req: Request): Promise<{
+        userId: string;
+        username: string;
+        flow: string;
+        redirect: string;
+        scope: string[];
+        clientId: string;
+        clientName: string;
+    }> {
+        if (!req.flow.isAuthenticated()) {
+            throw new OAuthHttpException("access_denied", "The user is not authenticated");
+        }
+
+        const request = req.flow.getRequest();
+        const user = await this.userService.findOneBy({ id: req.flow.getUser() });
+        const client = await this.authClientService.findAuthClient(request.clientId);
+
+        return {
+            userId: req.flow.getUser(),
+            username: user.username,
+            flow: req.flow.getFlow(),
+            redirect: request.redirect,
+            scope: request.scope,
+            clientId: request.clientId,
+            clientName: client.name,
+        };
+    }
+
+    @Post("prompt/callback")
+    @ApiOperation({ summary: "Callback endpoint for granting permissions" })
+    promptCallback(@Body() flow: string, @Body() consent: boolean) {
+        throw new HttpException(
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
 
     @Post("register")
-    @ApiOperation({ summary: "Copmplete a registration" })
+    @ApiOperation({ summary: "Complete a registration" })
     register(@Body() input: SelfRegisterUserInput) {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }

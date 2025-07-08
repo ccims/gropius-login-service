@@ -15,7 +15,9 @@ import { AuthRegisterMiddleware } from "./auth-register.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
 import { AuthErrorRedirectMiddleware } from "./auth-error-redirect.middleware";
 import { UpdateActionController } from "./update-action.controller";
-import { AuthSessionMiddleware } from "./auth-session.middleware";
+import { AuthFlowSetAuthenticatedMiddleware } from "./auth-flow-set-authenticated-middleware.service";
+import { AuthPromptRedirectMiddleware } from "./auth-prompt-redirect.middleware";
+import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
@@ -25,6 +27,9 @@ import { AuthSessionMiddleware } from "./auth-session.middleware";
         AuthRegisterMiddleware,
         ModeExtractorMiddleware,
         AuthErrorRedirectMiddleware,
+        AuthFlowSetAuthenticatedMiddleware,
+        AuthPromptRedirectMiddleware,
+        AuthPromptCallbackMiddleware,
     ],
     controllers: [AuthEndpointsController, UpdateActionController],
 })
@@ -32,20 +37,23 @@ export class ApiInternalModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
 
     constructor(
-        private readonly authAutorizeExtract: AuthAuthorizeExtractMiddleware,
+        private readonly authAuthorizeExtract: AuthAuthorizeExtractMiddleware,
         private readonly authRedirect: AuthRedirectMiddleware,
         private readonly modeExtractor: ModeExtractorMiddleware,
         private readonly strategies: StrategiesMiddleware,
-        private readonly session: AuthSessionMiddleware,
+        private readonly flowSetAuthenticated: AuthFlowSetAuthenticatedMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
         private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
         private readonly authRegister: AuthRegisterMiddleware,
         private readonly authErrorRedirect: AuthErrorRedirectMiddleware,
+        private readonly promptRedirect: AuthPromptRedirectMiddleware,
+        private readonly promptCallback: AuthPromptCallbackMiddleware,
     ) {
+        // TODO: adapt this to new prompt flow? (starts external oauth)
         this.middlewares.push({
             middlewares: [
-                this.authAutorizeExtract,
+                this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
                 this.strategies,
@@ -56,6 +64,7 @@ export class ApiInternalModule {
             path: "auth/api/internal/auth/redirect/:id/:mode",
         });
 
+        // TODO: rewrite this to new prompt flow (callback for external oauth)
         this.middlewares.push({
             middlewares: [
                 this.strategies,
@@ -70,14 +79,14 @@ export class ApiInternalModule {
 
         this.middlewares.push({
             middlewares: [
-                this.authAutorizeExtract,
+                this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
                 this.strategies,
-                this.session,
-                this.authRedirect,
                 this.authErrorRedirect,
                 this.oauthErrorRedirect,
+                this.flowSetAuthenticated,
+                this.promptRedirect,
                 this.errorHandler,
             ],
             path: "auth/api/internal/auth/submit/:id/:mode",
@@ -85,7 +94,19 @@ export class ApiInternalModule {
 
         this.middlewares.push({
             middlewares: [
-                this.authAutorizeExtract,
+                this.promptCallback,
+                // TODO: no idea how to adapt this
+                this.authRedirect,
+                this.oauthErrorRedirect,
+                this.errorHandler,
+            ],
+            path: "auth/api/internal/auth/prompt/callback",
+        });
+
+        // TODO: adapt this to new prompt flow?
+        this.middlewares.push({
+            middlewares: [
+                this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.authRegister,
                 this.authRedirect,

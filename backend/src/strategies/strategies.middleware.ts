@@ -89,7 +89,7 @@ export class StrategiesMiddleware extends StateMiddleware<
             await this.performImsUserSearchIfNeeded(state, instance, strategy);
         } else {
             throw new AuthException(
-                result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfull",
+                result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfully",
                 instance.id,
             );
         }
