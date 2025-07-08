@@ -22,15 +22,15 @@ export type FlowSessionData = {
     // TODO: is this confidential?
     activeLogin?: string;
 
-    // flow
+    // flow id (used to bind the whole interaction)
     flow?: string;
 
     // oauth authorization request
     request?: OAuthAuthorizeRequest;
 
-    // current step in the flow process
+    // current step in the flow process (the steps are sequential as givne and might be restarted from "started" any time)
     // TODO: register?
-    step: "init" | "started" | "authenticated" | "prompted";
+    step: "init" | "started" | "authenticated" | "prompted" | "finished";
 };
 
 // TODO: session can be undefined?!
@@ -149,6 +149,23 @@ export class FlowSession {
         }
 
         this.req.session.step = "prompted";
+        return this;
+    }
+
+    setFinished(flow: string) {
+        if (this.req.session.step !== "prompted") {
+            throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
+        }
+
+        if (flow !== this.req.session.flow) {
+            throw new OAuthHttpException("invalid_request", "Another flow is currently running");
+        }
+
+        this.req.session.step = "finished";
+
+        delete this.req.session.flow;
+        delete this.req.session.request;
+        delete this.req.session.activeLogin;
         return this;
     }
 }

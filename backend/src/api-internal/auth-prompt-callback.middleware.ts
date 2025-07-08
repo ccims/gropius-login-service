@@ -60,6 +60,9 @@ export class AuthPromptCallbackMiddleware extends StateMiddleware<
         const client = await this.authClientService.findAuthClient(request.clientId);
         this.appendState(res, { activeLogin, request, client });
 
+        // Update flow
+        req.flow.setFinished(data.flow);
+
         next();
     }
 }
