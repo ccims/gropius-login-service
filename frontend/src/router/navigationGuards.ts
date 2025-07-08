@@ -5,19 +5,9 @@ export async function checkAuth(
     to: RouteLocationNormalized,
     from: RouteLocationNormalized
 ): Promise<RouteLocationRaw | boolean> {
-    const id = to.query.id as string;
-
-    // Check if user had been already authenticated
-    const token = oauth.getAccessToken();
-    if (token) {
-        if (!token.expired) return true;
-        oauth.clean();
-        window.location.href = await oauth.constructAuthorizeUrl({ id });
-    }
-
-    // User has not been authenticated yet
+    // If this is not an oauth callback, then ensure that access token exists
     if (to.query.code == undefined) {
-        window.location.href = await oauth.constructAuthorizeUrl({ id });
+        await oauth.loadAccessToken();
     }
 
     return true;

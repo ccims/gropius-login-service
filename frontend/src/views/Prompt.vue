@@ -73,7 +73,7 @@ function onSubmit() {
     if (form.value) nextTick(() => form.value.submit());
 }
 
-const data = ref<PromptData>(null);
+const data = ref<oauth.PromptData>(null);
 onMounted(async () => {
     data.value = await oauth.fetchPromptData();
 });

@@ -97,7 +97,7 @@ async function submitForm() {
     try {
         await axios.put(`/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`, formData.value, {
             headers: {
-                Authorization: `Bearer ${oauth.getAccessToken()}`
+                Authorization: `Bearer ${await oauth.loadAccessToken()}`
             }
         });
         actionTab.value = 0;
@@ -116,7 +116,7 @@ onMounted(async () => {
     const strategyInstance = (
         await axios.get(`/auth/api/login/login-data/${id.value}`, {
             headers: {
-                Authorization: `Bearer ${oauth.getAccessToken()}`
+                Authorization: `Bearer ${await oauth.loadAccessToken()}`
             }
         })
     ).data.strategyInstance as LoginStrategyInstance;

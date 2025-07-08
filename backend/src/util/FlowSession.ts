@@ -32,8 +32,6 @@ export type FlowSessionData = {
     step: "init" | "started" | "authenticated" | "prompted" | "finished";
 };
 
-// TODO: session can be undefined?!
-
 /**
  * Persistent session-based authentication used, e.g., for permission prompts and silent authentication.
  * Session data is exposed to the client and MUST NOT contain sensitive information.
@@ -44,16 +42,15 @@ export class FlowSession {
 
     constructor(req: Request) {
         this.req = req as RequestWithSession;
-        this.init();
     }
 
     init() {
-        if (this.req.session) return this;
+        if (this.req.session?.isPopulated) return this;
         const iat = now();
         this.req.session = {
             id: uuidv4(),
             iat,
-            exp: iat + MONTH_DAYS_IN_SECONDS,
+            exp: iat + MONTH_IN_SECONDS,
             step: "init",
         };
     }
@@ -63,11 +60,11 @@ export class FlowSession {
     }
 
     isValid() {
-        // Not initialized
-        if (!this.req.session) return false;
-
         // Expired
-        if (now() > this.req.session.exp) return false;
+        if (now() > this.req.session.exp) {
+            console.log(this.req.session, now(), this.req.session.exp);
+            return false;
+        }
 
         // Revoked
         // TODO: check if revoked
@@ -76,17 +73,20 @@ export class FlowSession {
     }
 
     drop() {
-        // TODO: why do we drop it?!
-        console.log("would have dropped");
-        // this.req.session = null;
+        this.req.session = null;
         return this;
+    }
+
+    regenerate() {
+        this.drop();
+        this.init();
     }
 
     setStarted(request: OAuthAuthorizeRequest) {
         this.init();
 
-        if (this.req.session.exp !== this.req.session.iat + MONTH_DAYS_IN_SECONDS) {
-            this.req.session.exp += MONTH_DAYS_IN_SECONDS;
+        if (this.req.session.exp !== this.req.session.iat + MONTH_IN_SECONDS) {
+            this.req.session.exp += MONTH_IN_SECONDS;
         }
         this.req.session.flow = uuidv4();
         this.req.session.request = request;
@@ -169,17 +169,16 @@ export class FlowSession {
     }
 }
 
-const MONTH_DAYS_IN_SECONDS = 30 * 60 * 30;
+const MONTH_IN_SECONDS = 30 * 24 * 60 * 60;
 
 function now() {
     return Math.floor(Date.now() / 1000);
 }
 
 export function middleware(req: Request, res: Response, next: NextFunction) {
-    if (req.session) {
-        req.flow = new FlowSession(req);
-        if (!req.flow.isValid()) req.flow.drop();
-    }
+    req.flow = new FlowSession(req);
+    req.flow.init();
+    if (!req.flow.isValid()) req.flow.regenerate();
     next();
 }
 

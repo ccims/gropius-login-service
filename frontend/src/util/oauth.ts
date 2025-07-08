@@ -1,10 +1,35 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { OAuthResponse, PromptData } from "@/views/model";
 
 export type Token = {
     iat: number;
 };
+
+export interface OAuthResponse {
+    access_token: string;
+    token_type: string;
+    expires_in: number;
+    refresh_token: string;
+    scope: string;
+}
+
+export enum TokenScope {
+    LOGIN_SERVICE = "login",
+    LOGIN_SERVICE_REGISTER = "login-register",
+    BACKEND = "backend",
+    REFRESH_TOKEN = "token",
+    NONE = "none"
+}
+
+export interface PromptData {
+    userId: string;
+    username: string;
+    flow: string;
+    redirect: string;
+    scope: string[];
+    clientId: string;
+    clientName: string;
+}
 
 function constructKey(key: string) {
     return `gropiusLoginFrontend__${key}`;
@@ -25,46 +50,90 @@ export function removeCodeVerifier() {
 }
 
 const LOCAL_STORAGE_ACCESS_TOKEN = constructKey("accessToken");
+let _refreshToken: string | undefined;
 
-export function removeAccessToken() {
-    localStorage.removeItem(LOCAL_STORAGE_ACCESS_TOKEN);
+export function setResponse(response: OAuthResponse) {
+    localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN, response.access_token);
+    _refreshToken = response.refresh_token;
 }
 
 export function getAccessToken() {
-    const token = localStorage.getItem(LOCAL_STORAGE_ACCESS_TOKEN);
-    if (!token) return;
+    return localStorage.getItem(LOCAL_STORAGE_ACCESS_TOKEN);
+}
 
+export function getRefreshToken() {
+    return _refreshToken;
+}
+
+export function removeResponse() {
+    localStorage.removeItem(LOCAL_STORAGE_ACCESS_TOKEN);
+    _refreshToken = undefined;
+}
+
+export async function loadAccessToken() {
+    // Current access token
+    const token = getAccessToken();
+
+    // Start new redirect flow
+    if (!token) await authorize();
+
+    // Check if access token expires soon
     const decoded = jwtDecode(token) as Token;
-
-    // Check if token expires in the next 30 seconds
     const now = Math.floor(Date.now() / 1000);
-    const buffer = 30;
+    const buffer = 15;
     const expired = now > decoded.iat + buffer;
+    if (!expired) return token;
 
-    return {
-        decoded,
-        token,
-        expired
-    };
+    // Refresh token
+    const refreshed = await refreshToken();
+    if (refreshed) return getAccessToken();
+
+    // Start new redirect flow
+    await authorize();
 }
 
 export async function exchangeToken(code: string) {
-    const response: OAuthResponse = await axios.post("/auth/oauth/token", {
+    const { data } = await axios.post<OAuthResponse>("/auth/oauth/token", {
         grant_type: "authorization_code",
         client_id: "login-auth-client",
         code,
         code_verifier: getCodeVerifier()
-    }).data;
+    });
 
-    localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN, response.access_token);
+    setResponse(data);
     removeCodeVerifier();
+}
+
+export async function refreshToken() {
+    try {
+        const token = getRefreshToken();
+        if (!token) return false;
+
+        const { data } = await axios.post<OAuthResponse>("/auth/oauth/token", {
+            grant_type: "refresh_token",
+            client_id: "login-auth-client",
+            refresh_token: token
+        });
+        setResponse(data);
+        return true;
+    } catch (err: Error) {
+        console.log(err);
+        return false;
+    }
 }
 
 export async function fetchPromptData() {
     return (await axios.get("/auth/api/internal/auth/prompt/data")).data as PromptData;
 }
 
-export async function constructAuthorizeUrl(data: { id: string }): Promise<string> {
+export async function authorize(): Promise<string> {
+    clean();
+
+    // TODO: this does not work
+    const query = new URLSearchParams(window.location.search);
+    const id = query.get("id");
+    const state = { id };
+
     const codeVerifierArray = new Uint8Array(32);
     crypto.getRandomValues(codeVerifierArray);
     const codeVerifier = base64URLEncode(String.fromCharCode.apply(null, Array.from(codeVerifierArray)));
@@ -73,18 +142,17 @@ export async function constructAuthorizeUrl(data: { id: string }): Promise<strin
     const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(codeVerifier));
     const codeChallenge = base64URLEncode(String.fromCharCode.apply(null, Array.from(new Uint8Array(hash))));
 
-    return (
+    window.location.href =
         "/auth/oauth/authorize?" +
         new URLSearchParams({
             client_id: "login-auth-client",
             response_type: "code",
             scope: "auth login",
             redirect_uri: window.location.origin + "/auth/flow/update",
-            state: JSON.stringify({ id: data.id }),
+            state: JSON.stringify(state),
             code_challenge_method: "S256",
             code_challenge: codeChallenge
-        }).toString()
-    );
+        }).toString();
 }
 
 function base64URLEncode(str: string): string {
@@ -92,6 +160,6 @@ function base64URLEncode(str: string): string {
 }
 
 export function clean() {
-    removeAccessToken();
+    removeResponse();
     removeCodeVerifier();
 }

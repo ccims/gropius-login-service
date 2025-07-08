@@ -58,22 +58,6 @@ export interface LoginStrategyInstance {
     doesImplicitRegister: boolean;
 }
 
-export interface OAuthResponse {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-    refresh_token: string;
-    scope: string;
-}
-
-export enum TokenScope {
-    LOGIN_SERVICE = "login",
-    LOGIN_SERVICE_REGISTER = "login-register",
-    BACKEND = "backend",
-    REFRESH_TOKEN = "token",
-    NONE = "none"
-}
-
 export enum UserDataSuggestionStatus {
     ALREADY_REGISTERED = "already-registered",
     USERNAME_TAKEN = "username-taken",
@@ -86,14 +70,4 @@ export interface UserDataSuggestionResponse {
     username?: string;
     displayName?: string;
     email?: string;
-}
-
-export interface PromptData {
-    userId: string;
-    username: string;
-    flow: string;
-    redirect: string;
-    scope: string[];
-    clientId: string;
-    clientName: string;
 }
