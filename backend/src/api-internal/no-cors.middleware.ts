@@ -10,11 +10,7 @@ export class NoCorsMiddleware extends StateMiddleware {
         state: { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        disableCors(res);
+        res.set("Access-Control-Allow-Origin", process.env.GROPIUS_ENDPOINT);
         next();
     }
-}
-
-export function disableCors(res: Response) {
-    res.set("Access-Control-Allow-Origin", process.env.GROPIUS_ENDPOINT);
 }

@@ -1,13 +1,13 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
 import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
-import { Request, Response } from "express";
+import { Request } from "express";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { LoginUserService } from "../model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
-import { disableCors } from "./no-cors.middleware";
+import { NoCors } from "./no-cors.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -83,11 +83,9 @@ export class AuthEndpointsController {
     }
 
     @Get("prompt/data")
+    @NoCors()
     @ApiOperation({ summary: "Endpoint to access data that should be displayed to the user" })
-    async promptData(
-        @Req() req: Request,
-        @Res({ passthrough: true }) res: Response,
-    ): Promise<{
+    async promptData(@Req() req: Request): Promise<{
         userId: string;
         username: string;
         flow: string;
@@ -96,8 +94,6 @@ export class AuthEndpointsController {
         clientId: string;
         clientName: string;
     }> {
-        disableCors(res);
-
         if (!req.flow.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
