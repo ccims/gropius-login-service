@@ -69,7 +69,7 @@ async function bootstrap() {
             name: "gropius-login-session",
             // TODO: secret
             secret: "SOME_SECRET",
-            // TODO: with path?
+            // TODO: which path?
             path: "/auth",
             httpOnly: true,
             // TODO: make this

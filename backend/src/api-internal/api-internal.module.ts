@@ -18,12 +18,10 @@ import { UpdateActionController } from "./update-action.controller";
 import { AuthFlowSetAuthenticatedMiddleware } from "./auth-flow-set-authenticated-middleware.service";
 import { AuthPromptRedirectMiddleware } from "./auth-prompt-redirect.middleware";
 import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware";
-import { NoCorsMiddleware } from "./no-cors.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
     providers: [
-        NoCorsMiddleware,
         AuthAuthorizeExtractMiddleware,
         AuthRedirectMiddleware,
         AuthRegisterMiddleware,
@@ -39,7 +37,6 @@ export class ApiInternalModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
 
     constructor(
-        private readonly noCors: NoCorsMiddleware,
         private readonly authAuthorizeExtract: AuthAuthorizeExtractMiddleware,
         private readonly authRedirect: AuthRedirectMiddleware,
         private readonly modeExtractor: ModeExtractorMiddleware,
@@ -56,7 +53,6 @@ export class ApiInternalModule {
         // TODO: adapt this to new prompt flow? (starts external oauth)
         this.middlewares.push({
             middlewares: [
-                this.noCors,
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
@@ -71,7 +67,6 @@ export class ApiInternalModule {
         // TODO: rewrite this to new prompt flow (callback for external oauth)
         this.middlewares.push({
             middlewares: [
-                this.noCors,
                 this.strategies,
                 this.oauthAuthorizeValidate,
                 this.authRedirect,
@@ -84,7 +79,6 @@ export class ApiInternalModule {
 
         this.middlewares.push({
             middlewares: [
-                this.noCors,
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
@@ -106,7 +100,6 @@ export class ApiInternalModule {
         // TODO: adapt this to new prompt flow?
         this.middlewares.push({
             middlewares: [
-                this.noCors,
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.authRegister,

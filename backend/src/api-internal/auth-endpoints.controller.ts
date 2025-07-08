@@ -32,6 +32,7 @@ export class AuthEndpointsController {
      *
      */
     @Get("redirect/:id/:mode")
+    @NoCors()
     @ApiOperation({ summary: "Authorize endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to initiate" })
     @ApiParam({
@@ -54,6 +55,7 @@ export class AuthEndpointsController {
      * Meant as callback for oauth flows started by the login-service
      */
     @Get("callback/:id")
+    @NoCors()
     @ApiOperation({ summary: "Redirect/Callback endpoint for a strategy instance" })
     @ApiParam({
         name: "id",
@@ -67,6 +69,7 @@ export class AuthEndpointsController {
     }
 
     @Get("submit/:id/:mode")
+    @NoCors()
     @ApiOperation({ summary: "Submit endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to submit" })
     @ApiParam({
@@ -114,6 +117,7 @@ export class AuthEndpointsController {
     }
 
     @Post("prompt/callback")
+    @NoCors()
     @ApiOperation({ summary: "Callback endpoint for granting permissions" })
     promptCallback(@Body() flow: string, @Body() consent: boolean) {
         throw new HttpException(
@@ -123,6 +127,7 @@ export class AuthEndpointsController {
     }
 
     @Post("register")
+    @NoCors()
     @ApiOperation({ summary: "Complete a registration" })
     register(@Body() input: SelfRegisterUserInput) {
         throw new HttpException(

@@ -17,7 +17,7 @@ export class AuthRegisterMiddleware extends StateMiddleware<
     constructor(
         private readonly checkRegistrationTokenService: CheckRegistrationTokenService,
         private readonly userService: LoginUserService,
-        private readonly backendUserSerivce: BackendUserService,
+        private readonly backendUserService: BackendUserService,
     ) {
         super();
     }
@@ -39,8 +39,8 @@ export class AuthRegisterMiddleware extends StateMiddleware<
         if ((await this.userService.countBy({ username: input.username })) > 0) {
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
         }
-        const newUser = await this.backendUserSerivce.createNewUser(input, false);
-        await this.backendUserSerivce.linkAccountToUser(newUser, loginData, activeLogin);
+        const newUser = await this.backendUserService.createNewUser(input, false);
+        await this.backendUserService.linkAccountToUser(newUser, loginData, activeLogin);
         this.appendState(res, { activeLogin, secondToken: true });
         next();
     }

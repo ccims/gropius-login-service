@@ -16,8 +16,6 @@ export class AuthAuthorizeExtractMiddleware extends StateMiddleware<{}, Omit<OAu
         state: { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        // TODO: can we omit this middleware since we have FlowSession?
-
         const newState = { request: req.flow.getRequest() };
 
         this.appendState(res, {

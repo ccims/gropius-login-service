@@ -28,8 +28,7 @@ export type FlowSessionData = {
     // oauth authorization request
     request?: OAuthAuthorizeRequest;
 
-    // current step in the flow process (the steps are sequential as givne and might be restarted from "started" any time)
-    // TODO: register?
+    // current step in the flow process (the steps are sequential as given and might be restarted from "started" any time)
     step: "init" | "started" | "authenticated" | "prompted" | "finished";
 };
 

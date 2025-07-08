@@ -26,6 +26,7 @@ import { Response } from "express";
 import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { DefaultReturn } from "src/default-return.dto";
+import { NoCors } from "./no-cors.decorator";
 
 @Controller("update-action")
 @ApiTags(OpenApiTag.INTERNAL_API)
@@ -38,6 +39,7 @@ export class UpdateActionController {
     ) {}
 
     @Put(":id/:action")
+    @NoCors()
     @ApiOperation({ summary: "Update a login data with a specific action" })
     @ApiParam({ name: "id", type: String, description: "The id of the login data to update" })
     @ApiParam({ name: "action", type: String, description: "The action to perform on the login data" })

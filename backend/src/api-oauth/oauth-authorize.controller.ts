@@ -1,6 +1,7 @@
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
+import { NoCors } from "../api-internal/no-cors.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -19,6 +20,7 @@ export class OauthAuthorizeController {
      *
      */
     @Get("authorize")
+    @NoCors()
     @ApiOperation({ summary: "Authorize OAuth endpoint" })
     @ApiQuery({ name: "client_id", type: String, description: "The id of the client to initiate" })
     @ApiQuery({
