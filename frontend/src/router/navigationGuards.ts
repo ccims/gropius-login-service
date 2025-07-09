@@ -5,9 +5,15 @@ export async function checkAuth(
     to: RouteLocationNormalized,
     from: RouteLocationNormalized
 ): Promise<RouteLocationRaw | boolean> {
-    // If this is not an oauth callback, then ensure that access token exists
+    const id = to.query.id as string;
+
     if (to.query.code == undefined) {
-        await oauth.loadAccessToken();
+        try {
+            await oauth.loadToken();
+        } catch (error: Error) {
+            console.error(error);
+            await oauth.authorizeUser({ id });
+        }
     }
 
     return true;

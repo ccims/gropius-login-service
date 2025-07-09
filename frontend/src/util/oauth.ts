@@ -5,7 +5,7 @@ export type Token = {
     iat: number;
 };
 
-export interface OAuthResponse {
+export interface TokenResponse {
     access_token: string;
     token_type: string;
     expires_in: number;
@@ -52,7 +52,7 @@ export function removeCodeVerifier() {
 const LOCAL_STORAGE_ACCESS_TOKEN = constructKey("accessToken");
 let _refreshToken: string | undefined;
 
-export function setResponse(response: OAuthResponse) {
+export function setResponse(response: TokenResponse) {
     localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN, response.access_token);
     _refreshToken = response.refresh_token;
 }
@@ -70,30 +70,28 @@ export function removeResponse() {
     _refreshToken = undefined;
 }
 
-export async function loadAccessToken() {
+export async function loadToken(): Promise<string> {
     // Current access token
     const token = getAccessToken();
 
-    // Start new redirect flow
-    if (!token) await authorize();
-
     // Check if access token expires soon
-    const decoded = jwtDecode(token) as Token;
-    const now = Math.floor(Date.now() / 1000);
-    const buffer = 15;
-    const expired = now > decoded.iat + buffer;
-    if (!expired) return token;
+    if (token) {
+        const decoded = jwtDecode(token) as Token;
+        const now = Math.floor(Date.now() / 1000);
+        const buffer = 15;
+        const expired = now > decoded.iat + buffer;
+        if (!expired) return token;
+    }
 
     // Refresh token
     const refreshed = await refreshToken();
     if (refreshed) return getAccessToken();
 
-    // Start new redirect flow
-    await authorize();
+    throw new Error("No access token available.");
 }
 
 export async function exchangeToken(code: string) {
-    const { data } = await axios.post<OAuthResponse>("/auth/oauth/token", {
+    const { data } = await axios.post<TokenResponse>("/auth/oauth/token", {
         grant_type: "authorization_code",
         client_id: "login-auth-client",
         code,
@@ -109,7 +107,7 @@ export async function refreshToken() {
         const token = getRefreshToken();
         if (!token) return false;
 
-        const { data } = await axios.post<OAuthResponse>("/auth/oauth/token", {
+        const { data } = await axios.post<TokenResponse>("/auth/oauth/token", {
             grant_type: "refresh_token",
             client_id: "login-auth-client",
             refresh_token: token
@@ -126,13 +124,8 @@ export async function fetchPromptData() {
     return (await axios.get("/auth/api/internal/auth/prompt/data")).data as PromptData;
 }
 
-export async function authorize(): Promise<string> {
+export async function authorizeUser(state: object): Promise<string> {
     clean();
-
-    // TODO: this does not work
-    const query = new URLSearchParams(window.location.search);
-    const id = query.get("id");
-    const state = { id };
 
     const codeVerifierArray = new Uint8Array(32);
     crypto.getRandomValues(codeVerifierArray);
