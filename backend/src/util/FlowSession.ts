@@ -135,6 +135,7 @@ export class FlowSession {
         this.req.session.user = userId;
         this.req.session.activeLogin = activeLoginId;
         this.req.session.step = "authenticated";
+
         return this;
     }
 

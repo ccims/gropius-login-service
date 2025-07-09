@@ -50,7 +50,6 @@ export class ApiInternalModule {
         private readonly promptRedirect: AuthPromptRedirectMiddleware,
         private readonly promptCallback: AuthPromptCallbackMiddleware,
     ) {
-        // TODO: adapt this to new prompt flow? (starts external oauth)
         this.middlewares.push({
             middlewares: [
                 this.authAuthorizeExtract,
@@ -64,12 +63,11 @@ export class ApiInternalModule {
             path: "auth/api/internal/auth/redirect/:id/:mode",
         });
 
-        // TODO: rewrite this to new prompt flow (callback for external oauth)
         this.middlewares.push({
             middlewares: [
                 this.strategies,
-                this.oauthAuthorizeValidate,
-                this.authRedirect,
+                this.flowSetAuthenticated,
+                this.promptRedirect,
                 this.authErrorRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,
@@ -83,10 +81,10 @@ export class ApiInternalModule {
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
                 this.strategies,
-                this.authErrorRedirect,
-                this.oauthErrorRedirect,
                 this.flowSetAuthenticated,
                 this.promptRedirect,
+                this.authErrorRedirect,
+                this.oauthErrorRedirect,
                 this.errorHandler,
             ],
             path: "auth/api/internal/auth/submit/:id/:mode",
