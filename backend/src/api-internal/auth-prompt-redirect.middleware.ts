@@ -14,12 +14,15 @@ export class AuthPromptRedirectMiddleware extends StateMiddleware<
         super();
     }
 
-    protected override async useWithState(
+    override async useWithState(
         req: Request,
         res: Response,
         state: OAuthAuthorizeServerState & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<void> {
+        // Check if middleware is enabled
+        if (!req.flow.middlewares.prompt) return next();
+
         // Do not prompt for internal clients or if consent is already given
         if (state.client.isInternal || req.flow.didConsent()) {
             req.flow.skipPrompt();

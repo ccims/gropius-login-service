@@ -13,6 +13,9 @@ import { BackendServicesModule } from "src/backend-services/backend-services.mod
 import { StrategiesModule } from "src/strategies/strategies.module";
 import { EncryptionService } from "./encryption.service";
 import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
+import { AuthFlowSwitchMiddleware } from "./auth-flow-switch";
+import { AuthRedirectMiddleware } from "../api-internal/auth-redirect.middleware";
+import { AuthPromptRedirectMiddleware } from "../api-internal/auth-prompt-redirect.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
@@ -26,6 +29,9 @@ import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-cred
         ErrorHandlerMiddleware,
         OAuthErrorRedirectMiddleware,
         EncryptionService,
+        AuthRedirectMiddleware,
+        AuthPromptRedirectMiddleware,
+        AuthFlowSwitchMiddleware,
     ],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
     exports: [OAuthAuthorizeValidateMiddleware, ErrorHandlerMiddleware, OAuthErrorRedirectMiddleware],
@@ -40,11 +46,17 @@ export class ApiOauthModule {
         private readonly oauthToken: OAuthTokenMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
+        private readonly authFlowSwitch: AuthFlowSwitchMiddleware,
+        private readonly authRedirect: AuthRedirectMiddleware,
+        private readonly promptRedirect: AuthPromptRedirectMiddleware,
     ) {
         this.middlewares.push({
             middlewares: [
                 this.oauthAuthorizeExtract,
                 this.oauthAuthorizeValidate,
+                this.authFlowSwitch,
+                this.promptRedirect,
+                this.authRedirect,
                 this.oauthAuthorizeRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,

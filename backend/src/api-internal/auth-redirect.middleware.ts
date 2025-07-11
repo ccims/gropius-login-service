@@ -55,6 +55,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         super();
     }
 
+    // TODO: this needs to be adapted to the "automatic login thing"
     private async assignActiveLoginToClient(
         state: AuthStateServerData & OAuthAuthorizeServerState & { secondToken?: boolean },
         expiresIn: number,
@@ -67,7 +68,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
             state.activeLogin.nextExpectedRefreshTokenNumber !=
             ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (state.secondToken ? 2 : 0)
         ) {
-            throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
+            // TODO: throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (state.activeLogin.expires != null && state.activeLogin.expires <= new Date()) {
             throw new Error("Active login expired");
@@ -133,12 +134,15 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         };
     }
 
-    protected override async useWithState(
+    override async useWithState(
         req: Request,
         res: Response,
         state: AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy } & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
+        // Check if middleware is enabled
+        if (!req.flow.middlewares.code) return next();
+
         if (!state.activeLogin) {
             throw new OAuthHttpException("server_error", "No active login");
         }

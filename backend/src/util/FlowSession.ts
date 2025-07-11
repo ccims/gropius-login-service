@@ -44,6 +44,11 @@ export type FlowSessionData = {
 export class FlowSession {
     private readonly req: RequestWithSession;
 
+    middlewares: {
+        prompt: boolean;
+        code: boolean;
+    } = { prompt: true, code: true };
+
     constructor(req: Request) {
         this.req = req as RequestWithSession;
     }
@@ -182,7 +187,6 @@ export class FlowSession {
 
         delete this.req.session.flow;
         delete this.req.session.request;
-        delete this.req.session.activeLogin;
         return this;
     }
 
