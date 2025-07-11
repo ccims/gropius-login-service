@@ -11,7 +11,6 @@ export async function checkAuth(
         try {
             await oauth.loadToken();
         } catch (error: any) {
-            console.error(error);
             await oauth.authorizeUser({ id });
         }
     }

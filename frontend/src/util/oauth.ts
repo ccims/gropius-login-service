@@ -79,7 +79,7 @@ export async function loadToken(): Promise<string> {
         const decoded = jwtDecode(token) as Token;
         const now = Math.floor(Date.now() / 1000);
         const buffer = 15;
-        const expired = now > decoded.iat + buffer;
+        const expired = now + buffer > decoded.exp;
         if (!expired) return token;
     }
 
@@ -102,7 +102,7 @@ export async function exchangeToken(code: string) {
 
 export async function refreshToken() {
     const token = getRefreshToken();
-    if (!token) return false;
+    if (!token) throw new Error("No refresh token");
 
     const { data } = await axios.post<TokenResponse>("/auth/oauth/token", {
         grant_type: "refresh_token",
