@@ -3,6 +3,7 @@ import axios from "axios";
 
 export type Token = {
     iat: number;
+    exp: number;
 };
 
 export interface TokenResponse {

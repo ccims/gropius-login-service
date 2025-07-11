@@ -198,6 +198,7 @@ export class FlowSession {
         const data = JSON.stringify({
             clientId: this.req.session.request.clientId,
             scope: this.req.session.request.scope,
+            redirect: this.req.session.request.redirect,
         });
 
         return crypto.createHash("sha256").update(data).digest("base64url");
