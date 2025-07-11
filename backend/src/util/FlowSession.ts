@@ -2,6 +2,7 @@ import { NextFunction, Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import * as crypto from "crypto";
 
 type RequestWithSession = Request & { session?: FlowSessionData };
 
@@ -28,6 +29,9 @@ export type FlowSessionData = {
     // oauth authorization request
     request?: OAuthAuthorizeRequest;
 
+    // consent fingerprints of consented oauth authorization request
+    consents: string[];
+
     // current step in the flow process (the steps are sequential as given and might be restarted from "started" any time)
     step: "init" | "started" | "authenticated" | "prompted" | "finished";
 };
@@ -52,6 +56,7 @@ export class FlowSession {
             iat,
             exp: iat + MONTH_IN_SECONDS,
             step: "init",
+            consents: [],
         };
     }
 
@@ -95,12 +100,11 @@ export class FlowSession {
     }
 
     getRequest() {
-        const request = this.req.session?.request;
-        if (!request) {
+        if (!this.req.session.request) {
             throw new OAuthHttpException("invalid_request", "Authorization request is missing");
         }
 
-        return this.req.session.request;
+        return this.req.session!.request;
     }
 
     getUser() {
@@ -139,7 +143,7 @@ export class FlowSession {
         return this;
     }
 
-    setPrompted(flow: string) {
+    setPrompted(consent: boolean, flow: string) {
         if (this.req.session.step !== "authenticated") {
             throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
@@ -148,7 +152,20 @@ export class FlowSession {
             throw new OAuthHttpException("invalid_request", "Another flow is currently running");
         }
 
+        if (consent) {
+            const fingerprint = this.consentFingerprint();
+            if (!this.req.session.consents.includes(fingerprint)) {
+                this.req.session.consents.push(fingerprint);
+            }
+        }
+
         this.req.session.step = "prompted";
+        return this;
+    }
+
+    skipPrompt() {
+        this.setPrompted(true, this.getFlow());
+        this.setFinished(this.getFlow());
         return this;
     }
 
@@ -167,6 +184,23 @@ export class FlowSession {
         delete this.req.session.request;
         delete this.req.session.activeLogin;
         return this;
+    }
+
+    didConsent() {
+        return this.req.session.consents.includes(this.consentFingerprint());
+    }
+
+    consentFingerprint() {
+        if (!this.req.session.request) {
+            throw new OAuthHttpException("invalid_request", "Authorization request is missing");
+        }
+
+        const data = JSON.stringify({
+            clientId: this.req.session.request.clientId,
+            scope: this.req.session.request.scope,
+        });
+
+        return crypto.createHash("sha256").update(data).digest("base64url");
     }
 }
 

@@ -70,10 +70,10 @@ function onGrant() {
 }
 
 function onSubmit() {
-    if (form.value) nextTick(() => form.value.submit());
+    if (form.value) nextTick(() => form.value!.submit());
 }
 
-const data = ref<oauth.PromptData>(null);
+const data = ref<oauth.PromptData | null>(null);
 onMounted(async () => {
     data.value = await oauth.fetchPromptData();
 });

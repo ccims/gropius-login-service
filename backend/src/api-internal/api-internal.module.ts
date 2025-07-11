@@ -68,6 +68,7 @@ export class ApiInternalModule {
                 this.strategies,
                 this.flowSetAuthenticated,
                 this.promptRedirect,
+                this.authRedirect,
                 this.authErrorRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,
@@ -83,6 +84,7 @@ export class ApiInternalModule {
                 this.strategies,
                 this.flowSetAuthenticated,
                 this.promptRedirect,
+                this.authRedirect,
                 this.authErrorRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,
@@ -95,12 +97,13 @@ export class ApiInternalModule {
             path: "auth/api/internal/auth/prompt/callback",
         });
 
-        // TODO: adapt this to new prompt flow?
         this.middlewares.push({
             middlewares: [
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.authRegister,
+                this.flowSetAuthenticated,
+                this.promptRedirect,
                 this.authRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,

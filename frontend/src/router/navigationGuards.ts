@@ -10,7 +10,7 @@ export async function checkAuth(
     if (to.query.code == undefined) {
         try {
             await oauth.loadToken();
-        } catch (error: Error) {
+        } catch (error: any) {
             console.error(error);
             await oauth.authorizeUser({ id });
         }

@@ -84,10 +84,8 @@ export async function loadToken(): Promise<string> {
     }
 
     // Refresh token
-    const refreshed = await refreshToken();
-    if (refreshed) return getAccessToken();
-
-    throw new Error("No access token available.");
+    await refreshToken();
+    return getAccessToken()!;
 }
 
 export async function exchangeToken(code: string) {
@@ -103,28 +101,22 @@ export async function exchangeToken(code: string) {
 }
 
 export async function refreshToken() {
-    try {
-        const token = getRefreshToken();
-        if (!token) return false;
+    const token = getRefreshToken();
+    if (!token) return false;
 
-        const { data } = await axios.post<TokenResponse>("/auth/oauth/token", {
-            grant_type: "refresh_token",
-            client_id: "login-auth-client",
-            refresh_token: token
-        });
-        setResponse(data);
-        return true;
-    } catch (err: Error) {
-        console.log(err);
-        return false;
-    }
+    const { data } = await axios.post<TokenResponse>("/auth/oauth/token", {
+        grant_type: "refresh_token",
+        client_id: "login-auth-client",
+        refresh_token: token
+    });
+    setResponse(data);
 }
 
 export async function fetchPromptData() {
     return (await axios.get("/auth/api/internal/auth/prompt/data")).data as PromptData;
 }
 
-export async function authorizeUser(state: object): Promise<string> {
+export async function authorizeUser(state: object) {
     clean();
 
     const codeVerifierArray = new Uint8Array(32);

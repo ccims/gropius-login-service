@@ -46,7 +46,7 @@ export class AuthPromptCallbackMiddleware extends StateMiddleware<
         const data: Data = await schema.validateAsync(req.body);
 
         // Update flow and ensure state
-        req.flow.setPrompted(data.flow);
+        req.flow.setPrompted(data.consent, data.flow);
 
         // Abort without consent
         if (!data.consent) {
