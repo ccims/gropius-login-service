@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { combineURL } from "../util/combineURL";
-import * as process from "node:process";
 
 @Injectable()
 export class AuthPromptRedirectMiddleware extends StateMiddleware<

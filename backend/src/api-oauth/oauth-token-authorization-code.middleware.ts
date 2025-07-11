@@ -9,7 +9,6 @@ import { EncryptionService } from "./encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
-import * as process from "node:process";
 
 @Injectable()
 export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }> {
