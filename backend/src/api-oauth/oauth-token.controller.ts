@@ -1,4 +1,4 @@
-import { Controller, HttpException, HttpStatus, Post, Res } from "@nestjs/common";
+import { Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";

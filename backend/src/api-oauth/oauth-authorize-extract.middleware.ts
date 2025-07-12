@@ -26,7 +26,7 @@ export class OAuthAuthorizeExtractMiddleware implements NestMiddleware {
             codeChallengeMethod: req.query.code_challenge_method as string,
             responseType: req.query.response_type as "code",
         };
-        res.appendState({
+        req.internal.append({
             request: requestParams,
             isRegisterAdditional: requestParams.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
         });

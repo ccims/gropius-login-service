@@ -8,7 +8,7 @@ import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { State } from "../util/State";
+import { FlowInternal } from "../util/FlowInternal";
 
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {
@@ -32,16 +32,17 @@ export class StrategiesMiddleware implements NestMiddleware {
         return instance;
     }
 
-    async performImsUserSearchIfNeeded(state: State, instance: StrategyInstance, strategy: Strategy) {
-        if (!state.authState) throw new Error("Active login missing");
+    async performImsUserSearchIfNeeded(internal: FlowInternal, instance: StrategyInstance, strategy: Strategy) {
+        const activeLogin = internal.getActiveLogin();
+        const authState = internal.getAuthState();
 
         if (strategy.canSync && instance.isSyncActive) {
-            if (typeof state.activeLogin == "object" && state.activeLogin.id) {
+            if (typeof activeLogin == "object" && activeLogin.id) {
                 const imsUserSearchOnModes = process.env.GROPIUS_PERFORM_IMS_USER_SEARCH_ON.split(",").filter(
                     (s) => !!s,
                 );
-                if (imsUserSearchOnModes.includes(state.authState.function)) {
-                    const loginData = await state.activeLogin.loginInstanceFor;
+                if (imsUserSearchOnModes.includes(authState.function)) {
+                    const loginData = await activeLogin.loginInstanceFor;
                     try {
                         await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
                     } catch (err) {
@@ -59,29 +60,34 @@ export class StrategiesMiddleware implements NestMiddleware {
         const id = req.params.id;
         const instance = await this.idToStrategyInstance(id);
         const strategy = this.strategiesService.getStrategyByName(instance.type);
-        res.appendState({ strategy });
+        req.internal.append({ strategy });
 
-        const result = await strategy.performAuth(instance, res.state, req, res);
-        res.appendState(result.returnedState);
+        const result = await strategy.performAuth(instance, req.internal, req, res);
+        req.internal.append(result.returnedState);
         const authResult = result.result;
         if (authResult) {
-            const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(res.state, instance, strategy);
+            const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(
+                req.internal,
+                instance,
+                strategy,
+            );
             if (functionError != null) {
                 throw new OAuthHttpException("server_error", functionError);
             }
             const activeLogin = await this.performAuthFunctionService.performRequestedAction(
                 authResult,
-                res.state,
+                req.internal,
                 instance,
                 strategy,
             );
 
-            // TODO: why cant we do this on res.state?
-            const stateCopy = Object.assign({}, res.state);
-            stateCopy.authState.activeLogin = activeLogin.id;
+            // TODO: why do we need to do this?!
+            const internalCopy = new FlowInternal();
+            internalCopy.append(Object.assign({}, req.internal._internal));
+            internalCopy._internal.authState!.activeLogin = activeLogin.id;
 
-            res.appendState({ activeLogin });
-            await this.performImsUserSearchIfNeeded(stateCopy, instance, strategy);
+            req.internal.append({ activeLogin });
+            await this.performImsUserSearchIfNeeded(internalCopy, instance, strategy);
         } else {
             throw new AuthException(
                 result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfully",

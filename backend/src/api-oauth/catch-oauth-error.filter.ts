@@ -1,5 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { OAuthHttpException } from "./OAuthHttpException";
 
 @Catch(OAuthHttpException)
@@ -9,10 +9,11 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
     catch(error: OAuthHttpException, host: ArgumentsHost) {
         console.log("hiere", error);
 
-        const res = host.switchToHttp().getResponse<Response>();
-        if (!res.state.request) throw error;
+        const context = host.switchToHttp();
+        const req = context.getRequest<Request>();
+        const res = context.getResponse<Response>();
 
-        const url = new URL(res.state.request.redirect);
+        const url = new URL(req.internal.getRequest().redirect);
         if (error.error_type && error.error_message) {
             url.searchParams.append("error", error.error_type);
             url.searchParams.append(

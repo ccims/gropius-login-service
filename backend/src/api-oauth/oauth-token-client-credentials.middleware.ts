@@ -8,6 +8,7 @@ import { OAuthHttpException } from "./OAuthHttpException";
 @Injectable()
 export class OAuthTokenClientCredentialsMiddleware implements NestMiddleware {
     private readonly logger = new Logger(OAuthTokenClientCredentialsMiddleware.name);
+
     constructor(private readonly tokenService: TokenService) {}
 
     private async createAccessToken(currentClient: AuthClient, scope: TokenScope[]): Promise<OAuthTokenResponseDto> {
@@ -37,7 +38,7 @@ export class OAuthTokenClientCredentialsMiddleware implements NestMiddleware {
     }
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const currentClient = res.state.client;
+        const currentClient = req.internal.getClient();
         if (!currentClient.requiresSecret) {
             throw new OAuthHttpException("invalid_client", "Client does not support client credentials flow");
         }

@@ -9,7 +9,7 @@ export class FlowSessionSwitchMiddleware implements NestMiddleware {
         // TODO: enable this
         const not = false;
         if (req.flow.isAuthenticated() && not) {
-            req.flow.setStarted(res.state.request);
+            req.flow.setStarted(req.internal.getRequest());
             req.flow.setAuthenticated(req.flow.getUser(), req.flow.getActiveLogin(), req.flow.getExternalFlow());
         } else {
             req.flow.middlewares.prompt = false;

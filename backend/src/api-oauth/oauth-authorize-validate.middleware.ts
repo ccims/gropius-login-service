@@ -12,28 +12,32 @@ export class OAuthAuthorizeValidateMiddleware implements NestMiddleware {
     ) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
+        const request = req.internal.getRequest();
+
         try {
-            const client = await this.authClientService.findAuthClient(res.state.request.clientId);
-            res.appendState({ client });
+            const client = await this.authClientService.findAuthClient(request.clientId);
+            req.internal.append({ client });
         } catch {}
-        if (!res.state.client || !res.state.client.isValid) {
+
+        const client = req.internal.getClient();
+        if (!client || !client.isValid) {
             throw new OAuthHttpException("invalid_client", "Client unknown or unauthorized");
         }
-        if (res.state.request.responseType !== "code") {
+        if (request.responseType !== "code") {
             throw new OAuthHttpException("unsupported_response_type", "response_type must be set to 'code'");
         }
-        if (!res.state.request.redirect || !res.state.client.redirectUrls.includes(res.state.request.redirect)) {
+        if (!request.redirect || !client.redirectUrls.includes(request.redirect)) {
             throw new OAuthHttpException("invalid_request", "Redirect URL not allowed");
         }
         try {
-            this.tokenService.verifyScope(res.state.request.scope);
+            this.tokenService.verifyScope(request.scope);
         } catch (error) {
             throw new OAuthHttpException("invalid_scope", error.message);
         }
-        if (res.state.request.codeChallengeMethod !== "S256") {
+        if (request.codeChallengeMethod !== "S256") {
             throw new OAuthHttpException("invalid_request", "Only S256 code challenge method is supported");
         }
-        if (!res.state.request.codeChallenge) {
+        if (!request.codeChallenge) {
             throw new OAuthHttpException("invalid_request", "Code challenge required");
         }
         next();

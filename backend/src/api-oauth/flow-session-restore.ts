@@ -19,7 +19,7 @@ export class FlowSessionRestoreMiddleware implements NestMiddleware {
         const activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
         const client = await this.authClientService.findAuthClient(request.clientId);
         const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
-        res.appendState({ activeLogin, request, client, isRegisterAdditional });
+        req.internal.append({ activeLogin, request, client, isRegisterAdditional });
 
         next();
     }

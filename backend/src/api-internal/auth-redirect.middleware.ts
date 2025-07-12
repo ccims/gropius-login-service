@@ -9,7 +9,6 @@ import { JwtService } from "@nestjs/jwt";
 import { Strategy } from "src/strategies/Strategy";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { combineURL } from "src/util/combineURL";
-import { State } from "../util/State";
 
 /**
  * Return data of the user data suggestion endpoint
@@ -51,42 +50,44 @@ export class AuthRedirectMiddleware implements NestMiddleware {
     ) {}
 
     // TODO: this needs to be adapted to the "automatic login thing"
-    private async assignActiveLoginToClient(state: State, expiresIn: number): Promise<number> {
-        if (!state.activeLogin.isValid) {
+    private async assignActiveLoginToClient(req: Request, expiresIn: number): Promise<number> {
+        const activeLogin = req.internal.getActiveLogin();
+
+        if (!activeLogin.isValid) {
             throw new Error("Active login invalid");
         }
         // if the login service handles the registration, two tokens were already generated: the code and the access token
         if (
-            state.activeLogin.nextExpectedRefreshTokenNumber !=
-            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (state.secondToken ? 2 : 0)
+            activeLogin.nextExpectedRefreshTokenNumber !=
+            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (req.internal.getSecondToken() ? 2 : 0)
         ) {
             // TODO: throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
-        if (state.activeLogin.expires != null && state.activeLogin.expires <= new Date()) {
+        if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
             throw new Error("Active login expired");
         }
-        if (state.activeLogin.expires == null) {
-            state.activeLogin.expires = new Date(Date.now() + expiresIn);
+        if (activeLogin.expires == null) {
+            activeLogin.expires = new Date(Date.now() + expiresIn);
         }
-        const codeJwtId = ++state.activeLogin.nextExpectedRefreshTokenNumber;
+        const codeJwtId = ++activeLogin.nextExpectedRefreshTokenNumber;
 
-        state.activeLogin = await this.activeLoginService.save(state.activeLogin);
+        req.internal.append({ activeLogin: await this.activeLoginService.save(activeLogin) });
 
         return codeJwtId;
     }
 
-    private async generateCode(state: State, clientId: string, scope: TokenScope[], pkce: boolean): Promise<string> {
-        const activeLogin = state.activeLogin;
+    private async generateCode(req: Request, clientId: string, scope: TokenScope[], pkce: boolean): Promise<string> {
+        const activeLogin = req.internal.getActiveLogin();
         try {
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
-            const codeJwtId = await this.assignActiveLoginToClient(state, expiresIn);
+            const codeJwtId = await this.assignActiveLoginToClient(req, expiresIn);
             const token = await this.tokenService.signActiveLoginCode(
                 activeLogin.id,
                 clientId,
                 codeJwtId,
                 scope,
                 expiresIn,
-                pkce ? state.request.codeChallenge : undefined,
+                pkce ? req.internal.getRequest().codeChallenge : undefined,
             );
             this.logger.debug("Created token");
             return token;
@@ -125,46 +126,52 @@ export class AuthRedirectMiddleware implements NestMiddleware {
         // Check if middleware is enabled
         if (!req.flow.middlewares.code) return next();
 
-        if (!res.state.activeLogin) {
+        const activeLogin = req.internal.getActiveLogin();
+        const authState = req.internal.getAuthState();
+        const request = req.internal.getRequest();
+        const strategy = req.internal.getStrategy();
+
+        if (!activeLogin) {
             throw new OAuthHttpException("server_error", "No active login");
         }
-        const userLoginData = await res.state.activeLogin.loginInstanceFor;
-        if (res.state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
+        const userLoginData = await activeLogin.loginInstanceFor;
+        if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                await this.redirectWithCode(res);
+                await this.redirectWithCode(req, res);
             } else {
                 throw new OAuthHttpException("invalid_request", "Login is not in register state");
             }
         } else {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                const encodedState = encodeURIComponent(
-                    this.stateJwtService.sign({ request: res.state.request, authState: res.state.authState }),
-                );
+                const encodedState = encodeURIComponent(this.stateJwtService.sign({ request, authState }));
                 const token = await this.generateCode(
-                    res.state,
+                    req,
                     "login-auth-client",
                     [TokenScope.LOGIN_SERVICE_REGISTER],
                     false,
                 );
-                const suggestions = await this.getDataSuggestions(userLoginData, res.state.strategy);
+                const suggestions = await this.getDataSuggestions(userLoginData, strategy);
                 const suggestionQuery = `&email=${encodeURIComponent(
                     suggestions.email ?? "",
                 )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
                     suggestions.displayName ?? "",
-                )}&forceSuggestedUsername=${res.state.strategy.forceSuggestedUsername}`;
+                )}&forceSuggestedUsername=${strategy.forceSuggestedUsername}`;
                 const url = `auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
                 res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
             } else {
-                await this.redirectWithCode(res);
+                await this.redirectWithCode(req, res);
             }
         }
     }
 
-    private async redirectWithCode(res: Response) {
-        const url = new URL(res.state.request.redirect);
-        const token = await this.generateCode(res.state, res.state.client.id, res.state.request.scope, true);
+    private async redirectWithCode(req: Request, res: Response) {
+        const request = req.internal.getRequest();
+        const client = req.internal.getClient();
+
+        const url = new URL(request.redirect);
+        const token = await this.generateCode(req, client.id, request.scope, true);
         url.searchParams.append("code", token);
-        url.searchParams.append("state", res.state.request.state ?? "");
+        url.searchParams.append("state", request.state ?? "");
         res.redirect(url.toString());
     }
 }

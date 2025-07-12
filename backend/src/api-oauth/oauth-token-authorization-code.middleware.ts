@@ -141,7 +141,7 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         let tokenData: ActiveLoginTokenResult;
-        const currentClient = res.state.client;
+        const currentClient = req.internal.getClient();
         const codeVerifier = req.body.code_verifier;
         try {
             tokenData = await this.tokenService.verifyActiveLoginToken(

@@ -8,7 +8,7 @@ import { AuthFunction, AuthResult } from "./AuthResult";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { State } from "../util/State";
+import { FlowInternal } from "../util/FlowInternal";
 
 /**
  * Contains the logic how the system is supposed to create and link
@@ -24,14 +24,17 @@ export class PerformAuthFunctionService {
         private readonly userLoginDataService: UserLoginDataService,
     ) {}
 
-    public checkFunctionIsAllowed(state: State, instance: StrategyInstance, strategy: Strategy): string | null {
-        if (!state.authState) throw new Error("Active login missing");
+    public checkFunctionIsAllowed(
+        internal: FlowInternal,
+        instance: StrategyInstance,
+        strategy: Strategy,
+    ): string | null {
+        const authState = internal.getAuthState();
 
-        const authFunction = state.authState.function;
-        if (authFunction == AuthFunction.REGISTER_WITH_SYNC && !strategy.canSync) {
-            state.authState.function = AuthFunction.REGISTER;
+        if (authState.function == AuthFunction.REGISTER_WITH_SYNC && !strategy.canSync) {
+            authState.function = AuthFunction.REGISTER;
         }
-        if (state.isRegisterAdditional) {
+        if (internal.isRegisterAdditional()) {
             return null;
         }
         if (!strategy.canLoginRegister) {
@@ -94,11 +97,11 @@ export class PerformAuthFunctionService {
 
     public async performRequestedAction(
         authResult: AuthResult,
-        state: State,
+        internal: FlowInternal,
         instance: StrategyInstance,
         strategy: Strategy,
     ): Promise<ActiveLogin> {
-        const authFunction = state.authState.function;
+        const authFunction = internal.getAuthState().function;
         const wantsToDoImplicitRegister =
             strategy.allowsImplicitSignup && instance.doesImplicitRegister && authFunction == AuthFunction.LOGIN;
         if (authFunction != AuthFunction.LOGIN && !authResult.mayRegister) {

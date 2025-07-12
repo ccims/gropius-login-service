@@ -8,6 +8,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { Request } from "express";
+import { FlowInternal } from "../util/FlowInternal";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -39,14 +40,14 @@ export abstract class StrategyUsingPassport extends Strategy {
 
     protected getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        internal: FlowInternal | undefined,
     ): passport.AuthenticateOptions {
         return {};
     }
 
     public override async performAuth(
         strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        internal: FlowInternal | undefined,
         req: Request,
         res: any,
     ): Promise<PerformAuthResult> {
@@ -58,11 +59,11 @@ export abstract class StrategyUsingPassport extends Strategy {
                 {
                     session: false,
                     state: jwtService.sign({
-                        request: state?.request,
-                        authState: state?.authState,
+                        request: internal?._internal.request,
+                        authState: internal?._internal.authState,
                         externalFlow: req.flow.getExternalFlow(),
                     }),
-                    ...this.getAdditionalPassportOptions(strategyInstance, state),
+                    ...this.getAdditionalPassportOptions(strategyInstance, internal),
                 },
                 (err, user: AuthResult | false, info) => {
                     if (err) {

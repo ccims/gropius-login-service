@@ -8,6 +8,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
+import { FlowInternal } from "../../util/FlowInternal";
 
 @Injectable()
 export class GithubTokenStrategyService extends Strategy {
@@ -161,13 +162,13 @@ export class GithubTokenStrategyService extends Strategy {
             username: userData.login,
             displayName: userData.name,
             email: userData.email,
-            token
+            token,
         };
     }
 
     override async performAuth(
         strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        internal: FlowInternal | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult> {

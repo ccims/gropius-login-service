@@ -7,7 +7,7 @@ export class AuthAuthorizeExtractMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         const request = req.flow.getRequest();
 
-        res.appendState({
+        req.internal.append({
             request,
             isRegisterAdditional: request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
         });
