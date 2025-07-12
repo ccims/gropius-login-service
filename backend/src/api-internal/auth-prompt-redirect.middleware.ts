@@ -1,29 +1,15 @@
-import { Injectable } from "@nestjs/common";
-import { Request, Response } from "express";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { combineURL } from "../util/combineURL";
 
 @Injectable()
-export class AuthPromptRedirectMiddleware extends StateMiddleware<
-    OAuthAuthorizeServerState,
-    OAuthAuthorizeServerState
-> {
-    constructor() {
-        super();
-    }
-
-    override async useWithState(
-        req: Request,
-        res: Response,
-        state: OAuthAuthorizeServerState & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<void> {
+export class AuthPromptRedirectMiddleware implements NestMiddleware {
+    async use(req: Request, res: Response, next: NextFunction) {
         // Check if middleware is enabled
         if (!req.flow.middlewares.prompt) return next();
 
         // Do not prompt for internal clients or if consent is already given
-        if (state.client.isInternal || req.flow.didConsent()) {
+        if (res.state.client.isInternal || req.flow.didConsent()) {
             req.flow.skipPrompt();
             return next();
         }

@@ -1,24 +1,14 @@
-import { Injectable } from "@nestjs/common";
-import { Request, Response } from "express";
-import { StateMiddleware } from "./StateMiddleware";
-import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
-import { AuthStateServerData } from "../strategies/AuthResult";
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { FlowSession } from "../util/FlowSession";
 import { LoginUserService } from "../model/services/login-user.service";
 import { now } from "../util/utils";
 
 @Injectable()
-export class FlowSessionInitMiddleware extends StateMiddleware {
-    constructor(private readonly loginUserService: LoginUserService) {
-        super();
-    }
+export class FlowSessionInitMiddleware implements NestMiddleware {
+    constructor(private readonly loginUserService: LoginUserService) {}
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: AuthStateServerData & OAuthAuthorizeServerState & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: NextFunction) {
         // Init flow session
         req.flow = new FlowSession(req);
         req.flow.init();

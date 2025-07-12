@@ -4,7 +4,6 @@ import { Request, Response } from "express";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { ensureState } from "src/util/ensureState";
 import { ApiStateData } from "./ApiStateData";
 
 /**
@@ -59,7 +58,6 @@ export class CheckAccessTokenGuard implements CanActivate {
         }
 
         const res = context.switchToHttp().getResponse<Response>();
-        ensureState(res);
         (res.locals.state as ApiStateData).loggedInUser = user;
         return true;
     }

@@ -7,8 +7,6 @@ import { OauthAuthorizeController as OAuthAuthorizeController } from "./oauth-au
 import { OAuthTokenController } from "./oauth-token.controller";
 import { OAuthAuthorizeValidateMiddleware } from "./oauth-authorize-validate.middleware";
 import { OAuthAuthorizeRedirectMiddleware } from "./oauth-authorize-redirect.middleware";
-import { ErrorHandlerMiddleware } from "./error-handler.middleware";
-import { OAuthErrorRedirectMiddleware } from "./oauth-error-redirect.middleware";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { StrategiesModule } from "src/strategies/strategies.module";
 import { EncryptionService } from "./encryption.service";
@@ -28,8 +26,6 @@ import { FlowSessionRestoreMiddleware } from "./flow-session-restore";
         OAuthTokenMiddleware,
         OAuthTokenAuthorizationCodeMiddleware,
         OAuthTokenClientCredentialsMiddleware,
-        ErrorHandlerMiddleware,
-        OAuthErrorRedirectMiddleware,
         EncryptionService,
         AuthRedirectMiddleware,
         AuthPromptRedirectMiddleware,
@@ -38,7 +34,7 @@ import { FlowSessionRestoreMiddleware } from "./flow-session-restore";
         FlowSessionRestoreMiddleware,
     ],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
-    exports: [OAuthAuthorizeValidateMiddleware, ErrorHandlerMiddleware, OAuthErrorRedirectMiddleware],
+    exports: [OAuthAuthorizeValidateMiddleware],
 })
 export class ApiOauthModule {
     private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
@@ -48,8 +44,6 @@ export class ApiOauthModule {
         private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
         private readonly oauthAuthorizeRedirect: OAuthAuthorizeRedirectMiddleware,
         private readonly oauthToken: OAuthTokenMiddleware,
-        private readonly errorHandler: ErrorHandlerMiddleware,
-        private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
         private readonly authRedirect: AuthRedirectMiddleware,
         private readonly promptRedirect: AuthPromptRedirectMiddleware,
         private readonly flowSessionInit: FlowSessionInitMiddleware,
@@ -66,14 +60,12 @@ export class ApiOauthModule {
                 this.promptRedirect,
                 this.authRedirect,
                 this.oauthAuthorizeRedirect,
-                this.oauthErrorRedirect,
-                this.errorHandler,
             ],
             path: "auth/oauth/authorize",
         });
 
         this.middlewares.push({
-            middlewares: [this.oauthToken, this.errorHandler],
+            middlewares: [this.oauthToken],
             path: "auth/oauth/token",
         });
     }

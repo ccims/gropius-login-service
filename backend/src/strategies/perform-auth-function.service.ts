@@ -4,11 +4,11 @@ import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthStateServerData, AuthFunction, AuthResult } from "./AuthResult";
+import { AuthFunction, AuthResult } from "./AuthResult";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { State } from "../util/State";
 
 /**
  * Contains the logic how the system is supposed to create and link
@@ -24,11 +24,9 @@ export class PerformAuthFunctionService {
         private readonly userLoginDataService: UserLoginDataService,
     ) {}
 
-    public checkFunctionIsAllowed(
-        state: AuthStateServerData & OAuthAuthorizeServerState,
-        instance: StrategyInstance,
-        strategy: Strategy,
-    ): string | null {
+    public checkFunctionIsAllowed(state: State, instance: StrategyInstance, strategy: Strategy): string | null {
+        if (!state.authState) throw new Error("Active login missing");
+
         const authFunction = state.authState.function;
         if (authFunction == AuthFunction.REGISTER_WITH_SYNC && !strategy.canSync) {
             state.authState.function = AuthFunction.REGISTER;
@@ -96,7 +94,7 @@ export class PerformAuthFunctionService {
 
     public async performRequestedAction(
         authResult: AuthResult,
-        state: AuthStateServerData,
+        state: State,
         instance: StrategyInstance,
         strategy: Strategy,
     ): Promise<ActiveLogin> {

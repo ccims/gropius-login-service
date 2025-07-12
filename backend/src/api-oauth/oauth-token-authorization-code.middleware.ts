@@ -1,25 +1,22 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "./OAuthHttpException";
-import { StateMiddleware } from "./StateMiddleware";
 import { EncryptionService } from "./encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
 
 @Injectable()
-export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }> {
+export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
     private readonly logger = new Logger(OAuthTokenAuthorizationCodeMiddleware.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
         private readonly encryptionService: EncryptionService,
-    ) {
-        super();
-    }
+    ) {}
 
     private throwGenericCodeError() {
         throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
@@ -142,14 +139,9 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
         return await this.createAccessToken(loginData, activeLogin, client, scope);
     }
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: { client: AuthClient } & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: NextFunction) {
         let tokenData: ActiveLoginTokenResult;
-        const currentClient = state.client;
+        const currentClient = res.state.client;
         const codeVerifier = req.body.code_verifier;
         try {
             tokenData = await this.tokenService.verifyActiveLoginToken(

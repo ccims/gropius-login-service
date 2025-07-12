@@ -1,28 +1,15 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
-import { StateMiddleware } from "./StateMiddleware";
-import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
-import { AuthStateServerData } from "../strategies/AuthResult";
 
 @Injectable()
-export class FlowSessionSwitchMiddleware extends StateMiddleware<
-    AuthStateServerData & OAuthAuthorizeServerState,
-    AuthStateServerData & OAuthAuthorizeServerState
-> {
-    constructor() {
-        super();
-    }
+export class FlowSessionSwitchMiddleware implements NestMiddleware {
+    constructor() {}
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: AuthStateServerData & OAuthAuthorizeServerState & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: (error?: Error | any) => void) {
         // TODO: enable this
         const not = false;
         if (req.flow.isAuthenticated() && not) {
-            req.flow.setStarted(state.request);
+            req.flow.setStarted(res.state.request);
             req.flow.setAuthenticated(req.flow.getUser(), req.flow.getActiveLogin(), req.flow.getExternalFlow());
         } else {
             req.flow.middlewares.prompt = false;

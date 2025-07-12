@@ -1,16 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { Request, Response } from "express";
-import { AuthFunction, AuthStateServerData } from "../strategies/AuthResult";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
+import { AuthFunction } from "../strategies/AuthResult";
 
 @Injectable()
-export class ModeExtractorMiddleware extends StateMiddleware<{}, AuthStateServerData> {
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+export class ModeExtractorMiddleware implements NestMiddleware {
+    async use(req: Request, res: Response, next: NextFunction) {
         let authFunction: AuthFunction;
         switch (req.params.mode) {
             case "register":
@@ -25,7 +19,7 @@ export class ModeExtractorMiddleware extends StateMiddleware<{}, AuthStateServer
             default:
                 throw new Error("Invalid mode");
         }
-        this.appendState(res, { authState: { function: authFunction } });
+        res.appendState({ authState: { function: authFunction } });
         next();
     }
 }

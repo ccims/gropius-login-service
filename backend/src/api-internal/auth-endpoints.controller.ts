@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, UseFilters } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
@@ -8,6 +8,8 @@ import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { LoginUserService } from "../model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { NoCors } from "./no-cors.decorator";
+import { CatchAuthError } from "./catch-auth-error.decorator";
+import { CatchOAuthError } from "../api-oauth/catch-oauth-error.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -33,6 +35,8 @@ export class AuthEndpointsController {
      */
     @Get("redirect/:id/:mode")
     @NoCors()
+    @CatchAuthError()
+    @CatchOAuthError()
     @ApiOperation({ summary: "Authorize endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to initiate" })
     @ApiParam({
@@ -56,6 +60,8 @@ export class AuthEndpointsController {
      */
     @Get("callback/:id")
     @NoCors()
+    @CatchAuthError()
+    @CatchOAuthError()
     @ApiOperation({ summary: "Redirect/Callback endpoint for a strategy instance" })
     @ApiParam({
         name: "id",
@@ -70,6 +76,8 @@ export class AuthEndpointsController {
 
     @Get("submit/:id/:mode")
     @NoCors()
+    @CatchAuthError()
+    @CatchOAuthError()
     @ApiOperation({ summary: "Submit endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to submit" })
     @ApiParam({
@@ -129,6 +137,8 @@ export class AuthEndpointsController {
 
     @Post("prompt/callback")
     @NoCors()
+    @CatchAuthError()
+    @CatchOAuthError()
     @ApiOperation({ summary: "Callback endpoint for granting permissions" })
     promptCallback(@Body() flow: string, @Body() consent: boolean) {
         throw new HttpException(
@@ -139,6 +149,8 @@ export class AuthEndpointsController {
 
     @Post("register")
     @NoCors()
+    @CatchAuthError()
+    @CatchOAuthError()
     @ApiOperation({ summary: "Complete a registration" })
     register(@Body() input: SelfRegisterUserInput) {
         throw new HttpException(

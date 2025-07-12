@@ -1,17 +1,15 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Inject, Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { Request, Response, NextFunction } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { AuthStateServerData } from "../strategies/AuthResult";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { JwtService } from "@nestjs/jwt";
 import { Strategy } from "src/strategies/Strategy";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { combineURL } from "src/util/combineURL";
+import { State } from "../util/State";
 
 /**
  * Return data of the user data suggestion endpoint
@@ -41,25 +39,19 @@ interface UserDataSuggestion {
 }
 
 @Injectable()
-export class AuthRedirectMiddleware extends StateMiddleware<
-    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy; secondToken?: boolean }
-> {
+export class AuthRedirectMiddleware implements NestMiddleware {
     private readonly logger = new Logger(AuthRedirectMiddleware.name);
+
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
         @Inject("StateJwtService")
         private readonly stateJwtService: JwtService,
         private readonly userService: LoginUserService,
-    ) {
-        super();
-    }
+    ) {}
 
     // TODO: this needs to be adapted to the "automatic login thing"
-    private async assignActiveLoginToClient(
-        state: AuthStateServerData & OAuthAuthorizeServerState & { secondToken?: boolean },
-        expiresIn: number,
-    ): Promise<number> {
+    private async assignActiveLoginToClient(state: State, expiresIn: number): Promise<number> {
         if (!state.activeLogin.isValid) {
             throw new Error("Active login invalid");
         }
@@ -83,12 +75,7 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         return codeJwtId;
     }
 
-    private async generateCode(
-        state: AuthStateServerData & OAuthAuthorizeServerState & { secondToken?: boolean },
-        clientId: string,
-        scope: TokenScope[],
-        pkce: boolean,
-    ): Promise<string> {
+    private async generateCode(state: State, clientId: string, scope: TokenScope[], pkce: boolean): Promise<string> {
         const activeLogin = state.activeLogin;
         try {
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
@@ -134,58 +121,50 @@ export class AuthRedirectMiddleware extends StateMiddleware<
         };
     }
 
-    override async useWithState(
-        req: Request,
-        res: Response,
-        state: AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy } & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: NextFunction) {
         // Check if middleware is enabled
         if (!req.flow.middlewares.code) return next();
 
-        if (!state.activeLogin) {
+        if (!res.state.activeLogin) {
             throw new OAuthHttpException("server_error", "No active login");
         }
-        const userLoginData = await state.activeLogin.loginInstanceFor;
-        if (state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
+        const userLoginData = await res.state.activeLogin.loginInstanceFor;
+        if (res.state.request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                await this.redirectWithCode(state, res);
+                await this.redirectWithCode(res);
             } else {
                 throw new OAuthHttpException("invalid_request", "Login is not in register state");
             }
         } else {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
                 const encodedState = encodeURIComponent(
-                    this.stateJwtService.sign({ request: state.request, authState: state.authState }),
+                    this.stateJwtService.sign({ request: res.state.request, authState: res.state.authState }),
                 );
                 const token = await this.generateCode(
-                    state,
+                    res.state,
                     "login-auth-client",
                     [TokenScope.LOGIN_SERVICE_REGISTER],
                     false,
                 );
-                const suggestions = await this.getDataSuggestions(userLoginData, state.strategy);
+                const suggestions = await this.getDataSuggestions(userLoginData, res.state.strategy);
                 const suggestionQuery = `&email=${encodeURIComponent(
                     suggestions.email ?? "",
                 )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
                     suggestions.displayName ?? "",
-                )}&forceSuggestedUsername=${state.strategy.forceSuggestedUsername}`;
+                )}&forceSuggestedUsername=${res.state.strategy.forceSuggestedUsername}`;
                 const url = `auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
                 res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
             } else {
-                await this.redirectWithCode(state, res);
+                await this.redirectWithCode(res);
             }
         }
     }
 
-    private async redirectWithCode(
-        state: AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy } & { error?: any },
-        res: Response<any, Record<string, any>>,
-    ) {
-        const url = new URL(state.request.redirect);
-        const token = await this.generateCode(state, state.client.id, state.request.scope, true);
+    private async redirectWithCode(res: Response) {
+        const url = new URL(res.state.request.redirect);
+        const token = await this.generateCode(res.state, res.state.client.id, res.state.request.scope, true);
         url.searchParams.append("code", token);
-        url.searchParams.append("state", state.request.state ?? "");
+        url.searchParams.append("state", res.state.request.state ?? "");
         res.redirect(url.toString());
     }
 }

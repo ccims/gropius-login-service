@@ -1,24 +1,21 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import * as bcrypt from "bcrypt";
 import { OAuthHttpException } from "./OAuthHttpException";
-import { StateMiddleware } from "./StateMiddleware";
 import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
 import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
 
 @Injectable()
-export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClient }> {
+export class OauthTokenMiddleware implements NestMiddleware {
     private readonly logger = new Logger(OauthTokenMiddleware.name);
 
     constructor(
         private readonly authClientService: AuthClientService,
         private readonly oauthTokenAuthorizationCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
         private readonly oauthTokenClientCredentialsMiddleware: OAuthTokenClientCredentialsMiddleware,
-    ) {
-        super();
-    }
+    ) {}
 
     private async checkGivenClientSecretValidOrNotRequired(client: AuthClient, givenSecret?: string): Promise<boolean> {
         if (!client.requiresSecret && (!givenSecret || givenSecret.length == 0)) {
@@ -78,19 +75,14 @@ export class OauthTokenMiddleware extends StateMiddleware<{}, { client: AuthClie
         return null;
     }
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: NextFunction) {
         const grant_type = req.body.grant_type;
 
         const client = await this.getCallingClient(req);
         if (!client) {
             throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
-        this.appendState(res, { client });
+        res.appendState({ client });
 
         switch (grant_type) {
             case "refresh_token":

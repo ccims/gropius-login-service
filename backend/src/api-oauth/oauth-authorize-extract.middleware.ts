@@ -1,23 +1,15 @@
-import { Injectable } from "@nestjs/common";
-import { Request, Response } from "express";
-import { StateMiddleware } from "./StateMiddleware";
-import { OAuthAuthorizeRequest, OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
+import { OAuthAuthorizeRequest } from "./OAuthAuthorizeServerState";
 import { TokenScope } from "src/backend-services/token.service";
 import { EncryptionService } from "./encryption.service";
 import { OAuthHttpException } from "./OAuthHttpException";
 
 @Injectable()
-export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, Omit<OAuthAuthorizeServerState, "client">> {
-    constructor(private readonly encryptionService: EncryptionService) {
-        super();
-    }
+export class OAuthAuthorizeExtractMiddleware implements NestMiddleware {
+    constructor(private readonly encryptionService: EncryptionService) {}
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: { error?: any },
-        next: (error?: Error | any) => void,
-    ) {
+    async use(req: Request, res: Response, next: NextFunction) {
         const codeChallenge = req.query.code_challenge as string | undefined;
         if (!codeChallenge) {
             throw new OAuthHttpException("invalid_request", "Code challenge required");
@@ -34,7 +26,7 @@ export class OAuthAuthorizeExtractMiddleware extends StateMiddleware<{}, Omit<OA
             codeChallengeMethod: req.query.code_challenge_method as string,
             responseType: req.query.response_type as "code",
         };
-        this.appendState(res, {
+        res.appendState({
             request: requestParams,
             isRegisterAdditional: requestParams.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
         });

@@ -1,6 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { Request, Response } from "express";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as Joi from "joi";
 
@@ -15,17 +14,8 @@ type Data = {
 };
 
 @Injectable()
-export class AuthPromptCallbackMiddleware extends StateMiddleware {
-    constructor() {
-        super();
-    }
-
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: object,
-        next: (error?: Error | any) => void,
-    ): Promise<void> {
+export class AuthPromptCallbackMiddleware implements NestMiddleware {
+    async use(req: Request, res: Response, next: NextFunction) {
         // Ensure that user is authenticated
         if (!req.flow.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");

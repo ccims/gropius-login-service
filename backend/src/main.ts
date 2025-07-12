@@ -5,7 +5,7 @@ import { OpenApiTag } from "./openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
 import session = require("cookie-session");
-import * as FlowSession from "./util/FlowSession";
+import * as State from "./util/State";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -76,6 +76,8 @@ async function bootstrap() {
             secure: false,
         }),
     );
+
+    app.use(State.middleware);
 
     await app.listen(portNumber);
 }
