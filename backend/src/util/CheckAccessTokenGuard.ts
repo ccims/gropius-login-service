@@ -39,7 +39,7 @@ export class CheckAccessTokenGuard implements CanActivate {
         let user: LoginUser;
         try {
             user = (await this.tokenService.verifyAccessToken(token, this.requiredScope)).user;
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn("Invalid access token:", err);
             throw new UnauthorizedException(undefined, "Invalid access token: " + (err.message ?? err));
         }

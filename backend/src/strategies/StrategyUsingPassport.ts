@@ -59,8 +59,8 @@ export abstract class StrategyUsingPassport extends Strategy {
                 {
                     session: false,
                     state: jwtService.sign({
-                        request: internal?._internal.request,
-                        authState: internal?._internal.authState,
+                        request: internal?.tryRequest(),
+                        authState: internal?.tryAuthState(),
                         externalFlow: req.flow.getExternalFlow(),
                     }),
                     ...this.getAdditionalPassportOptions(strategyInstance, internal),

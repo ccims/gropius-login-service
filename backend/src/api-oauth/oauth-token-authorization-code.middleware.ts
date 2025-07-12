@@ -148,7 +148,7 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
                 req.body.code ?? req.body.refresh_token,
                 currentClient.id,
             );
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn(err);
             return this.throwGenericCodeError();
         }

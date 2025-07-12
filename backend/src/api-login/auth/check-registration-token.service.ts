@@ -112,7 +112,7 @@ export class CheckRegistrationTokenService {
         let activeLoginId: string;
         try {
             activeLoginId = await this.tokenService.verifyRegistrationToken(token);
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn("Invalid registration token: ", err);
             throw new UnauthorizedException(undefined, "Invalid registration token: " + (err.message ?? err));
         }

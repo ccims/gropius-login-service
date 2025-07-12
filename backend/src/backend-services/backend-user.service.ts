@@ -100,7 +100,7 @@ export class BackendUserService {
             }
             loginUser.neo4jId = backendUser.createGropiusUser.gropiusUser.id;
             loginUser = await this.loginUserService.save(loginUser);
-        } catch (err) {
+        } catch (err: any) {
             this.logger.error("Error during user creation in backend. Rolling back created user");
             await this.loginUserService.remove(loginUser);
             throw err;
@@ -130,7 +130,7 @@ export class BackendUserService {
             loginUser.neo4jId = backendUser.node.id;
             loginUser = await this.loginUserService.save(loginUser);
             return loginUser;
-        } catch (err) {
+        } catch (err: any) {
             throw err;
         }
     }

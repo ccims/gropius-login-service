@@ -106,7 +106,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-        } catch (err) {
+        } catch (err: any) {
             throw new Error("Instance config for github instance invalid: " + err.message);
         }
 
@@ -158,7 +158,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategyInstance: StrategyInstance,
         internal: FlowInternal | undefined,
     ): passport.AuthenticateOptions {
-        const mode = internal?._internal.authState?.function ?? AuthFunction.LOGIN;
+        const mode = internal?.tryAuthState()?.function ?? AuthFunction.LOGIN;
         if (mode == AuthFunction.REGISTER_WITH_SYNC) {
             return {
                 scope: ["scope", "user:email", "repo"],

@@ -5,7 +5,7 @@ import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as crypto from "crypto";
 import { MONTH_IN_SECONDS, now } from "./utils";
 
-type RequestWithSession = Request & { session?: FlowSessionData };
+type RequestWithSession = Request & { session: FlowSessionData };
 
 export type FlowSessionData = {
     // session id
@@ -81,6 +81,7 @@ export class FlowSession {
     }
 
     drop() {
+        // @ts-ignore
         this.req.session = null;
         return this;
     }
@@ -149,7 +150,7 @@ export class FlowSession {
         }
 
         if (externalFlow !== this.getExternalFlow()) {
-            throw new Error("Another external flow is currently running");
+            throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
         this.req.session.user = userId;
@@ -226,7 +227,7 @@ export class FlowSession {
 declare global {
     namespace Express {
         export interface Request {
-            flow?: FlowSession;
+            flow: FlowSession;
         }
     }
 }

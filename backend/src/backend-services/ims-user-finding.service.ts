@@ -275,7 +275,7 @@ export class ImsUserFindingService {
                 }
                 return newImsUser;
             });
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn("Error while linking IMSUser to GropiusUser. Rolling back.");
             return null;
         }

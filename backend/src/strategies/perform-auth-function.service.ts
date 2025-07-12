@@ -34,7 +34,7 @@ export class PerformAuthFunctionService {
         if (authState.function == AuthFunction.REGISTER_WITH_SYNC && !strategy.canSync) {
             authState.function = AuthFunction.REGISTER;
         }
-        if (internal.isRegisterAdditional()) {
+        if (internal.tryIsRegisterAdditional()) {
             return null;
         }
         if (!strategy.canLoginRegister) {

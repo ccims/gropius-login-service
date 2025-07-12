@@ -7,8 +7,6 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
     private readonly logger = new Logger(CatchOAuthErrorFilter.name);
 
     catch(error: OAuthHttpException, host: ArgumentsHost) {
-        console.log("hiere", error);
-
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();
         const res = context.getResponse<Response>();

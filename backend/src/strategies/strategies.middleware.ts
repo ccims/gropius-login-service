@@ -45,7 +45,7 @@ export class StrategiesMiddleware implements NestMiddleware {
                     const loginData = await activeLogin.loginInstanceFor;
                     try {
                         await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.logger.error(
                             "Error while linking/creating IMSUsers in the backend (Not canceling request):",
                             err,
@@ -84,7 +84,7 @@ export class StrategiesMiddleware implements NestMiddleware {
             // TODO: why do we need to do this?!
             const internalCopy = new FlowInternal();
             internalCopy.append(Object.assign({}, req.internal._internal));
-            internalCopy._internal.authState!.activeLogin = activeLogin.id;
+            internalCopy.getAuthState().activeLogin = activeLogin.id;
 
             req.internal.append({ activeLogin });
             await this.performImsUserSearchIfNeeded(internalCopy, instance, strategy);

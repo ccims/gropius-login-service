@@ -91,7 +91,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
             );
             this.logger.debug("Created token");
             return token;
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn(err);
             throw new OAuthHttpException("server_error", "Could not generate code for response");
         }

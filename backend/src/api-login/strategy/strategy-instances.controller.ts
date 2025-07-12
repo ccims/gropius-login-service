@@ -167,7 +167,7 @@ export class StrategyInstancesController {
         }
         try {
             return strategy.createOrUpdateNewInstance(input);
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn("Error on strategy instance creation", err);
             throw new HttpException(err.message ?? err, HttpStatus.BAD_REQUEST);
         }

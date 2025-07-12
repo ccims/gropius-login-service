@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AuthStateServerData } from "../strategies/AuthResult";
 import { OAuthAuthorizeServerState } from "../api-oauth/OAuthAuthorizeServerState";
 import { Strategy } from "../strategies/Strategy";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 
 declare global {
     namespace Express {
@@ -10,8 +11,6 @@ declare global {
         }
     }
 }
-
-// TODO: undefined thingies not highlighted in my ide ...
 
 export function middleware(req: Request, res: Response, next: NextFunction) {
     // TODO: wtf is "(res.locals.state as ApiStateData)"?!
@@ -34,15 +33,16 @@ export type FlowInternalData = Partial<
         }
 >;
 
-// TODO: which kind of error to throw?!
-
 export class FlowInternal {
-    // TODO: debug the use of _internal
     readonly _internal: FlowInternalData = {};
 
+    tryAuthState() {
+        return this._internal.authState;
+    }
+
     getAuthState() {
-        const authState = this._internal.authState;
-        if (!authState) throw new Error("AuthState missing");
+        const authState = this.tryAuthState();
+        if (!authState) throw new OAuthHttpException("invalid_request", "AuthState missing");
         return authState;
     }
 
@@ -50,19 +50,27 @@ export class FlowInternal {
         return this._internal.activeLogin;
     }
 
+    tryRequest() {
+        return this._internal.request;
+    }
+
     getRequest() {
-        const request = this._internal.request;
-        if (!request) throw new Error("Request missing");
+        const request = this.tryRequest();
+        if (!request) throw new OAuthHttpException("invalid_request", "Request missing");
         return request;
     }
 
-    isRegisterAdditional() {
+    tryIsRegisterAdditional() {
         return this._internal.isRegisterAdditional;
     }
 
+    tryClient() {
+        return this._internal.client;
+    }
+
     getClient() {
-        const client = this._internal.client;
-        if (!client) throw new Error("Client missing");
+        const client = this.tryClient();
+        if (!client) throw new OAuthHttpException("invalid_request", "Client missing");
         return client;
     }
 
@@ -72,7 +80,7 @@ export class FlowInternal {
 
     getStrategy() {
         const strategy = this._internal.strategy;
-        if (!strategy) throw new Error("strategy missing");
+        if (!strategy) throw new OAuthHttpException("invalid_request", "Strategy missing");
         return strategy;
     }
 

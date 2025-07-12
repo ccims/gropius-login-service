@@ -36,7 +36,7 @@ export class SyncImsUserController {
             imsUser = await this.imsUserService.findOneBy({
                 neo4jId: imsUserId,
             });
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn("Error loading imsuser by neo4jId", err);
             throw new HttpException("Could not load ims user by id; Check the id syntax", HttpStatus.BAD_REQUEST);
         }

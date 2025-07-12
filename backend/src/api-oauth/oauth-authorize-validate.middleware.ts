@@ -19,7 +19,7 @@ export class OAuthAuthorizeValidateMiddleware implements NestMiddleware {
             req.internal.append({ client });
         } catch {}
 
-        const client = req.internal.getClient();
+        const client = req.internal.tryClient();
         if (!client || !client.isValid) {
             throw new OAuthHttpException("invalid_client", "Client unknown or unauthorized");
         }
@@ -31,7 +31,7 @@ export class OAuthAuthorizeValidateMiddleware implements NestMiddleware {
         }
         try {
             this.tokenService.verifyScope(request.scope);
-        } catch (error) {
+        } catch (error: any) {
             throw new OAuthHttpException("invalid_scope", error.message);
         }
         if (request.codeChallengeMethod !== "S256") {

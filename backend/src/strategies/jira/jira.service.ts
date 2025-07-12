@@ -108,7 +108,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-        } catch (err) {
+        } catch (err: any) {
             throw new Error("Instance config for jira instance invalid: " + err.message);
         }
 
