@@ -68,7 +68,7 @@ export class LoginDataController {
             relations: ["strategyInstance"],
         });
         if ((await loginData.user).id != loggedInUser.id) {
-            if (!this.backendUserService.checkIsUserAdmin(loggedInUser)) {
+            if (!(await this.backendUserService.checkIsUserAdmin(loggedInUser))) {
                 throw new HttpException(
                     "No permission to access others login data if not admin",
                     HttpStatus.UNAUTHORIZED,

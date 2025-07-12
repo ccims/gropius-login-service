@@ -72,7 +72,6 @@ export class FlowSession {
     isValid() {
         // Expired
         if (now() > this.req.session.exp) {
-            console.log(this.req.session, now(), this.req.session.exp);
             return false;
         }
 

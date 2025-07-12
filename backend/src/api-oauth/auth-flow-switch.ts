@@ -5,6 +5,7 @@ import { OAuthAuthorizeServerState } from "./OAuthAuthorizeServerState";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { AuthStateServerData } from "../strategies/AuthResult";
+import { TokenScope } from "../backend-services/token.service";
 
 @Injectable()
 export class AuthFlowSwitchMiddleware extends StateMiddleware<
@@ -24,9 +25,8 @@ export class AuthFlowSwitchMiddleware extends StateMiddleware<
         state: AuthStateServerData & OAuthAuthorizeServerState & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        console.log(req.session);
-
-        if (req.flow.isAuthenticated()) {
+        // TODO: enable this
+        if (req.flow.isAuthenticated() && false) {
             req.flow.setStarted(state.request);
             req.flow.setAuthenticated(req.flow.getUser(), req.flow.getActiveLogin());
 
@@ -34,7 +34,8 @@ export class AuthFlowSwitchMiddleware extends StateMiddleware<
             const request = req.flow.getRequest();
             const activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
             const client = await this.authClientService.findAuthClient(request.clientId);
-            this.appendState(res, { activeLogin, request, client });
+            const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
+            this.appendState(res, { activeLogin, request, client, isRegisterAdditional });
         } else {
             req.flow.middlewares.prompt = false;
             req.flow.middlewares.code = false;

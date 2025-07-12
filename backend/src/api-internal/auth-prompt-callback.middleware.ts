@@ -8,6 +8,7 @@ import { AuthStateServerData } from "../strategies/AuthResult";
 import { OAuthAuthorizeServerState } from "../api-oauth/OAuthAuthorizeServerState";
 import { Strategy } from "../strategies/Strategy";
 import { AuthClientService } from "../model/services/auth-client.service";
+import { TokenScope } from "../backend-services/token.service";
 
 const schema = Joi.object({
     flow: Joi.string(),
@@ -58,7 +59,8 @@ export class AuthPromptCallbackMiddleware extends StateMiddleware<
         const request = req.flow.getRequest();
         const activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
         const client = await this.authClientService.findAuthClient(request.clientId);
-        this.appendState(res, { activeLogin, request, client });
+        const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
+        this.appendState(res, { activeLogin, request, client, isRegisterAdditional });
 
         // Update flow
         req.flow.setFinished(data.flow);

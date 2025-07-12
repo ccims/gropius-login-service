@@ -19,8 +19,18 @@ export class AuthFlowSetAuthenticatedMiddleware extends StateMiddleware<
         state: OAuthAuthorizeServerState & AuthStateServerData & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        const user = await (await state.activeLogin.loginInstanceFor).user;
-        req.flow.setAuthenticated(user.id, state.activeLogin.id);
+        // TODO: remove logs
+        console.log(res.locals);
+
+        const userLoginData = await state.activeLogin.loginInstanceFor;
+        console.log(userLoginData);
+        if (!userLoginData) throw new Error("Did not find user login data");
+
+        const loginUser = await userLoginData.user;
+        console.log(loginUser);
+        if (!loginUser) throw new Error("Did not find login user");
+
+        req.flow.setAuthenticated(loginUser.id, state.activeLogin.id);
         next();
     }
 }
