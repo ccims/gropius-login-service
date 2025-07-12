@@ -1,18 +1,17 @@
 import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
 import { State } from "../util/State";
 
 @Injectable()
-export class StrategiesMiddleware extends StateMiddleware {
+export class StrategiesMiddleware implements NestMiddleware {
     private readonly logger = new Logger(StrategiesMiddleware.name);
 
     constructor(
@@ -20,9 +19,7 @@ export class StrategiesMiddleware extends StateMiddleware {
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly performAuthFunctionService: PerformAuthFunctionService,
         private readonly imsUserFindingService: ImsUserFindingService,
-    ) {
-        super();
-    }
+    ) {}
 
     private async idToStrategyInstance(id: string): Promise<StrategyInstance> {
         if (!id) {
@@ -58,11 +55,7 @@ export class StrategiesMiddleware extends StateMiddleware {
         }
     }
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: NextFunction) {
         const id = req.params.id;
         const instance = await this.idToStrategyInstance(id);
         const strategy = this.strategiesService.getStrategyByName(instance.type);
