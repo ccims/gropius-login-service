@@ -3,12 +3,6 @@ import { Request, Response } from "express";
 import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as Joi from "joi";
-import { ActiveLoginService } from "../model/services/active-login.service";
-import { AuthStateServerData } from "../strategies/AuthResult";
-import { OAuthAuthorizeServerState } from "../api-oauth/OAuthAuthorizeServerState";
-import { Strategy } from "../strategies/Strategy";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { TokenScope } from "../backend-services/token.service";
 
 const schema = Joi.object({
     flow: Joi.string(),
@@ -21,21 +15,15 @@ type Data = {
 };
 
 @Injectable()
-export class AuthPromptCallbackMiddleware extends StateMiddleware<
-    AuthStateServerData & OAuthAuthorizeServerState,
-    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy }
-> {
-    constructor(
-        private readonly activeLoginService: ActiveLoginService,
-        private readonly authClientService: AuthClientService,
-    ) {
+export class AuthPromptCallbackMiddleware extends StateMiddleware {
+    constructor() {
         super();
     }
 
     protected override async useWithState(
         req: Request,
         res: Response,
-        state: AuthStateServerData & OAuthAuthorizeServerState & { error?: any },
+        state: object,
         next: (error?: Error | any) => void,
     ): Promise<void> {
         // Ensure that user is authenticated
@@ -54,13 +42,6 @@ export class AuthPromptCallbackMiddleware extends StateMiddleware<
             // TODO: the user is not redirected to the client?
             throw new OAuthHttpException("access_denied", "The user did not grant permission.");
         }
-
-        // Restore state
-        const request = req.flow.getRequest();
-        const activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
-        const client = await this.authClientService.findAuthClient(request.clientId);
-        const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
-        this.appendState(res, { activeLogin, request, client, isRegisterAdditional });
 
         // Update flow
         req.flow.setFinished(data.flow);

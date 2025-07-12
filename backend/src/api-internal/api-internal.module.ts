@@ -15,9 +15,11 @@ import { AuthRegisterMiddleware } from "./auth-register.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
 import { AuthErrorRedirectMiddleware } from "./auth-error-redirect.middleware";
 import { UpdateActionController } from "./update-action.controller";
-import { AuthFlowSetAuthenticatedMiddleware } from "./auth-flow-set-authenticated-middleware.service";
+import { FlowSessionSetAuthenticatedMiddleware } from "./flow-session-set-authenticated.middleware.service";
 import { AuthPromptRedirectMiddleware } from "./auth-prompt-redirect.middleware";
 import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware";
+import { FlowSessionRestoreMiddleware } from "../api-oauth/flow-session-restore";
+import { FlowSessionInitMiddleware } from "../api-oauth/flow-session-init";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
@@ -27,9 +29,11 @@ import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware"
         AuthRegisterMiddleware,
         ModeExtractorMiddleware,
         AuthErrorRedirectMiddleware,
-        AuthFlowSetAuthenticatedMiddleware,
         AuthPromptRedirectMiddleware,
         AuthPromptCallbackMiddleware,
+        FlowSessionInitMiddleware,
+        FlowSessionSetAuthenticatedMiddleware,
+        FlowSessionRestoreMiddleware,
     ],
     controllers: [AuthEndpointsController, UpdateActionController],
 })
@@ -41,7 +45,6 @@ export class ApiInternalModule {
         private readonly authRedirect: AuthRedirectMiddleware,
         private readonly modeExtractor: ModeExtractorMiddleware,
         private readonly strategies: StrategiesMiddleware,
-        private readonly flowSetAuthenticated: AuthFlowSetAuthenticatedMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
         private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
@@ -49,9 +52,13 @@ export class ApiInternalModule {
         private readonly authErrorRedirect: AuthErrorRedirectMiddleware,
         private readonly promptRedirect: AuthPromptRedirectMiddleware,
         private readonly promptCallback: AuthPromptCallbackMiddleware,
+        private readonly flowSessionInit: FlowSessionInitMiddleware,
+        private readonly flowSessionSetAuthenticated: FlowSessionSetAuthenticatedMiddleware,
+        private readonly flowSessionRestore: FlowSessionRestoreMiddleware,
     ) {
         this.middlewares.push({
             middlewares: [
+                this.flowSessionInit,
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
@@ -65,8 +72,9 @@ export class ApiInternalModule {
 
         this.middlewares.push({
             middlewares: [
+                this.flowSessionInit,
                 this.strategies,
-                this.flowSetAuthenticated,
+                this.flowSessionSetAuthenticated,
                 this.promptRedirect,
                 this.authRedirect,
                 this.authErrorRedirect,
@@ -78,11 +86,12 @@ export class ApiInternalModule {
 
         this.middlewares.push({
             middlewares: [
+                this.flowSessionInit,
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.modeExtractor,
                 this.strategies,
-                this.flowSetAuthenticated,
+                this.flowSessionSetAuthenticated,
                 this.promptRedirect,
                 this.authRedirect,
                 this.authErrorRedirect,
@@ -93,22 +102,36 @@ export class ApiInternalModule {
         });
 
         this.middlewares.push({
-            middlewares: [this.promptCallback, this.authRedirect, this.oauthErrorRedirect, this.errorHandler],
+            middlewares: [
+                this.flowSessionInit,
+                this.promptCallback,
+                this.flowSessionRestore,
+                this.authRedirect,
+                this.oauthErrorRedirect,
+                this.errorHandler,
+            ],
             path: "auth/api/internal/auth/prompt/callback",
         });
 
+        // TODO: CSRF?
         this.middlewares.push({
             middlewares: [
+                this.flowSessionInit,
                 this.authAuthorizeExtract,
                 this.oauthAuthorizeValidate,
                 this.authRegister,
-                this.flowSetAuthenticated,
+                this.flowSessionSetAuthenticated,
                 this.promptRedirect,
                 this.authRedirect,
                 this.oauthErrorRedirect,
                 this.errorHandler,
             ],
             path: "auth/api/internal/auth/register",
+        });
+
+        this.middlewares.push({
+            middlewares: [this.flowSessionInit],
+            path: "auth/api/internal/auth/external-flow",
         });
     }
 

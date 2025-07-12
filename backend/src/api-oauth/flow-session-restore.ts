@@ -8,7 +8,7 @@ import { AuthStateServerData } from "../strategies/AuthResult";
 import { TokenScope } from "../backend-services/token.service";
 
 @Injectable()
-export class AuthFlowSwitchMiddleware extends StateMiddleware<
+export class FlowSessionRestoreMiddleware extends StateMiddleware<
     AuthStateServerData & OAuthAuthorizeServerState,
     AuthStateServerData & OAuthAuthorizeServerState
 > {
@@ -25,22 +25,14 @@ export class AuthFlowSwitchMiddleware extends StateMiddleware<
         state: AuthStateServerData & OAuthAuthorizeServerState & { error?: any },
         next: (error?: Error | any) => void,
     ): Promise<any> {
-        // TODO: enable this
-        if (req.flow.isAuthenticated() && false) {
-            req.flow.setStarted(state.request);
-            req.flow.setAuthenticated(req.flow.getUser(), req.flow.getActiveLogin());
+        if (!req.flow.middlewares.restore) return next();
 
-            // Restore state
-            const request = req.flow.getRequest();
-            const activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
-            const client = await this.authClientService.findAuthClient(request.clientId);
-            const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
-            this.appendState(res, { activeLogin, request, client, isRegisterAdditional });
-        } else {
-            req.flow.middlewares.prompt = false;
-            req.flow.middlewares.code = false;
-        }
-
+        // Restore state
+        const request = req.flow.getRequest();
+        const activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
+        const client = await this.authClientService.findAuthClient(request.clientId);
+        const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
+        this.appendState(res, { activeLogin, request, client, isRegisterAdditional });
         next();
     }
 }

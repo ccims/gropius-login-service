@@ -62,8 +62,6 @@ async function bootstrap() {
     // TODO: configure proxy
     // app.set('trust proxy', 1)
 
-    // TODO: CSRF
-
     app.use(
         session({
             name: "gropius-login-session",
@@ -78,8 +76,6 @@ async function bootstrap() {
             secure: false,
         }),
     );
-
-    app.use(FlowSession.middleware);
 
     await app.listen(portNumber);
 }

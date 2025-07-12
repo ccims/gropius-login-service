@@ -85,6 +85,17 @@ export class AuthEndpointsController {
         );
     }
 
+    @Get("external-flow")
+    @NoCors()
+    @ApiOperation({ summary: "Endpoint to access the external flow id" })
+    async externalFlow(@Req() req: Request): Promise<{
+        externalFlow: string;
+    }> {
+        return {
+            externalFlow: req.flow.getExternalFlow(),
+        };
+    }
+
     @Get("prompt/data")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access data that should be displayed to the user" })

@@ -24,6 +24,7 @@ export class OAuthErrorRedirectMiddleware extends StateMiddleware<OAuthAuthorize
         next: (error?: Error | any) => void,
     ): void {
         console.log(error);
+        console.log(req.session);
 
         if (state.request?.redirect) {
             const url = new URL(state.request.redirect);

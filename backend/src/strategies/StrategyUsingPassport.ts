@@ -7,9 +7,11 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { Request } from "express";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
+
     constructor(
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
@@ -45,7 +47,7 @@ export abstract class StrategyUsingPassport extends Strategy {
     public override async performAuth(
         strategyInstance: StrategyInstance,
         state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
-        req: any,
+        req: Request,
         res: any,
     ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
@@ -55,7 +57,11 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign({ request: state?.request, authState: state?.authState }),
+                    state: jwtService.sign({
+                        request: state?.request,
+                        authState: state?.authState,
+                        externalFlow: req.flow.getExternalFlow(),
+                    }),
                     ...this.getAdditionalPassportOptions(strategyInstance, state),
                 },
                 (err, user: AuthResult | false, info) => {
@@ -63,13 +69,16 @@ export abstract class StrategyUsingPassport extends Strategy {
                         this.logger.error("Error while authenticating with passport", err);
                         reject(err);
                     } else {
-                        let returnedState = {};
+                        let returnedState: any = {};
                         const state = info.state || req.query?.state;
                         if (state && typeof state == "string") {
                             returnedState = jwtService.verify(state);
                         } else if (state) {
                             reject("State not returned as JWT");
                         }
+
+                        returnedState.externalFlow = returnedState?.externalFlow ?? req.query.externalFlow;
+
                         resolve({ result: user || null, returnedState, info });
                     }
                 },

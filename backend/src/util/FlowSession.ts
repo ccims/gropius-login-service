@@ -1,8 +1,9 @@
-import { NextFunction, Request } from "express";
+import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as crypto from "crypto";
+import { MONTH_IN_SECONDS, now } from "./utils";
 
 type RequestWithSession = Request & { session?: FlowSessionData };
 
@@ -20,11 +21,13 @@ export type FlowSessionData = {
     user?: string;
 
     // active login id
-    // TODO: is this confidential?
     activeLogin?: string;
 
     // flow id (used to bind the whole interaction)
     flow?: string;
+
+    // external flow id (used to bind the whole interaction also with external parties)
+    externalFlow?: string;
 
     // oauth authorization request
     request?: OAuthAuthorizeRequest;
@@ -45,16 +48,19 @@ export class FlowSession {
     private readonly req: RequestWithSession;
 
     middlewares: {
+        restore: boolean;
         prompt: boolean;
         code: boolean;
-    } = { prompt: true, code: true };
+    } = { restore: true, prompt: true, code: true };
 
     constructor(req: Request) {
         this.req = req as RequestWithSession;
     }
 
     init() {
-        if (this.req.session?.isPopulated) return this;
+        if (!this.req.session) throw new Error("Session is missing");
+        if (this.req.session.isPopulated) return this;
+
         const iat = now();
         this.req.session = {
             id: uuidv4(),
@@ -63,22 +69,15 @@ export class FlowSession {
             step: "init",
             consents: [],
         };
+        return this;
     }
 
     isAuthenticated() {
         return !!this.req.session.user;
     }
 
-    isValid() {
-        // Expired
-        if (now() > this.req.session.exp) {
-            return false;
-        }
-
-        // Revoked
-        // TODO: check if revoked
-
-        return true;
+    isExpired() {
+        return now() > this.req.session.exp;
     }
 
     drop() {
@@ -89,18 +88,6 @@ export class FlowSession {
     regenerate() {
         this.drop();
         this.init();
-    }
-
-    setStarted(request: OAuthAuthorizeRequest) {
-        this.init();
-
-        if (this.req.session.exp !== this.req.session.iat + MONTH_IN_SECONDS) {
-            this.req.session.exp += MONTH_IN_SECONDS;
-        }
-        this.req.session.flow = uuidv4();
-        this.req.session.request = request;
-        this.req.session.step = "started";
-        return this;
     }
 
     getRequest() {
@@ -135,14 +122,41 @@ export class FlowSession {
         return flow;
     }
 
-    setAuthenticated(userId: string, activeLoginId: string) {
+    getExternalFlow() {
+        const externalFlow = this.req.session.externalFlow;
+        if (!externalFlow) {
+            throw new OAuthHttpException("invalid_request", "External flow id is missing");
+        }
+        return externalFlow;
+    }
+
+    setStarted(request: OAuthAuthorizeRequest) {
+        this.init();
+
+        if (this.req.session.exp !== this.req.session.iat + MONTH_IN_SECONDS) {
+            this.req.session.exp += MONTH_IN_SECONDS;
+        }
+        this.req.session.flow = uuidv4();
+        this.req.session.externalFlow = uuidv4();
+        this.req.session.request = request;
+        this.req.session.step = "started";
+        return this;
+    }
+
+    setAuthenticated(userId: string, activeLoginId: string, externalFlow: string) {
         if (this.req.session.step !== "started") {
-            throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
+            throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong");
+        }
+
+        if (externalFlow !== this.getExternalFlow()) {
+            throw new Error("Another external flow is currently running");
         }
 
         this.req.session.user = userId;
         this.req.session.activeLogin = activeLoginId;
         this.req.session.step = "authenticated";
+
+        delete this.req.session.externalFlow;
 
         return this;
     }
@@ -186,6 +200,7 @@ export class FlowSession {
 
         delete this.req.session.flow;
         delete this.req.session.request;
+
         return this;
     }
 
@@ -206,19 +221,6 @@ export class FlowSession {
 
         return crypto.createHash("sha256").update(data).digest("base64url");
     }
-}
-
-const MONTH_IN_SECONDS = 30 * 24 * 60 * 60;
-
-function now() {
-    return Math.floor(Date.now() / 1000);
-}
-
-export function middleware(req: Request, res: Response, next: NextFunction) {
-    req.flow = new FlowSession(req);
-    req.flow.init();
-    if (!req.flow.isValid()) req.flow.regenerate();
-    next();
 }
 
 declare global {

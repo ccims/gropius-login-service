@@ -23,7 +23,9 @@ export interface StrategyUpdateAction {
 
 export interface PerformAuthResult {
     result: AuthResult | null;
-    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">>;
+    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">> & {
+        externalFlow?: string;
+    };
     info: any;
 }
 

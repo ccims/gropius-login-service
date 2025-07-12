@@ -13,9 +13,11 @@ import { BackendServicesModule } from "src/backend-services/backend-services.mod
 import { StrategiesModule } from "src/strategies/strategies.module";
 import { EncryptionService } from "./encryption.service";
 import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
-import { AuthFlowSwitchMiddleware } from "./auth-flow-switch";
+import { FlowSessionSwitchMiddleware } from "./flow-session-switch";
 import { AuthRedirectMiddleware } from "../api-internal/auth-redirect.middleware";
 import { AuthPromptRedirectMiddleware } from "../api-internal/auth-prompt-redirect.middleware";
+import { FlowSessionInitMiddleware } from "./flow-session-init";
+import { FlowSessionRestoreMiddleware } from "./flow-session-restore";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
@@ -31,7 +33,9 @@ import { AuthPromptRedirectMiddleware } from "../api-internal/auth-prompt-redire
         EncryptionService,
         AuthRedirectMiddleware,
         AuthPromptRedirectMiddleware,
-        AuthFlowSwitchMiddleware,
+        FlowSessionInitMiddleware,
+        FlowSessionSwitchMiddleware,
+        FlowSessionRestoreMiddleware,
     ],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
     exports: [OAuthAuthorizeValidateMiddleware, ErrorHandlerMiddleware, OAuthErrorRedirectMiddleware],
@@ -46,15 +50,19 @@ export class ApiOauthModule {
         private readonly oauthToken: OAuthTokenMiddleware,
         private readonly errorHandler: ErrorHandlerMiddleware,
         private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
-        private readonly authFlowSwitch: AuthFlowSwitchMiddleware,
         private readonly authRedirect: AuthRedirectMiddleware,
         private readonly promptRedirect: AuthPromptRedirectMiddleware,
+        private readonly flowSessionInit: FlowSessionInitMiddleware,
+        private readonly flowSessionSwitch: FlowSessionSwitchMiddleware,
+        private readonly flowSessionRestore: FlowSessionRestoreMiddleware,
     ) {
         this.middlewares.push({
             middlewares: [
                 this.oauthAuthorizeExtract,
                 this.oauthAuthorizeValidate,
-                this.authFlowSwitch,
+                this.flowSessionInit,
+                this.flowSessionSwitch,
+                this.flowSessionRestore,
                 this.promptRedirect,
                 this.authRedirect,
                 this.oauthAuthorizeRedirect,

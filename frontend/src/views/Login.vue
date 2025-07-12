@@ -1,9 +1,9 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="login-container mt-5 pb-4" v-if="!loadingStrategies">
+            <GropiusCard v-if="!loadingStrategies" class="login-container mt-5 pb-4">
                 <p class="text-center text-body-1 mt-2">{{ title }}</p>
-                <v-sheet color="error-container" v-if="errorMessage" rounded="lger" class="pa-3 mt-2">
+                <v-sheet v-if="errorMessage" color="error-container" rounded="lger" class="pa-3 mt-2">
                     <v-icon icon="mdi-alert-circle-outline" size="x-large" />
                     {{ errorMessage }}
                 </v-sheet>
@@ -32,10 +32,11 @@
                                 :field="field"
                             />
                             <input type="submit" hidden />
+                            <input type="text" name="externalFlow" :value="externalFlow" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
-                <DefaultButton class="w-100" @click="submitForm"> Continue </DefaultButton>
+                <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
                 <div v-if="!isRegisterAdditional" class="mt-2">
                     <p v-if="isLogin">
                         <span class="text-middle">Don't have an account?</span>
@@ -78,7 +79,7 @@
 </template>
 <script setup lang="ts">
 import BaseLayout from "@/components/BaseLayout.vue";
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import {
     CredentialStrategyInstance,
@@ -92,6 +93,7 @@ import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
 import axios from "axios";
 import InputField from "@/components/InputField.vue";
+import * as oauth from "@/util/oauth";
 
 const route = useRoute();
 
@@ -184,6 +186,12 @@ const credentialTab = ref(0);
 const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
+
+const externalFlow = ref<string | undefined>(undefined);
+onMounted(async () => {
+    const { data } = await axios.get<{ externalFlow: string }>(`/auth/api/internal/auth/external-flow`);
+    externalFlow.value = data.externalFlow;
+});
 
 function formDataAt(id: string) {
     if (!(id in formData.value)) {
