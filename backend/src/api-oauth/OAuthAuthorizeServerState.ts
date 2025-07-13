@@ -9,6 +9,7 @@ export interface OAuthAuthorizeRequest {
     codeChallenge: string;
     codeChallengeMethod: string;
     responseType: "code";
+    prompt?: "consent";
 }
 
 export interface OAuthAuthorizeServerState {

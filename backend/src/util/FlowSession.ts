@@ -107,8 +107,12 @@ export class FlowSession {
         return user;
     }
 
+    tryActiveLogin() {
+        return this.req.session.activeLogin;
+    }
+
     getActiveLogin() {
-        const activeLogin = this.req.session.activeLogin;
+        const activeLogin = this.tryActiveLogin();
         if (!activeLogin) {
             throw new OAuthHttpException("invalid_request", "Active login id is missing");
         }

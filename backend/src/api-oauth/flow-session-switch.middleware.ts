@@ -1,14 +1,10 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 @Injectable()
 export class FlowSessionSwitchMiddleware implements NestMiddleware {
-    constructor() {}
-
-    async use(req: Request, res: Response, next: (error?: Error | any) => void) {
-        // TODO: enable this
-        const not = false;
-        if (req.flow.isAuthenticated() && not) {
+    async use(req: Request, res: Response, next: NextFunction) {
+        if (req.flow.isAuthenticated()) {
             req.flow.setStarted(req.internal.getRequest());
             req.flow.setAuthenticated(req.flow.getUser(), req.flow.getActiveLogin(), req.flow.getExternalFlow());
         } else {

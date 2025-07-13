@@ -25,6 +25,7 @@ export class OAuthAuthorizeExtractMiddleware implements NestMiddleware {
             codeChallenge: this.encryptionService.encrypt(codeChallenge),
             codeChallengeMethod: req.query.code_challenge_method as string,
             responseType: req.query.response_type as "code",
+            prompt: req.query.prompt as "consent",
         };
         req.internal.append({
             request: requestParams,

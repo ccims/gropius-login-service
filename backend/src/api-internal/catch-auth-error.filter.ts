@@ -7,6 +7,8 @@ import { combineURL } from "../util/utils";
 @Catch(AuthException)
 export class CatchAuthErrorFilter implements ExceptionFilter {
     catch(error: AuthException, host: ArgumentsHost) {
+        console.log(error);
+
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();
         const res = context.getResponse<Response>();

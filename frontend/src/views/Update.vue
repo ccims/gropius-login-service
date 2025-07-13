@@ -37,7 +37,7 @@
                             </IconButton>
                             <span class="text-h6 my-2">{{ chosenAction?.displayName }}</span>
                         </div>
-                        <v-form @submit.prevent="submitForm">
+                        <v-form @submit.prevent="onUpdate">
                             <div class="d-flex flex-column ga-2 mt-2">
                                 <InputField
                                     v-for="(field, idx) in chosenAction?.variables"
@@ -50,6 +50,12 @@
                         </v-form>
                     </v-window-item>
                 </v-window>
+
+                <DefaultButton class="w-100 mt-4 mb-4" @click="() => onLogout('current')"> Logout</DefaultButton>
+
+                <DefaultButton class="w-100" variant="outlined" @click="() => onLogout('everywhere')">
+                    Logout Everywhere
+                </DefaultButton>
             </GropiusCard>
         </template>
     </BaseLayout>
@@ -93,13 +99,27 @@ function goBack() {
     errorMessage.value = undefined;
 }
 
-async function submitForm() {
+async function Authorization() {
+    return {
+        headers: {
+            Authorization: `Bearer ${await oauth.loadToken()}`
+        }
+    };
+}
+
+async function onLogout(mode: "current" | "everywhere") {
+    await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, await Authorization());
+    oauth.clean();
+    window.location.reload();
+}
+
+async function onUpdate() {
     try {
-        await axios.put(`/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`, formData.value, {
-            headers: {
-                Authorization: `Bearer ${await oauth.loadToken()}`
-            }
-        });
+        await axios.put(
+            `/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`,
+            formData.value,
+            await Authorization()
+        );
         actionTab.value = 0;
         showSuccessMessage.value = true;
         errorMessage.value = undefined;
@@ -113,13 +133,8 @@ onMounted(async () => {
     await router.replace({ query: { id: id.value } });
     if (code) await oauth.exchangeToken(code.toString());
 
-    const strategyInstance = (
-        await axios.get(`/auth/api/login/login-data/${id.value}`, {
-            headers: {
-                Authorization: `Bearer ${await oauth.loadToken()}`
-            }
-        })
-    ).data.strategyInstance as LoginStrategyInstance;
+    const strategyInstance = (await axios.get(`/auth/api/login/login-data/${id.value}`, await Authorization())).data
+        .strategyInstance as LoginStrategyInstance;
     strategy.value = (await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`)).data as LoginStrategy;
 });
 </script>

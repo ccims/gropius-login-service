@@ -7,7 +7,6 @@ import { StrategiesModule } from "../strategies/strategies.module";
 import { AuthEndpointsController } from "./auth-endpoints.controller";
 import { AuthRedirectMiddleware } from "./auth-redirect.middleware";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
-import { AuthAuthorizeExtractMiddleware } from "./auth-authorize-extract.middleware";
 import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/oauth-authorize-validate.middleware";
 import { AuthRegisterMiddleware } from "./auth-register.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
@@ -28,13 +27,14 @@ export class ApiInternalModule {
         consumer
             .apply(
                 FlowSessionInitMiddleware,
-                AuthAuthorizeExtractMiddleware,
+                FlowSessionRestoreMiddleware,
                 OAuthAuthorizeValidateMiddleware,
                 ModeExtractorMiddleware,
                 StrategiesMiddleware,
             )
             .forRoutes("auth/api/internal/auth/redirect/:id/:mode");
 
+        // TODO: not tested
         consumer
             .apply(
                 FlowSessionInitMiddleware,
@@ -48,7 +48,7 @@ export class ApiInternalModule {
         consumer
             .apply(
                 FlowSessionInitMiddleware,
-                AuthAuthorizeExtractMiddleware,
+                FlowSessionRestoreMiddleware,
                 OAuthAuthorizeValidateMiddleware,
                 ModeExtractorMiddleware,
                 StrategiesMiddleware,
@@ -61,17 +61,18 @@ export class ApiInternalModule {
         consumer
             .apply(
                 FlowSessionInitMiddleware,
-                AuthPromptCallbackMiddleware,
                 FlowSessionRestoreMiddleware,
+                AuthPromptCallbackMiddleware,
                 AuthRedirectMiddleware,
             )
             .forRoutes("auth/api/internal/auth/prompt/callback");
 
         // TODO: CSRF?
+        // TODO: not tested
         consumer
             .apply(
                 FlowSessionInitMiddleware,
-                AuthAuthorizeExtractMiddleware,
+                FlowSessionRestoreMiddleware,
                 OAuthAuthorizeValidateMiddleware,
                 AuthRegisterMiddleware,
                 FlowSessionSetAuthenticatedMiddleware,
@@ -81,5 +82,15 @@ export class ApiInternalModule {
             .forRoutes("auth/api/internal/auth/register");
 
         consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/external-flow");
+
+        consumer
+            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .forRoutes("auth/api/internal/auth/prompt/data");
+
+        // TODO: CSRF?
+        consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/logout/current");
+
+        // TODO: CSRF?
+        consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/logout/everywhere");
     }
 }

@@ -7,23 +7,29 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
     private readonly logger = new Logger(CatchOAuthErrorFilter.name);
 
     catch(error: OAuthHttpException, host: ArgumentsHost) {
+        console.log(error);
+
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();
         const res = context.getResponse<Response>();
 
-        const url = new URL(req.internal.getRequest().redirect);
-        if (error.error_type && error.error_message) {
-            url.searchParams.append("error", error.error_type);
-            url.searchParams.append(
-                "error_description",
-                error.error_message.replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, ""),
-            );
-        } else {
-            this.logger.error("Unknown error", error);
-            url.searchParams.append("error", "server_error");
-            url.searchParams.append("error_description", encodeURIComponent("An unknown error occurred"));
-        }
+        try {
+            const url = new URL(req.internal.getRequest().redirect);
+            if (error.error_type && error.error_message) {
+                url.searchParams.append("error", error.error_type);
+                url.searchParams.append(
+                    "error_description",
+                    error.error_message.replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, ""),
+                );
+            } else {
+                this.logger.error("Unknown error", error);
+                url.searchParams.append("error", "server_error");
+                url.searchParams.append("error_description", encodeURIComponent("An unknown error occurred"));
+            }
 
-        res.redirect(url.toString());
+            res.redirect(url.toString());
+        } catch (another: any) {
+            throw new Error("Unknown error occurred");
+        }
     }
 }

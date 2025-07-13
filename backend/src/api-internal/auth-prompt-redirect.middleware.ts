@@ -8,10 +8,13 @@ export class AuthPromptRedirectMiddleware implements NestMiddleware {
         // Check if middleware is enabled
         if (!req.flow.middlewares.prompt) return next();
 
-        // Do not prompt for internal clients or if consent is already given
-        if (req.internal.getClient().isInternal || req.flow.didConsent()) {
-            req.flow.skipPrompt();
-            return next();
+        // Always prompt if requested
+        if (req.internal.getRequest().prompt !== "consent") {
+            // Do not prompt for internal clients or if consent is already given
+            if (req.internal.getClient().isInternal || req.flow.didConsent()) {
+                req.flow.skipPrompt();
+                return next();
+            }
         }
 
         // Prompt user for consent

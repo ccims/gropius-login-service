@@ -38,6 +38,7 @@ export class UpdateActionController {
         private readonly strategyService: StrategiesService,
     ) {}
 
+    // TODO: use cookie auth only (and add CSRF protection)?
     @Put(":id/:action")
     @NoCors()
     @ApiOperation({ summary: "Update a login data with a specific action" })

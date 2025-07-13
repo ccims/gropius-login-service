@@ -127,9 +127,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
         if (!req.flow.middlewares.code) return next();
 
         const activeLogin = req.internal.getActiveLogin();
-        const authState = req.internal.getAuthState();
         const request = req.internal.getRequest();
-        const strategy = req.internal.getStrategy();
 
         if (!activeLogin) {
             throw new OAuthHttpException("server_error", "No active login");
@@ -143,6 +141,9 @@ export class AuthRedirectMiddleware implements NestMiddleware {
             }
         } else {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
+                const strategy = req.internal.getStrategy();
+                const authState = req.internal.getAuthState();
+
                 const encodedState = encodeURIComponent(this.stateJwtService.sign({ request, authState }));
                 const token = await this.generateCode(
                     req,
