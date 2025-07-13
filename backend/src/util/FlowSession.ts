@@ -91,12 +91,17 @@ export class FlowSession {
         this.init();
     }
 
+    tryRequest() {
+        return this.req.session.request;
+    }
+
     getRequest() {
-        if (!this.req.session.request) {
+        const request = this.tryRequest();
+        if (!request) {
             throw new OAuthHttpException("invalid_request", "Authorization request is missing");
         }
 
-        return this.req.session!.request;
+        return request;
     }
 
     getUser() {

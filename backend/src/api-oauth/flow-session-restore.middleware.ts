@@ -4,6 +4,7 @@ import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { TokenScope } from "../backend-services/token.service";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
+import { FlowInternalData } from "../util/FlowInternal";
 
 @Injectable()
 export class FlowSessionRestoreMiddleware implements NestMiddleware {
@@ -15,19 +16,21 @@ export class FlowSessionRestoreMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         if (!req.flow.middlewares.restore) return next();
 
-        const request = req.flow.getRequest();
+        const data: FlowInternalData = {};
 
-        let activeLogin: ActiveLogin | undefined;
-        const activeLoginId = req.flow.tryActiveLogin();
-        if (activeLoginId) {
-            activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
+        const request = req.flow.tryRequest();
+        if (request) {
+            data.request = request;
+            data.client = await this.authClientService.findAuthClient(request.clientId);
+            data.isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
         }
 
-        const client = await this.authClientService.findAuthClient(request.clientId);
+        const activeLoginId = req.flow.tryActiveLogin();
+        if (activeLoginId) {
+            data.activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLogin() });
+        }
 
-        const isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
-
-        req.internal.append({ activeLogin, request, client, isRegisterAdditional });
+        req.internal.append(data);
 
         next();
     }

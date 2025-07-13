@@ -34,10 +34,10 @@ export class ApiInternalModule {
             )
             .forRoutes("auth/api/internal/auth/redirect/:id/:mode");
 
-        // TODO: not tested
         consumer
             .apply(
                 FlowSessionInitMiddleware,
+                FlowSessionRestoreMiddleware,
                 StrategiesMiddleware,
                 FlowSessionSetAuthenticatedMiddleware,
                 AuthPromptRedirectMiddleware,
@@ -81,16 +81,22 @@ export class ApiInternalModule {
             )
             .forRoutes("auth/api/internal/auth/register");
 
-        consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/external-flow");
+        consumer
+            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .forRoutes("auth/api/internal/auth/external-flow");
 
         consumer
             .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
             .forRoutes("auth/api/internal/auth/prompt/data");
 
         // TODO: CSRF?
-        consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/logout/current");
+        consumer
+            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .forRoutes("auth/api/internal/auth/logout/current");
 
         // TODO: CSRF?
-        consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/logout/everywhere");
+        consumer
+            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .forRoutes("auth/api/internal/auth/logout/everywhere");
     }
 }

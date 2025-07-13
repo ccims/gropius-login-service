@@ -46,7 +46,7 @@ export class FlowInternal {
         return authState;
     }
 
-    getActiveLogin() {
+    tryActiveLogin() {
         return this._internal.activeLogin;
     }
 

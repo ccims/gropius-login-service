@@ -137,8 +137,7 @@ export async function authorizeUser(state: object) {
             redirect_uri: window.location.origin + "/auth/flow/update",
             state: JSON.stringify(state),
             code_challenge_method: "S256",
-            code_challenge: codeChallenge,
-            prompt: "consent"
+            code_challenge: codeChallenge
         }).toString();
 }
 

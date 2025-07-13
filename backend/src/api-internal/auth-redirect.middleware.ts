@@ -51,7 +51,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
 
     // TODO: this needs to be adapted to the "automatic login thing"
     private async assignActiveLoginToClient(req: Request, expiresIn: number): Promise<number> {
-        const activeLogin = req.internal.getActiveLogin();
+        const activeLogin = req.internal.tryActiveLogin();
 
         if (!activeLogin.isValid) {
             throw new Error("Active login invalid");
@@ -77,7 +77,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
     }
 
     private async generateCode(req: Request, clientId: string, scope: TokenScope[], pkce: boolean): Promise<string> {
-        const activeLogin = req.internal.getActiveLogin();
+        const activeLogin = req.internal.tryActiveLogin();
         try {
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(req, expiresIn);
@@ -126,7 +126,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
         // Check if middleware is enabled
         if (!req.flow.middlewares.code) return next();
 
-        const activeLogin = req.internal.getActiveLogin();
+        const activeLogin = req.internal.tryActiveLogin();
         const request = req.internal.getRequest();
 
         if (!activeLogin) {

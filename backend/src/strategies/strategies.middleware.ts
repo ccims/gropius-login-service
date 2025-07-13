@@ -33,7 +33,7 @@ export class StrategiesMiddleware implements NestMiddleware {
     }
 
     async performImsUserSearchIfNeeded(internal: FlowInternal, instance: StrategyInstance, strategy: Strategy) {
-        const activeLogin = internal.getActiveLogin();
+        const activeLogin = internal.tryActiveLogin();
         const authState = internal.getAuthState();
 
         if (strategy.canSync && instance.isSyncActive) {

@@ -13,6 +13,10 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
         const req = context.getRequest<Request>();
         const res = context.getResponse<Response>();
 
+        // TODO: remove logs
+        console.log(req.session);
+        console.log(req.internal._internal);
+
         try {
             const url = new URL(req.internal.getRequest().redirect);
             if (error.error_type && error.error_message) {
@@ -29,7 +33,9 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
 
             res.redirect(url.toString());
         } catch (another: any) {
-            throw new Error("Unknown error occurred");
+            res.json({
+                error: another,
+            });
         }
     }
 }
