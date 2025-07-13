@@ -7,7 +7,7 @@ import { UserLoginDataImsUserService } from "src/model/services/user-login-data-
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Strategy } from "src/strategies/Strategy";
-import { jsonFieldArrayToObject, objectToJsonFieldArray } from "./JSONField";
+import { jsonFieldArrayToObject, objectToJsonFieldArray } from "../util/JSONField";
 import { BackendUserService } from "./backend-user.service";
 import { deepEqual } from "fast-equals";
 

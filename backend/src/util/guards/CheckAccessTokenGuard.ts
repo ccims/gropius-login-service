@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { ApiStateData } from "./ApiStateData";
+import { ApiStateData } from "../ApiStateData";
 
 /**
  * Base class for guards for checking the presence of an access token in the request.

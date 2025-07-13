@@ -1,119 +1,85 @@
-import { MiddlewareConsumer, Module, NestMiddleware } from "@nestjs/common";
+import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { ModelModule } from "src/model/model.module";
-import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
+import { ModeExtractorMiddleware } from "./middlewares/mode-extractor.middleware";
 import { StrategiesMiddleware } from "../strategies/strategies.middleware";
 import { StrategiesModule } from "../strategies/strategies.module";
-import { AuthEndpointsController } from "./auth-endpoints.controller";
-import { AuthRedirectMiddleware } from "./auth-redirect.middleware";
+import { AuthEndpointsController } from "./controllers/auth-endpoints.controller";
+import { AuthRedirectMiddleware } from "./middlewares/auth-redirect.middleware";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
-import { AuthAuthorizeExtractMiddleware } from "./auth-authorize-extract.middleware";
-import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/oauth-authorize-validate.middleware";
-import { AuthRegisterMiddleware } from "./auth-register.middleware";
+import { AuthAuthorizeExtractMiddleware } from "./middlewares/auth-authorize-extract.middleware";
+import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/middlewares/oauth-authorize-validate.middleware";
+import { AuthRegisterMiddleware } from "./middlewares/auth-register.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
-import { UpdateActionController } from "./update-action.controller";
-import { FlowSessionSetAuthenticatedMiddleware } from "./flow-session-set-authenticated.middleware.service";
-import { AuthPromptRedirectMiddleware } from "./auth-prompt-redirect.middleware";
-import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware";
-import { FlowSessionRestoreMiddleware } from "../api-oauth/flow-session-restore";
-import { FlowSessionInitMiddleware } from "../api-oauth/flow-session-init";
+import { UpdateActionController } from "./controllers/update-action.controller";
+import { FlowSessionSetAuthenticatedMiddleware } from "./middlewares/flow-session-set-authenticated.middleware";
+import { AuthPromptRedirectMiddleware } from "./middlewares/auth-prompt-redirect.middleware";
+import { AuthPromptCallbackMiddleware } from "./middlewares/auth-prompt-callback.middleware";
+import { FlowSessionRestoreMiddleware } from "../api-oauth/middlewares/flow-session-restore.middleware";
+import { FlowSessionInitMiddleware } from "../api-oauth/middlewares/flow-session-init.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
-    providers: [
-        AuthAuthorizeExtractMiddleware,
-        AuthRedirectMiddleware,
-        AuthRegisterMiddleware,
-        ModeExtractorMiddleware,
-        AuthPromptRedirectMiddleware,
-        AuthPromptCallbackMiddleware,
-        FlowSessionInitMiddleware,
-        FlowSessionSetAuthenticatedMiddleware,
-        FlowSessionRestoreMiddleware,
-    ],
     controllers: [AuthEndpointsController, UpdateActionController],
 })
 export class ApiInternalModule {
-    private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
-
-    constructor(
-        private readonly authAuthorizeExtract: AuthAuthorizeExtractMiddleware,
-        private readonly authRedirect: AuthRedirectMiddleware,
-        private readonly modeExtractor: ModeExtractorMiddleware,
-        private readonly strategies: StrategiesMiddleware,
-        private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
-        private readonly authRegister: AuthRegisterMiddleware,
-        private readonly promptRedirect: AuthPromptRedirectMiddleware,
-        private readonly promptCallback: AuthPromptCallbackMiddleware,
-        private readonly flowSessionInit: FlowSessionInitMiddleware,
-        private readonly flowSessionSetAuthenticated: FlowSessionSetAuthenticatedMiddleware,
-        private readonly flowSessionRestore: FlowSessionRestoreMiddleware,
-    ) {
-        // TODO: CSRF?
-        this.middlewares.push({
-            middlewares: [
-                this.flowSessionInit,
-                this.authAuthorizeExtract,
-                this.oauthAuthorizeValidate,
-                this.modeExtractor,
-                this.strategies,
-            ],
-            path: "auth/api/internal/auth/redirect/:id/:mode",
-        });
-
-        this.middlewares.push({
-            middlewares: [
-                this.flowSessionInit,
-                this.strategies,
-                this.flowSessionSetAuthenticated,
-                this.promptRedirect,
-                this.authRedirect,
-            ],
-            path: "auth/api/internal/auth/callback/:id",
-        });
-
-        this.middlewares.push({
-            middlewares: [
-                this.flowSessionInit,
-                this.authAuthorizeExtract,
-                this.oauthAuthorizeValidate,
-                this.modeExtractor,
-                this.strategies,
-                this.flowSessionSetAuthenticated,
-                this.promptRedirect,
-                this.authRedirect,
-            ],
-            path: "auth/api/internal/auth/submit/:id/:mode",
-        });
-
-        this.middlewares.push({
-            middlewares: [this.flowSessionInit, this.promptCallback, this.flowSessionRestore, this.authRedirect],
-            path: "auth/api/internal/auth/prompt/callback",
-        });
-
-        // TODO: CSRF?
-        this.middlewares.push({
-            middlewares: [
-                this.flowSessionInit,
-                this.authAuthorizeExtract,
-                this.oauthAuthorizeValidate,
-                this.authRegister,
-                this.flowSessionSetAuthenticated,
-                this.promptRedirect,
-                this.authRedirect,
-            ],
-            path: "auth/api/internal/auth/register",
-        });
-
-        this.middlewares.push({
-            middlewares: [this.flowSessionInit],
-            path: "auth/api/internal/auth/external-flow",
-        });
-    }
-
     configure(consumer: MiddlewareConsumer) {
-        for (const chain of this.middlewares) {
-            consumer.apply(...chain.middlewares.map((m) => m.use.bind(m))).forRoutes(chain.path);
-        }
+        // TODO: CSRF?
+        consumer
+            .apply(
+                FlowSessionInitMiddleware,
+                AuthAuthorizeExtractMiddleware,
+                OAuthAuthorizeValidateMiddleware,
+                ModeExtractorMiddleware,
+                StrategiesMiddleware,
+            )
+            .forRoutes("auth/api/internal/auth/redirect/:id/:mode");
+
+        consumer
+            .apply(
+                FlowSessionInitMiddleware,
+                StrategiesMiddleware,
+                FlowSessionSetAuthenticatedMiddleware,
+                AuthPromptRedirectMiddleware,
+                AuthRedirectMiddleware,
+            )
+            .forRoutes("auth/api/internal/auth/callback/:id");
+
+        consumer
+            .apply(
+                FlowSessionInitMiddleware,
+                AuthAuthorizeExtractMiddleware,
+                OAuthAuthorizeValidateMiddleware,
+                ModeExtractorMiddleware,
+                StrategiesMiddleware,
+                FlowSessionSetAuthenticatedMiddleware,
+                AuthPromptRedirectMiddleware,
+                AuthRedirectMiddleware,
+            )
+            .forRoutes("auth/api/internal/auth/submit/:id/:mode");
+
+        consumer
+            .apply(
+                FlowSessionInitMiddleware,
+                AuthPromptCallbackMiddleware,
+                FlowSessionRestoreMiddleware,
+                AuthRedirectMiddleware,
+            )
+            .forRoutes("auth/api/internal/auth/prompt/callback");
+
+        // TODO: CSRF?
+        consumer
+            .apply(
+                FlowSessionInitMiddleware,
+                AuthAuthorizeExtractMiddleware,
+                OAuthAuthorizeValidateMiddleware,
+                AuthRegisterMiddleware,
+                FlowSessionSetAuthenticatedMiddleware,
+                AuthPromptRedirectMiddleware,
+                AuthRedirectMiddleware,
+            )
+            .forRoutes("auth/api/internal/auth/register");
+
+        consumer.apply(FlowSessionInitMiddleware).forRoutes("auth/api/internal/auth/external-flow");
     }
 }

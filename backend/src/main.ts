@@ -1,13 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { OpenApiTag } from "./openapi-tag";
+import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
 import session = require("cookie-session");
-import * as State from "./util/FlowInternal";
-import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
-import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
+import * as State from "./util/flow/FlowInternal";
+import { CatchOAuthErrorFilter } from "./api-oauth/filters/catch-oauth-error.filter";
+import { CatchAuthErrorFilter } from "./api-internal/filters/catch-auth-error.filter";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];

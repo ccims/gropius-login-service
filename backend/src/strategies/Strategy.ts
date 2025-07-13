@@ -7,7 +7,7 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { AuthResult, AuthStateServerData } from "./AuthResult";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { Schema } from "jtd";
-import { FlowInternal } from "../util/FlowInternal";
+import { FlowInternal } from "../util/flow/FlowInternal";
 
 export interface StrategyVariable {
     name: string;

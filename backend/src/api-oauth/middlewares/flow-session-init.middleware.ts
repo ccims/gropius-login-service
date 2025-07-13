@@ -1,8 +1,8 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { FlowSession } from "../util/FlowSession";
-import { LoginUserService } from "../model/services/login-user.service";
-import { now } from "../util/utils";
+import { FlowSession } from "../../util/flow/FlowSession";
+import { LoginUserService } from "../../model/services/login-user.service";
+import { now } from "../../util/utils";
 
 @Injectable()
 export class FlowSessionInitMiddleware implements NestMiddleware {

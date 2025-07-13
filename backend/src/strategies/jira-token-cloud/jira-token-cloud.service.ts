@@ -1,15 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PerformAuthResult, Strategy, StrategyUpdateAction, StrategyVariable } from "../Strategy";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthStateServerData } from "../AuthResult";
 import { Schema } from "jtd";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { combineURL } from "src/util/combineURL";
-import { FlowInternal } from "../../util/FlowInternal";
+import { FlowInternal } from "../../util/flow/FlowInternal";
+import { combineURL } from "../../util/utils";
 
 @Injectable()
 export class JiraTokenCloudStrategyService extends Strategy {

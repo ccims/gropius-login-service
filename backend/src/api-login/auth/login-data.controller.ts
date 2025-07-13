@@ -15,7 +15,7 @@ import { ApiStateData } from "src/util/ApiStateData";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { StrategiesService } from "src/model/services/strategies.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 
 @Controller("login-data")

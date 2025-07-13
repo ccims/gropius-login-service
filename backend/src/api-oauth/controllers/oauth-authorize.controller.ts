@@ -1,7 +1,7 @@
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/openapi-tag";
-import { NoCors } from "../api-internal/no-cors.decorator";
+import { OpenApiTag } from "src/util/openapi-tag";
+import { NoCors } from "../../util/decorators/NoCors.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.

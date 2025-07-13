@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
-import { OAuthHttpException } from "./OAuthHttpException";
+import { OAuthHttpException } from "../OAuthHttpException";
 
 @Catch(OAuthHttpException)
 export class CatchOAuthErrorFilter implements ExceptionFilter {

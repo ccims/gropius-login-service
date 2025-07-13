@@ -28,13 +28,13 @@ import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { ApiStateData } from "../../util/ApiStateData";
 import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
 import { UserLoginDataResponse } from "./dto/user-login-data.dto";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
-import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { NeedsAdmin } from "src/util/decorators/NeedsAdmin.decorator";
 
 /**
  * Controller allowing access to the users in the system

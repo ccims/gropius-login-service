@@ -1,13 +1,13 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Put, UseGuards } from "@nestjs/common";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
-import { DefaultReturn } from "src/default-return.dto";
+import { DefaultReturn } from "src/util/default-return.dto";
 import { UserLoginDataImsUser } from "src/model/postgres/UserLoginDataImsUser.entity";
 import { UserLoginDataImsUserService } from "src/model/services/user-login-data-ims-user";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { CheckSyncSecretGuard } from "./check-sync-secret.guard";
 import { GetImsTokenResult } from "./dto/get-ims-token.dto";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { LinkImsUsersInputDto } from "./dto/link-ims-users-input.dto";
 
 @Controller()

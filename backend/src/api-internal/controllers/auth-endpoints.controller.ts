@@ -1,13 +1,13 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/openapi-tag";
-import { AuthFunctionInput } from "./dto/auth-function.dto";
-import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
+import { OpenApiTag } from "src/util/openapi-tag";
+import { AuthFunctionInput } from "../dto/auth-function.dto";
+import { SelfRegisterUserInput } from "../dto/self-register-user-input.dto";
 import { Request } from "express";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
-import { LoginUserService } from "../model/services/login-user.service";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { NoCors } from "./no-cors.decorator";
+import { OAuthHttpException } from "../../api-oauth/OAuthHttpException";
+import { LoginUserService } from "../../model/services/login-user.service";
+import { AuthClientService } from "../../model/services/auth-client.service";
+import { NoCors } from "../../util/decorators/NoCors.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.

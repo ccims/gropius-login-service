@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { AuthStateServerData } from "../strategies/AuthResult";
-import { OAuthAuthorizeServerState } from "../api-oauth/OAuthAuthorizeServerState";
-import { Strategy } from "../strategies/Strategy";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { AuthStateServerData } from "../../strategies/AuthResult";
+import { OAuthAuthorizeServerState } from "../../api-oauth/OAuthAuthorizeServerState";
+import { Strategy } from "../../strategies/Strategy";
+import { OAuthHttpException } from "../../api-oauth/OAuthHttpException";
 
 declare global {
     namespace Express {

@@ -8,7 +8,7 @@ import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.enti
 import { JwtService } from "@nestjs/jwt";
 import { Strategy } from "src/strategies/Strategy";
 import { LoginUserService } from "src/model/services/login-user.service";
-import { combineURL } from "src/util/combineURL";
+import { combineURL } from "../../util/utils";
 
 /**
  * Return data of the user data suggestion endpoint

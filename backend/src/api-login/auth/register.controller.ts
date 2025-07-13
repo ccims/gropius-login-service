@@ -8,15 +8,15 @@ import {
     ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { Response } from "express";
-import { DefaultReturn } from "src/default-return.dto";
+import { DefaultReturn } from "src/util/default-return.dto";
 import { LoginUserService } from "src/model/services/login-user.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { ApiStateData } from "../../util/ApiStateData";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 import { CheckRegistrationTokenService } from "./check-registration-token.service";
 import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { NeedsAdmin } from "src/util/decorators/NeedsAdmin.decorator";
 
 /**
  * Controller for handling self registration of new users as well as linking of existing users to new loginData

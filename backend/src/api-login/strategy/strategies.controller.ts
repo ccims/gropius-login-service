@@ -2,7 +2,7 @@ import { Controller, Get, HttpException, HttpStatus, Param } from "@nestjs/commo
 import { StrategiesService } from "src/model/services/strategies.service";
 import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { GetStrategyResponse } from "./dto/strategy-api.dto";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 
 /**
  * Controller providing (read only) access to existing strategies (strategy types)

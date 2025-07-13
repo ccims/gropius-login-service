@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
-import { CheckAccessTokenGuard } from "src/util/CheckAccessTokenGuard";
+import { CheckAccessTokenGuard } from "src/util/guards/CheckAccessTokenGuard";
 
 /**
  * Guard for checking the presence of an access token in the request.

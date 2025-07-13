@@ -1,78 +1,40 @@
-import { MiddlewareConsumer, Module, NestMiddleware } from "@nestjs/common";
+import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { ModelModule } from "src/model/model.module";
-import { OAuthAuthorizeExtractMiddleware } from "./oauth-authorize-extract.middleware";
-import { OauthTokenMiddleware as OAuthTokenMiddleware } from "./oauth-token.middleware";
-import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
-import { OauthAuthorizeController as OAuthAuthorizeController } from "./oauth-authorize.controller";
-import { OAuthTokenController } from "./oauth-token.controller";
-import { OAuthAuthorizeValidateMiddleware } from "./oauth-authorize-validate.middleware";
-import { OAuthAuthorizeRedirectMiddleware } from "./oauth-authorize-redirect.middleware";
+import { OAuthAuthorizeExtractMiddleware } from "./middlewares/oauth-authorize-extract.middleware";
+import { OauthTokenMiddleware as OAuthTokenMiddleware } from "./middlewares/oauth-token.middleware";
+import { OauthAuthorizeController as OAuthAuthorizeController } from "./controllers/oauth-authorize.controller";
+import { OAuthTokenController } from "./controllers/oauth-token.controller";
+import { OAuthAuthorizeValidateMiddleware } from "./middlewares/oauth-authorize-validate.middleware";
+import { OAuthAuthorizeRedirectMiddleware } from "./middlewares/oauth-authorize-redirect.middleware";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { StrategiesModule } from "src/strategies/strategies.module";
-import { EncryptionService } from "./encryption.service";
-import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
-import { FlowSessionSwitchMiddleware } from "./flow-session-switch";
-import { AuthRedirectMiddleware } from "../api-internal/auth-redirect.middleware";
-import { AuthPromptRedirectMiddleware } from "../api-internal/auth-prompt-redirect.middleware";
-import { FlowSessionInitMiddleware } from "./flow-session-init";
-import { FlowSessionRestoreMiddleware } from "./flow-session-restore";
+import { FlowSessionSwitchMiddleware } from "./middlewares/flow-session-switch.middleware";
+import { AuthRedirectMiddleware } from "../api-internal/middlewares/auth-redirect.middleware";
+import { AuthPromptRedirectMiddleware } from "../api-internal/middlewares/auth-prompt-redirect.middleware";
+import { FlowSessionInitMiddleware } from "./middlewares/flow-session-init.middleware";
+import { OAuthTokenClientCredentialsMiddleware } from "./middlewares/oauth-token-client-credentials.middleware";
+import { OAuthTokenAuthorizationCodeMiddleware } from "./middlewares/oauth-token-authorization-code.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
-    providers: [
-        OAuthAuthorizeExtractMiddleware,
-        OAuthAuthorizeValidateMiddleware,
-        OAuthAuthorizeRedirectMiddleware,
-        OAuthTokenMiddleware,
-        OAuthTokenAuthorizationCodeMiddleware,
-        OAuthTokenClientCredentialsMiddleware,
-        EncryptionService,
-        AuthRedirectMiddleware,
-        AuthPromptRedirectMiddleware,
-        FlowSessionInitMiddleware,
-        FlowSessionSwitchMiddleware,
-        FlowSessionRestoreMiddleware,
-    ],
+    providers: [OAuthTokenAuthorizationCodeMiddleware, OAuthTokenClientCredentialsMiddleware],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
-    exports: [OAuthAuthorizeValidateMiddleware],
+    exports: [],
 })
 export class ApiOauthModule {
-    private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
-
-    constructor(
-        private readonly oauthAuthorizeExtract: OAuthAuthorizeExtractMiddleware,
-        private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
-        private readonly oauthAuthorizeRedirect: OAuthAuthorizeRedirectMiddleware,
-        private readonly oauthToken: OAuthTokenMiddleware,
-        private readonly authRedirect: AuthRedirectMiddleware,
-        private readonly promptRedirect: AuthPromptRedirectMiddleware,
-        private readonly flowSessionInit: FlowSessionInitMiddleware,
-        private readonly flowSessionSwitch: FlowSessionSwitchMiddleware,
-        private readonly flowSessionRestore: FlowSessionRestoreMiddleware,
-    ) {
-        this.middlewares.push({
-            middlewares: [
-                this.oauthAuthorizeExtract,
-                this.oauthAuthorizeValidate,
-                this.flowSessionInit,
-                this.flowSessionSwitch,
-                this.flowSessionRestore,
-                this.promptRedirect,
-                this.authRedirect,
-                this.oauthAuthorizeRedirect,
-            ],
-            path: "auth/oauth/authorize",
-        });
-
-        this.middlewares.push({
-            middlewares: [this.oauthToken],
-            path: "auth/oauth/token",
-        });
-    }
-
     configure(consumer: MiddlewareConsumer) {
-        for (const chain of this.middlewares) {
-            consumer.apply(...chain.middlewares.map((m) => m.use.bind(m))).forRoutes(chain.path);
-        }
+        consumer
+            .apply(
+                OAuthAuthorizeExtractMiddleware,
+                OAuthAuthorizeValidateMiddleware,
+                FlowSessionInitMiddleware,
+                FlowSessionSwitchMiddleware,
+                AuthPromptRedirectMiddleware,
+                AuthRedirectMiddleware,
+                OAuthAuthorizeRedirectMiddleware,
+            )
+            .forRoutes("auth/oauth/authorize");
+
+        consumer.apply(OAuthTokenMiddleware).forRoutes("auth/oauth/token");
     }
 }

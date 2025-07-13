@@ -4,6 +4,7 @@ import { ModelModule } from "src/model/model.module";
 import { TokenService } from "./token.service";
 import { BackendUserService } from "./backend-user.service";
 import { ImsUserFindingService } from "./ims-user-finding.service";
+import { EncryptionService } from "./encryption.service";
 
 @Module({
     imports: [
@@ -31,7 +32,8 @@ import { ImsUserFindingService } from "./ims-user-finding.service";
         TokenService,
         BackendUserService,
         ImsUserFindingService,
+        EncryptionService,
     ],
-    exports: [TokenService, BackendUserService, ImsUserFindingService],
+    exports: [TokenService, BackendUserService, ImsUserFindingService, EncryptionService],
 })
 export class BackendServicesModule {}

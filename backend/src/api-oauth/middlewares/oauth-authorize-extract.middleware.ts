@@ -1,9 +1,9 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { OAuthAuthorizeRequest } from "./OAuthAuthorizeServerState";
+import { OAuthAuthorizeRequest } from "../OAuthAuthorizeServerState";
 import { TokenScope } from "src/backend-services/token.service";
-import { EncryptionService } from "./encryption.service";
-import { OAuthHttpException } from "./OAuthHttpException";
+import { EncryptionService } from "../../backend-services/encryption.service";
+import { OAuthHttpException } from "../OAuthHttpException";
 
 @Injectable()
 export class OAuthAuthorizeExtractMiddleware implements NestMiddleware {

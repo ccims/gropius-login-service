@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import * as bcrypt from "bcrypt";
-import { OAuthHttpException } from "./OAuthHttpException";
+import { OAuthHttpException } from "../OAuthHttpException";
 import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
 import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
 

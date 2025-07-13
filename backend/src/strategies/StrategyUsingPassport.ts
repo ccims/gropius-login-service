@@ -1,14 +1,13 @@
 import * as passport from "passport";
 import { PerformAuthResult, Strategy } from "./Strategy";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthStateServerData, AuthResult } from "./AuthResult";
+import { AuthResult } from "./AuthResult";
 import { JwtService } from "@nestjs/jwt";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { Request } from "express";
-import { FlowInternal } from "../util/FlowInternal";
+import { FlowInternal } from "../util/flow/FlowInternal";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);

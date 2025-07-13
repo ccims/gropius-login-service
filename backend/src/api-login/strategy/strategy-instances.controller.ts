@@ -12,7 +12,7 @@ import {
     UseGuards,
 } from "@nestjs/common";
 import { CheckLoginServiceAccessTokenGuard } from "src/api-login/auth/check-login-service-access-token.guard";
-import { DefaultReturn } from "src/default-return.dto";
+import { DefaultReturn } from "src/util/default-return.dto";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
@@ -27,9 +27,9 @@ import {
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-detail.dto";
-import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { NeedsAdmin } from "src/util/decorators/NeedsAdmin.decorator";
 
 /**
  * Controller for providing crud access to login strategy instances.

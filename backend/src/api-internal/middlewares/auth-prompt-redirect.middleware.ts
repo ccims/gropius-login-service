@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { combineURL } from "../util/combineURL";
+import { combineURL } from "../../util/utils";
 
 @Injectable()
 export class AuthPromptRedirectMiddleware implements NestMiddleware {

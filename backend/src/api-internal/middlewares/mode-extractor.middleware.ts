@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { AuthFunction } from "../strategies/AuthResult";
+import { AuthFunction } from "../../strategies/AuthResult";
 
 @Injectable()
 export class ModeExtractorMiddleware implements NestMiddleware {

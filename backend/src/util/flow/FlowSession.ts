@@ -1,9 +1,9 @@
 import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthAuthorizeRequest } from "../../api-oauth/OAuthAuthorizeServerState";
+import { OAuthHttpException } from "../../api-oauth/OAuthHttpException";
 import * as crypto from "crypto";
-import { MONTH_IN_SECONDS, now } from "./utils";
+import { MONTH_IN_SECONDS, now } from "../utils";
 
 type RequestWithSession = Request & { session: FlowSessionData };
 

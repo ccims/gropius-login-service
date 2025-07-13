@@ -1,8 +1,8 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from "@nestjs/common";
 import { Request, Response } from "express";
-import { AuthException } from "./AuthException";
+import { AuthException } from "../AuthException";
 import { TokenScope } from "src/backend-services/token.service";
-import { combineURL } from "src/util/combineURL";
+import { combineURL } from "../../util/utils";
 
 @Catch(AuthException)
 export class CatchAuthErrorFilter implements ExceptionFilter {
