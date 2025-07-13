@@ -1,22 +1,22 @@
 import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { ModelModule } from "src/model/model.module";
-import { ModeExtractorMiddleware } from "./middlewares/mode-extractor.middleware";
+import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
 import { StrategiesMiddleware } from "../strategies/strategies.middleware";
 import { StrategiesModule } from "../strategies/strategies.module";
-import { AuthEndpointsController } from "./controllers/auth-endpoints.controller";
-import { AuthRedirectMiddleware } from "./middlewares/auth-redirect.middleware";
+import { AuthEndpointsController } from "./auth-endpoints.controller";
+import { AuthRedirectMiddleware } from "./auth-redirect.middleware";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
-import { AuthAuthorizeExtractMiddleware } from "./middlewares/auth-authorize-extract.middleware";
-import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/middlewares/oauth-authorize-validate.middleware";
-import { AuthRegisterMiddleware } from "./middlewares/auth-register.middleware";
+import { AuthAuthorizeExtractMiddleware } from "./auth-authorize-extract.middleware";
+import { OAuthAuthorizeValidateMiddleware } from "src/api-oauth/oauth-authorize-validate.middleware";
+import { AuthRegisterMiddleware } from "./auth-register.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
-import { UpdateActionController } from "./controllers/update-action.controller";
-import { FlowSessionSetAuthenticatedMiddleware } from "./middlewares/flow-session-set-authenticated.middleware";
-import { AuthPromptRedirectMiddleware } from "./middlewares/auth-prompt-redirect.middleware";
-import { AuthPromptCallbackMiddleware } from "./middlewares/auth-prompt-callback.middleware";
-import { FlowSessionRestoreMiddleware } from "../api-oauth/middlewares/flow-session-restore.middleware";
-import { FlowSessionInitMiddleware } from "../api-oauth/middlewares/flow-session-init.middleware";
+import { UpdateActionController } from "./update-action.controller";
+import { FlowSessionSetAuthenticatedMiddleware } from "./flow-session-set-authenticated.middleware";
+import { AuthPromptRedirectMiddleware } from "./auth-prompt-redirect.middleware";
+import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware";
+import { FlowSessionRestoreMiddleware } from "../api-oauth/flow-session-restore.middleware";
+import { FlowSessionInitMiddleware } from "../api-oauth/flow-session-init.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],

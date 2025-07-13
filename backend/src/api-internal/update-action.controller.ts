@@ -23,10 +23,10 @@ import { BackendUserService } from "src/backend-services/backend-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { Response } from "express";
-import { CheckAuthAccessTokenGuard } from "../guards/check-auth-access-token.guard";
+import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { DefaultReturn } from "src/util/default-return.dto";
-import { NoCors } from "../../util/decorators/NoCors.decorator";
+import { NoCors } from "../util/decorators/NoCors.decorator";
 
 @Controller("update-action")
 @ApiTags(OpenApiTag.INTERNAL_API)

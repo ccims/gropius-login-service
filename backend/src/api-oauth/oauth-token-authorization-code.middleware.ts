@@ -3,11 +3,11 @@ import { NextFunction, Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { OAuthHttpException } from "../OAuthHttpException";
-import { EncryptionService } from "../../backend-services/encryption.service";
+import { OAuthHttpException } from "./OAuthHttpException";
+import { EncryptionService } from "../backend-services/encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { OAuthTokenResponseDto } from "../dto/oauth-token-response.dto";
+import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
 
 @Injectable()
 export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {

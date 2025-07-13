@@ -4,7 +4,7 @@ import { CheckRegistrationTokenService } from "src/api-login/auth/check-registra
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { SelfRegisterUserInput } from "../dto/self-register-user-input.dto";
+import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
 
 @Injectable()
 export class AuthRegisterMiddleware implements NestMiddleware {

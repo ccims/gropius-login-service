@@ -6,8 +6,8 @@ import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
 import session = require("cookie-session");
 import * as State from "./util/flow/FlowInternal";
-import { CatchOAuthErrorFilter } from "./api-oauth/filters/catch-oauth-error.filter";
-import { CatchAuthErrorFilter } from "./api-internal/filters/catch-auth-error.filter";
+import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
+import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];

@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { OAuthHttpException } from "../OAuthHttpException";
+import { OAuthHttpException } from "./OAuthHttpException";
 import { TokenService } from "src/backend-services/token.service";
 import { AuthClientService } from "src/model/services/auth-client.service";
 

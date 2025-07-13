@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response } from "express";
 import { TokenScope } from "src/backend-services/token.service";
-import { combineURL } from "../../util/utils";
+import { combineURL } from "../util/utils";
 
 @Injectable()
 export class OAuthAuthorizeRedirectMiddleware implements NestMiddleware {

@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { OAuthHttpException } from "../../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as Joi from "joi";
 
 const schema = Joi.object({
@@ -29,7 +29,6 @@ export class AuthPromptCallbackMiddleware implements NestMiddleware {
 
         // Abort without consent
         if (!data.consent) {
-            // TODO: the user is not redirected to the client?
             throw new OAuthHttpException("access_denied", "The user did not grant permission.");
         }
 

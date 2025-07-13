@@ -1,8 +1,8 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { ActiveLoginService } from "../../model/services/active-login.service";
-import { AuthClientService } from "../../model/services/auth-client.service";
-import { TokenScope } from "../../backend-services/token.service";
+import { ActiveLoginService } from "../model/services/active-login.service";
+import { AuthClientService } from "../model/services/auth-client.service";
+import { TokenScope } from "../backend-services/token.service";
 
 @Injectable()
 export class FlowSessionRestoreMiddleware implements NestMiddleware {
