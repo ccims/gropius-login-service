@@ -7,7 +7,7 @@ import { Request } from "express";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { LoginUserService } from "../model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
-import { NoCors } from "../util/decorators/NoCors.decorator";
+import { NoCors } from "../util/NoCors.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.

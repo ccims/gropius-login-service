@@ -8,7 +8,7 @@ import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { FlowInternal } from "../util/flow/FlowInternal";
+import { FlowInternal } from "../util/FlowInternal";
 
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {

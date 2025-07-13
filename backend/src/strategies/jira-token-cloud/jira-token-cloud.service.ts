@@ -6,7 +6,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { FlowInternal } from "../../util/flow/FlowInternal";
+import { FlowInternal } from "../../util/FlowInternal";
 import { combineURL } from "../../util/utils";
 
 @Injectable()

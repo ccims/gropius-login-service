@@ -12,7 +12,7 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
-import { FlowInternal } from "../../util/flow/FlowInternal";
+import { FlowInternal } from "../../util/FlowInternal";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {

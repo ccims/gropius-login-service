@@ -26,7 +26,7 @@ import { Response } from "express";
 import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { DefaultReturn } from "src/util/default-return.dto";
-import { NoCors } from "../util/decorators/NoCors.decorator";
+import { NoCors } from "../util/NoCors.decorator";
 
 @Controller("update-action")
 @ApiTags(OpenApiTag.INTERNAL_API)

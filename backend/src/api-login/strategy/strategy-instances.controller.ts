@@ -29,7 +29,7 @@ import {
 } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-detail.dto";
-import { NeedsAdmin } from "src/util/decorators/NeedsAdmin.decorator";
+import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 
 /**
  * Controller for providing crud access to login strategy instances.

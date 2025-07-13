@@ -8,7 +8,7 @@ import { AuthFunction, AuthResult } from "./AuthResult";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { FlowInternal } from "../util/flow/FlowInternal";
+import { FlowInternal } from "../util/FlowInternal";
 
 /**
  * Contains the logic how the system is supposed to create and link

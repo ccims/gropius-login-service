@@ -7,7 +7,7 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { Request } from "express";
-import { FlowInternal } from "../util/flow/FlowInternal";
+import { FlowInternal } from "../util/FlowInternal";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);

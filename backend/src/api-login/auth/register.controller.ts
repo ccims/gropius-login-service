@@ -16,7 +16,7 @@ import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-
 import { CheckRegistrationTokenService } from "./check-registration-token.service";
 import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { NeedsAdmin } from "src/util/decorators/NeedsAdmin.decorator";
+import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 
 /**
  * Controller for handling self registration of new users as well as linking of existing users to new loginData

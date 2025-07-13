@@ -34,7 +34,7 @@ import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
 import { UserLoginDataResponse } from "./dto/user-login-data.dto";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
-import { NeedsAdmin } from "src/util/decorators/NeedsAdmin.decorator";
+import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 
 /**
  * Controller allowing access to the users in the system
