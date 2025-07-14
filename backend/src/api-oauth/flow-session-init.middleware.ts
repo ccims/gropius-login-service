@@ -18,7 +18,7 @@ export class FlowSessionInitMiddleware implements NestMiddleware {
 
         // Check if revoked
         if (req.flow.isAuthenticated()) {
-            const loginUser = await this.loginUserService.findOneBy({ id: req.flow.getUser() });
+            const loginUser = await this.loginUserService.findOneBy({ id: req.flow.getUserId() });
             if (!loginUser) throw new Error("Login user not found");
 
             const revokedAt = loginUser.revokeTokensBefore;

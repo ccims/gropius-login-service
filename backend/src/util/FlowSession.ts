@@ -7,9 +7,12 @@ import { MONTH_IN_SECONDS, now } from "./utils";
 
 type RequestWithSession = Request & { session: FlowSessionData };
 
+/**
+ * This data is stored in the session, i.e., in the cookie.
+ */
 export type FlowSessionData = {
     // session id
-    id: string;
+    sid: string;
 
     // issued at
     iat: number;
@@ -18,19 +21,22 @@ export type FlowSessionData = {
     exp: number;
 
     // user id
-    user?: string;
+    usr?: string;
 
     // active login id
-    activeLogin?: string;
+    active_login?: string;
 
     // flow id (used to bind the whole interaction)
     flow?: string;
 
-    // external flow id (used to bind the whole interaction also with external parties)
-    externalFlow?: string;
+    // internal csrf token
+    csrf?: string;
+
+    // external csrf token (used to bind the whole interaction also with external parties)
+    csrf_ext?: string;
 
     // oauth authorization request
-    request?: OAuthAuthorizeRequest;
+    req?: OAuthAuthorizeRequest;
 
     // consent fingerprints of consented oauth authorization request
     consents: string[];
@@ -63,7 +69,7 @@ export class FlowSession {
 
         const iat = now();
         this.req.session = {
-            id: uuidv4(),
+            sid: uuidv4(),
             iat,
             exp: iat + MONTH_IN_SECONDS,
             step: "init",
@@ -73,7 +79,7 @@ export class FlowSession {
     }
 
     isAuthenticated() {
-        return !!this.req.session.user;
+        return !!this.req.session.usr;
     }
 
     isExpired() {
@@ -92,7 +98,7 @@ export class FlowSession {
     }
 
     tryRequest() {
-        return this.req.session.request;
+        return this.req.session.req;
     }
 
     getRequest() {
@@ -104,8 +110,8 @@ export class FlowSession {
         return request;
     }
 
-    getUser() {
-        const user = this.req.session.user;
+    getUserId() {
+        const user = this.req.session.usr;
         if (!user) {
             throw new OAuthHttpException("invalid_request", "User id is missing");
         }
@@ -113,7 +119,7 @@ export class FlowSession {
     }
 
     tryActiveLogin() {
-        return this.req.session.activeLogin;
+        return this.req.session.active_login;
     }
 
     getActiveLogin() {
@@ -124,7 +130,7 @@ export class FlowSession {
         return activeLogin;
     }
 
-    getFlow() {
+    getFlowId() {
         const flow = this.req.session.flow;
         if (!flow) {
             throw new OAuthHttpException("invalid_request", "Flow id is missing");
@@ -132,12 +138,20 @@ export class FlowSession {
         return flow;
     }
 
-    getExternalFlow() {
-        const externalFlow = this.req.session.externalFlow;
-        if (!externalFlow) {
-            throw new OAuthHttpException("invalid_request", "External flow id is missing");
+    getCSRF() {
+        const CSRF = this.req.session.csrf;
+        if (!CSRF) {
+            throw new OAuthHttpException("invalid_request", "CSRF token is missing");
         }
-        return externalFlow;
+        return CSRF;
+    }
+
+    getExternalCSRF() {
+        const externalCSRF = this.req.session.csrf_ext;
+        if (!externalCSRF) {
+            throw new OAuthHttpException("invalid_request", "External CSRF token is missing");
+        }
+        return externalCSRF;
     }
 
     setStarted(request: OAuthAuthorizeRequest) {
@@ -147,26 +161,27 @@ export class FlowSession {
             this.req.session.exp += MONTH_IN_SECONDS;
         }
         this.req.session.flow = uuidv4();
-        this.req.session.externalFlow = uuidv4();
-        this.req.session.request = request;
+        this.req.session.csrf = uuidv4();
+        this.req.session.csrf_ext = uuidv4();
+        this.req.session.req = request;
         this.req.session.step = "started";
         return this;
     }
 
-    setAuthenticated(userId: string, activeLoginId: string, externalFlow: string) {
+    setAuthenticated(userId: string, activeLoginId: string, externalCSRF: string) {
         if (this.req.session.step !== "started") {
             throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong");
         }
 
-        if (externalFlow !== this.getExternalFlow()) {
+        if (externalCSRF !== this.getExternalCSRF()) {
             throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
-        this.req.session.user = userId;
-        this.req.session.activeLogin = activeLoginId;
+        this.req.session.usr = userId;
+        this.req.session.active_login = activeLoginId;
         this.req.session.step = "authenticated";
 
-        delete this.req.session.externalFlow;
+        delete this.req.session.csrf_ext;
 
         return this;
     }
@@ -192,8 +207,8 @@ export class FlowSession {
     }
 
     skipPrompt() {
-        this.setPrompted(true, this.getFlow());
-        this.setFinished(this.getFlow());
+        this.setPrompted(true, this.getFlowId());
+        this.setFinished(this.getFlowId());
         return this;
     }
 
@@ -209,7 +224,7 @@ export class FlowSession {
         this.req.session.step = "finished";
 
         delete this.req.session.flow;
-        delete this.req.session.request;
+        delete this.req.session.req;
 
         return this;
     }
@@ -219,14 +234,14 @@ export class FlowSession {
     }
 
     consentFingerprint() {
-        if (!this.req.session.request) {
+        if (!this.req.session.req) {
             throw new OAuthHttpException("invalid_request", "Authorization request is missing");
         }
 
         const data = JSON.stringify({
-            clientId: this.req.session.request.clientId,
-            scope: this.req.session.request.scope,
-            redirect: this.req.session.request.redirect,
+            clientId: this.req.session.req.clientId,
+            scope: this.req.session.req.scope,
+            redirect: this.req.session.req.redirect,
         });
 
         return crypto.createHash("sha256").update(data).digest("base64url");

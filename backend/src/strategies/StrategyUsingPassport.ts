@@ -60,7 +60,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                     state: jwtService.sign({
                         request: internal?.tryRequest(),
                         authState: internal?.tryAuthState(),
-                        externalFlow: req.flow.getExternalFlow(),
+                        externalCSRF: req.flow.getExternalCSRF(),
                     }),
                     ...this.getAdditionalPassportOptions(strategyInstance, internal),
                 },
@@ -77,7 +77,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                             reject("State not returned as JWT");
                         }
 
-                        returnedState.externalFlow = returnedState?.externalFlow ?? req.query.externalFlow;
+                        returnedState.externalCSRF = returnedState?.externalCSRF ?? req.query.externalCSRF;
 
                         resolve({ result: user || null, returnedState, info });
                     }

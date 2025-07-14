@@ -28,8 +28,10 @@ export function middleware(req: Request, res: Response, next: NextFunction) {
 
 export type FlowInternalData = Partial<
     AuthStateServerData &
-        OAuthAuthorizeServerState & { strategy: Strategy } & { secondToken?: boolean } & {
-            externalFlow?: string;
+        OAuthAuthorizeServerState & {
+            strategy: Strategy;
+            secondToken?: boolean;
+            externalCSRF?: string;
         }
 >;
 
@@ -84,8 +86,8 @@ export class FlowInternal {
         return strategy;
     }
 
-    getExternalFlow() {
-        return this._internal.externalFlow;
+    getExternalCSRF() {
+        return this._internal.externalCSRF;
     }
 
     append(data: FlowInternalData) {

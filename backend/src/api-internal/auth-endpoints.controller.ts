@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
 import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
@@ -9,8 +9,6 @@ import { LoginUserService } from "../model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { NoCors } from "../util/NoCors.decorator";
 import { DefaultReturn } from "../util/default-return.dto";
-import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard";
-import { ApiStateData } from "../util/ApiStateData";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -19,6 +17,7 @@ import { ApiStateData } from "../util/ApiStateData";
  * - Authorize endpoint
  * - Redirect/Callback endpoint
  */
+// TODO: doc decorator for required cookie?
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
 export class AuthEndpointsController {
@@ -88,18 +87,28 @@ export class AuthEndpointsController {
         );
     }
 
-    @Get("external-flow")
+    @Get("csrf")
     @NoCors()
-    @ApiOperation({ summary: "Endpoint to access the external flow id" })
-    async externalFlow(@Req() req: Request): Promise<{
-        externalFlow: string;
+    @ApiOperation({ summary: "Endpoint to access the CSRF token" })
+    async csrfToken(@Req() req: Request): Promise<{
+        csrf: string;
     }> {
         return {
-            externalFlow: req.flow.getExternalFlow(),
+            csrf: req.flow.getCSRF(),
         };
     }
 
-    // TODO: decorator for required cookie?
+    @Get("csrf-external")
+    @NoCors()
+    @ApiOperation({ summary: "Endpoint to access the external CSRF token" })
+    async externalCSRF(@Req() req: Request): Promise<{
+        externalCSRF: string;
+    }> {
+        return {
+            externalCSRF: req.flow.getExternalCSRF(),
+        };
+    }
+
     @Get("prompt/data")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access data that should be displayed to the user" })
@@ -117,13 +126,13 @@ export class AuthEndpointsController {
         }
 
         const request = req.flow.getRequest();
-        const user = await this.userService.findOneBy({ id: req.flow.getUser() });
+        const user = await this.userService.findOneBy({ id: req.flow.getUserId() });
         const client = await this.authClientService.findAuthClient(request.clientId);
 
         return {
-            userId: req.flow.getUser(),
+            userId: req.flow.getUserId(),
             username: user.username,
-            flow: req.flow.getFlow(),
+            flow: req.flow.getFlowId(),
             redirect: request.redirect,
             scope: request.scope,
             clientId: request.clientId,
@@ -151,33 +160,21 @@ export class AuthEndpointsController {
         );
     }
 
-    // TODO: use cookie auth only (and add CSRF protection)?
-    // TODO: decorator for required cookie?
+    // TODO: doc decorator for CSRF protection?
     @Post("logout/current")
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
-    @UseGuards(CheckAuthAccessTokenGuard)
-    @ApiBearerAuth()
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        const id = (res.locals.state as ApiStateData).loggedInUser.id;
-        if (req.flow.getUser() !== id) throw new Error("Cookie and token do not match");
-
         req.flow.drop();
         return new DefaultReturn("logout/current");
     }
 
-    // TODO: use cookie auth only (and add CSRF protection)?
-    // TODO: decorator for required cookie?
+    // TODO: doc decorator for CSRF protection?
     @Post("logout/everywhere")
     @NoCors()
     @ApiOperation({ summary: "Logout everywhere" })
-    @UseGuards(CheckAuthAccessTokenGuard)
-    @ApiBearerAuth()
     async logoutEverywhere(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        const id = (res.locals.state as ApiStateData).loggedInUser.id;
-        if (req.flow.getUser() !== id) throw new Error("Cookie and token do not match");
-
-        const user = await this.userService.findOneBy({ id });
+        const user = await this.userService.findOneBy({ id: req.flow.getUserId() });
         if (!user) throw new Error("Did not found user");
         user.revokeTokensBefore = new Date();
         await this.userService.save(user);

@@ -16,6 +16,7 @@ import { AuthPromptRedirectMiddleware } from "./auth-prompt-redirect.middleware"
 import { AuthPromptCallbackMiddleware } from "./auth-prompt-callback.middleware";
 import { FlowSessionRestoreMiddleware } from "../api-oauth/flow-session-restore.middleware";
 import { FlowSessionInitMiddleware } from "../api-oauth/flow-session-init.middleware";
+import CSRFMiddleware from "../util/csrf.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
@@ -83,20 +84,22 @@ export class ApiInternalModule {
 
         consumer
             .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
-            .forRoutes("auth/api/internal/auth/external-flow");
+            .forRoutes("auth/api/internal/auth/csrf");
+
+        consumer
+            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .forRoutes("auth/api/internal/auth/csrf-external");
 
         consumer
             .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
             .forRoutes("auth/api/internal/auth/prompt/data");
 
-        // TODO: CSRF?
         consumer
-            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .apply(FlowSessionInitMiddleware, CSRFMiddleware, FlowSessionRestoreMiddleware)
             .forRoutes("auth/api/internal/auth/logout/current");
 
-        // TODO: CSRF?
         consumer
-            .apply(FlowSessionInitMiddleware, FlowSessionRestoreMiddleware)
+            .apply(FlowSessionInitMiddleware, CSRFMiddleware, FlowSessionRestoreMiddleware)
             .forRoutes("auth/api/internal/auth/logout/everywhere");
     }
 }
