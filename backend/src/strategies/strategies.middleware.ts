@@ -60,6 +60,7 @@ export class StrategiesMiddleware implements NestMiddleware {
         const id = req.params.id;
         const instance = await this.idToStrategyInstance(id);
         const strategy = this.strategiesService.getStrategyByName(instance.type);
+
         req.internal.append({ strategy });
 
         const result = await strategy.performAuth(instance, req.internal, req, res);

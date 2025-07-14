@@ -5,8 +5,8 @@
                 <v-card-title class="pl-0">Complete registration</v-card-title>
                 <v-form class="mt-2" method="POST" action="/auth/api/internal/auth/register">
                     <v-text-field
-                        v-model="username"
                         v-if="!forceSuggestedUsername"
+                        v-model="username"
                         name="username"
                         v-bind="usernameProps"
                         label="Username"
@@ -22,6 +22,7 @@
                     />
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
                     <input type="hidden" name="register_token" :value="token" />
+                    <input type="hidden" name="externalCSRF" :value="csrf" />
                     <v-card-actions>
                         <v-spacer />
                         <DefaultButton variant="text" color="primary" type="submit">Register</DefaultButton>
@@ -53,6 +54,11 @@ const schema = toTypedSchema(
         email: yup.string().email().notRequired().label("Email")
     })
 );
+
+const csrf = asyncComputed(async () => {
+    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf-external`);
+    return data.csrf;
+});
 
 const token = asyncComputed(async () => {
     return (

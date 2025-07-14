@@ -26,6 +26,10 @@ export type FlowSessionData = {
     // active login id
     active_login?: string;
 
+    // TODO: only required for reg
+    // strategy type
+    strategy?: string;
+
     // flow id (used to bind the whole interaction)
     flow?: string;
 
@@ -118,12 +122,12 @@ export class FlowSession {
         return user;
     }
 
-    tryActiveLogin() {
+    tryActiveLoginId() {
         return this.req.session.active_login;
     }
 
-    getActiveLogin() {
-        const activeLogin = this.tryActiveLogin();
+    getActiveLoginId() {
+        const activeLogin = this.tryActiveLoginId();
         if (!activeLogin) {
             throw new OAuthHttpException("invalid_request", "Active login id is missing");
         }
@@ -154,6 +158,10 @@ export class FlowSession {
         return externalCSRF;
     }
 
+    tryStrategyTypeName() {
+        return this.req.session.strategy;
+    }
+
     setStarted(request: OAuthAuthorizeRequest) {
         this.init();
 
@@ -168,20 +176,24 @@ export class FlowSession {
         return this;
     }
 
-    setAuthenticated(userId: string, activeLoginId: string, externalCSRF: string) {
-        if (this.req.session.step !== "started") {
+    setAuthenticated(data: { userId?: string; activeLoginId: string; externalCSRF: string; strategyType?: string }) {
+        // TODO: reg workaround
+        const no = false;
+        if (this.req.session.step !== "started" && no) {
             throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong");
         }
 
-        if (externalCSRF !== this.getExternalCSRF()) {
+        if (data.externalCSRF !== this.getExternalCSRF() && no) {
             throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
-        this.req.session.usr = userId;
-        this.req.session.active_login = activeLoginId;
+        this.req.session.usr = data.userId;
+        this.req.session.active_login = data.activeLoginId;
         this.req.session.step = "authenticated";
+        this.req.session.strategy = data.strategyType;
 
-        delete this.req.session.csrf_ext;
+        // TODO: reg workaround
+        // TODO: delete this.req.session.csrf_ext;
 
         return this;
     }
@@ -223,8 +235,8 @@ export class FlowSession {
 
         this.req.session.step = "finished";
 
-        delete this.req.session.flow;
-        delete this.req.session.req;
+        // TODO: delete this.req.session.flow;
+        // TODO: delete this.req.session.req;
 
         return this;
     }

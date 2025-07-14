@@ -99,7 +99,7 @@ function goBack() {
     errorMessage.value = undefined;
 }
 
-async function Authorization() {
+async function AuthorizationHeader() {
     return {
         headers: {
             Authorization: `Bearer ${await oauth.loadToken()}`
@@ -107,8 +107,21 @@ async function Authorization() {
     };
 }
 
+const csrf = ref<string | undefined>(undefined);
+function CSRFHeader() {
+    return {
+        headers: {
+            "x-csrf-token": csrf.value
+        }
+    };
+}
+async function getCSRF() {
+    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf`);
+    csrf.value = data.csrf;
+}
+
 async function onLogout(mode: "current" | "everywhere") {
-    await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, await Authorization());
+    await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, CSRFHeader());
     oauth.clean();
     window.location.reload();
 }
@@ -118,7 +131,7 @@ async function onUpdate() {
         await axios.put(
             `/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`,
             formData.value,
-            await Authorization()
+            await AuthorizationHeader()
         );
         actionTab.value = 0;
         showSuccessMessage.value = true;
@@ -133,8 +146,10 @@ onMounted(async () => {
     await router.replace({ query: { id: id.value } });
     if (code) await oauth.exchangeToken(code.toString());
 
-    const strategyInstance = (await axios.get(`/auth/api/login/login-data/${id.value}`, await Authorization())).data
-        .strategyInstance as LoginStrategyInstance;
+    await getCSRF();
+
+    const strategyInstance = (await axios.get(`/auth/api/login/login-data/${id.value}`, await AuthorizationHeader()))
+        .data.strategyInstance as LoginStrategyInstance;
     strategy.value = (await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`)).data as LoginStrategy;
 });
 </script>

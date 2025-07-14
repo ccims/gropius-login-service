@@ -36,7 +36,8 @@ export type FlowInternalData = Partial<
 >;
 
 export class FlowInternal {
-    readonly _internal: FlowInternalData = {};
+    // TODO: make this private
+    _internal: FlowInternalData = {};
 
     tryAuthState() {
         return this._internal.authState;
@@ -80,8 +81,12 @@ export class FlowInternal {
         return this._internal.secondToken;
     }
 
+    tryStrategy() {
+        return this._internal.strategy;
+    }
+
     getStrategy() {
-        const strategy = this._internal.strategy;
+        const strategy = this.tryStrategy();
         if (!strategy) throw new OAuthHttpException("invalid_request", "Strategy missing");
         return strategy;
     }

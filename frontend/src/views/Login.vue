@@ -32,7 +32,7 @@
                                 :field="field"
                             />
                             <input type="submit" hidden />
-                            <input type="text" name="externalFlow" :value="externalFlow" hidden />
+                            <input type="hidden" name="externalCSRF" :value="externalCSRF" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
@@ -93,7 +93,6 @@ import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
 import axios from "axios";
 import InputField from "@/components/InputField.vue";
-import * as oauth from "@/util/oauth";
 
 const route = useRoute();
 
@@ -187,10 +186,10 @@ const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
 
-const externalFlow = ref<string | undefined>(undefined);
+const externalCSRF = ref<string | undefined>(undefined);
 onMounted(async () => {
-    const { data } = await axios.get<{ externalFlow: string }>(`/auth/api/internal/auth/external-flow`);
-    externalFlow.value = data.externalFlow;
+    const { data } = await axios.get<{ externalCSRF: string }>(`/auth/api/internal/auth/csrf-external`);
+    externalCSRF.value = data.externalCSRF;
 });
 
 function formDataAt(id: string) {

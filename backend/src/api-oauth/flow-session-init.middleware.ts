@@ -14,16 +14,22 @@ export class FlowSessionInitMiddleware implements NestMiddleware {
         req.flow.init();
 
         // Check if expired
-        if (req.flow.isExpired()) req.flow.regenerate();
+        if (req.flow.isExpired()) {
+            console.log("flow experied ...");
+            req.flow.regenerate();
+        }
 
         // Check if revoked
         if (req.flow.isAuthenticated()) {
             const loginUser = await this.loginUserService.findOneBy({ id: req.flow.getUserId() });
-            if (!loginUser) throw new Error("Login user not found");
+            // TODO: enable this once REG_HOTFIX is resolved
+            // if (!loginUser) throw new Error("Login user not found");
 
-            const revokedAt = loginUser.revokeTokensBefore;
-            if (revokedAt) {
-                if (now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
+            if (loginUser) {
+                const revokedAt = loginUser.revokeTokensBefore;
+                if (revokedAt) {
+                    if (now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
+                }
             }
         }
 

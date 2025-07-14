@@ -29,6 +29,7 @@ export class AuthRegisterMiddleware implements NestMiddleware {
         const newUser = await this.backendUserService.createNewUser(input, false);
         await this.backendUserService.linkAccountToUser(newUser, loginData, activeLogin);
         req.internal.append({ activeLogin, secondToken: true });
+
         next();
     }
 }

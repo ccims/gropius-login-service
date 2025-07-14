@@ -5,7 +5,7 @@ import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
 import session = require("cookie-session");
-import * as State from "./util/FlowInternal";
+import * as FlowInternal from "./util/FlowInternal";
 import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
 import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
 
@@ -79,7 +79,7 @@ async function bootstrap() {
         }),
     );
 
-    app.use(State.middleware);
+    app.use(FlowInternal.middleware);
 
     app.useGlobalFilters(new CatchOAuthErrorFilter(), new CatchAuthErrorFilter());
 

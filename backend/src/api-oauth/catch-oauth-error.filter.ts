@@ -14,8 +14,8 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
         const res = context.getResponse<Response>();
 
         // TODO: remove logs
-        console.log(req.session);
-        console.log(req.internal._internal);
+        console.log("session", req.session);
+        console.log("internal", req.internal._internal);
 
         try {
             const url = new URL(req.internal.getRequest().redirect);

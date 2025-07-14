@@ -19,7 +19,11 @@ export class ModeExtractorMiddleware implements NestMiddleware {
             default:
                 throw new Error("Invalid mode");
         }
-        req.internal.append({ authState: { function: authFunction } });
+
+        const authState = { function: authFunction };
+        req.internal.append({ authState });
+        req.session.authState = authState;
+
         next();
     }
 }

@@ -14,8 +14,8 @@ export class CatchAuthErrorFilter implements ExceptionFilter {
         const res = context.getResponse<Response>();
 
         // TODO: remove logs
-        console.log(req.session);
-        console.log(req.internal._internal);
+        console.log("session", req.session);
+        console.log("internal", req.internal._internal);
 
         const target = req.internal.getRequest().scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)
             ? "register-additional"

@@ -67,6 +67,8 @@ export class LoginDataController {
             },
             relations: ["strategyInstance"],
         });
+        if (!loginData) throw new HttpException("Invalid loginData", HttpStatus.UNAUTHORIZED);
+
         if ((await loginData.user).id != loggedInUser.id) {
             if (!(await this.backendUserService.checkIsUserAdmin(loggedInUser))) {
                 throw new HttpException(
