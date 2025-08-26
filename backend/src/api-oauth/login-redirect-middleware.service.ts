@@ -4,11 +4,11 @@ import { TokenScope } from "src/backend-services/token.service";
 import { combineURL } from "../util/utils";
 
 @Injectable()
-export class OAuthAuthorizeRedirectMiddleware implements NestMiddleware {
+export class LoginRedirectMiddleware implements NestMiddleware {
     async use(req: Request, res: Response) {
         const request = req.context.getRequest();
         const target = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER) ? "register-additional" : "login";
-        req.context.setStarted(request);
+        req.context.setStarted();
         res.redirect(combineURL(`auth/flow/${target}`, process.env.GROPIUS_ENDPOINT).toString());
     }
 }

@@ -43,6 +43,9 @@ export type FlowSession = {
     // strategy type
     strategy_type?: string;
 
+    // flow type
+    flow_type?: FlowType;
+
     // flow id (used to bind the whole interaction)
     flow_id?: string;
 
@@ -64,19 +67,18 @@ export type FlowSession = {
     // TODO: get rid of this
     // second token
     second_token?: boolean;
-
-    flow_type?: FlowType;
 };
 
-// TODO: which can we drop?
-export type FlowInternal = {
+// TODO: also load user?
+
+/**
+ * Entities that are loaded from the database
+ */
+export type FlowLoaded = {
     activeLogin?: ActiveLogin;
     client?: AuthClient;
-    isRegisterAdditional?: boolean;
     strategy?: Strategy;
 };
-
-// TODO: get rid of state machine?
 
 /**
  * Persistent session-based authentication used, e.g., for permission prompts and silent authentication.
@@ -86,14 +88,7 @@ export type FlowInternal = {
 export class FlowContext {
     private readonly req: RequestWithContext;
 
-    internal: FlowInternal = {};
-
-    // Enable or disable other middlewares
-    middlewares: {
-        restore: boolean;
-        prompt: boolean;
-        code: boolean;
-    } = { restore: true, prompt: true, code: true };
+    loaded: FlowLoaded = {};
 
     constructor(req: Request) {
         this.req = req as RequestWithContext;
@@ -139,7 +134,6 @@ export class FlowContext {
 
     setRequest(request: OAuthAuthorizeRequest) {
         this.req.session.oauth_request = request;
-        this.internal.isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
         return this;
     }
 
@@ -150,6 +144,10 @@ export class FlowContext {
         }
 
         return request;
+    }
+
+    isRegisterAdditional() {
+        return this.getRequest().scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
     }
 
     getUserId() {
@@ -170,6 +168,23 @@ export class FlowContext {
             throw new OAuthHttpException("invalid_request", "Active login id is missing");
         }
         return activeLogin;
+    }
+
+    tryActiveLogin() {
+        return this.loaded.activeLogin;
+    }
+
+    getActiveLogin() {
+        const login = this.tryActiveLogin();
+        if (!login) {
+            throw new OAuthHttpException("invalid_request", "Active login is missing");
+        }
+        return login;
+    }
+
+    setActiveLogin(activeLogin: ActiveLogin) {
+        this.req.session.active_login_id = activeLogin.id;
+        this.loaded.activeLogin = activeLogin;
     }
 
     getFlowId() {
@@ -201,12 +216,12 @@ export class FlowContext {
     }
 
     tryStrategy() {
-        return this.internal.strategy;
+        return this.loaded.strategy;
     }
 
     setStrategy(name: string, strategy: Strategy) {
         this.req.session.strategy_type = name;
-        this.internal.strategy = strategy;
+        this.loaded.strategy = strategy;
     }
 
     getStrategy() {
@@ -215,7 +230,7 @@ export class FlowContext {
         return strategy;
     }
 
-    setStarted(request: OAuthAuthorizeRequest) {
+    setStarted() {
         this.init();
 
         if (this.req.session.exp !== this.req.session.iat + MONTH_IN_SECONDS) {
@@ -224,11 +239,12 @@ export class FlowContext {
         this.req.session.flow_id = uuidv4();
         this.req.session.csrf = uuidv4();
         this.req.session.csrf_ext = uuidv4();
-        this.req.session.oauth_request = request;
         this.req.session.step = "started";
         return this;
     }
 
+    // TODO: drop activeLoginId here?
+    // TODO: drop strategyType here?
     setAuthenticated(data: { userId?: string; activeLoginId: string; externalCSRF: string; strategyType?: string }) {
         // TODO: reg workaround
         const no = false;
@@ -271,12 +287,6 @@ export class FlowContext {
         return this;
     }
 
-    skipPrompt() {
-        this.setPrompted(true, this.getFlowId());
-        this.setFinished(this.getFlowId());
-        return this;
-    }
-
     setFinished(flow: string) {
         if (this.req.session.step !== "prompted") {
             throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
@@ -312,16 +322,8 @@ export class FlowContext {
         return crypto.createHash("sha256").update(data).digest("base64url");
     }
 
-    tryActiveLogin() {
-        return this.internal.activeLogin;
-    }
-
-    tryIsRegisterAdditional() {
-        return this.internal.isRegisterAdditional;
-    }
-
     tryClient() {
-        return this.internal.client;
+        return this.loaded.client;
     }
 
     getClient() {
@@ -331,7 +333,7 @@ export class FlowContext {
     }
 
     setClient(client: AuthClient) {
-        this.internal.client = client;
+        this.loaded.client = client;
     }
 
     getSecondToken() {
@@ -340,11 +342,6 @@ export class FlowContext {
 
     setSecondToken(value: boolean) {
         this.req.session.second_token = value;
-    }
-
-    setActiveLogin(activeLogin: ActiveLogin) {
-        this.req.session.active_login_id = activeLogin.id;
-        this.internal.activeLogin = activeLogin;
     }
 
     tryFlowType() {

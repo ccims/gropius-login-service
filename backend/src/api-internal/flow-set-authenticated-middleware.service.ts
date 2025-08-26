@@ -2,12 +2,12 @@ import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 
 /**
- * TODO: fix this
+ * TODO: reg workaround
  * During a registration, an activeLogin is created for userLoginData BUT NO user is created YET
  */
 
 @Injectable()
-export class FlowSessionSetAuthenticatedMiddleware implements NestMiddleware {
+export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         const externalCSRF = req.context.getExternalCSRF();
         const activeLogin = req.context.tryActiveLogin();

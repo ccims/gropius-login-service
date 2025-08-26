@@ -7,7 +7,7 @@ import { BackendUserService } from "src/backend-services/backend-user.service";
 import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
 
 @Injectable()
-export class AuthRegisterMiddleware implements NestMiddleware {
+export class RegisterMiddleware implements NestMiddleware {
     constructor(
         private readonly checkRegistrationTokenService: CheckRegistrationTokenService,
         private readonly userService: LoginUserService,

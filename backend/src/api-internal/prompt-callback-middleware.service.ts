@@ -14,7 +14,7 @@ type Data = {
 };
 
 @Injectable()
-export class AuthPromptCallbackMiddleware implements NestMiddleware {
+export class PromptCallbackMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         // Ensure that user is authenticated
         if (!req.context.isAuthenticated()) {

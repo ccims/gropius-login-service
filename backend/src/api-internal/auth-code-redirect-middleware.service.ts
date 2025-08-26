@@ -38,8 +38,8 @@ interface UserDataSuggestion {
 }
 
 @Injectable()
-export class AuthRedirectMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(AuthRedirectMiddleware.name);
+export class CodeRedirectMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(CodeRedirectMiddleware.name);
 
     constructor(
         private readonly tokenService: TokenService,
@@ -123,15 +123,11 @@ export class AuthRedirectMiddleware implements NestMiddleware {
     }
 
     async use(req: Request, res: Response, next: NextFunction) {
-        // Check if middleware is enabled
-        if (!req.context.middlewares.code) return next();
+        if (!req.context.isAuthenticated()) return next();
 
-        const activeLogin = req.context.tryActiveLogin();
+        const activeLogin = req.context.getActiveLogin();
         const request = req.context.getRequest();
 
-        if (!activeLogin) {
-            throw new OAuthHttpException("server_error", "No active login");
-        }
         const userLoginData = await activeLogin.loginInstanceFor;
         if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {

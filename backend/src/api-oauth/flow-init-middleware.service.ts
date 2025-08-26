@@ -10,7 +10,7 @@ import { StrategiesService } from "../model/services/strategies.service";
 import { OAuthAuthorizeRequest } from "./OAuthAuthorizeServerState";
 
 @Injectable()
-export class FlowSessionInitMiddleware implements NestMiddleware {
+export class FlowInitMiddleware implements NestMiddleware {
     constructor(
         private readonly loginUserService: LoginUserService,
         @Inject("StateJwtService")
@@ -34,7 +34,7 @@ export class FlowSessionInitMiddleware implements NestMiddleware {
         // Check if revoked
         if (req.context.isAuthenticated()) {
             const loginUser = await this.loginUserService.findOneBy({ id: req.context.getUserId() });
-            // TODO: enable this once REG_HOTFIX is resolved
+            // TODO: reg workaround
             // if (!loginUser) throw new Error("Login user not found");
 
             if (loginUser) {
@@ -52,12 +52,13 @@ export class FlowSessionInitMiddleware implements NestMiddleware {
     }
 
     async restore(req: Request) {
-        if (!req.context.middlewares.restore) return;
-
         const request = req.context.tryRequest() ?? this.tryRequestFromState(req);
         if (request) {
             req.context.setRequest(request);
-            req.context.setClient(await this.authClientService.findAuthClient(request.clientId));
+
+            const client = await this.authClientService.findAuthClient(request.clientId);
+            if (!client || client.isValid) throw new Error("Client invalid");
+            req.context.setClient(client);
         }
 
         const activeLoginId = req.context.tryActiveLoginId();
