@@ -9,7 +9,6 @@ export class FlowSkipMiddleware implements NestMiddleware {
             req.context.setStarted();
             req.context.setAuthenticated({
                 userId: req.context.getUserId(),
-                activeLoginId: req.context.getActiveLoginId(),
                 externalCSRF: req.context.getExternalCSRF(),
             });
         }
