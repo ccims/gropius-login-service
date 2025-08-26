@@ -51,7 +51,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
 
     // TODO: this needs to be adapted to the "automatic login thing"
     private async assignActiveLoginToClient(req: Request, expiresIn: number): Promise<number> {
-        const activeLogin = req.internal.tryActiveLogin();
+        const activeLogin = req.context.tryActiveLogin();
 
         if (!activeLogin.isValid) {
             throw new Error("Active login invalid");
@@ -59,7 +59,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
         // if the login service handles the registration, two tokens were already generated: the code and the access token
         if (
             activeLogin.nextExpectedRefreshTokenNumber !=
-            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (req.internal.getSecondToken() ? 2 : 0)
+            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (req.context.getSecondToken() ? 2 : 0)
         ) {
             // TODO: throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
@@ -71,13 +71,13 @@ export class AuthRedirectMiddleware implements NestMiddleware {
         }
         const codeJwtId = ++activeLogin.nextExpectedRefreshTokenNumber;
 
-        req.internal.append({ activeLogin: await this.activeLoginService.save(activeLogin) });
+        req.context.setActiveLogin(await this.activeLoginService.save(activeLogin));
 
         return codeJwtId;
     }
 
     private async generateCode(req: Request, clientId: string, scope: TokenScope[], pkce: boolean): Promise<string> {
-        const activeLogin = req.internal.tryActiveLogin();
+        const activeLogin = req.context.tryActiveLogin();
         try {
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(req, expiresIn);
@@ -87,7 +87,7 @@ export class AuthRedirectMiddleware implements NestMiddleware {
                 codeJwtId,
                 scope,
                 expiresIn,
-                pkce ? req.internal.getRequest().codeChallenge : undefined,
+                pkce ? req.context.getRequest().codeChallenge : undefined,
             );
             this.logger.debug("Created token");
             return token;
@@ -124,10 +124,10 @@ export class AuthRedirectMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // Check if middleware is enabled
-        if (!req.flow.middlewares.code) return next();
+        if (!req.context.middlewares.code) return next();
 
-        const activeLogin = req.internal.tryActiveLogin();
-        const request = req.internal.getRequest();
+        const activeLogin = req.context.tryActiveLogin();
+        const request = req.context.getRequest();
 
         if (!activeLogin) {
             throw new OAuthHttpException("server_error", "No active login");
@@ -141,10 +141,11 @@ export class AuthRedirectMiddleware implements NestMiddleware {
             }
         } else {
             if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                const strategy = req.internal.getStrategy();
-                const authState = req.internal.getAuthState();
+                const strategy = req.context.getStrategy();
 
-                const encodedState = encodeURIComponent(this.stateJwtService.sign({ request, authState }));
+                // TODO: clean this up (guess we broke the token?)
+
+                const encodedState = encodeURIComponent(this.stateJwtService.sign({ request }));
                 const token = await this.generateCode(
                     req,
                     "login-auth-client",
@@ -166,8 +167,8 @@ export class AuthRedirectMiddleware implements NestMiddleware {
     }
 
     private async redirectWithCode(req: Request, res: Response) {
-        const request = req.internal.getRequest();
-        const client = req.internal.getClient();
+        const request = req.context.getRequest();
+        const client = req.context.getClient();
 
         const url = new URL(request.redirect);
         const token = await this.generateCode(req, client.id, request.scope, true);

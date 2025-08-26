@@ -17,7 +17,7 @@ type Data = {
 export class AuthPromptCallbackMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         // Ensure that user is authenticated
-        if (!req.flow.isAuthenticated()) {
+        if (!req.context.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
 
@@ -25,7 +25,7 @@ export class AuthPromptCallbackMiddleware implements NestMiddleware {
         const data: Data = await schema.validateAsync(req.body);
 
         // Update flow and ensure state
-        req.flow.setPrompted(data.consent, data.flow);
+        req.context.setPrompted(data.consent, data.flow);
 
         // Abort without consent
         if (!data.consent) {
@@ -33,7 +33,7 @@ export class AuthPromptCallbackMiddleware implements NestMiddleware {
         }
 
         // Update flow
-        req.flow.setFinished(data.flow);
+        req.context.setFinished(data.flow);
 
         next();
     }

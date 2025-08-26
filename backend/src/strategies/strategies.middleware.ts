@@ -8,7 +8,7 @@ import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { FlowInternal } from "../util/FlowInternal";
+import { FlowContext } from "../util/FlowContext";
 
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {
@@ -32,16 +32,15 @@ export class StrategiesMiddleware implements NestMiddleware {
         return instance;
     }
 
-    async performImsUserSearchIfNeeded(internal: FlowInternal, instance: StrategyInstance, strategy: Strategy) {
-        const activeLogin = internal.tryActiveLogin();
-        const authState = internal.getAuthState();
+    async performImsUserSearchIfNeeded(context: FlowContext, instance: StrategyInstance, strategy: Strategy) {
+        const activeLogin = context.tryActiveLogin();
 
         if (strategy.canSync && instance.isSyncActive) {
             if (typeof activeLogin == "object" && activeLogin.id) {
                 const imsUserSearchOnModes = process.env.GROPIUS_PERFORM_IMS_USER_SEARCH_ON.split(",").filter(
                     (s) => !!s,
                 );
-                if (imsUserSearchOnModes.includes(authState.function)) {
+                if (imsUserSearchOnModes.includes(context.getFlowType())) {
                     const loginData = await activeLogin.loginInstanceFor;
                     try {
                         await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
@@ -58,17 +57,18 @@ export class StrategiesMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         const id = req.params.id;
+
         const instance = await this.idToStrategyInstance(id);
+        // TODO: is this unique?!
         const strategy = this.strategiesService.getStrategyByName(instance.type);
+        req.context.setStrategy(instance.type, strategy);
 
-        req.internal.append({ strategy });
+        const result = await strategy.performAuth(instance, req.context, req, res);
 
-        const result = await strategy.performAuth(instance, req.internal, req, res);
-        req.internal.append(result.returnedState);
         const authResult = result.result;
         if (authResult) {
             const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(
-                req.internal,
+                req.context,
                 instance,
                 strategy,
             );
@@ -77,18 +77,14 @@ export class StrategiesMiddleware implements NestMiddleware {
             }
             const activeLogin = await this.performAuthFunctionService.performRequestedAction(
                 authResult,
-                req.internal,
+                req.context,
                 instance,
                 strategy,
             );
 
-            // TODO: why do we need to do this?!
-            const internalCopy = new FlowInternal();
-            internalCopy.append(Object.assign({}, req.internal._internal));
-            internalCopy.getAuthState().activeLogin = activeLogin.id;
+            req.context.setActiveLogin(activeLogin);
 
-            req.internal.append({ activeLogin });
-            await this.performImsUserSearchIfNeeded(internalCopy, instance, strategy);
+            await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
         } else {
             throw new AuthException(
                 result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfully",

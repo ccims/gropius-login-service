@@ -15,10 +15,10 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
 
         // TODO: remove logs
         console.log("session", req.session);
-        console.log("internal", req.internal._internal);
+        console.log("internal", req.context.internal);
 
         try {
-            const url = new URL(req.internal.getRequest().redirect);
+            const url = new URL(req.context.getRequest().redirect);
             if (error.error_type && error.error_message) {
                 url.searchParams.append("error", error.error_type);
                 url.searchParams.append(

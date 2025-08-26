@@ -5,14 +5,14 @@ import * as passportGithub from "passport-github2";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthFunction, AuthResult } from "../AuthResult";
+import { FlowType, AuthResult } from "../AuthResult";
 import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
-import { FlowInternal } from "../../util/FlowInternal";
+import { FlowContext } from "../../util/FlowContext";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
@@ -156,10 +156,10 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     protected override getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        internal: FlowInternal | undefined,
+        context: FlowContext | undefined,
     ): passport.AuthenticateOptions {
-        const mode = internal?.tryAuthState()?.function ?? AuthFunction.LOGIN;
-        if (mode == AuthFunction.REGISTER_WITH_SYNC) {
+        const mode = internal?.tryFlowType() ?? FlowType.LOGIN;
+        if (mode == FlowType.REGISTER_WITH_SYNC) {
             return {
                 scope: ["scope", "user:email", "repo"],
             };

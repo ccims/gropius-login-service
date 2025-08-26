@@ -6,13 +6,13 @@ import { combineURL } from "../util/utils";
 export class AuthPromptRedirectMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         // Check if middleware is enabled
-        if (!req.flow.middlewares.prompt) return next();
+        if (!req.context.middlewares.prompt) return next();
 
         // Always prompt if requested
-        if (req.internal.getRequest().prompt !== "consent") {
+        if (req.context.getRequest().prompt !== "consent") {
             // Do not prompt for internal clients or if consent is already given
-            if (req.internal.getClient().isInternal || req.flow.didConsent()) {
-                req.flow.skipPrompt();
+            if (req.context.getClient().isInternal || req.context.didConsent()) {
+                req.context.skipPrompt();
                 return next();
             }
         }

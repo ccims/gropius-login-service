@@ -5,9 +5,9 @@ import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
 import session = require("cookie-session");
-import * as FlowInternal from "./util/FlowInternal";
 import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
 import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
+import { NextFunction, Request, Response } from "express";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -79,7 +79,17 @@ async function bootstrap() {
         }),
     );
 
-    app.use(FlowInternal.middleware);
+    app.use((req: Request, res: Response, next: NextFunction) => {
+        // TODO: wtf is "(res.locals.state as ApiStateData)"?!
+        if (!res.locals) {
+            res.locals = {};
+        }
+        if (!res.locals.state) {
+            res.locals.state = {};
+        }
+
+        next();
+    });
 
     app.useGlobalFilters(new CatchOAuthErrorFilter(), new CatchAuthErrorFilter());
 

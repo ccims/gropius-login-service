@@ -20,7 +20,7 @@ export class AuthRegisterMiddleware implements NestMiddleware {
         const { loginData, activeLogin } = await this.checkRegistrationTokenService.getActiveLoginAndLoginDataForToken(
             input.register_token,
         );
-        if (req.internal.getAuthState().activeLogin !== activeLogin.id) {
+        if (req.context.getActiveLoginId() !== activeLogin.id) {
             throw new OAuthHttpException("server_error", "Invalid registration token");
         }
         if ((await this.userService.countBy({ username: input.username })) > 0) {
@@ -28,8 +28,8 @@ export class AuthRegisterMiddleware implements NestMiddleware {
         }
         const newUser = await this.backendUserService.createNewUser(input, false);
         await this.backendUserService.linkAccountToUser(newUser, loginData, activeLogin);
-        req.internal.append({ activeLogin, secondToken: true });
-
+        req.context.setActiveLogin(activeLogin);
+        req.context.setSecondToken(true);
         next();
     }
 }

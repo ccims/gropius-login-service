@@ -4,17 +4,17 @@ import { NextFunction, Request, Response } from "express";
 @Injectable()
 export class FlowSessionSwitchMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
-        if (req.flow.isAuthenticated()) {
-            req.flow.setStarted(req.internal.getRequest());
-            req.flow.setAuthenticated({
-                userId: req.flow.getUserId(),
-                activeLoginId: req.flow.getActiveLoginId(),
-                externalCSRF: req.flow.getExternalCSRF(),
+        if (req.context.isAuthenticated()) {
+            req.context.setStarted(req.context.getRequest());
+            req.context.setAuthenticated({
+                userId: req.context.getUserId(),
+                activeLoginId: req.context.getActiveLoginId(),
+                externalCSRF: req.context.getExternalCSRF(),
             });
         } else {
-            req.flow.middlewares.prompt = false;
-            req.flow.middlewares.code = false;
-            req.flow.middlewares.restore = false;
+            req.context.middlewares.prompt = false;
+            req.context.middlewares.code = false;
+            req.context.middlewares.restore = false;
         }
 
         next();

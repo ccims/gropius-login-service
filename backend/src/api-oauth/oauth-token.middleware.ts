@@ -82,7 +82,7 @@ export class OauthTokenMiddleware implements NestMiddleware {
         if (!client) {
             throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
-        req.internal.append({ client });
+        req.context.setClient(client);
 
         switch (grant_type) {
             case "refresh_token":

@@ -38,7 +38,7 @@ export class OAuthTokenClientCredentialsMiddleware implements NestMiddleware {
     }
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const currentClient = req.internal.getClient();
+        const currentClient = req.context.getClient();
         if (!currentClient.requiresSecret) {
             throw new OAuthHttpException("invalid_client", "Client does not support client credentials flow");
         }

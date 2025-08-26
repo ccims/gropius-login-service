@@ -7,7 +7,7 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { Request } from "express";
-import { FlowInternal } from "../util/FlowInternal";
+import { FlowContext } from "../util/FlowContext";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -39,14 +39,14 @@ export abstract class StrategyUsingPassport extends Strategy {
 
     protected getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        internal: FlowInternal | undefined,
+        context: FlowContext | undefined,
     ): passport.AuthenticateOptions {
         return {};
     }
 
     public override async performAuth(
         strategyInstance: StrategyInstance,
-        internal: FlowInternal | undefined,
+        context: FlowContext | undefined,
         req: Request,
         res: any,
     ): Promise<PerformAuthResult> {
@@ -59,8 +59,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                     session: false,
                     state: jwtService.sign({
                         request: internal?.tryRequest(),
-                        authState: internal?.tryAuthState(),
-                        externalCSRF: req.flow?.getExternalCSRF(),
+                        externalCSRF: req.context?.getExternalCSRF(),
                     }),
                     ...this.getAdditionalPassportOptions(strategyInstance, internal),
                 },

@@ -12,13 +12,13 @@ export class OAuthAuthorizeValidateMiddleware implements NestMiddleware {
     ) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const request = req.internal.getRequest();
+        const request = req.context.getRequest();
 
         try {
             const client = await this.authClientService.findAuthClient(request.clientId);
-            req.internal.append({ client });
+            req.context.setClient(client);
         } catch {}
-        const client = req.internal.tryClient();
+        const client = req.context.tryClient();
         if (!client || !client.isValid) {
             throw new OAuthHttpException("invalid_client", "Client unknown or unauthorized");
         }

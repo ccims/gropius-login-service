@@ -220,11 +220,11 @@ export class StrategyInstancesController {
         if (!instance) {
             throw new HttpException("id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
         }
-        const stragety = this.strategiesService.getStrategyByName(instance.type);
-        if (!stragety) {
+        const strategy = this.strategiesService.getStrategyByName(instance.type);
+        if (!strategy) {
             throw new Error(`Strategy ${instance.type} for instance ${instance.id} not found`);
         }
-        return stragety.createOrUpdateNewInstance(input, instance);
+        return strategy.createOrUpdateNewInstance(input, instance);
     }
 
     /**

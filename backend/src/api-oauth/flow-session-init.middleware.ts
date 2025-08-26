@@ -1,14 +1,13 @@
 import { Inject, Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { FlowSession } from "../util/FlowSession";
+import { FlowContext } from "../util/FlowContext";
 import { LoginUserService } from "../model/services/login-user.service";
 import { now } from "../util/utils";
-import { FlowInternalData } from "../util/FlowInternal";
 import { JwtService } from "@nestjs/jwt";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { StrategiesService } from "../model/services/strategies.service";
-import { TokenScope } from "../backend-services/token.service";
+import { OAuthAuthorizeRequest } from "./OAuthAuthorizeServerState";
 
 @Injectable()
 export class FlowSessionInitMiddleware implements NestMiddleware {
@@ -23,18 +22,18 @@ export class FlowSessionInitMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // Init flow session
-        req.flow = new FlowSession(req);
-        req.flow.init();
+        req.context = new FlowContext(req);
+        req.context.init();
 
         // Check if expired
-        if (req.flow.isExpired()) {
+        if (req.context.isExpired()) {
             console.log("flow expired ...");
-            req.flow.regenerate();
+            req.context.regenerate();
         }
 
         // Check if revoked
-        if (req.flow.isAuthenticated()) {
-            const loginUser = await this.loginUserService.findOneBy({ id: req.flow.getUserId() });
+        if (req.context.isAuthenticated()) {
+            const loginUser = await this.loginUserService.findOneBy({ id: req.context.getUserId() });
             // TODO: enable this once REG_HOTFIX is resolved
             // if (!loginUser) throw new Error("Login user not found");
 
@@ -53,36 +52,30 @@ export class FlowSessionInitMiddleware implements NestMiddleware {
     }
 
     async restore(req: Request) {
-        if (!req.flow.middlewares.restore) return;
+        if (!req.context.middlewares.restore) return;
 
-        const data: FlowInternalData = {};
-
-        const request = req.flow.tryRequest() ?? this.tryRequestFromState(req);
+        const request = req.context.tryRequest() ?? this.tryRequestFromState(req);
         if (request) {
-            data.request = request;
-            data.client = await this.authClientService.findAuthClient(request.clientId);
-            data.isRegisterAdditional = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
+            req.context.setRequest(request);
+            req.context.setClient(await this.authClientService.findAuthClient(request.clientId));
         }
 
-        const activeLoginId = req.flow.tryActiveLoginId();
+        const activeLoginId = req.context.tryActiveLoginId();
         if (activeLoginId) {
-            data.activeLogin = await this.activeLoginService.findOneBy({ id: req.flow.getActiveLoginId() });
+            req.context.setActiveLogin(await this.activeLoginService.findOneBy({ id: req.context.getActiveLoginId() }));
         }
 
         // TODO: is this even required?!
-        const strategyTypeName = req.flow.tryStrategyTypeName();
+        const strategyTypeName = req.context.tryStrategyTypeName();
         if (strategyTypeName) {
-            data.strategy = this.strategiesService.getStrategyByName(strategyTypeName);
+            req.context.setStrategy(strategyTypeName, this.strategiesService.getStrategyByName(strategyTypeName));
         }
 
-        // TODO: is this even required? (if yes, then mv this into flow)
-        data.authState = req.session.authState;
-
-        req.internal.append(data);
+        // req.data.authState = req.session.authState;
     }
 
     // TODO: required for req flow?
-    tryRequestFromState(req: Request) {
+    tryRequestFromState(req: Request): OAuthAuthorizeRequest {
         try {
             const state = req.query.state ?? req.body.state;
             console.log(state);

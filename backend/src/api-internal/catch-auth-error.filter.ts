@@ -15,9 +15,9 @@ export class CatchAuthErrorFilter implements ExceptionFilter {
 
         // TODO: remove logs
         console.log("session", req.session);
-        console.log("internal", req.internal._internal);
+        console.log("internal", req.context.internal);
 
-        const target = req.internal.getRequest().scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)
+        const target = req.context.getRequest().scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)
             ? "register-additional"
             : "login";
         const url = `auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}`;

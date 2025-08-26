@@ -27,10 +27,9 @@ export class OAuthAuthorizeExtractMiddleware implements NestMiddleware {
             responseType: req.query.response_type as "code",
             prompt: req.query.prompt as "consent",
         };
-        req.internal.append({
-            request: requestParams,
-            isRegisterAdditional: requestParams.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER),
-        });
+
+        req.context.setRequest(requestParams);
+
         next();
     }
 }

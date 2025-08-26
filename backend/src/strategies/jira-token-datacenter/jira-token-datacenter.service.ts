@@ -6,8 +6,8 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { FlowInternal } from "../../util/FlowInternal";
 import { combineURL } from "../../util/utils";
+import { FlowContext } from "../../util/FlowContext";
 
 @Injectable()
 export class JiraTokenDatacenterStrategyService extends Strategy {
@@ -149,7 +149,7 @@ export class JiraTokenDatacenterStrategyService extends Strategy {
 
     override async performAuth(
         strategyInstance: StrategyInstance,
-        internal: FlowInternal | undefined,
+        context: FlowContext | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult> {

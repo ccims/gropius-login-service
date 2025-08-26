@@ -94,7 +94,7 @@ export class AuthEndpointsController {
         csrf: string;
     }> {
         return {
-            csrf: req.flow.getCSRF(),
+            csrf: req.context.getCSRF(),
         };
     }
 
@@ -105,7 +105,7 @@ export class AuthEndpointsController {
         externalCSRF: string;
     }> {
         return {
-            externalCSRF: req.flow.getExternalCSRF(),
+            externalCSRF: req.context.getExternalCSRF(),
         };
     }
 
@@ -121,18 +121,18 @@ export class AuthEndpointsController {
         clientId: string;
         clientName: string;
     }> {
-        if (!req.flow.isAuthenticated()) {
+        if (!req.context.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
 
-        const request = req.flow.getRequest();
-        const user = await this.userService.findOneBy({ id: req.flow.getUserId() });
+        const request = req.context.getRequest();
+        const user = await this.userService.findOneBy({ id: req.context.getUserId() });
         const client = await this.authClientService.findAuthClient(request.clientId);
 
         return {
-            userId: req.flow.getUserId(),
+            userId: req.context.getUserId(),
             username: user.username,
-            flow: req.flow.getFlowId(),
+            flow: req.context.getFlowId(),
             redirect: request.redirect,
             scope: request.scope,
             clientId: request.clientId,
@@ -165,7 +165,7 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        req.flow.drop();
+        req.context.drop();
         return new DefaultReturn("logout/current");
     }
 
@@ -174,12 +174,12 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout everywhere" })
     async logoutEverywhere(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        const user = await this.userService.findOneBy({ id: req.flow.getUserId() });
+        const user = await this.userService.findOneBy({ id: req.context.getUserId() });
         if (!user) throw new Error("Did not found user");
         user.revokeTokensBefore = new Date();
         await this.userService.save(user);
 
-        req.flow.drop();
+        req.context.drop();
         return new DefaultReturn("logout/everywhere");
     }
 }
