@@ -131,9 +131,9 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         email?: string;
     } {
         return {
-            username: loginData.data?.username || undefined,
-            displayName: loginData.data?.displayName || undefined,
-            email: loginData.data?.email || undefined,
+            username: loginData.data?.username.trim() || undefined,
+            displayName: loginData.data?.displayName.trim() || undefined,
+            email: loginData.data?.email.trim() || undefined,
         };
     }
 

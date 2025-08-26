@@ -32,7 +32,7 @@ export class StrategiesMiddleware implements NestMiddleware {
         return instance;
     }
 
-    async performImsUserSearchIfNeeded(context: FlowContext, instance: StrategyInstance, strategy: Strategy) {
+    private async performImsUserSearchIfNeeded(context: FlowContext, instance: StrategyInstance, strategy: Strategy) {
         const activeLogin = context.tryActiveLogin();
 
         if (strategy.canSync && instance.isSyncActive) {
@@ -59,38 +59,33 @@ export class StrategiesMiddleware implements NestMiddleware {
         const id = req.params.id;
 
         const instance = await this.idToStrategyInstance(id);
-        // TODO: is this unique?!
         const strategy = this.strategiesService.getStrategyByName(instance.type);
         req.context.setStrategy(instance.type, strategy);
 
         const result = await strategy.performAuth(instance, req.context, req, res);
-
         const authResult = result.result;
-        if (authResult) {
-            const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(
-                req.context,
-                instance,
-                strategy,
-            );
-            if (functionError != null) {
-                throw new OAuthHttpException("server_error", functionError);
-            }
-            const activeLogin = await this.performAuthFunctionService.performRequestedAction(
-                authResult,
-                req.context,
-                instance,
-                strategy,
-            );
-
-            req.context.setActiveLogin(activeLogin);
-
-            await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
-        } else {
+        if (!authResult) {
             throw new AuthException(
                 result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfully",
                 instance.id,
             );
         }
+
+        const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(req.context, instance, strategy);
+        if (functionError) {
+            throw new OAuthHttpException("server_error", functionError);
+        }
+
+        const activeLogin = await this.performAuthFunctionService.performRequestedAction(
+            authResult,
+            req.context,
+            instance,
+            strategy,
+        );
+        req.context.setActiveLogin(activeLogin);
+
+        await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
+
         this.logger.debug("Strategy Middleware completed. Calling next");
         next();
     }

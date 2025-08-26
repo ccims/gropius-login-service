@@ -89,7 +89,6 @@ export class CodeRedirectMiddleware implements NestMiddleware {
                 expiresIn,
                 pkce ? req.context.getRequest().codeChallenge : undefined,
             );
-            this.logger.debug("Created token");
             return token;
         } catch (err: any) {
             this.logger.warn(err);
@@ -99,67 +98,57 @@ export class CodeRedirectMiddleware implements NestMiddleware {
 
     /**
      * Return username, display name and email suggestions for registering a user
-     * @param input The input data containing the registration token to retrieve suggestions for
      */
-    async getDataSuggestions(loginData: UserLoginData, strategy: Strategy): Promise<UserDataSuggestion> {
-        const suggestions = strategy.getUserDataSuggestion(loginData);
+    private async getDataSuggestions(loginData: UserLoginData, strategy: Strategy): Promise<UserDataSuggestion> {
+        const initial = strategy.getUserDataSuggestion(loginData);
+
+        const suggestions: UserDataSuggestion = {
+            displayName: initial.displayName,
+            // TODO: validate email?!
+            email: initial.email,
+        };
 
         if (suggestions.username) {
-            const numUsers = await this.userService.countBy({ username: suggestions.username.trim() });
-            if (numUsers > 0) {
-                return {
-                    email: suggestions.email,
-                };
+            const exists = await this.userService.exists({ where: { username: initial.username } });
+            if (!exists) {
+                suggestions.username = initial.username;
             }
         }
-        if (!suggestions.username && !suggestions.displayName && !suggestions.email) {
-            return {};
-        }
-        return {
-            username: suggestions.username,
-            displayName: suggestions.displayName,
-            email: suggestions.email,
-        };
+
+        return suggestions;
     }
 
     async use(req: Request, res: Response, next: NextFunction) {
         if (!req.context.isAuthenticated()) return next();
 
-        const activeLogin = req.context.getActiveLogin();
+        const userLoginData = await req.context.getActiveLogin().loginInstanceFor;
         const request = req.context.getRequest();
 
-        const userLoginData = await activeLogin.loginInstanceFor;
         if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
-            if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                await this.redirectWithCode(req, res);
-            } else {
+            if (userLoginData.state !== LoginState.WAITING_FOR_REGISTER) {
                 throw new OAuthHttpException("invalid_request", "Login is not in register state");
             }
-        } else {
-            if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-                const strategy = req.context.getStrategy();
-
-                // TODO: clean this up (guess we broke the token?)
-
-                const encodedState = encodeURIComponent(this.stateJwtService.sign({ request }));
-                const token = await this.generateCode(
-                    req,
-                    "login-auth-client",
-                    [TokenScope.LOGIN_SERVICE_REGISTER],
-                    false,
-                );
-                const suggestions = await this.getDataSuggestions(userLoginData, strategy);
-                const suggestionQuery = `&email=${encodeURIComponent(
-                    suggestions.email ?? "",
-                )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
-                    suggestions.displayName ?? "",
-                )}&forceSuggestedUsername=${strategy.forceSuggestedUsername}`;
-                const url = `auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
-                res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
-            } else {
-                await this.redirectWithCode(req, res);
-            }
+            return this.redirectWithCode(req, res);
         }
+
+        if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
+            const strategy = req.context.getStrategy();
+
+            // TODO: clean this up (guess we broke the token?)
+
+            const encodedState = encodeURIComponent(this.stateJwtService.sign({ request }));
+            const token = await this.generateCode(req, "login-auth-client", [TokenScope.LOGIN_SERVICE_REGISTER], false);
+            const suggestions = await this.getDataSuggestions(userLoginData, strategy);
+            const suggestionQuery = `&email=${encodeURIComponent(
+                suggestions.email ?? "",
+            )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
+                suggestions.displayName ?? "",
+            )}&forceSuggestedUsername=${strategy.forceSuggestedUsername}`;
+            const url = `auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
+            return res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
+        }
+
+        return this.redirectWithCode(req, res);
     }
 
     private async redirectWithCode(req: Request, res: Response) {
