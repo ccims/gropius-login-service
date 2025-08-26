@@ -14,13 +14,9 @@ export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
         const userLoginData = await activeLogin.loginInstanceFor;
         const loginUser = await userLoginData.user;
 
-        const strategy = req.context.tryStrategy();
-
         req.context.setAuthenticated({
             userId: loginUser?.id,
-            activeLoginId: activeLogin.id,
             externalCSRF,
-            strategyType: strategy?.typeName,
         });
         next();
     }

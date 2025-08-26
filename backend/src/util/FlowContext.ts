@@ -243,9 +243,9 @@ export class FlowContext {
         return this;
     }
 
-    // TODO: drop activeLoginId here?
-    // TODO: drop strategyType here?
-    setAuthenticated(data: { userId?: string; activeLoginId: string; externalCSRF: string; strategyType?: string }) {
+    // TODO: req workaround (userId must be string)
+    // TODO: setActiveLoginId and setStrategy should only be called from setAuthenticated?
+    setAuthenticated(data: { userId?: string; externalCSRF: string }) {
         // TODO: reg workaround
         const no = false;
         if (this.req.session.step !== "started" && no) {
@@ -257,9 +257,7 @@ export class FlowContext {
         }
 
         this.req.session.user_id = data.userId;
-        this.req.session.active_login_id = data.activeLoginId;
         this.req.session.step = "authenticated";
-        this.req.session.strategy_type = data.strategyType;
 
         // TODO: reg workaround
         // TODO: delete this.req.session.csrf_ext;
