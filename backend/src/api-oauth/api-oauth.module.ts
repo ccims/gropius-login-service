@@ -14,7 +14,6 @@ import { AuthPromptRedirectMiddleware } from "../api-internal/auth-prompt-redire
 import { FlowSessionInitMiddleware } from "./flow-session-init.middleware";
 import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
 import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
-import { FlowSessionRestoreMiddleware } from "./flow-session-restore.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
@@ -29,7 +28,6 @@ export class ApiOauthModule {
                 OAuthAuthorizeExtractMiddleware,
                 OAuthAuthorizeValidateMiddleware,
                 FlowSessionInitMiddleware,
-                FlowSessionRestoreMiddleware,
                 FlowSessionSwitchMiddleware,
                 AuthPromptRedirectMiddleware,
                 AuthRedirectMiddleware,
