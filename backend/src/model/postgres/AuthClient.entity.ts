@@ -184,6 +184,14 @@ export class AuthClient {
         }));
     }
 
+    async verifySecret(secret: string) {
+        for (const hash of this.clientSecrets) {
+            const verified = await bcrypt.compare(secret, hash.substring(hash.indexOf(";") + 1));
+            if (verified) return true;
+        }
+        return false;
+    }
+
     toJSON() {
         return {
             id: this.id,

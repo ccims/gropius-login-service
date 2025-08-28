@@ -11,12 +11,12 @@ import { FlowSkipMiddleware } from "./flow-skip-middleware.service";
 import { CodeRedirectMiddleware } from "../api-internal/auth-code-redirect-middleware.service";
 import { PromptRedirectMiddleware } from "../api-internal/prompt-redirect-middleware.service";
 import { FlowInitMiddleware } from "./flow-init-middleware.service";
-import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
-import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
+import { ClientCredentialsService } from "./client-credentials.service";
+import { AuthorizationCodeService } from "./authorization-code.service";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
-    providers: [OAuthTokenAuthorizationCodeMiddleware, OAuthTokenClientCredentialsMiddleware],
+    providers: [AuthorizationCodeService, ClientCredentialsService],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
     exports: [],
 })
@@ -24,8 +24,8 @@ export class ApiOauthModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(
-                RequestExtractMiddleware,
                 FlowInitMiddleware,
+                RequestExtractMiddleware,
                 FlowSkipMiddleware,
                 PromptRedirectMiddleware,
                 CodeRedirectMiddleware,

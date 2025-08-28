@@ -1,4 +1,4 @@
-export class OAuthTokenResponseDto {
+export class OauthTokenResponse {
     access_token: string;
     token_type: "bearer";
     expires_in: number;

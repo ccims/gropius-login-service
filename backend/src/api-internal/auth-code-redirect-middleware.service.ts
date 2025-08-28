@@ -54,7 +54,8 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         const activeLogin = req.context.tryActiveLogin();
 
         if (!activeLogin.isValid) {
-            throw new Error("Active login invalid");
+            // TODO: this
+            // TODO: throw new Error("Active login invalid");
         }
         // if the login service handles the registration, two tokens were already generated: the code and the access token
         if (

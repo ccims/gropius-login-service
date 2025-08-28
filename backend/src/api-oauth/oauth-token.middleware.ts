@@ -2,10 +2,9 @@ import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import * as bcrypt from "bcrypt";
 import { OAuthHttpException } from "./OAuthHttpException";
-import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
-import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
+import { AuthorizationCodeService } from "./authorization-code.service";
+import { ClientCredentialsService } from "./client-credentials.service";
 
 @Injectable()
 export class OauthTokenMiddleware implements NestMiddleware {
@@ -13,43 +12,17 @@ export class OauthTokenMiddleware implements NestMiddleware {
 
     constructor(
         private readonly authClientService: AuthClientService,
-        private readonly oauthTokenAuthorizationCodeMiddleware: OAuthTokenAuthorizationCodeMiddleware,
-        private readonly oauthTokenClientCredentialsMiddleware: OAuthTokenClientCredentialsMiddleware,
+        private readonly authorizationCodeService: AuthorizationCodeService,
+        private readonly clientCredentialsService: ClientCredentialsService,
     ) {}
 
-    private async checkGivenClientSecretValidOrNotRequired(client: AuthClient, givenSecret?: string): Promise<boolean> {
-        if (!client.requiresSecret && (!givenSecret || givenSecret.length == 0)) {
-            return true;
-        }
-        const hasCorrectClientSecret = (
-            await Promise.all(
-                client.clientSecrets.map((hashedSecret) =>
-                    bcrypt.compare(givenSecret, hashedSecret.substring(hashedSecret.indexOf(";") + 1)),
-                ),
-            )
-        ).includes(true);
-        if (hasCorrectClientSecret) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Performs the OAuth client authentication by checking the given client_id and client_secret
-     * in the Authorization header and in the body (both allowed according to OAuth spec).
-     *
-     * Flag can be set to return any client without secrets if desired to allow logins without client
-     * @param req The request object
-     * @returns The auth client that requested (or any without secret if flag ist set)
-     *  or `null` if credentials invalid or none given
-     */
-    private async getCallingClient(req: Request): Promise<AuthClient | null> {
+    private async getClient(req: Request): Promise<AuthClient | undefined> {
         let clientId: string;
         let clientSecret: string | undefined;
 
-        const auth_head = req.headers["authorization"];
-        if (auth_head && auth_head.startsWith("Basic ")) {
-            const clientIdSecret = Buffer.from(auth_head.substring(6), "base64")
+        const header = req.headers["authorization"];
+        if (header && header.startsWith("Basic ")) {
+            const clientIdSecret = Buffer.from(header.substring(6), "base64")
                 ?.toString("utf-8")
                 ?.split(":")
                 ?.map((text) => decodeURIComponent(text));
@@ -66,33 +39,25 @@ export class OauthTokenMiddleware implements NestMiddleware {
         }
 
         const client = await this.authClientService.findAuthClient(clientId);
-        if (client && client.isValid) {
-            if (await this.checkGivenClientSecretValidOrNotRequired(client, clientSecret)) {
-                return client;
-            }
-        }
+        if (!client) return;
+        if (!client.isValid) return;
+        if (!client.requiresSecret) return client;
 
-        return null;
+        const authenticated = client.verifySecret(clientSecret);
+        if (authenticated) return client;
     }
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const grant_type = req.body.grant_type;
-
-        const client = await this.getCallingClient(req);
+        const client = await this.getClient(req);
         if (!client) {
             throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
         }
-        req.context.setClient(client);
 
-        switch (grant_type) {
-            case "refresh_token":
-                return this.oauthTokenAuthorizationCodeMiddleware.use(req, res, next);
-            case "authorization_code":
-                return this.oauthTokenAuthorizationCodeMiddleware.use(req, res, next);
-            case "client_credentials":
-                return this.oauthTokenClientCredentialsMiddleware.use(req, res, next);
-            default:
-                throw new OAuthHttpException("unsupported_grant_type", "No grant_type given or unsupported type");
-        }
+        const handlers = [this.authorizationCodeService, this.clientCredentialsService];
+        const handler = handlers.find((it) => it.supportedGrantTypes.includes(req.body.grant_type));
+        if (!handler) throw new OAuthHttpException("unsupported_grant_type", "No grant_type given or unsupported type");
+
+        const response = await handler.handle(req, res, client);
+        return res.json(response);
     }
 }

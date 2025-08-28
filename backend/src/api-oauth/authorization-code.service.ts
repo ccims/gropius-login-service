@@ -7,11 +7,13 @@ import { OAuthHttpException } from "./OAuthHttpException";
 import { EncryptionService } from "../backend-services/encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
+import { OauthTokenResponse } from "./dto/oauth-token-response";
 
 @Injectable()
-export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(OAuthTokenAuthorizationCodeMiddleware.name);
+export class AuthorizationCodeService {
+    readonly supportedGrantTypes = ["authorization_code", "refresh_token"];
+
+    private readonly logger = new Logger(AuthorizationCodeService.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
@@ -22,7 +24,7 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
         throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
     }
 
-    private async checkLoginDataIsVaild(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
+    private async checkLoginDataIsValid(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
         if (!loginData) {
             this.logger.warn("Login data not found");
             throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
@@ -60,14 +62,18 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
         }
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
             this.logger.warn("Active login has expired", activeLogin.id);
+
+            // TODO: this
+            /**
             throw new OAuthHttpException(
                 "invalid_grant",
                 "Login has expired. Try restarting login/register/link process.",
             );
+                **/
         }
         if (!activeLogin.isValid) {
             this.logger.warn("Active login is set invalid", activeLogin.id);
-            throw new OAuthHttpException("invalid_grant", "Login is set invalid/disabled");
+            // TODO: throw new OAuthHttpException("invalid_grant", "Login is set invalid/disabled");
         }
     }
 
@@ -89,7 +95,7 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
         activeLogin: ActiveLogin,
         currentClient: AuthClient,
         scope: TokenScope[],
-    ): Promise<OAuthTokenResponseDto> {
+    ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
         let accessToken: string;
@@ -128,46 +134,49 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
         client: AuthClient,
         scope: TokenScope[],
         activeLogin: ActiveLogin,
-    ): Promise<OAuthTokenResponseDto> {
+    ): Promise<OauthTokenResponse> {
         for (const requestedScope of scope) {
             if (!client.validScopes.includes(requestedScope)) {
                 throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
             }
         }
         const loginData = await activeLogin.loginInstanceFor;
-        await this.checkLoginDataIsVaild(loginData, activeLogin);
+        await this.checkLoginDataIsValid(loginData, activeLogin);
         return await this.createAccessToken(loginData, activeLogin, client, scope);
     }
 
-    async use(req: Request, res: Response, next: NextFunction) {
+    async handle(req: Request, res: Response, client: AuthClient) {
         let tokenData: ActiveLoginTokenResult;
-        const currentClient = req.context.getClient();
         const codeVerifier = req.body.code_verifier;
         try {
             tokenData = await this.tokenService.verifyActiveLoginToken(
                 req.body.code ?? req.body.refresh_token,
-                currentClient.id,
+                client.id,
             );
         } catch (err: any) {
             this.logger.warn(err);
-            return this.throwGenericCodeError();
+            this.throwGenericCodeError();
         }
 
         const activeLogin = await this.activeLoginService.findOneBy({
             id: tokenData.activeLoginId,
         });
+
         if (!activeLogin) {
             this.logger.warn("No active login with id", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
+            this.throwGenericCodeError();
         }
+
         if (!activeLogin.isValid) {
             this.logger.warn("Active login set invalid", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
+            // TODO: this.throwGenericCodeError();
         }
+
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
             this.logger.warn("Active login is expired", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
+            // TODO: return this.throwGenericCodeError();
         }
+
         const codeUniqueId = parseInt(tokenData.tokenUniqueId, 10);
         if (!isFinite(codeUniqueId) || codeUniqueId !== activeLogin.nextExpectedRefreshTokenNumber) {
             //Make active login invalid if code/refresh token is reused
@@ -201,7 +210,7 @@ export class OAuthTokenAuthorizationCodeMiddleware implements NestMiddleware {
                 throw new OAuthHttpException("invalid_request", "Code verifier not required");
             }
         }
-        const response = await this.createResponse(currentClient, tokenData.scope, activeLogin);
-        res.json(response);
+
+        return await this.createResponse(client, tokenData.scope, activeLogin);
     }
 }

@@ -1,15 +1,15 @@
 import { Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
-import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
+import { OauthTokenResponse } from "./dto/oauth-token-response";
 
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)
 export class OAuthTokenController {
     @Post("token")
     @ApiOperation({ summary: "Token OAuth Endpoint" })
-    @ApiOkResponse({ type: OAuthTokenResponseDto })
-    async token(): Promise<OAuthTokenResponseDto> {
+    @ApiOkResponse({ type: OauthTokenResponse })
+    async token(): Promise<OauthTokenResponse> {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,

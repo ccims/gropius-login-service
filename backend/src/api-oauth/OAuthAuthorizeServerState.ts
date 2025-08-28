@@ -12,6 +12,7 @@ export interface OAuthAuthorizeRequest {
     prompt?: "consent";
 }
 
+// TODO: get rid of this
 export interface OAuthAuthorizeServerState {
     request: OAuthAuthorizeRequest;
     client: AuthClient;

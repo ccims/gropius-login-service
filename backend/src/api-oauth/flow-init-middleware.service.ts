@@ -57,7 +57,8 @@ export class FlowInitMiddleware implements NestMiddleware {
             req.context.setRequest(request);
 
             const client = await this.authClientService.findAuthClient(request.clientId);
-            if (!client || client.isValid) throw new Error("Client invalid");
+            if (!client) throw new Error("Client not found");
+            if (!client.isValid) throw new Error("Client invalid");
             req.context.setClient(client);
         }
 
@@ -82,7 +83,7 @@ export class FlowInitMiddleware implements NestMiddleware {
             console.log(state);
             if (state) return this.stateJwtService.verify(state);
         } catch (e) {
-            console.error(e);
+            console.error("following error is fine", e);
         }
     }
 }
