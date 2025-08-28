@@ -2,7 +2,7 @@ import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { NextFunction, Request, Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
-import { OauthTokenResponse } from "./dto/oauth-token-response";
+import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
 import { OAuthHttpException } from "./OAuthHttpException";
 
 @Injectable()
