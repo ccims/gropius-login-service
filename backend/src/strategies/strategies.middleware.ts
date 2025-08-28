@@ -8,7 +8,7 @@ import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { FlowContext } from "../util/FlowContext";
+import { Context } from "../util/Context";
 
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {
@@ -32,7 +32,7 @@ export class StrategiesMiddleware implements NestMiddleware {
         return instance;
     }
 
-    private async performImsUserSearchIfNeeded(context: FlowContext, instance: StrategyInstance, strategy: Strategy) {
+    private async performImsUserSearchIfNeeded(context: Context, instance: StrategyInstance, strategy: Strategy) {
         const activeLogin = context.tryActiveLogin();
 
         if (strategy.canSync && instance.isSyncActive) {

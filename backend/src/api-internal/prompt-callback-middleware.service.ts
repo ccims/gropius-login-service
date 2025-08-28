@@ -33,9 +33,6 @@ export class PromptCallbackMiddleware implements NestMiddleware {
             throw new OAuthHttpException("access_denied", "The user did not grant permission.");
         }
 
-        // Update flow
-        req.context.setFinished(data.flow);
-
         next();
     }
 }

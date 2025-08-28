@@ -1,6 +1,6 @@
 import { Inject, Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { FlowContext } from "../util/FlowContext";
+import { Context } from "../util/Context";
 import { LoginUserService } from "../model/services/login-user.service";
 import { now } from "../util/utils";
 import { JwtService } from "@nestjs/jwt";
@@ -22,7 +22,7 @@ export class FlowInitMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // Init flow session
-        req.context = new FlowContext(req);
+        req.context = new Context(req);
         req.context.init();
 
         // Check if expired

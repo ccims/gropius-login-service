@@ -12,7 +12,7 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
-import { FlowContext } from "../../util/FlowContext";
+import { Context } from "../../util/Context";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
@@ -156,7 +156,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     protected override getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        context: FlowContext | undefined,
+        context: Context | undefined,
     ): passport.AuthenticateOptions {
         const mode = context?.tryFlowType() ?? FlowType.LOGIN;
         if (mode == FlowType.REGISTER_WITH_SYNC) {

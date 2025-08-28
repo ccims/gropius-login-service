@@ -154,6 +154,9 @@ export class CodeRedirectMiddleware implements NestMiddleware {
             if (strategy.forceSuggestedUsername)
                 url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
 
+            // Update flow
+            req.context.setFinished(req.body.flow);
+
             return res.redirect(url.toString());
         }
 
@@ -168,6 +171,10 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         const token = await this.generateCode(req, client.id, request.scope, true);
         url.searchParams.append("code", token);
         url.searchParams.append("state", request.state ?? "");
+
+        // Update flow
+        req.context.setFinished(req.body.flow);
+
         res.redirect(url.toString());
     }
 }

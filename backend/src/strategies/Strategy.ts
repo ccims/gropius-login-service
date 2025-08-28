@@ -7,7 +7,7 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { AuthResult, AuthStateServerData } from "./AuthResult";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { Schema } from "jtd";
-import { FlowContext } from "../util/FlowContext";
+import { Context } from "../util/Context";
 
 export interface StrategyVariable {
     name: string;
@@ -304,7 +304,7 @@ export abstract class Strategy {
 
     abstract performAuth(
         strategyInstance: StrategyInstance,
-        context: FlowContext | undefined,
+        context: Context | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult>;

@@ -8,7 +8,7 @@ import { AuthResult, FlowType } from "./AuthResult";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { FlowContext } from "../util/FlowContext";
+import { Context } from "../util/Context";
 
 /**
  * Contains the logic how the system is supposed to create and link
@@ -24,7 +24,7 @@ export class PerformAuthFunctionService {
         private readonly userLoginDataService: UserLoginDataService,
     ) {}
 
-    public checkFunctionIsAllowed(context: FlowContext, instance: StrategyInstance, strategy: Strategy): string | null {
+    public checkFunctionIsAllowed(context: Context, instance: StrategyInstance, strategy: Strategy): string | null {
         const type = context.getFlowType();
 
         if (type == FlowType.REGISTER_WITH_SYNC && !strategy.canSync) {
@@ -93,7 +93,7 @@ export class PerformAuthFunctionService {
 
     public async performRequestedAction(
         authResult: AuthResult,
-        context: FlowContext,
+        context: Context,
         instance: StrategyInstance,
         strategy: Strategy,
     ): Promise<ActiveLogin> {
