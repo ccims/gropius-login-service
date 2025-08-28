@@ -54,7 +54,6 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         const activeLogin = req.context.tryActiveLogin();
 
         if (!activeLogin.isValid) {
-            // TODO: this
             // TODO: throw new Error("Active login invalid");
         }
         // if the login service handles the registration, two tokens were already generated: the code and the access token
@@ -65,7 +64,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
             // TODO: throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
-            throw new Error("Active login expired");
+            // TODO: throw new Error("Active login expired");
         }
         if (activeLogin.expires == null) {
             activeLogin.expires = new Date(Date.now() + expiresIn);

@@ -53,7 +53,6 @@ export class ApiInternalModule {
             .forRoutes("auth/api/internal/auth/prompt/callback");
 
         // TODO: CSRF?
-        // TODO: not tested
         consumer
             .apply(
                 FlowInitMiddleware,
