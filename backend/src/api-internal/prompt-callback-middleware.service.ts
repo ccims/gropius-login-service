@@ -17,7 +17,8 @@ type Data = {
 export class PromptCallbackMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         // Ensure that user is authenticated
-        if (!req.context.isAuthenticated()) {
+        // TODO: this
+        if (!req.context.isAuthenticated() && !req.context.tryActiveLoginId()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
 

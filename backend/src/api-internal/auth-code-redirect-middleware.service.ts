@@ -102,25 +102,29 @@ export class CodeRedirectMiddleware implements NestMiddleware {
      */
     private async getDataSuggestions(loginData: UserLoginData, strategy: Strategy): Promise<UserDataSuggestion> {
         const initial = strategy.getUserDataSuggestion(loginData);
+        const suggestions: UserDataSuggestion = {};
 
-        const suggestions: UserDataSuggestion = {
-            displayName: initial.displayName,
-            // TODO: validate email?!
-            email: initial.email,
-        };
+        // TODO: validate email?!
+        suggestions.email = initial.email;
 
-        if (suggestions.username) {
+        if (initial.username) {
             const exists = await this.userService.exists({ where: { username: initial.username } });
             if (!exists) {
                 suggestions.username = initial.username;
             }
         }
 
+        suggestions.displayName = initial.displayName ?? suggestions.username;
+
         return suggestions;
     }
 
     async use(req: Request, res: Response, next: NextFunction) {
-        if (!req.context.isAuthenticated()) return next();
+        // TODO: this
+        if (!req.context.isAuthenticated() && !req.context.tryActiveLoginId()) {
+            this.logger.log("Skipping auth core redirect middleware since not authenticated");
+            return next();
+        }
 
         const userLoginData = await req.context.getActiveLogin().loginInstanceFor;
         const request = req.context.getRequest();
@@ -137,16 +141,21 @@ export class CodeRedirectMiddleware implements NestMiddleware {
 
             // TODO: clean this up (guess we broke the token?)
 
-            const encodedState = encodeURIComponent(this.stateJwtService.sign({ request }));
             const token = await this.generateCode(req, "login-auth-client", [TokenScope.LOGIN_SERVICE_REGISTER], false);
+
+            const url = combineURL(`auth/flow/register`, process.env.GROPIUS_ENDPOINT);
+            url.searchParams.append("code", token);
+            // TODO: review this
+            url.searchParams.append("state", this.stateJwtService.sign({ request }));
+
             const suggestions = await this.getDataSuggestions(userLoginData, strategy);
-            const suggestionQuery = `&email=${encodeURIComponent(
-                suggestions.email ?? "",
-            )}&username=${encodeURIComponent(suggestions.username ?? "")}&displayName=${encodeURIComponent(
-                suggestions.displayName ?? "",
-            )}&forceSuggestedUsername=${strategy.forceSuggestedUsername}`;
-            const url = `auth/flow/register?code=${token}&state=${encodedState}` + suggestionQuery;
-            return res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
+            if (suggestions.email) url.searchParams.append("email", suggestions.email);
+            if (suggestions.username) url.searchParams.append("username", suggestions.username);
+            if (suggestions.displayName) url.searchParams.append("displayName", suggestions.displayName);
+            if (strategy.forceSuggestedUsername)
+                url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
+
+            return res.redirect(url.toString());
         }
 
         return this.redirectWithCode(req, res);

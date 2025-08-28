@@ -62,7 +62,7 @@ export class ApiInternalModule {
                 PromptRedirectMiddleware,
                 CodeRedirectMiddleware,
             )
-            .forRoutes("auth/api/internal/auth/register");
+            .forRoutes("auth/api/internal/auth/register/callback");
 
         consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/csrf");
 

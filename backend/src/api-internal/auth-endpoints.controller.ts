@@ -150,7 +150,7 @@ export class AuthEndpointsController {
         );
     }
 
-    @Post("register")
+    @Post("register/callback")
     @NoCors()
     @ApiOperation({ summary: "Complete a registration" })
     register(@Body() input: SelfRegisterUserInput) {

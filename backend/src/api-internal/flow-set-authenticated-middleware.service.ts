@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 
 /**
@@ -8,6 +8,8 @@ import { NextFunction, Request, Response } from "express";
 
 @Injectable()
 export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(this.constructor.name);
+
     async use(req: Request, res: Response, next: NextFunction) {
         const externalCSRF = req.context.getExternalCSRF();
         const activeLogin = req.context.tryActiveLogin();
@@ -18,6 +20,8 @@ export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
             userId: loginUser?.id,
             externalCSRF,
         });
+
+        this.logger.log("User authenticated in flow context: " + loginUser?.id);
         next();
     }
 }
