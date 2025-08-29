@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { RegistrationTokenInput } from "./link-user.dto";
 
+// TODO: drop this
+
 /**
  * Base input type containing all needed fields to create a new user
  */

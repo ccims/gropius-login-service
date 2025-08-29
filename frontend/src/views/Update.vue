@@ -19,7 +19,7 @@
                                 {{ updateAction.displayName }}
                             </DefaultButton>
 
-                            <p class="text-center">No actions ...</p>
+                            <p class="text-center my-2">No actions ...</p>
                         </div>
                     </v-window-item>
                     <v-window-item :value="1">

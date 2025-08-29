@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
+// TODO: drop this
+
 /**
  * Input type for self-linking
  * Only expects the register_token

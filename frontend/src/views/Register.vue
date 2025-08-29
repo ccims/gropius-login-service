@@ -23,7 +23,6 @@
 
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
 
-                    <input type="hidden" name="register_token" :value="token" />
                     <input type="hidden" name="externalCSRF" :value="csrf" />
 
                     <v-card-actions>
@@ -65,17 +64,6 @@ const csrf = asyncComputed(async () => {
     return data.csrf;
 });
 
-const token = asyncComputed(async () => {
-    return (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "authorization_code",
-            client_id: "login-auth-client",
-            code: route.query.code,
-            scope: "login-register"
-        })
-    ).data.access_token as string;
-}, "");
-
 const { defineField, handleSubmit, setValues } = useForm({
     validationSchema: schema
 });
@@ -88,7 +76,7 @@ onMounted(async () => {
     const params = route.query as Record<string, string>;
     setValues({
         username: params.username ?? "",
-        displayName: (params.displayName || params.username) ?? "",
+        displayName: params.displayName ?? "",
         email: params.email ?? ""
     });
 });

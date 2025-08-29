@@ -51,16 +51,14 @@ export class CodeRedirectMiddleware implements NestMiddleware {
 
     // TODO: this needs to be adapted to the "automatic login thing"
     private async assignActiveLoginToClient(req: Request, expiresIn: number): Promise<number> {
-        const activeLogin = req.context.tryActiveLogin();
+        const activeLogin = req.context.getActiveLogin();
 
         if (!activeLogin.isValid) {
             // TODO: throw new Error("Active login invalid");
         }
+
         // if the login service handles the registration, two tokens were already generated: the code and the access token
-        if (
-            activeLogin.nextExpectedRefreshTokenNumber !=
-            ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED + (req.context.getSecondToken() ? 2 : 0)
-        ) {
+        if (activeLogin.nextExpectedRefreshTokenNumber != ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED) {
             // TODO: throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
@@ -76,9 +74,9 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         return codeJwtId;
     }
 
-    private async generateCode(req: Request, clientId: string, scope: TokenScope[], pkce: boolean): Promise<string> {
-        const activeLogin = req.context.tryActiveLogin();
+    private async generateCode(req: Request, clientId: string, scope: TokenScope[]): Promise<string> {
         try {
+            const activeLogin = req.context.getActiveLogin();
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(req, expiresIn);
             const token = await this.tokenService.signActiveLoginCode(
@@ -87,7 +85,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
                 codeJwtId,
                 scope,
                 expiresIn,
-                pkce ? req.context.getRequest().codeChallenge : undefined,
+                req.context.getRequest().codeChallenge,
             );
             return token;
         } catch (err: any) {
@@ -128,24 +126,20 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         const userLoginData = await req.context.getActiveLogin().loginInstanceFor;
         const request = req.context.getRequest();
 
+        // CASE: link additional account
         if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
-            if (userLoginData.state !== LoginState.WAITING_FOR_REGISTER) {
-                throw new OAuthHttpException("invalid_request", "Login is not in register state");
+            if (userLoginData.state !== LoginState.VALID) {
+                throw new OAuthHttpException("invalid_request", "Login is not valid");
             }
+            // TODO: this will auto login ...
             return this.redirectWithCode(req, res);
         }
 
+        // CASE: registration
         if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
             const strategy = req.context.getStrategy();
 
-            // TODO: clean this up (guess we broke the token?)
-
-            const token = await this.generateCode(req, "login-auth-client", [TokenScope.LOGIN_SERVICE_REGISTER], false);
-
             const url = combineURL(`auth/flow/register`, process.env.GROPIUS_ENDPOINT);
-            url.searchParams.append("code", token);
-            // TODO: review this
-            url.searchParams.append("state", this.stateJwtService.sign({ request }));
 
             const suggestions = await this.getDataSuggestions(userLoginData, strategy);
             if (suggestions.email) url.searchParams.append("email", suggestions.email);
@@ -154,12 +148,10 @@ export class CodeRedirectMiddleware implements NestMiddleware {
             if (strategy.forceSuggestedUsername)
                 url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
 
-            // Update flow
-            req.context.setFinished(req.body.flow);
-
             return res.redirect(url.toString());
         }
 
+        // CASE: login
         return this.redirectWithCode(req, res);
     }
 
@@ -168,7 +160,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         const client = req.context.getClient();
 
         const url = new URL(request.redirect);
-        const token = await this.generateCode(req, client.id, request.scope, true);
+        const token = await this.generateCode(req, client.id, request.scope);
         url.searchParams.append("code", token);
         url.searchParams.append("state", request.state ?? "");
 

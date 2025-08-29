@@ -35,7 +35,7 @@ export class TokenService {
     ) {}
 
     async signAccessToken(user: LoginUser, scope: string[], expiresIn?: number): Promise<string> {
-        const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
+        const expiryObject = !!expiresIn ? { expiresIn: Math.floor(expiresIn / 1000) } : {};
         this.verifyScope(scope);
         if (scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             throw new Error("Cannot sign access token with register scope");
@@ -54,7 +54,7 @@ export class TokenService {
     }
 
     async signRegistrationToken(activeLoginId: string, expiresIn?: number): Promise<string> {
-        const expiryObject = !!expiresIn ? { expiresIn: expiresIn / 1000 } : {};
+        const expiryObject = !!expiresIn ? { expiresIn: Math.floor(expiresIn / 1000) } : {};
         return this.backendJwtService.signAsync(
             {},
             {
@@ -110,7 +110,7 @@ export class TokenService {
         }
         const tokenIssuedAt = payload.iat as number;
         const revokeBefore = user?.revokeTokensBefore.getTime();
-        if (revokeBefore !== undefined && revokeBefore / 1000 > tokenIssuedAt) {
+        if (revokeBefore !== undefined && Math.floor(revokeBefore / 1000) > tokenIssuedAt) {
             throw new Error("Token invalid");
         }
         user = user ?? null;

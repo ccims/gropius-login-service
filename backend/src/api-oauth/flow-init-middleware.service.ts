@@ -31,6 +31,12 @@ export class FlowInitMiddleware implements NestMiddleware {
             req.context.regenerate();
         }
 
+        // TODO: check if active login is valid and not expired
+
+        // TODO: check if user data is valid and not expired
+
+        // TODO: check if flow is expired
+
         // Check if revoked
         if (req.context.isAuthenticated()) {
             const loginUser = await this.loginUserService.findOneBy({ id: req.context.getUserId() });

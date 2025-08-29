@@ -5,6 +5,8 @@ import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 
+// TODO: drop this
+
 /**
  * Service to validate a registration token and retrieve the referenced nodes
  */

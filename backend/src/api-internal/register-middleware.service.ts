@@ -1,35 +1,48 @@
 import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
-import { CheckRegistrationTokenService } from "src/api-login/auth/check-registration-token.service";
-import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
-import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
+import * as Joi from "joi";
+
+const schema = Joi.object({
+    username: Joi.string(),
+    displayName: Joi.string(),
+    email: Joi.string(),
+    // TODO: this
+    externalCSRF: Joi.string().allow("").optional(),
+});
+
+type Data = {
+    username: string;
+    displayName: string;
+    email: string;
+};
 
 @Injectable()
 export class RegisterMiddleware implements NestMiddleware {
     constructor(
-        private readonly checkRegistrationTokenService: CheckRegistrationTokenService,
         private readonly userService: LoginUserService,
         private readonly backendUserService: BackendUserService,
     ) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const input = req.body;
-        SelfRegisterUserInput.check(input);
-        const { loginData, activeLogin } = await this.checkRegistrationTokenService.getActiveLoginAndLoginDataForToken(
-            input.register_token,
-        );
-        if (req.context.getActiveLoginId() !== activeLogin.id) {
-            throw new OAuthHttpException("server_error", "Invalid registration token");
-        }
-        if ((await this.userService.countBy({ username: input.username })) > 0) {
+        // Validate input data
+        const data: Data = await schema.validateAsync(req.body);
+
+        const activeLogin = req.context.getActiveLogin();
+        const loginData = await activeLogin.loginInstanceFor;
+        if (!loginData) throw new Error("Login data not found for active login");
+
+        // Check if username is still available
+        if ((await this.userService.countBy({ username: data.username })) > 0) {
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
         }
-        const newUser = await this.backendUserService.createNewUser(input, false);
+
+        // Create and link new user
+        const newUser = await this.backendUserService.createNewUser(data, false);
         await this.backendUserService.linkAccountToUser(newUser, loginData, activeLogin);
         req.context.setActiveLogin(activeLogin);
-        req.context.setSecondToken(true);
+
         next();
     }
 }

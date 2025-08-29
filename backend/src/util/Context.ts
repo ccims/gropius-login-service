@@ -66,10 +66,6 @@ export type FlowSession = {
         step?: "started" | "authenticated" | "prompted";
 
         // TODO: 2nd process model for registration?
-
-        // TODO: get rid of this
-        // second token
-        second_token?: boolean;
     };
 };
 
@@ -253,14 +249,12 @@ export class Context {
     // TODO: req workaround (userId must be string)
     // TODO: setActiveLoginId and setStrategy should only be called from setAuthenticated?
     setAuthenticated(data: { userId?: string; externalCSRF: string }) {
-        // TODO: reg workaround
-        const no = false;
-        if (this.req.session.flow.step !== "started" && no) {
-            throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong");
+        if (this.req.session.flow.step !== "started") {
+            // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
 
-        if (data.externalCSRF !== this.getExternalCSRF() && no) {
-            throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
+        if (data.externalCSRF !== this.getExternalCSRF()) {
+            // TODO: throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
         this.req.session.user_id = data.userId;
@@ -276,11 +270,11 @@ export class Context {
 
     setPrompted(consent: boolean, flow: string) {
         if (this.req.session.flow.step !== "authenticated") {
-            throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
+            // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
 
         if (flow !== this.req.session.flow.flow_id) {
-            throw new OAuthHttpException("invalid_request", "Another flow is currently running");
+            // TODO: throw new OAuthHttpException("invalid_request", "Another flow is currently running");
         }
 
         if (consent) {
@@ -296,7 +290,7 @@ export class Context {
 
     setFinished(flow: string) {
         if (this.req.session.flow.step !== "prompted") {
-            throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
+            // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
 
         if (flow !== this.req.session.flow.flow_id) {
@@ -338,14 +332,6 @@ export class Context {
 
     setClient(client: AuthClient) {
         this.loaded.client = client;
-    }
-
-    getSecondToken() {
-        return this.req.session.flow.second_token;
-    }
-
-    setSecondToken(value: boolean) {
-        this.req.session.flow.second_token = value;
     }
 
     tryFlowType() {

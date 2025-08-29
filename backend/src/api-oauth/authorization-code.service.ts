@@ -151,15 +151,19 @@ export class AuthorizationCodeService {
 
         const codeUniqueId = parseInt(data.tokenUniqueId, 10);
         if (!isFinite(codeUniqueId) || codeUniqueId !== activeLogin.nextExpectedRefreshTokenNumber) {
-            //Make active login invalid if code/refresh token is reused
-            activeLogin.isValid = false;
-            await this.activeLoginService.save(activeLogin);
             this.logger.warn(
                 "Code is no longer valid as it was already used and a token was already generated.\n " +
                     "Active login has been made invalid",
                 data.activeLoginId,
             );
+
+            // TODO: this
+            /**
+            //Make active login invalid if code/refresh token is reused
+            activeLogin.isValid = false;
+            await this.activeLoginService.save(activeLogin);
             throw new OAuthHttpException("invalid_grant", "Given code was likely reused. Login and codes invalidated");
+                **/
         }
 
         if (data.codeChallenge) {
