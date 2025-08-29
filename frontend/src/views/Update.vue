@@ -8,7 +8,7 @@
                             <v-icon icon="mdi-check" size="x-large" />
                             Success
                         </v-sheet>
-                        <p class="text-center text-h6 my-2">Choose an action</p>
+                        <p class="text-center text-h6 my-2">{{ strategy.typeName }}</p>
                         <div class="d-flex flex-column ga-2">
                             <DefaultButton
                                 v-for="(updateAction, idx) in strategy.updateActions"
@@ -18,6 +18,8 @@
                             >
                                 {{ updateAction.displayName }}
                             </DefaultButton>
+
+                            <p class="text-center">No actions ...</p>
                         </div>
                     </v-window-item>
                     <v-window-item :value="1">
@@ -50,6 +52,10 @@
                         </v-form>
                     </v-window-item>
                 </v-window>
+
+                <v-divider />
+
+                <p class="text-center text-h6 my-2">General Account</p>
 
                 <DefaultButton class="w-100 mt-4 mb-4" @click="() => onLogout('current')"> Logout</DefaultButton>
 
