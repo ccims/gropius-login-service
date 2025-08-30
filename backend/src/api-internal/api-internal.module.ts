@@ -22,7 +22,6 @@ import CSRFMiddleware from "../util/csrf.middleware";
 })
 export class ApiInternalModule {
     configure(consumer: MiddlewareConsumer) {
-        // TODO: CSRF?
         consumer
             .apply(FlowInitMiddleware, ModeExtractorMiddleware, StrategiesMiddleware)
             .forRoutes("auth/api/internal/auth/redirect/:id/:mode");
@@ -52,7 +51,6 @@ export class ApiInternalModule {
             .apply(FlowInitMiddleware, PromptCallbackMiddleware, CodeRedirectMiddleware)
             .forRoutes("auth/api/internal/auth/prompt/callback");
 
-        // TODO: CSRF?
         consumer
             .apply(
                 FlowInitMiddleware,

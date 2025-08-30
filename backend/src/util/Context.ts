@@ -9,6 +9,7 @@ import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { AuthClient } from "../model/postgres/AuthClient.entity";
 import { TokenScope } from "../backend-services/token.service";
 import { Strategy } from "../strategies/Strategy";
+import { LoginUser } from "../model/postgres/LoginUser.entity";
 
 declare global {
     namespace Express {
@@ -69,13 +70,15 @@ export type FlowSession = {
     };
 };
 
-// TODO: also load user?
+// TODO: also load user data?
 
 /**
  * Entities that are loaded from the database
  */
 export type FlowLoaded = {
+    user?: LoginUser;
     activeLogin?: ActiveLogin;
+
     client?: AuthClient;
     strategy?: Strategy;
 };
@@ -154,6 +157,19 @@ export class Context {
         const user = this.req.session.user_id;
         if (!user) {
             throw new OAuthHttpException("invalid_request", "User id is missing");
+        }
+        return user;
+    }
+
+    setUser(user: LoginUser) {
+        this.req.session.user_id = user.id;
+        this.loaded.user = user;
+    }
+
+    getUser() {
+        const user = this.loaded.user;
+        if (!user) {
+            throw new OAuthHttpException("invalid_request", "User is missing");
         }
         return user;
     }
@@ -246,9 +262,10 @@ export class Context {
         return this;
     }
 
+    // TODO: rework his
     // TODO: req workaround (userId must be string)
     // TODO: setActiveLoginId and setStrategy should only be called from setAuthenticated?
-    setAuthenticated(data: { userId?: string; externalCSRF: string }) {
+    setAuthenticated(data: { externalCSRF: string }) {
         if (this.req.session.flow.step !== "started") {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
@@ -257,7 +274,6 @@ export class Context {
             // TODO: throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
-        this.req.session.user_id = data.userId;
         this.req.session.flow.step = "authenticated";
 
         // TODO: clean up data
@@ -268,6 +284,7 @@ export class Context {
         return this;
     }
 
+    // TODO: rework his
     setPrompted(consent: boolean, flow: string) {
         if (this.req.session.flow.step !== "authenticated") {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
@@ -288,6 +305,7 @@ export class Context {
         return this;
     }
 
+    // TODO: rework his
     setFinished(flow: string) {
         if (this.req.session.flow.step !== "prompted") {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");

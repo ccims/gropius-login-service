@@ -2,13 +2,13 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
-import { SelfRegisterUserInput } from "./dto/self-register-user-input.dto";
 import { Request, Response } from "express";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { LoginUserService } from "../model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { NoCors } from "../util/NoCors.decorator";
 import { DefaultReturn } from "../util/default-return.dto";
+import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -153,7 +153,7 @@ export class AuthEndpointsController {
     @Post("register/callback")
     @NoCors()
     @ApiOperation({ summary: "Complete a registration" })
-    register(@Body() input: SelfRegisterUserInput) {
+    register(@Body() input: BaseUserInput) {
         throw new HttpException(
             "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,

@@ -1,14 +1,14 @@
-import { Inject, Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { Request, Response, NextFunction } from "express";
+import { Injectable, Logger, NestMiddleware, UnauthorizedException } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { JwtService } from "@nestjs/jwt";
 import { Strategy } from "src/strategies/Strategy";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { combineURL } from "../util/utils";
+import { BackendUserService } from "../backend-services/backend-user.service";
 
 /**
  * Return data of the user data suggestion endpoint
@@ -44,8 +44,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
-        @Inject("StateJwtService")
-        private readonly stateJwtService: JwtService,
+        private readonly backendUserService: BackendUserService,
         private readonly userService: LoginUserService,
     ) {}
 
@@ -127,11 +126,31 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         const request = req.context.getRequest();
 
         // CASE: link additional account
-        if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
-            if (userLoginData.state !== LoginState.VALID) {
-                throw new OAuthHttpException("invalid_request", "Login is not valid");
+        if (req.context.isRegisterAdditional()) {
+            // TODO: revert this change?
+            if (userLoginData.state !== LoginState.WAITING_FOR_REGISTER) {
+                this.logger.warn("State is not valid of login data", userLoginData.id, userLoginData.state);
+                // TODO: throw new OAuthHttpException("invalid_request", "Login is not valid");
             }
-            // TODO: this will auto login ...
+
+            const activeLogin = req.context.getActiveLogin();
+            const user = req.context.getUser();
+            const loginData = await activeLogin?.loginInstanceFor;
+
+            /**
+            if (loginData.state !== LoginState.WAITING_FOR_REGISTER) {
+                this.logger.warn("State is not waiting for register of login data", loginData.id);
+                throw new UnauthorizedException(undefined, "A user is already registered for this login");
+            }
+
+            // TODO: is this allowed?
+            request.scope = [TokenScope.AUTH, TokenScope.LOGIN_SERVICE];
+            **/
+
+            // TODO: this is only allowed on 2nd time?!
+
+            await this.backendUserService.linkAccountToUser(user, loginData, activeLogin);
+
             return this.redirectWithCode(req, res);
         }
 

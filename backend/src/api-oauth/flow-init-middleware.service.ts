@@ -13,8 +13,6 @@ import { OAuthAuthorizeRequest } from "./OAuthAuthorizeServerState";
 export class FlowInitMiddleware implements NestMiddleware {
     constructor(
         private readonly loginUserService: LoginUserService,
-        @Inject("StateJwtService")
-        private readonly stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly authClientService: AuthClientService,
         private readonly strategiesService: StrategiesService,
@@ -44,6 +42,8 @@ export class FlowInitMiddleware implements NestMiddleware {
             // if (!loginUser) throw new Error("Login user not found");
 
             if (loginUser) {
+                req.context.setUser(loginUser);
+
                 const revokedAt = loginUser.revokeTokensBefore;
                 if (revokedAt) {
                     if (now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");

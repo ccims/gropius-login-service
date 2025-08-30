@@ -7,6 +7,12 @@ export class PromptRedirectMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
 
     async use(req: Request, res: Response, next: NextFunction) {
+        // Check if register additional
+        if (req.context.isRegisterAdditional()) {
+            this.logger.log("Skipping prompt redirect middleware since register additional");
+            return next();
+        }
+
         // Check if middleware is enabled
         if (!req.context.isAuthenticated()) {
             this.logger.log("Skipping prompt redirect middleware since not authenticated");

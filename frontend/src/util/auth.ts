@@ -166,6 +166,12 @@ export async function loadCSRFHeader() {
     };
 }
 
+export async function logout(mode: "current" | "everywhere") {
+    await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, await loadCSRFHeader());
+    clean();
+    window.location.reload();
+}
+
 export async function loadExternalCSRFToken() {
     const { data } = await axios.get<{ externalCSRF: string }>(`/auth/api/internal/auth/csrf-external`);
     return data.externalCSRF;

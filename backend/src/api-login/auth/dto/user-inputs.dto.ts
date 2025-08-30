@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { RegistrationTokenInput } from "./link-user.dto";
 
 // TODO: drop this
 

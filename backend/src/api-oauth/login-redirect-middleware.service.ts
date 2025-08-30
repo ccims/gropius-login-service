@@ -6,8 +6,7 @@ import { combineURL } from "../util/utils";
 @Injectable()
 export class LoginRedirectMiddleware implements NestMiddleware {
     async use(req: Request, res: Response) {
-        const request = req.context.getRequest();
-        const target = request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER) ? "register-additional" : "login";
+        const target = req.context.isRegisterAdditional() ? "register-additional" : "login";
         req.context.setStarted();
         res.redirect(combineURL(`auth/flow/${target}`, process.env.GROPIUS_ENDPOINT).toString());
     }

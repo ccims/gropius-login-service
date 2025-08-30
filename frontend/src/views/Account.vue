@@ -26,16 +26,13 @@
                     </v-list-item>
                 </v-sheet>
 
-                <DefaultButtony
-                    variant="tonal"
-                    class="w-100 mt-4"
-                    @click="() => auth.authorizeUser(['login-register'], {})"
-                    >Link account</DefaultButtony
+                <DefaultButton class="w-100 mt-4" @click="() => auth.authorizeUser(['login-register'], {})"
+                    >Link Account</DefaultButton
                 >
 
-                <DefaultButton class="w-100 mt-4" @click="() => onLogout('current')"> Logout Session</DefaultButton>
+                <DefaultButton class="w-100 mt-4" @click="() => auth.logout('current')"> Logout Session</DefaultButton>
 
-                <DefaultButton class="w-100 mt-4" variant="outlined" @click="() => onLogout('everywhere')">
+                <DefaultButton class="w-100 mt-4" variant="outlined" @click="() => auth.logout('everywhere')">
                     Logout Everywhere
                 </DefaultButton>
             </GropiusCard>
@@ -49,12 +46,6 @@ import axios from "axios";
 import { StrategyInstance } from "./model";
 import * as auth from "../util/auth";
 import { asyncComputed } from "@vueuse/core";
-
-async function onLogout(mode: "current" | "everywhere") {
-    await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, await auth.loadCSRFHeader());
-    auth.clean();
-    window.location.reload();
-}
 
 const accounts = asyncComputed(async () => {
     return (
