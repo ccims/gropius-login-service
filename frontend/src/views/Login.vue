@@ -79,7 +79,7 @@
 </template>
 <script setup lang="ts">
 import BaseLayout from "@/components/BaseLayout.vue";
-import { ref, computed, nextTick, onMounted } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import {
     CredentialStrategyInstance,
@@ -93,6 +93,7 @@ import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
 import axios from "axios";
 import InputField from "@/components/InputField.vue";
+import * as auth from "@/util/auth";
 
 const route = useRoute();
 
@@ -186,11 +187,7 @@ const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
 
-const externalCSRF = ref<string | undefined>(undefined);
-onMounted(async () => {
-    const { data } = await axios.get<{ externalCSRF: string }>(`/auth/api/internal/auth/csrf-external`);
-    externalCSRF.value = data.externalCSRF;
-});
+const externalCSRF = asyncComputed(async () => await auth.loadExternalCSRFToken());
 
 function formDataAt(id: string) {
     if (!(id in formData.value)) {

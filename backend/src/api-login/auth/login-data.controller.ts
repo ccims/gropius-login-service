@@ -24,7 +24,7 @@ import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-
 @ApiBearerAuth()
 export class LoginDataController {
     constructor(
-        private readonly loginDataSerive: UserLoginDataService,
+        private readonly loginDataService: UserLoginDataService,
         private readonly backendUserService: BackendUserService,
         private readonly strategiesService: StrategiesService,
     ) {}
@@ -61,7 +61,7 @@ export class LoginDataController {
             throw new HttpException("id must be given", HttpStatus.BAD_REQUEST);
         }
         const loggedInUser = (res.locals.state as ApiStateData).loggedInUser;
-        const loginData = await this.loginDataSerive.findOne({
+        const loginData = await this.loginDataService.findOne({
             where: {
                 id,
             },

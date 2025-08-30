@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import BaseLayout from "@/components/BaseLayout.vue";
 import GropiusCard from "@/components/GropiusCard.vue";
-import * as oauth from "../util/oauth";
+import * as auth from "../util/auth";
 import { nextTick, onMounted, ref } from "vue";
 
 const form = ref<HTMLFormElement>();
@@ -73,9 +73,9 @@ function onSubmit() {
     if (form.value) nextTick(() => form.value!.submit());
 }
 
-const data = ref<oauth.PromptData | null>(null);
+const data = ref<auth.PromptData | null>(null);
 onMounted(async () => {
-    data.value = await oauth.fetchPromptData();
+    data.value = await auth.fetchPromptData();
 });
 </script>
 <style scoped>

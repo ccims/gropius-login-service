@@ -24,6 +24,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("../views/Register.vue")
     },
     {
+        path: "/account",
+        name: "account",
+        beforeEnter: checkAuth,
+        component: () => import("../views/Account.vue")
+    },
+    {
         path: "/update",
         name: "update",
         beforeEnter: checkAuth,

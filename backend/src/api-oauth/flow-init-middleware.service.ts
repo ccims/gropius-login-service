@@ -58,7 +58,7 @@ export class FlowInitMiddleware implements NestMiddleware {
     }
 
     async restore(req: Request) {
-        const request = req.context.tryRequest() ?? this.tryRequestFromState(req);
+        const request = req.context.tryRequest();
         if (request) {
             req.context.setRequest(request);
 
@@ -80,16 +80,5 @@ export class FlowInitMiddleware implements NestMiddleware {
         }
 
         // req.data.authState = req.session.authState;
-    }
-
-    // TODO: required for req flow?
-    tryRequestFromState(req: Request): OAuthAuthorizeRequest {
-        try {
-            const state = req.query.state ?? req.body.state;
-            console.log(state);
-            if (state) return this.stateJwtService.verify(state);
-        } catch (e) {
-            console.error("following error is fine", e);
-        }
     }
 }

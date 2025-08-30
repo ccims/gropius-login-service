@@ -89,6 +89,14 @@ export async function loadToken(): Promise<string> {
     return getAccessToken()!;
 }
 
+export async function loadAuthorizationHeader() {
+    return {
+        headers: {
+            Authorization: `Bearer ${await loadToken()}`
+        }
+    };
+}
+
 export async function exchangeToken(code: string) {
     const { data } = await axios.post<TokenResponse>("/auth/oauth/token", {
         grant_type: "authorization_code",
@@ -134,7 +142,7 @@ export async function authorizeUser(state: object) {
             client_id: "login-auth-client",
             response_type: "code",
             scope: "auth login",
-            redirect_uri: window.location.origin + "/auth/flow/update",
+            redirect_uri: window.location.origin + "/auth/flow/account",
             state: JSON.stringify(state),
             code_challenge_method: "S256",
             code_challenge: codeChallenge
@@ -148,4 +156,17 @@ function base64URLEncode(str: string): string {
 export function clean() {
     removeResponse();
     removeCodeVerifier();
+}
+
+export async function loadCSRFHeader() {
+    return {
+        headers: {
+            "x-csrf-token": (await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf`)).data.csrf
+        }
+    };
+}
+
+export async function loadExternalCSRFToken() {
+    const { data } = await axios.get<{ externalCSRF: string }>(`/auth/api/internal/auth/csrf-external`);
+    return data.externalCSRF;
 }

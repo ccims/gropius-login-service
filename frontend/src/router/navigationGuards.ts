@@ -1,18 +1,21 @@
 import { RouteLocationNormalized, RouteLocationRaw } from "vue-router";
-import * as oauth from "../util/oauth";
+import * as auth from "../util/auth";
 
 export async function checkAuth(
     to: RouteLocationNormalized,
     from: RouteLocationNormalized
 ): Promise<RouteLocationRaw | boolean> {
-    const id = to.query.id as string;
+    const code = to.query.code;
+    if (code) {
+        await auth.exchangeToken(code.toString());
+        // TODO: redirect to state.to
+        return "account";
+    }
 
-    if (to.query.code == undefined) {
-        try {
-            await oauth.loadToken();
-        } catch (error: any) {
-            await oauth.authorizeUser({ id });
-        }
+    try {
+        await auth.loadToken();
+    } catch (error: any) {
+        await auth.authorizeUser({ to: to.fullPath });
     }
 
     return true;

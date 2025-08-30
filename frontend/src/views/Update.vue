@@ -19,7 +19,7 @@
                                 {{ updateAction.displayName }}
                             </DefaultButton>
 
-                            <p class="text-center my-2">No actions ...</p>
+                            <p v-if="!strategy.updateActions.length" class="text-center my-2">No actions ...</p>
                         </div>
                     </v-window-item>
                     <v-window-item :value="1">
@@ -53,14 +53,8 @@
                     </v-window-item>
                 </v-window>
 
-                <v-divider />
-
-                <p class="text-center text-h6 my-2">General Account</p>
-
-                <DefaultButton class="w-100 mt-4 mb-4" @click="() => onLogout('current')"> Logout</DefaultButton>
-
-                <DefaultButton class="w-100" variant="outlined" @click="() => onLogout('everywhere')">
-                    Logout Everywhere
+                <DefaultButton class="w-100 mt-4" variant="outlined" @click="router.push('account')">
+                    Back
                 </DefaultButton>
             </GropiusCard>
         </template>
@@ -76,7 +70,7 @@ import { useRoute, useRouter } from "vue-router";
 import { LoginStrategy, LoginStrategyInstance, LoginStrategyUpdateAction } from "./model";
 import { onMounted } from "vue";
 import InputField from "@/components/InputField.vue";
-import * as oauth from "../util/oauth";
+import * as auth from "../util/auth";
 
 const route = useRoute();
 const router = useRouter();
@@ -105,39 +99,12 @@ function goBack() {
     errorMessage.value = undefined;
 }
 
-async function AuthorizationHeader() {
-    return {
-        headers: {
-            Authorization: `Bearer ${await oauth.loadToken()}`
-        }
-    };
-}
-
-const csrf = ref<string | undefined>(undefined);
-function CSRFHeader() {
-    return {
-        headers: {
-            "x-csrf-token": csrf.value
-        }
-    };
-}
-async function getCSRF() {
-    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf`);
-    csrf.value = data.csrf;
-}
-
-async function onLogout(mode: "current" | "everywhere") {
-    await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, CSRFHeader());
-    oauth.clean();
-    window.location.reload();
-}
-
 async function onUpdate() {
     try {
         await axios.put(
             `/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`,
             formData.value,
-            await AuthorizationHeader()
+            await auth.loadAuthorizationHeader()
         );
         actionTab.value = 0;
         showSuccessMessage.value = true;
@@ -148,15 +115,13 @@ async function onUpdate() {
 }
 
 onMounted(async () => {
-    const code = route.query.code;
-    await router.replace({ query: { id: id.value } });
-    if (code) await oauth.exchangeToken(code.toString());
+    const strategyInstance = (
+        await axios.get(`/auth/api/login/login-data/${id.value}`, await auth.loadAuthorizationHeader())
+    ).data.strategyInstance as LoginStrategyInstance;
 
-    await getCSRF();
-
-    const strategyInstance = (await axios.get(`/auth/api/login/login-data/${id.value}`, await AuthorizationHeader()))
-        .data.strategyInstance as LoginStrategyInstance;
-    strategy.value = (await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`)).data as LoginStrategy;
+    strategy.value = (
+        await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`, await auth.loadAuthorizationHeader())
+    ).data as LoginStrategy;
 });
 </script>
 <style scoped>
