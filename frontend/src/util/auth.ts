@@ -125,7 +125,7 @@ export async function fetchPromptData() {
     return (await axios.get("/auth/api/internal/auth/prompt/data")).data as PromptData;
 }
 
-export async function authorizeUser(state: object) {
+export async function authorizeUser(scope: string[], state: object) {
     clean();
 
     const codeVerifierArray = new Uint8Array(32);
@@ -141,7 +141,7 @@ export async function authorizeUser(state: object) {
         new URLSearchParams({
             client_id: "login-auth-client",
             response_type: "code",
-            scope: "auth login",
+            scope: scope.join(" "),
             redirect_uri: window.location.origin + "/auth/flow/account",
             state: JSON.stringify(state),
             code_challenge_method: "S256",

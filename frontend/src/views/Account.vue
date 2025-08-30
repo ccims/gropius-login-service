@@ -26,6 +26,13 @@
                     </v-list-item>
                 </v-sheet>
 
+                <DefaultButtony
+                    variant="tonal"
+                    class="w-100 mt-4"
+                    @click="() => auth.authorizeUser(['login-register'], {})"
+                    >Link account</DefaultButtony
+                >
+
                 <DefaultButton class="w-100 mt-4" @click="() => onLogout('current')"> Logout Session</DefaultButton>
 
                 <DefaultButton class="w-100 mt-4" variant="outlined" @click="() => onLogout('everywhere')">

@@ -15,7 +15,7 @@ export async function checkAuth(
     try {
         await auth.loadToken();
     } catch (error: any) {
-        await auth.authorizeUser({ to: to.fullPath });
+        await auth.authorizeUser(["auth", "login"], { to: to.fullPath });
     }
 
     return true;

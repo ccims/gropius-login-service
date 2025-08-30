@@ -18,6 +18,8 @@ import { AdminLinkUserInput, RegistrationTokenInput } from "./dto/link-user.dto"
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 
+// TODO: drop this
+
 /**
  * Controller for handling self registration of new users as well as linking of existing users to new loginData
  */
