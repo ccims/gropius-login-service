@@ -53,6 +53,8 @@
                     </v-window-item>
                 </v-window>
 
+                <DefaultButton class="w-100 mt-4" @click="onDelete">Delete</DefaultButton>
+
                 <DefaultButton class="w-100 mt-4" variant="outlined" @click="router.push('account')">
                     Back
                 </DefaultButton>
@@ -112,6 +114,12 @@ async function onUpdate() {
     } catch (e: any) {
         errorMessage.value = e.response?.data?.message ?? "An error occurred";
     }
+}
+
+async function onDelete() {
+    if (!window.confirm("Delete this login data?")) return;
+    await axios.post(`/auth/api/internal/update-action/${id.value}/delete`, {}, await auth.loadAuthorizationHeader());
+    await router.push("account");
 }
 
 onMounted(async () => {
