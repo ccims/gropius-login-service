@@ -9,7 +9,10 @@ export async function checkAuth(
     if (code) {
         await auth.exchangeToken(code.toString());
         // TODO: redirect to state.to
-        return "account";
+        return {
+            name: "account",
+            replace: true
+        };
     }
 
     try {
