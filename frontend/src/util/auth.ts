@@ -50,16 +50,16 @@ export function removeCodeVerifier() {
     localStorage.removeItem(LOCAL_STORAGE_CODE_VERIFIER);
 }
 
-const LOCAL_STORAGE_ACCESS_TOKEN = constructKey("accessToken");
+let _accessToken: string | undefined;
 let _refreshToken: string | undefined;
 
 export function setResponse(response: TokenResponse) {
-    localStorage.setItem(LOCAL_STORAGE_ACCESS_TOKEN, response.access_token);
+    _accessToken = response.access_token;
     _refreshToken = response.refresh_token;
 }
 
 export function getAccessToken() {
-    return localStorage.getItem(LOCAL_STORAGE_ACCESS_TOKEN);
+    return _accessToken;
 }
 
 export function getRefreshToken() {
@@ -67,28 +67,27 @@ export function getRefreshToken() {
 }
 
 export function removeResponse() {
-    localStorage.removeItem(LOCAL_STORAGE_ACCESS_TOKEN);
+    _accessToken = undefined;
     _refreshToken = undefined;
 }
 
-const LOCAL_STORAGE_ROUTER_TO = constructKey("routerTo");
+const LOCAL_STORAGE_REDIRECT_TO = constructKey("routerTo");
 
-export function setRouterTo(from: string) {
-    localStorage.setItem(LOCAL_STORAGE_ROUTER_TO, from);
+export function setRedirectTo(from: string) {
+    localStorage.setItem(LOCAL_STORAGE_REDIRECT_TO, from);
 }
 
-export function getRouterTo() {
-    return localStorage.getItem(LOCAL_STORAGE_ROUTER_TO);
+export function getRedirectTo() {
+    return localStorage.getItem(LOCAL_STORAGE_REDIRECT_TO);
 }
 
-// TODO: this
-export function removeRouterTo() {
-    localStorage.removeItem(LOCAL_STORAGE_ROUTER_TO);
+export function removeRedirectTo() {
+    localStorage.removeItem(LOCAL_STORAGE_REDIRECT_TO);
 }
 
 export async function loadToken(): Promise<string> {
     // Current access token
-    const token = getAccessToken();
+    let token = getAccessToken();
 
     // Check if access token expires soon
     if (token) {
@@ -101,7 +100,11 @@ export async function loadToken(): Promise<string> {
 
     // Refresh token
     await refreshToken();
-    return getAccessToken()!;
+
+    // Renewed access token
+    token = getAccessToken();
+    if (!token) throw new Error("No access token after refresh");
+    return token;
 }
 
 export async function loadAuthorizationHeader() {
@@ -140,7 +143,7 @@ export async function fetchPromptData() {
     return (await axios.get("/auth/api/internal/auth/prompt/data")).data as PromptData;
 }
 
-export async function authorizeUser(scope: string[], state: object, from: string) {
+export async function authorizeUser(scope: string[], state: object, from?: string) {
     clean();
 
     const codeVerifierArray = new Uint8Array(32);
@@ -151,7 +154,7 @@ export async function authorizeUser(scope: string[], state: object, from: string
     const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(codeVerifier));
     const codeChallenge = base64URLEncode(String.fromCharCode.apply(null, Array.from(new Uint8Array(hash))));
 
-    setRouterTo(from);
+    if (from) setRedirectTo(from);
 
     window.location.href =
         "/auth/oauth/authorize?" +
@@ -173,7 +176,7 @@ function base64URLEncode(str: string): string {
 export function clean() {
     removeResponse();
     removeCodeVerifier();
-    removeRouterTo();
+    removeRedirectTo();
 }
 
 export async function loadCSRFHeader() {

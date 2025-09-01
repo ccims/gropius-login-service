@@ -18,7 +18,7 @@
                         class="w-100 pr-1 pl-3"
                     >
                         <template #append>
-                            <IconButton :href="`/auth/flow/update?id=${encodeURIComponent(account.id)}`">
+                            <IconButton :to="{ name: 'update', query: { id: account.id } }">
                                 <v-icon icon="mdi-cog" />
                                 <v-tooltip activator="parent">Settings</v-tooltip>
                             </IconButton>

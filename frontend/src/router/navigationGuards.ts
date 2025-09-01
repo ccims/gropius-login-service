@@ -1,5 +1,6 @@
 import { RouteLocationNormalized, RouteLocationRaw } from "vue-router";
 import * as auth from "../util/auth";
+import router from "@/router/index";
 
 export async function checkAuth(
     to: RouteLocationNormalized,
@@ -9,11 +10,10 @@ export async function checkAuth(
     if (code) {
         await auth.exchangeToken(code.toString());
 
-        const next = auth.getRouterTo() ?? "accounts";
-        auth.removeRouterTo();
-
+        const next = auth.getRedirectTo() ?? "/account";
+        auth.removeRedirectTo();
         return {
-            name: next,
+            ...router.resolve(next),
             replace: true
         };
     }

@@ -81,7 +81,7 @@ const actionTab = ref(0);
 const showSuccessMessage = ref(false);
 const errorMessage = ref<string>();
 
-const id = computed(() => (route.query.id as string | undefined) ?? JSON.parse(route.query.state as string).id);
+const id = computed(() => route.query.id as string | undefined);
 
 const strategy = ref<LoginStrategy>();
 
