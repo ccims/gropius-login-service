@@ -166,6 +166,7 @@ export class AuthEndpointsController {
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         req.context.drop();
+        // TODO: invalidate activelogin
         return new DefaultReturn("logout/current");
     }
 
