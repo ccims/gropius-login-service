@@ -7,7 +7,7 @@ import { ApiSyncModule } from "./api-sync/api-sync.module";
 import { ModelModule } from "./model/model.module";
 import { StrategiesModule } from "./strategies/strategies.module";
 import { BackendServicesModule } from "./backend-services/backend-services.module";
-import { validationSchema } from "./configuration-validator";
+import { validationSchema } from "./util/configuration-validator";
 import { ApiInternalModule } from "./api-internal/api-internal.module";
 import { InitializationModule } from "./initialization/initialization.module";
 import * as path from "path";

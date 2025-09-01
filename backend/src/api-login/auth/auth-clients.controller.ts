@@ -9,15 +9,15 @@ import {
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { DefaultReturn } from "src/default-return.dto";
+import { DefaultReturn } from "src/util/default-return.dto";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 import { CreateAuthClientSecretResponse } from "./dto/create-auth-client-secret.dto";
 import { UpdateAuthClientInput } from "./dto/update-auth-client.dto";
 import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-client.dto";
-import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { CreateAuthClientInput } from "./dto/create-auth-client.dto";
 

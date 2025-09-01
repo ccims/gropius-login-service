@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
 import { AuthClient } from "../postgres/AuthClient.entity";
 import { TokenScope } from "src/backend-services/token.service";
-import { combineURL } from "src/util/combineURL";
+import { combineURL } from "../../util/utils";
 
 @Injectable()
 export class AuthClientService extends Repository<AuthClient> {
@@ -28,7 +28,10 @@ export class AuthClientService extends Repository<AuthClient> {
 
         const loginAuthClient = new AuthClient();
         loginAuthClient.name = "Login auth client";
-        loginAuthClient.redirectUrls = [combineURL("auth/flow/update", process.env.GROPIUS_ENDPOINT).toString()];
+        loginAuthClient.redirectUrls = [
+            combineURL("auth/flow/account", process.env.GROPIUS_ENDPOINT).toString(),
+            combineURL("auth/flow/update", process.env.GROPIUS_ENDPOINT).toString(),
+        ];
         loginAuthClient.id = "login-auth-client";
         loginAuthClient.isValid = true;
         loginAuthClient.validScopes = [TokenScope.LOGIN_SERVICE_REGISTER, TokenScope.AUTH, TokenScope.LOGIN_SERVICE];

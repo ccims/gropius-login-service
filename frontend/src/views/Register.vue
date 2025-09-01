@@ -3,16 +3,16 @@
         <template #content>
             <GropiusCard class="register-container mt-5">
                 <v-card-title class="pl-0">Complete registration</v-card-title>
-                <v-form class="mt-2" method="POST" action="/auth/api/internal/auth/register">
+                <v-form class="mt-2" method="POST" action="/auth/api/internal/auth/register/callback">
                     <v-text-field
                         v-model="username"
-                        v-if="!forceSuggestedUsername"
+                        :readonly="forceSuggestedUsername"
                         name="username"
                         v-bind="usernameProps"
                         label="Username"
                         class="mb-1"
                     />
-                    <input v-else type="hidden" name="username" :value="username" />
+
                     <v-text-field
                         v-model="displayName"
                         name="displayName"
@@ -20,9 +20,11 @@
                         label="Display name"
                         class="mb-1"
                     />
+
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
-                    <input type="hidden" name="state" :value="route.query.state" />
-                    <input type="hidden" name="register_token" :value="token" />
+
+                    <input type="hidden" name="externalCSRF" :value="csrf" />
+
                     <v-card-actions>
                         <v-spacer />
                         <DefaultButton variant="text" color="primary" type="submit">Register</DefaultButton>
@@ -45,7 +47,9 @@ import { computed, onMounted } from "vue";
 import { asyncComputed } from "@vueuse/core";
 
 const route = useRoute();
-const forceSuggestedUsername = computed(() => route.query.forceSuggestedUsername == "true");
+const forceSuggestedUsername = computed(
+    () => route.query.forceSuggestedUsername && route.query.forceSuggestedUsername == "true"
+);
 
 const schema = toTypedSchema(
     yup.object().shape({
@@ -55,16 +59,10 @@ const schema = toTypedSchema(
     })
 );
 
-const token = asyncComputed(async () => {
-    return (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "authorization_code",
-            client_id: "login-auth-client",
-            code: route.query.code,
-            scope: "login-register"
-        })
-    ).data.access_token as string;
-}, "");
+const csrf = asyncComputed(async () => {
+    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf-external`);
+    return data.csrf;
+});
 
 const { defineField, handleSubmit, setValues } = useForm({
     validationSchema: schema
@@ -78,7 +76,7 @@ onMounted(async () => {
     const params = route.query as Record<string, string>;
     setValues({
         username: params.username ?? "",
-        displayName: (params.displayName || params.username) ?? "",
+        displayName: params.displayName ?? "",
         email: params.email ?? ""
     });
 });

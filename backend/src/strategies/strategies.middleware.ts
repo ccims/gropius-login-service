@@ -1,31 +1,25 @@
 import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthStateServerData } from "./AuthResult";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesService } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { AuthException } from "src/api-internal/AuthException";
+import { Context } from "../util/Context";
 
 @Injectable()
-export class StrategiesMiddleware extends StateMiddleware<
-    AuthStateServerData & OAuthAuthorizeServerState,
-    AuthStateServerData & OAuthAuthorizeServerState & { strategy: Strategy }
-> {
+export class StrategiesMiddleware implements NestMiddleware {
     private readonly logger = new Logger(StrategiesMiddleware.name);
+
     constructor(
         private readonly strategiesService: StrategiesService,
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly performAuthFunctionService: PerformAuthFunctionService,
         private readonly imsUserFindingService: ImsUserFindingService,
-    ) {
-        super();
-    }
+    ) {}
 
     private async idToStrategyInstance(id: string): Promise<StrategyInstance> {
         if (!id) {
@@ -38,17 +32,19 @@ export class StrategiesMiddleware extends StateMiddleware<
         return instance;
     }
 
-    async performImsUserSearchIfNeeded(state: AuthStateServerData, instance: StrategyInstance, strategy: Strategy) {
+    private async performImsUserSearchIfNeeded(context: Context, instance: StrategyInstance, strategy: Strategy) {
+        const activeLogin = context.tryActiveLogin();
+
         if (strategy.canSync && instance.isSyncActive) {
-            if (typeof state.activeLogin == "object" && state.activeLogin.id) {
+            if (typeof activeLogin == "object" && activeLogin.id) {
                 const imsUserSearchOnModes = process.env.GROPIUS_PERFORM_IMS_USER_SEARCH_ON.split(",").filter(
                     (s) => !!s,
                 );
-                if (imsUserSearchOnModes.includes(state.authState.function)) {
-                    const loginData = await state.activeLogin.loginInstanceFor;
+                if (imsUserSearchOnModes.includes(context.getFlowType())) {
+                    const loginData = await activeLogin.loginInstanceFor;
                     try {
                         await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
-                    } catch (err) {
+                    } catch (err: any) {
                         this.logger.error(
                             "Error while linking/creating IMSUsers in the backend (Not canceling request):",
                             err,
@@ -59,40 +55,37 @@ export class StrategiesMiddleware extends StateMiddleware<
         }
     }
 
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: AuthStateServerData & OAuthAuthorizeServerState & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
+    async use(req: Request, res: Response, next: NextFunction) {
         const id = req.params.id;
+
         const instance = await this.idToStrategyInstance(id);
         const strategy = this.strategiesService.getStrategyByName(instance.type);
-        this.appendState(res, { strategy });
+        req.context.setStrategy(instance.type, strategy);
 
-        const result = await strategy.performAuth(instance, state, req, res);
-        this.appendState(res, result.returnedState);
+        const result = await strategy.performAuth(instance, req.context, req, res);
         const authResult = result.result;
-        if (authResult) {
-            const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(state, instance, strategy);
-            if (functionError != null) {
-                throw new OAuthHttpException("server_error", functionError);
-            }
-            const activeLogin = await this.performAuthFunctionService.performRequestedAction(
-                authResult,
-                state,
-                instance,
-                strategy,
-            );
-            this.appendState(res, { activeLogin });
-            state.authState.activeLogin = activeLogin.id;
-            await this.performImsUserSearchIfNeeded(state, instance, strategy);
-        } else {
+        if (!authResult) {
             throw new AuthException(
-                result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfull",
+                result.info?.message?.toString() || JSON.stringify(result.info) || "Login unsuccessfully",
                 instance.id,
             );
         }
+
+        const functionError = this.performAuthFunctionService.checkFunctionIsAllowed(req.context, instance, strategy);
+        if (functionError) {
+            throw new OAuthHttpException("server_error", functionError);
+        }
+
+        const activeLogin = await this.performAuthFunctionService.performRequestedAction(
+            authResult,
+            req.context,
+            instance,
+            strategy,
+        );
+        req.context.setActiveLogin(activeLogin);
+
+        await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
+
         this.logger.debug("Strategy Middleware completed. Calling next");
         next();
     }

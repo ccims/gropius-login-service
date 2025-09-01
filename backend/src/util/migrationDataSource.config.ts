@@ -8,7 +8,7 @@ async function getDataSource(): Promise<DataSource> {
     );
 
     const { NestFactory } = await import("@nestjs/core");
-    const { AppModule } = await import("./app.module");
+    const { AppModule } = await import("../app.module");
     const { ConfigModule } = await import("@nestjs/config");
 
     const app = await NestFactory.create(AppModule, {

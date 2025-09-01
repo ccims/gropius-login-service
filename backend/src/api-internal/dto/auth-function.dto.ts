@@ -1,3 +1,4 @@
+// TODO: get rid of this
 export enum AuthFunctionInput {
     LOGIN = "login",
     REGISTER = "register",

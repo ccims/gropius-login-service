@@ -1,31 +1,28 @@
-import { Injectable } from "@nestjs/common";
-import { Request, Response } from "express";
-import { AuthFunction, AuthStateServerData } from "../strategies/AuthResult";
-import { StateMiddleware } from "src/api-oauth/StateMiddleware";
+import { Injectable, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
+import { FlowType } from "../strategies/AuthResult";
+import { AuthFunctionInput } from "./dto/auth-function.dto";
 
 @Injectable()
-export class ModeExtractorMiddleware extends StateMiddleware<{}, AuthStateServerData> {
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
-        let authFunction: AuthFunction;
+export class ModeExtractorMiddleware implements NestMiddleware {
+    async use(req: Request, res: Response, next: NextFunction) {
+        let authFunction: FlowType;
         switch (req.params.mode) {
-            case "register":
-                authFunction = AuthFunction.REGISTER;
+            case AuthFunctionInput.REGISTER:
+                authFunction = FlowType.REGISTER;
                 break;
-            case "register-sync":
-                authFunction = AuthFunction.REGISTER_WITH_SYNC;
+            case AuthFunctionInput.REGISTER_WITH_SYNC:
+                authFunction = FlowType.REGISTER_WITH_SYNC;
                 break;
-            case "login":
-                authFunction = AuthFunction.LOGIN;
+            case AuthFunctionInput.LOGIN:
+                authFunction = FlowType.LOGIN;
                 break;
             default:
                 throw new Error("Invalid mode");
         }
-        this.appendState(res, { authState: { function: authFunction } });
+
+        req.context.setFlowType(authFunction);
+
         next();
     }
 }

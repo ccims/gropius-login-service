@@ -11,6 +11,7 @@ export interface OAuthAuthorizeRequest {
     responseType: "code";
 }
 
+// TODO: get rid of this
 export interface OAuthAuthorizeServerState {
     request: OAuthAuthorizeRequest;
     client: AuthClient;

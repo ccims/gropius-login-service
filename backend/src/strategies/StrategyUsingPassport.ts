@@ -1,15 +1,17 @@
 import * as passport from "passport";
 import { PerformAuthResult, Strategy } from "./Strategy";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthStateServerData, AuthResult } from "./AuthResult";
+import { AuthResult } from "./AuthResult";
 import { JwtService } from "@nestjs/jwt";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { Request } from "express";
+import { Context } from "../util/Context";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
+
     constructor(
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
@@ -37,15 +39,15 @@ export abstract class StrategyUsingPassport extends Strategy {
 
     protected getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        context: Context | undefined,
     ): passport.AuthenticateOptions {
         return {};
     }
 
     public override async performAuth(
         strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
-        req: any,
+        context: Context | undefined,
+        req: Request,
         res: any,
     ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
@@ -55,21 +57,27 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign({ request: state?.request, authState: state?.authState }),
-                    ...this.getAdditionalPassportOptions(strategyInstance, state),
+                    state: jwtService.sign({
+                        request: context?.tryRequest(),
+                        externalCSRF: req.context?.getExternalCSRF(),
+                    }),
+                    ...this.getAdditionalPassportOptions(strategyInstance, context),
                 },
                 (err, user: AuthResult | false, info) => {
                     if (err) {
                         this.logger.error("Error while authenticating with passport", err);
                         reject(err);
                     } else {
-                        let returnedState = {};
+                        let returnedState: any = {};
                         const state = info.state || req.query?.state;
                         if (state && typeof state == "string") {
                             returnedState = jwtService.verify(state);
                         } else if (state) {
                             reject("State not returned as JWT");
                         }
+
+                        returnedState.externalCSRF = returnedState?.externalCSRF ?? req.query?.externalCSRF;
+
                         resolve({ result: user || null, returnedState, info });
                     }
                 },

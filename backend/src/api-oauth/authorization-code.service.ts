@@ -1,35 +1,35 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { NextFunction, Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "./OAuthHttpException";
-import { StateMiddleware } from "./StateMiddleware";
-import { EncryptionService } from "./encryption.service";
+import { EncryptionService } from "../backend-services/encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { OAuthTokenResponseDto } from "./dto/oauth-token-response.dto";
+import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
 
 @Injectable()
-export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ client: AuthClient }> {
-    private readonly logger = new Logger(OAuthTokenAuthorizationCodeMiddleware.name);
+export class AuthorizationCodeService {
+    readonly supportedGrantTypes = ["authorization_code", "refresh_token"];
+
+    private readonly logger = new Logger(AuthorizationCodeService.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
         private readonly encryptionService: EncryptionService,
-    ) {
-        super();
-    }
+    ) {}
 
     private throwGenericCodeError() {
         throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
     }
 
-    private async checkLoginDataIsVaild(loginData?: UserLoginData, activeLogin?: ActiveLogin) {
+    private async validateLoginData(loginData?: UserLoginData) {
         if (!loginData) {
             this.logger.warn("Login data not found");
             throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
+
         if (loginData.expires != null && loginData.expires <= new Date()) {
             this.logger.warn("Login data has expired", loginData);
             throw new OAuthHttpException(
@@ -37,40 +37,30 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
                 "Login has expired. Try restarting login/register/link process.",
             );
         }
-        switch (loginData.state) {
-            case LoginState.VALID:
-                if (!(await loginData.user)) {
-                    throw new OAuthHttpException("invalid_state", "No user for valid login");
-                }
-                break;
-            case LoginState.WAITING_FOR_REGISTER:
-                if (await loginData.user) {
-                    throw new OAuthHttpException(
-                        "invalid_state",
-                        "Login still in register state but user already existing",
-                    );
-                }
-                break;
-            default:
-                throw new OAuthHttpException(
-                    "invalid_grant",
-                    "Login for given grant is not valid any more; Please re-login",
-                );
-        }
-        if (!activeLogin) {
-            this.logger.warn("Active login not found");
-            throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
-        }
-        if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
-            this.logger.warn("Active login has expired", activeLogin.id);
+
+        if (loginData.state === LoginState.BLOCKED) {
             throw new OAuthHttpException(
                 "invalid_grant",
-                "Login has expired. Try restarting login/register/link process.",
+                "Login for given grant is not valid any more; Please re-login",
             );
         }
-        if (!activeLogin.isValid) {
-            this.logger.warn("Active login is set invalid", activeLogin.id);
-            throw new OAuthHttpException("invalid_grant", "Login is set invalid/disabled");
+
+        // TODO: when would this even happen?
+        const user = await loginData.user;
+        if (loginData.state === LoginState.VALID) {
+            if (!user) {
+                throw new OAuthHttpException("invalid_state", "No user for valid login");
+            }
+        }
+
+        // TODO: when would this even happen?
+        if (loginData.state === LoginState.WAITING_FOR_REGISTER) {
+            if (user) {
+                throw new OAuthHttpException(
+                    "invalid_state",
+                    "Login still in register state but user already existing",
+                );
+            }
         }
     }
 
@@ -92,10 +82,11 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
         activeLogin: ActiveLogin,
         currentClient: AuthClient,
         scope: TokenScope[],
-    ): Promise<OAuthTokenResponseDto> {
+    ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
         let accessToken: string;
+        // TODO: when would this even happen?
         if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
             accessToken = await this.tokenService.signRegistrationToken(activeLogin.id, tokenExpiresInMs);
         } else {
@@ -127,89 +118,82 @@ export class OAuthTokenAuthorizationCodeMiddleware extends StateMiddleware<{ cli
         };
     }
 
-    private async createResponse(
-        client: AuthClient,
-        scope: TokenScope[],
-        activeLogin: ActiveLogin,
-    ): Promise<OAuthTokenResponseDto> {
-        for (const requestedScope of scope) {
-            if (!client.validScopes.includes(requestedScope)) {
-                throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
-            }
-        }
-        const loginData = await activeLogin.loginInstanceFor;
-        await this.checkLoginDataIsVaild(loginData, activeLogin);
-        return await this.createAccessToken(loginData, activeLogin, client, scope);
-    }
-
-    protected override async useWithState(
-        req: Request,
-        res: Response,
-        state: { client: AuthClient } & { error?: any },
-        next: (error?: Error | any) => void,
-    ): Promise<any> {
-        let tokenData: ActiveLoginTokenResult;
-        const currentClient = state.client;
+    async handle(req: Request, res: Response, client: AuthClient) {
         const codeVerifier = req.body.code_verifier;
+        const token = req.body.code ?? req.body.refresh_token;
+
+        let data: ActiveLoginTokenResult;
         try {
-            tokenData = await this.tokenService.verifyActiveLoginToken(
-                req.body.code ?? req.body.refresh_token,
-                currentClient.id,
-            );
-        } catch (err) {
+            data = await this.tokenService.verifyActiveLoginToken(token, client.id);
+        } catch (err: any) {
             this.logger.warn(err);
-            return this.throwGenericCodeError();
+            this.throwGenericCodeError();
         }
 
         const activeLogin = await this.activeLoginService.findOneBy({
-            id: tokenData.activeLoginId,
+            id: data.activeLoginId,
         });
+
         if (!activeLogin) {
-            this.logger.warn("No active login with id", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
+            this.logger.warn("No active login with id", data.activeLoginId);
+            this.throwGenericCodeError();
         }
+
         if (!activeLogin.isValid) {
-            this.logger.warn("Active login set invalid", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
+            this.logger.warn("Active login set invalid", data.activeLoginId);
+            // TODO: this.throwGenericCodeError();
         }
+
         if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
-            this.logger.warn("Active login is expired", tokenData.activeLoginId);
-            return this.throwGenericCodeError();
+            this.logger.warn("Active login is expired", data.activeLoginId);
+            // TODO: return this.throwGenericCodeError();
         }
-        const codeUniqueId = parseInt(tokenData.tokenUniqueId, 10);
+
+        const codeUniqueId = parseInt(data.tokenUniqueId, 10);
         if (!isFinite(codeUniqueId) || codeUniqueId !== activeLogin.nextExpectedRefreshTokenNumber) {
-            //Make active login invalid if code/refresh token is reused
-            activeLogin.isValid = false;
-            await this.activeLoginService.save(activeLogin);
             this.logger.warn(
                 "Code is no longer valid as it was already used and a token was already generated.\n " +
                     "Active login has been made invalid",
-                tokenData.activeLoginId,
+                data.activeLoginId,
             );
-            throw new OAuthHttpException("invalid_grant", "Given code was liekely reused. Login and codes invalidated");
+
+            // TODO: this
+            /**
+            //Make active login invalid if code/refresh token is reused
+            activeLogin.isValid = false;
+            await this.activeLoginService.save(activeLogin);
+            throw new OAuthHttpException("invalid_grant", "Given code was likely reused. Login and codes invalidated");
+                **/
         }
-        if (tokenData.codeChallenge != undefined) {
-            if (codeVerifier == undefined) {
+
+        if (data.codeChallenge) {
+            if (!codeVerifier) {
                 this.logger.warn("Code verifier missing");
                 throw new OAuthHttpException("invalid_request", "Code verifier missing");
             }
+
             if (typeof codeVerifier !== "string") {
                 this.logger.warn("Code verifier is not a string");
                 throw new OAuthHttpException("invalid_request", "Code verifier has invalid format");
             }
-            const decryptedCodeChallenge = this.encryptionService.decrypt(tokenData.codeChallenge);
+
+            const decryptedCodeChallenge = this.encryptionService.decrypt(data.codeChallenge);
             const codeChallenge = this.tokenService.calculateCodeChallenge(codeVerifier);
             if (decryptedCodeChallenge !== codeChallenge) {
                 this.logger.warn("Code verifier does not match code challenge");
                 throw new OAuthHttpException("invalid_request", "Code verifier does not match code challenge");
             }
-        } else {
-            if (codeVerifier != undefined) {
-                this.logger.warn("Code verifier not required");
-                throw new OAuthHttpException("invalid_request", "Code verifier not required");
+        }
+
+        for (const requestedScope of data.scope) {
+            if (!client.validScopes.includes(requestedScope)) {
+                throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
             }
         }
-        const response = await this.createResponse(currentClient, tokenData.scope, activeLogin);
-        res.json(response);
+
+        const loginData = await activeLogin.loginInstanceFor;
+        await this.validateLoginData(loginData);
+
+        return await this.createAccessToken(loginData, activeLogin, client, data.scope);
     }
 }

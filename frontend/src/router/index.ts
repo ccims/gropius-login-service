@@ -9,6 +9,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import("../views/Login.vue")
     },
     {
+        path: "/prompt",
+        name: "prompt",
+        component: () => import("../views/Prompt.vue")
+    },
+    {
         path: "/register-additional",
         name: "register-additional",
         component: () => import("../views/Login.vue")
@@ -17,6 +22,12 @@ const routes: RouteRecordRaw[] = [
         path: "/register",
         name: "register",
         component: () => import("../views/Register.vue")
+    },
+    {
+        path: "/account",
+        name: "account",
+        beforeEnter: checkAuth,
+        component: () => import("../views/Account.vue")
     },
     {
         path: "/update",

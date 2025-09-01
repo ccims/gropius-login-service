@@ -1,9 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { OpenApiTag } from "./openapi-tag";
+import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
+import session = require("cookie-session");
+import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
+import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
+import { NextFunction, Request, Response } from "express";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -56,6 +60,40 @@ async function bootstrap() {
     const portNumber = parseInt(process.env.GROPIUS_LOGIN_LISTEN_PORT, 10) || 3000;
 
     app.enableCors();
+
+    // TODO: configure proxy
+    // app.set('trust proxy', 1)
+
+    app.use(
+        session({
+            name: "gropius-login-session",
+            // TODO: secret
+            secret: "SOME_SECRET",
+            // TODO: which path?
+            path: "/auth",
+            httpOnly: true,
+            // TODO: make this
+            sameSite: false,
+            // TODO: make this true in prod
+            secure: false,
+        }),
+    );
+
+    app.use((req: Request, res: Response, next: NextFunction) => {
+        // TODO: wtf is "(res.locals.state as ApiStateData)"?!
+        if (!res.locals) {
+            res.locals = {};
+        }
+        if (!res.locals.state) {
+            res.locals.state = {};
+        }
+
+        next();
+    });
+
+    app.useGlobalFilters(new CatchOAuthErrorFilter(), new CatchAuthErrorFilter());
+
     await app.listen(portNumber);
 }
+
 bootstrap().catch((err) => console.error("NestJS Application exited with error", err));

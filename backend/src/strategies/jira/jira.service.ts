@@ -108,7 +108,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-        } catch (err) {
+        } catch (err: any) {
             throw new Error("Instance config for jira instance invalid: " + err.message);
         }
 
@@ -206,9 +206,9 @@ export class JiraStrategyService extends StrategyUsingPassport {
         email?: string;
     } {
         return {
-            username: loginData.data?.username || undefined,
-            displayName: loginData.data?.displayName || undefined,
-            email: loginData.data?.email || undefined,
+            username: loginData.data?.username?.trim(),
+            displayName: loginData.data?.displayName?.trim(),
+            email: loginData.data?.email?.trim(),
         };
     }
 

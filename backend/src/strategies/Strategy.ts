@@ -7,6 +7,7 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { AuthResult, AuthStateServerData } from "./AuthResult";
 import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { Schema } from "jtd";
+import { Context } from "../util/Context";
 
 export interface StrategyVariable {
     name: string;
@@ -23,7 +24,9 @@ export interface StrategyUpdateAction {
 
 export interface PerformAuthResult {
     result: AuthResult | null;
-    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">>;
+    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">> & {
+        externalCSRF?: string;
+    };
     info: any;
 }
 
@@ -301,7 +304,7 @@ export abstract class Strategy {
 
     abstract performAuth(
         strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        context: Context | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult>;

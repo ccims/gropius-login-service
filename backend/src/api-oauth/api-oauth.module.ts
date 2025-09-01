@@ -1,66 +1,38 @@
-import { MiddlewareConsumer, Module, NestMiddleware } from "@nestjs/common";
+import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { ModelModule } from "src/model/model.module";
-import { OAuthAuthorizeExtractMiddleware } from "./oauth-authorize-extract.middleware";
+import { RequestExtractMiddleware } from "./request-extract.middleware";
 import { OauthTokenMiddleware as OAuthTokenMiddleware } from "./oauth-token.middleware";
-import { OAuthTokenAuthorizationCodeMiddleware } from "./oauth-token-authorization-code.middleware";
 import { OauthAuthorizeController as OAuthAuthorizeController } from "./oauth-authorize.controller";
 import { OAuthTokenController } from "./oauth-token.controller";
-import { OAuthAuthorizeValidateMiddleware } from "./oauth-authorize-validate.middleware";
-import { OAuthAuthorizeRedirectMiddleware } from "./oauth-authorize-redirect.middleware";
-import { ErrorHandlerMiddleware } from "./error-handler.middleware";
-import { OAuthErrorRedirectMiddleware } from "./oauth-error-redirect.middleware";
+import { LoginRedirectMiddleware } from "./login-redirect-middleware.service";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { StrategiesModule } from "src/strategies/strategies.module";
-import { EncryptionService } from "./encryption.service";
-import { OAuthTokenClientCredentialsMiddleware } from "./oauth-token-client-credentials.middleware";
+import { FlowSkipMiddleware } from "./flow-skip-middleware.service";
+import { CodeRedirectMiddleware } from "../api-internal/auth-code-redirect-middleware.service";
+import { PromptRedirectMiddleware } from "../api-internal/prompt-redirect-middleware.service";
+import { FlowInitMiddleware } from "./flow-init-middleware.service";
+import { ClientCredentialsService } from "./client-credentials.service";
+import { AuthorizationCodeService } from "./authorization-code.service";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
-    providers: [
-        OAuthAuthorizeExtractMiddleware,
-        OAuthAuthorizeValidateMiddleware,
-        OAuthAuthorizeRedirectMiddleware,
-        OAuthTokenMiddleware,
-        OAuthTokenAuthorizationCodeMiddleware,
-        OAuthTokenClientCredentialsMiddleware,
-        ErrorHandlerMiddleware,
-        OAuthErrorRedirectMiddleware,
-        EncryptionService,
-    ],
+    providers: [AuthorizationCodeService, ClientCredentialsService],
     controllers: [OAuthAuthorizeController, OAuthTokenController],
-    exports: [OAuthAuthorizeValidateMiddleware, ErrorHandlerMiddleware, OAuthErrorRedirectMiddleware],
+    exports: [],
 })
 export class ApiOauthModule {
-    private middlewares: { middlewares: NestMiddleware[]; path: string }[] = [];
-
-    constructor(
-        private readonly oauthAuthorizeExtract: OAuthAuthorizeExtractMiddleware,
-        private readonly oauthAuthorizeValidate: OAuthAuthorizeValidateMiddleware,
-        private readonly oauthAuthorizeRedirect: OAuthAuthorizeRedirectMiddleware,
-        private readonly oauthToken: OAuthTokenMiddleware,
-        private readonly errorHandler: ErrorHandlerMiddleware,
-        private readonly oauthErrorRedirect: OAuthErrorRedirectMiddleware,
-    ) {
-        this.middlewares.push({
-            middlewares: [
-                this.oauthAuthorizeExtract,
-                this.oauthAuthorizeValidate,
-                this.oauthAuthorizeRedirect,
-                this.oauthErrorRedirect,
-                this.errorHandler,
-            ],
-            path: "auth/oauth/authorize",
-        });
-
-        this.middlewares.push({
-            middlewares: [this.oauthToken, this.errorHandler],
-            path: "auth/oauth/token",
-        });
-    }
-
     configure(consumer: MiddlewareConsumer) {
-        for (const chain of this.middlewares) {
-            consumer.apply(...chain.middlewares.map((m) => m.use.bind(m))).forRoutes(chain.path);
-        }
+        consumer
+            .apply(
+                FlowInitMiddleware,
+                RequestExtractMiddleware,
+                FlowSkipMiddleware,
+                PromptRedirectMiddleware,
+                CodeRedirectMiddleware,
+                LoginRedirectMiddleware,
+            )
+            .forRoutes("auth/oauth/authorize");
+
+        consumer.apply(OAuthTokenMiddleware).forRoutes("auth/oauth/token");
     }
 }

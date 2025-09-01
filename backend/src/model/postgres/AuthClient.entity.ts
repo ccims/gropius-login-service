@@ -95,8 +95,8 @@ export class AuthClient {
     clientCredentialFlowUser: Promise<LoginUser | null>;
 
     /**
-     * If this client is editable.
-     * If not, the client can not be changed or deleted.
+     * If this client is internal.
+     * Internal clients are immutable, i.e., cannot be changed or deleted.
      */
     isInternal: boolean = false;
 
@@ -113,7 +113,7 @@ export class AuthClient {
 
     /**
      * Generates a new secret and adds it to the list of this client.
-     * Does NOT save the entitiy!
+     * Does NOT save the entity!
      *
      * **Note**: The secret text is only returned here and will not be saved as plain text.
      * There is no way to retrieve it later.
@@ -182,6 +182,14 @@ export class AuthClient {
             censored: entry.censored,
             fingerprint: entry.fingerprint,
         }));
+    }
+
+    async verifySecret(secret: string) {
+        for (const hash of this.clientSecrets) {
+            const verified = await bcrypt.compare(secret, hash.substring(hash.indexOf(";") + 1));
+            if (verified) return true;
+        }
+        return false;
     }
 
     toJSON() {

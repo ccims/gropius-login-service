@@ -43,6 +43,10 @@ import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira
         { provide: "StateJwtService", useExisting: JwtService },
         StrategiesMiddleware,
     ],
-    exports: [StrategiesMiddleware, { provide: "StateJwtService", useExisting: JwtService }],
+    exports: [
+        StrategiesMiddleware,
+        { provide: "StateJwtService", useExisting: JwtService },
+        PerformAuthFunctionService,
+    ],
 })
 export class StrategiesModule {}

@@ -1,9 +1,10 @@
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
+import { NoCors } from "../util/NoCors.decorator";
 
 /**
- * Controller for the openapi generator to find the oauth server routes that are handeled exclusively in middleware.
+ * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
  *
  * This includes:
  * - Authorize endpoint
@@ -19,6 +20,7 @@ export class OauthAuthorizeController {
      *
      */
     @Get("authorize")
+    @NoCors()
     @ApiOperation({ summary: "Authorize OAuth endpoint" })
     @ApiQuery({ name: "client_id", type: String, description: "The id of the client to initiate" })
     @ApiQuery({
@@ -54,7 +56,7 @@ export class OauthAuthorizeController {
     @ApiTags(OpenApiTag.OAUTH_API)
     authorizeEndpoint() {
         throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handeled in middleware",
+            "This controller shouldn't be reached as all functionality is handled in middleware",
             HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }

@@ -1,9 +1,9 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="login-container mt-5 pb-4" v-if="!loadingStrategies">
+            <GropiusCard v-if="!loadingStrategies" class="login-container mt-5 pb-4">
                 <p class="text-center text-body-1 mt-2">{{ title }}</p>
-                <v-sheet color="error-container" v-if="errorMessage" rounded="lger" class="pa-3 mt-2">
+                <v-sheet v-if="errorMessage" color="error-container" rounded="lger" class="pa-3 mt-2">
                     <v-icon icon="mdi-alert-circle-outline" size="x-large" />
                     {{ errorMessage }}
                 </v-sheet>
@@ -31,12 +31,12 @@
                                 v-model="formDataAt(strategy.id)[field.name]"
                                 :field="field"
                             />
-                            <input type="hidden" name="state" :value="route.query.state" />
                             <input type="submit" hidden />
+                            <input type="hidden" name="externalCSRF" :value="externalCSRF" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
-                <DefaultButton class="w-100" @click="submitForm"> Continue </DefaultButton>
+                <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
                 <div v-if="!isRegisterAdditional" class="mt-2">
                     <p v-if="isLogin">
                         <span class="text-middle">Don't have an account?</span>
@@ -93,6 +93,7 @@ import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
 import axios from "axios";
 import InputField from "@/components/InputField.vue";
+import * as auth from "@/util/auth";
 
 const route = useRoute();
 
@@ -186,6 +187,8 @@ const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
 
+const externalCSRF = asyncComputed(async () => await auth.loadExternalCSRFToken());
+
 function formDataAt(id: string) {
     if (!(id in formData.value)) {
         formData.value[id] = {};
@@ -238,14 +241,12 @@ function redirect(strategy: RedirectStrategyInstance) {
 }
 
 async function redirectLogin(strategyInstance: RedirectStrategyInstance) {
-    const state = encodeURIComponent(route.query.state as string);
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login?state=${state}`;
+    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login`;
 }
 
 async function redirectRegister(strategyInstance: RedirectStrategyInstance, sync: boolean) {
-    const state = encodeURIComponent(route.query.state as string);
     const mode = sync ? "register-sync" : "register";
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}?state=${state}`;
+    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}`;
 }
 </script>
 <style scoped>
