@@ -8,9 +8,12 @@ export async function checkAuth(
     const code = to.query.code;
     if (code) {
         await auth.exchangeToken(code.toString());
-        // TODO: redirect to state.to
+
+        const next = auth.getRouterTo() ?? "accounts";
+        auth.removeRouterTo();
+
         return {
-            name: "account",
+            name: next,
             replace: true
         };
     }
@@ -18,7 +21,7 @@ export async function checkAuth(
     try {
         await auth.loadToken();
     } catch (error: any) {
-        await auth.authorizeUser(["auth", "login"], { to: to.fullPath });
+        await auth.authorizeUser(["auth", "login"], {}, to.fullPath);
     }
 
     return true;

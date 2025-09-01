@@ -71,6 +71,21 @@ export function removeResponse() {
     _refreshToken = undefined;
 }
 
+const LOCAL_STORAGE_ROUTER_TO = constructKey("routerTo");
+
+export function setRouterTo(from: string) {
+    localStorage.setItem(LOCAL_STORAGE_ROUTER_TO, from);
+}
+
+export function getRouterTo() {
+    return localStorage.getItem(LOCAL_STORAGE_ROUTER_TO);
+}
+
+// TODO: this
+export function removeRouterTo() {
+    localStorage.removeItem(LOCAL_STORAGE_ROUTER_TO);
+}
+
 export async function loadToken(): Promise<string> {
     // Current access token
     const token = getAccessToken();
@@ -125,7 +140,7 @@ export async function fetchPromptData() {
     return (await axios.get("/auth/api/internal/auth/prompt/data")).data as PromptData;
 }
 
-export async function authorizeUser(scope: string[], state: object) {
+export async function authorizeUser(scope: string[], state: object, from: string) {
     clean();
 
     const codeVerifierArray = new Uint8Array(32);
@@ -135,6 +150,8 @@ export async function authorizeUser(scope: string[], state: object) {
 
     const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(codeVerifier));
     const codeChallenge = base64URLEncode(String.fromCharCode.apply(null, Array.from(new Uint8Array(hash))));
+
+    setRouterTo(from);
 
     window.location.href =
         "/auth/oauth/authorize?" +
@@ -156,6 +173,7 @@ function base64URLEncode(str: string): string {
 export function clean() {
     removeResponse();
     removeCodeVerifier();
+    removeRouterTo();
 }
 
 export async function loadCSRFHeader() {
