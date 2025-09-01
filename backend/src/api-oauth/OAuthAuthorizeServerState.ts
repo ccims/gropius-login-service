@@ -9,7 +9,6 @@ export interface OAuthAuthorizeRequest {
     codeChallenge: string;
     codeChallengeMethod: string;
     responseType: "code";
-    prompt?: "consent";
 }
 
 // TODO: get rid of this

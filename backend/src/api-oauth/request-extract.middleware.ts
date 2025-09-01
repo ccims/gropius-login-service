@@ -31,7 +31,6 @@ export class RequestExtractMiddleware implements NestMiddleware {
             codeChallenge: this.encryptionService.encrypt(codeChallenge),
             codeChallengeMethod: req.query.code_challenge_method as string,
             responseType: req.query.response_type as "code",
-            prompt: req.query.prompt as "consent",
         };
 
         const client = await this.authClientService.findAuthClient(unsafe.clientId);
@@ -59,10 +58,6 @@ export class RequestExtractMiddleware implements NestMiddleware {
 
         if (!unsafe.codeChallenge) {
             throw new OAuthHttpException("invalid_request", "Code challenge required");
-        }
-
-        if (unsafe.prompt && unsafe.prompt !== "consent") {
-            throw new OAuthHttpException("invalid_request", 'Only "consent" prompt is supported');
         }
 
         req.context.setClient(client);
