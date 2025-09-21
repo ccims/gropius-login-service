@@ -23,6 +23,11 @@ const routes: RouteRecordRaw[] = [
         name: "update",
         beforeEnter: checkAuth,
         component: () => import("../views/Update.vue")
+    },
+    {
+        path: "/legal-information/:legalInformation",
+        name: "legal-information",
+        component: () => import("../views/LegalInformation.vue")
     }
 ];
 

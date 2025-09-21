@@ -22,11 +22,32 @@
             </v-sheet>
             <div class="right-bar" />
         </div>
+        <div v-if="legalInformation?.length ?? 0 > 0" class="d-flex justify-end mr-3 mt-n2 mb-1 ga-3">
+            <RouterLink
+                v-for="info in legalInformation"
+                :key="info.id"
+                :to="{
+                    name: 'legal-information',
+                    params: { legalInformation: info.id }
+                }"
+                class="text-decoration-none text-medium-emphasis text-caption"
+            >
+                {{ info.label }}
+            </RouterLink>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
+import { withErrorMessage } from "@/util/withErrorMessage";
 import { useLocalStorage } from "@vueuse/core";
-import { useTheme } from "vuetify/lib/framework.mjs";
+import axios from "axios";
+import { onMounted, ref } from "vue";
+import { useTheme } from "vuetify";
+
+interface LegalInformation {
+    id: string;
+    label: string;
+}
 
 const theme = useTheme();
 const lightMode = useLocalStorage("lightMode", true);
@@ -41,6 +62,15 @@ function updateColorMode() {
 }
 
 updateColorMode();
+
+const legalInformation = ref<LegalInformation[]>([]);
+
+onMounted(async () => {
+    legalInformation.value = await withErrorMessage(
+        async () => (await axios.get(`/auth/api/internal/legal-information/`)).data.legalInformation,
+        "Could not fetch available legal information"
+    );
+});
 </script>
 <style scoped lang="scss">
 @use "@/styles/settings.scss";

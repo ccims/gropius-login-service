@@ -16,9 +16,184 @@ export type Scalars = {
     Int: { input: number; output: number };
     Float: { input: number; output: number };
     DateTime: { input: any; output: any };
-    Duration: { input: any; output: any };
     JSON: { input: any; output: any };
     URL: { input: any; output: any };
+};
+
+/** Filter used to filter AbstractTypeChangedEvent */
+export type AbstractTypeChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AbstractTypeChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type AssignmentTypeChangedEvent */
+    isAssignmentTypeChangedEventAnd?: InputMaybe<AssignmentTypeChangedEventFilterInput>;
+    /** Filter for nodes of type IncomingRelationTypeChangedEvent */
+    isIncomingRelationTypeChangedEventAnd?: InputMaybe<IncomingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type OutgoingRelationTypeChangedEvent */
+    isOutgoingRelationTypeChangedEventAnd?: InputMaybe<OutgoingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type RelationTypeChangedEvent */
+    isRelationTypeChangedEventAnd?: InputMaybe<RelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type TypeChangedEvent */
+    isTypeChangedEventAnd?: InputMaybe<TypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AbstractTypeChangedEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AbstractTypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter AddedAffectedEntityEvent */
+export type AddedAffectedEntityEventFilterInput = {
+    /** Filters for nodes where the related node match this filter */
+    addedAffectedEntity?: InputMaybe<AffectedByIssueFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AddedAffectedEntityEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AddedAffectedEntityEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AddedAffectedEntityEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter AddedArtefactEvent */
+export type AddedArtefactEventFilterInput = {
+    /** Filters for nodes where the related node match this filter */
+    addedArtefact?: InputMaybe<ArtefactFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AddedArtefactEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AddedArtefactEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AddedArtefactEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter AddedLabelEvent */
+export type AddedLabelEventFilterInput = {
+    /** Filters for nodes where the related node match this filter */
+    addedLabel?: InputMaybe<LabelFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AddedLabelEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AddedLabelEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AddedLabelEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter AddedToPinnedIssuesEvent */
+export type AddedToPinnedIssuesEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AddedToPinnedIssuesEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AddedToPinnedIssuesEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AddedToPinnedIssuesEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    pinnedOn?: InputMaybe<TrackableFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter AddedToTrackableEvent */
+export type AddedToTrackableEventFilterInput = {
+    /** Filters for nodes where the related node match this filter */
+    addedToTrackable?: InputMaybe<TrackableFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AddedToTrackableEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AddedToTrackableEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AddedToTrackableEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
 };
 
 /** Filter used to filter AffectedByIssue */
@@ -27,12 +202,28 @@ export type AffectedByIssueFilterInput = {
     affectingIssues?: InputMaybe<IssueListFilterInput>;
     /** Connects all subformulas via and */
     and?: InputMaybe<Array<AffectedByIssueFilterInput>>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
+    /** Filter for nodes of type Component */
+    isComponentAnd?: InputMaybe<ComponentFilterInput>;
+    /** Filter for nodes of type ComponentVersion */
+    isComponentVersionAnd?: InputMaybe<ComponentVersionFilterInput>;
+    /** Filter for nodes of type Interface */
+    isInterfaceAnd?: InputMaybe<InterfaceFilterInput>;
+    /** Filter for nodes of type InterfacePart */
+    isInterfacePartAnd?: InputMaybe<InterfacePartFilterInput>;
+    /** Filter for nodes of type InterfaceSpecification */
+    isInterfaceSpecificationAnd?: InputMaybe<InterfaceSpecificationFilterInput>;
+    /** Filter for nodes of type InterfaceSpecificationVersion */
+    isInterfaceSpecificationVersionAnd?: InputMaybe<InterfaceSpecificationVersionFilterInput>;
+    /** Filter for nodes of type NamedAffectedByIssue */
+    isNamedAffectedByIssueAnd?: InputMaybe<NamedAffectedByIssueFilterInput>;
+    /** Filter for nodes of type Project */
+    isProjectAnd?: InputMaybe<ProjectFilterInput>;
+    /** Filter for nodes of type RelationPartner */
+    isRelationPartnerAnd?: InputMaybe<RelationPartnerFilterInput>;
+    /** Filter for nodes of type Trackable */
+    isTrackableAnd?: InputMaybe<TrackableFilterInput>;
     /** Negates the subformula */
     not?: InputMaybe<AffectedByIssueFilterInput>;
     /** Connects all subformulas via or */
@@ -63,8 +254,6 @@ export type AffectedByIssueOrder = {
 export enum AffectedByIssueOrderField {
     /** Order by id */
     Id = "ID",
-    /** Order by name */
-    Name = "NAME",
 }
 
 /** Filter used to filter AggregatedIssue */
@@ -214,7 +403,7 @@ export enum AllPermissionEntry {
      *   - change the Template
      *   - add / remove Labels
      *   - add / remove Artefacts
-     *   - change any field on the Issue (title, startDate, dueDate, ...)
+     *   - change any field on the Issue (title, ...)
      *   - change templated fields
      * In contrast to `MODERATOR`, this does not allow editing / removing Comments of other users
      */
@@ -224,6 +413,8 @@ export enum AllPermissionEntry {
      * Also allows to delete a Label, but only if it is allowed on all Trackable the Label is on.
      */
     ManageLabels = "MANAGE_LABELS",
+    /** Allows to manage the views of this Project. */
+    ManageViews = "MANAGE_VIEWS",
     /**
      * Allows to moderate Issues on this Trackable.
      * This allows everything `MANAGE_ISSUES` allows.
@@ -428,6 +619,38 @@ export enum AssignmentOrderField {
     LastModifiedAt = "LAST_MODIFIED_AT",
 }
 
+/** Filter used to filter AssignmentTypeChangedEvent */
+export type AssignmentTypeChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<AssignmentTypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    assignment?: InputMaybe<AssignmentFilterInput>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newType?: InputMaybe<AssignmentTypeFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<AssignmentTypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldType?: InputMaybe<AssignmentTypeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<AssignmentTypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Filter used to filter AssignmentType */
 export type AssignmentTypeFilterInput = {
     /** Connects all subformulas via and */
@@ -484,6 +707,84 @@ export type AuditedNodeFilterInput = {
     createdBy?: InputMaybe<UserFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type AbstractTypeChangedEvent */
+    isAbstractTypeChangedEventAnd?: InputMaybe<AbstractTypeChangedEventFilterInput>;
+    /** Filter for nodes of type AddedAffectedEntityEvent */
+    isAddedAffectedEntityEventAnd?: InputMaybe<AddedAffectedEntityEventFilterInput>;
+    /** Filter for nodes of type AddedArtefactEvent */
+    isAddedArtefactEventAnd?: InputMaybe<AddedArtefactEventFilterInput>;
+    /** Filter for nodes of type AddedLabelEvent */
+    isAddedLabelEventAnd?: InputMaybe<AddedLabelEventFilterInput>;
+    /** Filter for nodes of type AddedToPinnedIssuesEvent */
+    isAddedToPinnedIssuesEventAnd?: InputMaybe<AddedToPinnedIssuesEventFilterInput>;
+    /** Filter for nodes of type AddedToTrackableEvent */
+    isAddedToTrackableEventAnd?: InputMaybe<AddedToTrackableEventFilterInput>;
+    /** Filter for nodes of type Artefact */
+    isArtefactAnd?: InputMaybe<ArtefactFilterInput>;
+    /** Filter for nodes of type Assignment */
+    isAssignmentAnd?: InputMaybe<AssignmentFilterInput>;
+    /** Filter for nodes of type AssignmentTypeChangedEvent */
+    isAssignmentTypeChangedEventAnd?: InputMaybe<AssignmentTypeChangedEventFilterInput>;
+    /** Filter for nodes of type Body */
+    isBodyAnd?: InputMaybe<BodyFilterInput>;
+    /** Filter for nodes of type Comment */
+    isCommentAnd?: InputMaybe<CommentFilterInput>;
+    /** Filter for nodes of type IncomingRelationTypeChangedEvent */
+    isIncomingRelationTypeChangedEventAnd?: InputMaybe<IncomingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type Issue */
+    isIssueAnd?: InputMaybe<IssueFilterInput>;
+    /** Filter for nodes of type IssueComment */
+    isIssueCommentAnd?: InputMaybe<IssueCommentFilterInput>;
+    /** Filter for nodes of type IssueRelation */
+    isIssueRelationAnd?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for nodes of type Label */
+    isLabelAnd?: InputMaybe<LabelFilterInput>;
+    /** Filter for nodes of type NamedAuditedNode */
+    isNamedAuditedNodeAnd?: InputMaybe<NamedAuditedNodeFilterInput>;
+    /** Filter for nodes of type OutgoingRelationTypeChangedEvent */
+    isOutgoingRelationTypeChangedEventAnd?: InputMaybe<OutgoingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type ParentTimelineItem */
+    isParentTimelineItemAnd?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for nodes of type PriorityChangedEvent */
+    isPriorityChangedEventAnd?: InputMaybe<PriorityChangedEventFilterInput>;
+    /** Filter for nodes of type PublicTimelineItem */
+    isPublicTimelineItemAnd?: InputMaybe<PublicTimelineItemFilterInput>;
+    /** Filter for nodes of type RelatedByIssueEvent */
+    isRelatedByIssueEventAnd?: InputMaybe<RelatedByIssueEventFilterInput>;
+    /** Filter for nodes of type RelationTypeChangedEvent */
+    isRelationTypeChangedEventAnd?: InputMaybe<RelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type RemovedAffectedEntityEvent */
+    isRemovedAffectedEntityEventAnd?: InputMaybe<RemovedAffectedEntityEventFilterInput>;
+    /** Filter for nodes of type RemovedArtefactEvent */
+    isRemovedArtefactEventAnd?: InputMaybe<RemovedArtefactEventFilterInput>;
+    /** Filter for nodes of type RemovedAssignmentEvent */
+    isRemovedAssignmentEventAnd?: InputMaybe<RemovedAssignmentEventFilterInput>;
+    /** Filter for nodes of type RemovedFromPinnedIssuesEvent */
+    isRemovedFromPinnedIssuesEventAnd?: InputMaybe<RemovedFromPinnedIssuesEventFilterInput>;
+    /** Filter for nodes of type RemovedFromTrackableEvent */
+    isRemovedFromTrackableEventAnd?: InputMaybe<RemovedFromTrackableEventFilterInput>;
+    /** Filter for nodes of type RemovedIncomingRelationEvent */
+    isRemovedIncomingRelationEventAnd?: InputMaybe<RemovedIncomingRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedLabelEvent */
+    isRemovedLabelEventAnd?: InputMaybe<RemovedLabelEventFilterInput>;
+    /** Filter for nodes of type RemovedOutgoingRelationEvent */
+    isRemovedOutgoingRelationEventAnd?: InputMaybe<RemovedOutgoingRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedRelationEvent */
+    isRemovedRelationEventAnd?: InputMaybe<RemovedRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedTemplatedFieldEvent */
+    isRemovedTemplatedFieldEventAnd?: InputMaybe<RemovedTemplatedFieldEventFilterInput>;
+    /** Filter for nodes of type StateChangedEvent */
+    isStateChangedEventAnd?: InputMaybe<StateChangedEventFilterInput>;
+    /** Filter for nodes of type TemplateChangedEvent */
+    isTemplateChangedEventAnd?: InputMaybe<TemplateChangedEventFilterInput>;
+    /** Filter for nodes of type TemplatedFieldChangedEvent */
+    isTemplatedFieldChangedEventAnd?: InputMaybe<TemplatedFieldChangedEventFilterInput>;
+    /** Filter for nodes of type TimelineItem */
+    isTimelineItemAnd?: InputMaybe<TimelineItemFilterInput>;
+    /** Filter for nodes of type TitleChangedEvent */
+    isTitleChangedEventAnd?: InputMaybe<TitleChangedEventFilterInput>;
+    /** Filter for nodes of type TypeChangedEvent */
+    isTypeChangedEventAnd?: InputMaybe<TypeChangedEventFilterInput>;
     /** Filter by lastModifiedAt */
     lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
     /** Filters for nodes where the related node match this filter */
@@ -532,6 +833,18 @@ export type BasePermissionFilterInput = {
     description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type ComponentPermission */
+    isComponentPermissionAnd?: InputMaybe<ComponentPermissionFilterInput>;
+    /** Filter for nodes of type GlobalPermission */
+    isGlobalPermissionAnd?: InputMaybe<GlobalPermissionFilterInput>;
+    /** Filter for nodes of type IMSPermission */
+    isIMSPermissionAnd?: InputMaybe<ImsPermissionFilterInput>;
+    /** Filter for nodes of type NodePermission */
+    isNodePermissionAnd?: InputMaybe<NodePermissionFilterInput>;
+    /** Filter for nodes of type ProjectPermission */
+    isProjectPermissionAnd?: InputMaybe<ProjectPermissionFilterInput>;
+    /** Filter for nodes of type TrackablePermission */
+    isTrackablePermissionAnd?: InputMaybe<TrackablePermissionFilterInput>;
     /** Filter by name */
     name?: InputMaybe<StringFilterInput>;
     /** Negates the subformula */
@@ -626,6 +939,10 @@ export type CommentFilterInput = {
     createdBy?: InputMaybe<UserFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type Body */
+    isBodyAnd?: InputMaybe<BodyFilterInput>;
+    /** Filter for nodes of type IssueComment */
+    isIssueCommentAnd?: InputMaybe<IssueCommentFilterInput>;
     /** Filters for nodes where the related node match this filter */
     issue?: InputMaybe<IssueFilterInput>;
     /** Filter by lastModifiedAt */
@@ -763,7 +1080,7 @@ export enum ComponentPermissionEntry {
      *   - change the Template
      *   - add / remove Labels
      *   - add / remove Artefacts
-     *   - change any field on the Issue (title, startDate, dueDate, ...)
+     *   - change any field on the Issue (title, ...)
      *   - change templated fields
      * In contrast to `MODERATOR`, this does not allow editing / removing Comments of other users
      */
@@ -855,6 +1172,8 @@ export type ComponentTemplateFilterInput = {
     extends?: InputMaybe<ComponentTemplateListFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter by intraComponentDependencySpecificationTypes */
+    intraComponentDependencySpecificationTypes?: InputMaybe<IntraComponentDependencySpecificationTypeListFilterInput>;
     /** Filter by isDeprecated */
     isDeprecated?: InputMaybe<BooleanFilterInput>;
     /** Filter by name */
@@ -909,8 +1228,6 @@ export type ComponentVersionFilterInput = {
     and?: InputMaybe<Array<ComponentVersionFilterInput>>;
     /** Filters for nodes where the related node match this filter */
     component?: InputMaybe<ComponentFilterInput>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
     /** Filter by includingProjects */
@@ -921,8 +1238,6 @@ export type ComponentVersionFilterInput = {
     interfaceDefinitions?: InputMaybe<InterfaceDefinitionListFilterInput>;
     /** Filter by intraComponentDependencySpecifications */
     intraComponentDependencySpecifications?: InputMaybe<IntraComponentDependencySpecificationListFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
     /** Negates the subformula */
     not?: InputMaybe<ComponentVersionFilterInput>;
     /** Connects all subformulas via or */
@@ -963,8 +1278,6 @@ export type ComponentVersionOrder = {
 export enum ComponentVersionOrderField {
     /** Order by id */
     Id = "ID",
-    /** Order by name */
-    Name = "NAME",
     /** Order by template_id */
     TemplateId = "TEMPLATE_ID",
     /** Order by template_name */
@@ -1400,6 +1713,10 @@ export type ImsProjectOrder = {
 export enum ImsProjectOrderField {
     /** Order by id */
     Id = "ID",
+    /** Order by ims_id */
+    ImsId = "IMS_ID",
+    /** Order by ims_name */
+    ImsName = "IMS_NAME",
     /** Order by name */
     Name = "NAME",
     /** Order by template_id */
@@ -1550,6 +1867,38 @@ export type ImsUserTemplateFilterInput = {
     or?: InputMaybe<Array<ImsUserTemplateFilterInput>>;
 };
 
+/** Filter used to filter IncomingRelationTypeChangedEvent */
+export type IncomingRelationTypeChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<IncomingRelationTypeChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issueRelation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newType?: InputMaybe<IssueRelationTypeFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<IncomingRelationTypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldType?: InputMaybe<IssueRelationTypeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<IncomingRelationTypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Filter which can be used to filter for Nodes with a specific Int field */
 export type IntFilterInput = {
     /** Matches values which are equal to the provided value */
@@ -1584,10 +1933,6 @@ export type InterfaceDefinitionFilterInput = {
     not?: InputMaybe<InterfaceDefinitionFilterInput>;
     /** Connects all subformulas via or */
     or?: InputMaybe<Array<InterfaceDefinitionFilterInput>>;
-    /** Filters for nodes where the related node match this filter */
-    template?: InputMaybe<InterfaceDefinitionTemplateFilterInput>;
-    /** Filter for templated fields with matching key and values. Entries are joined by AND */
-    templatedFields?: InputMaybe<Array<InputMaybe<JsonFieldInput>>>;
     /** Filter by visibleDerivedBy */
     visibleDerivedBy?: InputMaybe<RelationListFilterInput>;
     /** Filters for nodes where the related node match this filter */
@@ -1618,31 +1963,15 @@ export type InterfaceDefinitionOrder = {
 export enum InterfaceDefinitionOrderField {
     /** Order by id */
     Id = "ID",
+    /** Order by interfaceSpecificationVersion_id */
+    InterfaceSpecificationVersionId = "INTERFACE_SPECIFICATION_VERSION_ID",
+    /** Order by interfaceSpecificationVersion_version */
+    InterfaceSpecificationVersionVersion = "INTERFACE_SPECIFICATION_VERSION_VERSION",
     /** Order by invisibleSelfDefined */
     InvisibleSelfDefined = "INVISIBLE_SELF_DEFINED",
-    /** Order by template_id */
-    TemplateId = "TEMPLATE_ID",
-    /** Order by template_name */
-    TemplateName = "TEMPLATE_NAME",
     /** Order by visibleSelfDefined */
     VisibleSelfDefined = "VISIBLE_SELF_DEFINED",
 }
-
-/** Filter used to filter InterfaceDefinitionTemplate */
-export type InterfaceDefinitionTemplateFilterInput = {
-    /** Connects all subformulas via and */
-    and?: InputMaybe<Array<InterfaceDefinitionTemplateFilterInput>>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
-    /** Filter by id */
-    id?: InputMaybe<IdFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
-    /** Negates the subformula */
-    not?: InputMaybe<InterfaceDefinitionTemplateFilterInput>;
-    /** Connects all subformulas via or */
-    or?: InputMaybe<Array<InterfaceDefinitionTemplateFilterInput>>;
-};
 
 /** Filter used to filter Interface */
 export type InterfaceFilterInput = {
@@ -1652,8 +1981,6 @@ export type InterfaceFilterInput = {
     aggregatedIssues?: InputMaybe<AggregatedIssueListFilterInput>;
     /** Connects all subformulas via and */
     and?: InputMaybe<Array<InterfaceFilterInput>>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
     /** Filter by incomingRelations */
@@ -1662,8 +1989,6 @@ export type InterfaceFilterInput = {
     interfaceDefinition?: InputMaybe<InterfaceDefinitionFilterInput>;
     /** Filter by intraComponentDependencyParticipants */
     intraComponentDependencyParticipants?: InputMaybe<IntraComponentDependencyParticipantListFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
     /** Negates the subformula */
     not?: InputMaybe<InterfaceFilterInput>;
     /** Connects all subformulas via or */
@@ -1674,31 +1999,7 @@ export type InterfaceFilterInput = {
     partOfProject?: InputMaybe<Scalars["ID"]["input"]>;
     /** Filters for AffectedByIssues which are related to a Trackable */
     relatedTo?: InputMaybe<Scalars["ID"]["input"]>;
-    /** Filters for nodes where the related node match this filter */
-    template?: InputMaybe<InterfaceTemplateFilterInput>;
-    /** Filter for templated fields with matching key and values. Entries are joined by AND */
-    templatedFields?: InputMaybe<Array<InputMaybe<JsonFieldInput>>>;
 };
-
-/** Defines the order of a Interface list */
-export type InterfaceOrder = {
-    /** The direction to order by, defaults to ASC */
-    direction?: InputMaybe<OrderDirection>;
-    /** The field to order by, defaults to ID */
-    field?: InputMaybe<InterfaceOrderField>;
-};
-
-/** Fields a list of Interface can be sorted by */
-export enum InterfaceOrderField {
-    /** Order by id */
-    Id = "ID",
-    /** Order by name */
-    Name = "NAME",
-    /** Order by template_id */
-    TemplateId = "TEMPLATE_ID",
-    /** Order by template_name */
-    TemplateName = "TEMPLATE_NAME",
-}
 
 /** Filter used to filter InterfacePart */
 export type InterfacePartFilterInput = {
@@ -1952,16 +2253,12 @@ export type InterfaceSpecificationVersionFilterInput = {
     affectingIssues?: InputMaybe<IssueListFilterInput>;
     /** Connects all subformulas via and */
     and?: InputMaybe<Array<InterfaceSpecificationVersionFilterInput>>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
     /** Filter by interfaceDefinitions */
     interfaceDefinitions?: InputMaybe<InterfaceDefinitionListFilterInput>;
     /** Filters for nodes where the related node match this filter */
     interfaceSpecification?: InputMaybe<InterfaceSpecificationFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
     /** Negates the subformula */
     not?: InputMaybe<InterfaceSpecificationVersionFilterInput>;
     /** Connects all subformulas via or */
@@ -2000,8 +2297,6 @@ export type InterfaceSpecificationVersionOrder = {
 export enum InterfaceSpecificationVersionOrderField {
     /** Order by id */
     Id = "ID",
-    /** Order by name */
-    Name = "NAME",
     /** Order by template_id */
     TemplateId = "TEMPLATE_ID",
     /** Order by template_name */
@@ -2024,22 +2319,6 @@ export type InterfaceSpecificationVersionTemplateFilterInput = {
     not?: InputMaybe<InterfaceSpecificationVersionTemplateFilterInput>;
     /** Connects all subformulas via or */
     or?: InputMaybe<Array<InterfaceSpecificationVersionTemplateFilterInput>>;
-};
-
-/** Filter used to filter InterfaceTemplate */
-export type InterfaceTemplateFilterInput = {
-    /** Connects all subformulas via and */
-    and?: InputMaybe<Array<InterfaceTemplateFilterInput>>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
-    /** Filter by id */
-    id?: InputMaybe<IdFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
-    /** Negates the subformula */
-    not?: InputMaybe<InterfaceTemplateFilterInput>;
-    /** Connects all subformulas via or */
-    or?: InputMaybe<Array<InterfaceTemplateFilterInput>>;
 };
 
 /** Filter used to filter IntraComponentDependencyParticipant */
@@ -2106,6 +2385,8 @@ export type IntraComponentDependencySpecificationFilterInput = {
     or?: InputMaybe<Array<IntraComponentDependencySpecificationFilterInput>>;
     /** Filter by outgoingParticipants */
     outgoingParticipants?: InputMaybe<IntraComponentDependencyParticipantListFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    type?: InputMaybe<IntraComponentDependencySpecificationTypeFilterInput>;
 };
 
 /** Used to filter by a connection-based property. Fields are joined by AND */
@@ -2128,6 +2409,56 @@ export type IntraComponentDependencySpecificationOrder = {
 
 /** Fields a list of IntraComponentDependencySpecification can be sorted by */
 export enum IntraComponentDependencySpecificationOrderField {
+    /** Order by id */
+    Id = "ID",
+    /** Order by name */
+    Name = "NAME",
+    /** Order by type_id */
+    TypeId = "TYPE_ID",
+    /** Order by type_name */
+    TypeName = "TYPE_NAME",
+}
+
+/** Filter used to filter IntraComponentDependencySpecificationType */
+export type IntraComponentDependencySpecificationTypeFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<IntraComponentDependencySpecificationTypeFilterInput>>;
+    /** Filter by description */
+    description?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter by intraComponentDependencySpecificationsWithType */
+    intraComponentDependencySpecificationsWithType?: InputMaybe<IssueListFilterInput>;
+    /** Filter by name */
+    name?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<IntraComponentDependencySpecificationTypeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<IntraComponentDependencySpecificationTypeFilterInput>>;
+    /** Filter by partOf */
+    partOf?: InputMaybe<ComponentTemplateListFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type IntraComponentDependencySpecificationTypeListFilterInput = {
+    /** Filters for nodes where all of the related nodes match this filter */
+    all?: InputMaybe<IntraComponentDependencySpecificationTypeFilterInput>;
+    /** Filters for nodes where any of the related nodes match this filter */
+    any?: InputMaybe<IntraComponentDependencySpecificationTypeFilterInput>;
+    /** Filters for nodes where none of the related nodes match this filter */
+    none?: InputMaybe<IntraComponentDependencySpecificationTypeFilterInput>;
+};
+
+/** Defines the order of a IntraComponentDependencySpecificationType list */
+export type IntraComponentDependencySpecificationTypeOrder = {
+    /** The direction to order by, defaults to ASC */
+    direction?: InputMaybe<OrderDirection>;
+    /** The field to order by, defaults to ID */
+    field?: InputMaybe<IntraComponentDependencySpecificationTypeOrderField>;
+};
+
+/** Fields a list of IntraComponentDependencySpecificationType can be sorted by */
+export enum IntraComponentDependencySpecificationTypeOrderField {
     /** Order by id */
     Id = "ID",
     /** Order by name */
@@ -2220,10 +2551,6 @@ export type IssueFilterInput = {
     createdAt?: InputMaybe<DateTimeFilterInput>;
     /** Filters for nodes where the related node match this filter */
     createdBy?: InputMaybe<UserFilterInput>;
-    /** Filter by dueDate */
-    dueDate?: InputMaybe<NullableDateTimeFilterInput>;
-    /** Filter by estimatedTime */
-    estimatedTime?: InputMaybe<NullableDurationFilterInputFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
     /** Filter by imsIssues */
@@ -2252,10 +2579,6 @@ export type IssueFilterInput = {
     pinnedOn?: InputMaybe<TrackableListFilterInput>;
     /** Filters for nodes where the related node match this filter */
     priority?: InputMaybe<IssuePriorityFilterInput>;
-    /** Filter by spentTime */
-    spentTime?: InputMaybe<NullableDurationFilterInputFilterInput>;
-    /** Filter by startDate */
-    startDate?: InputMaybe<NullableDateTimeFilterInput>;
     /** Filters for nodes where the related node match this filter */
     state?: InputMaybe<IssueStateFilterInput>;
     /** Filters for nodes where the related node match this filter */
@@ -2294,10 +2617,6 @@ export type IssueOrder = {
 export enum IssueOrderField {
     /** Order by createdAt */
     CreatedAt = "CREATED_AT",
-    /** Order by dueDate */
-    DueDate = "DUE_DATE",
-    /** Order by estimatedTime */
-    EstimatedTime = "ESTIMATED_TIME",
     /** Order by id */
     Id = "ID",
     /** Order by lastModifiedAt */
@@ -2310,10 +2629,6 @@ export enum IssueOrderField {
     PriorityName = "PRIORITY_NAME",
     /** Order by priority_value */
     PriorityValue = "PRIORITY_VALUE",
-    /** Order by spentTime */
-    SpentTime = "SPENT_TIME",
-    /** Order by startDate */
-    StartDate = "START_DATE",
     /** Order by state_id */
     StateId = "STATE_ID",
     /** Order by state_isOpen */
@@ -2718,6 +3033,34 @@ export enum LabelOrderField {
     Name = "NAME",
 }
 
+/** Filter used to filter LegalInformation */
+export type LegalInformationFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<LegalInformationFilterInput>>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<LegalInformationFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<LegalInformationFilterInput>>;
+};
+
+/** Defines the order of a LegalInformation list */
+export type LegalInformationOrder = {
+    /** The direction to order by, defaults to ASC */
+    direction?: InputMaybe<OrderDirection>;
+    /** The field to order by, defaults to ID */
+    field?: InputMaybe<LegalInformationOrderField>;
+};
+
+/** Fields a list of LegalInformation can be sorted by */
+export enum LegalInformationOrderField {
+    /** Order by id */
+    Id = "ID",
+    /** Order by priority */
+    Priority = "PRIORITY",
+}
+
 /** Type of a Relation marker */
 export enum MarkerType {
     /** A regular arrow */
@@ -2736,6 +3079,62 @@ export enum MarkerType {
     Triangle = "TRIANGLE",
 }
 
+/** Filter used to filter NamedAffectedByIssue */
+export type NamedAffectedByIssueFilterInput = {
+    /** Filter by affectingIssues */
+    affectingIssues?: InputMaybe<IssueListFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<NamedAffectedByIssueFilterInput>>;
+    /** Filter by description */
+    description?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type Component */
+    isComponentAnd?: InputMaybe<ComponentFilterInput>;
+    /** Filter for nodes of type InterfacePart */
+    isInterfacePartAnd?: InputMaybe<InterfacePartFilterInput>;
+    /** Filter for nodes of type InterfaceSpecification */
+    isInterfaceSpecificationAnd?: InputMaybe<InterfaceSpecificationFilterInput>;
+    /** Filter for nodes of type Project */
+    isProjectAnd?: InputMaybe<ProjectFilterInput>;
+    /** Filter for nodes of type Trackable */
+    isTrackableAnd?: InputMaybe<TrackableFilterInput>;
+    /** Filter by name */
+    name?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<NamedAffectedByIssueFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<NamedAffectedByIssueFilterInput>>;
+    /** Filters for AffectedByIssues which are related to a Trackable */
+    relatedTo?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+/** Filter used to filter NamedAuditedNode */
+export type NamedAuditedNodeFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<NamedAuditedNodeFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by description */
+    description?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type Label */
+    isLabelAnd?: InputMaybe<LabelFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filter by name */
+    name?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<NamedAuditedNodeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<NamedAuditedNodeFilterInput>>;
+};
+
 export type NodePermissionFilterEntry = {
     /** The node where the user must have the permission */
     node: Scalars["ID"]["input"];
@@ -2743,40 +3142,32 @@ export type NodePermissionFilterEntry = {
     permission: AllPermissionEntry;
 };
 
-/** Filter which can be used to filter for Nodes with a specific DateTime field */
-export type NullableDateTimeFilterInput = {
-    /** Matches values which are equal to the provided value */
-    eq?: InputMaybe<Scalars["DateTime"]["input"]>;
-    /** Matches values which are greater than the provided value */
-    gt?: InputMaybe<Scalars["DateTime"]["input"]>;
-    /** Matches values which are greater than or equal to the provided value */
-    gte?: InputMaybe<Scalars["DateTime"]["input"]>;
-    /** Matches values which are equal to any of the provided values */
-    in?: InputMaybe<Array<Scalars["DateTime"]["input"]>>;
-    /** If true, matches only null values, if false, matches only non-null values */
-    isNull?: InputMaybe<Scalars["Boolean"]["input"]>;
-    /** Matches values which are lesser than the provided value */
-    lt?: InputMaybe<Scalars["DateTime"]["input"]>;
-    /** Matches values which are lesser than or equal to the provided value */
-    lte?: InputMaybe<Scalars["DateTime"]["input"]>;
-};
-
-/** Filter which can be used to filter for Nodes with a specific Duration field */
-export type NullableDurationFilterInputFilterInput = {
-    /** Matches values which are equal to the provided value */
-    eq?: InputMaybe<Scalars["Duration"]["input"]>;
-    /** Matches values which are greater than the provided value */
-    gt?: InputMaybe<Scalars["Duration"]["input"]>;
-    /** Matches values which are greater than or equal to the provided value */
-    gte?: InputMaybe<Scalars["Duration"]["input"]>;
-    /** Matches values which are equal to any of the provided values */
-    in?: InputMaybe<Array<Scalars["Duration"]["input"]>>;
-    /** If true, matches only null values, if false, matches only non-null values */
-    isNull?: InputMaybe<Scalars["Boolean"]["input"]>;
-    /** Matches values which are lesser than the provided value */
-    lt?: InputMaybe<Scalars["Duration"]["input"]>;
-    /** Matches values which are lesser than or equal to the provided value */
-    lte?: InputMaybe<Scalars["Duration"]["input"]>;
+/** Filter used to filter NodePermission */
+export type NodePermissionFilterInput = {
+    /** Filter by allUsers */
+    allUsers?: InputMaybe<BooleanFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<NodePermissionFilterInput>>;
+    /** Filter by description */
+    description?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type ComponentPermission */
+    isComponentPermissionAnd?: InputMaybe<ComponentPermissionFilterInput>;
+    /** Filter for nodes of type IMSPermission */
+    isIMSPermissionAnd?: InputMaybe<ImsPermissionFilterInput>;
+    /** Filter for nodes of type ProjectPermission */
+    isProjectPermissionAnd?: InputMaybe<ProjectPermissionFilterInput>;
+    /** Filter for nodes of type TrackablePermission */
+    isTrackablePermissionAnd?: InputMaybe<TrackablePermissionFilterInput>;
+    /** Filter by name */
+    name?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<NodePermissionFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<NodePermissionFilterInput>>;
+    /** Filter by users */
+    users?: InputMaybe<GropiusUserListFilterInput>;
 };
 
 /** Filter which can be used to filter for Nodes with a specific Int field */
@@ -2831,6 +3222,38 @@ export enum OrderDirection {
     Desc = "DESC",
 }
 
+/** Filter used to filter OutgoingRelationTypeChangedEvent */
+export type OutgoingRelationTypeChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<OutgoingRelationTypeChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issueRelation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newType?: InputMaybe<IssueRelationTypeFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<OutgoingRelationTypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldType?: InputMaybe<IssueRelationTypeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<OutgoingRelationTypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Filter used to filter ParentTimelineItem */
 export type ParentTimelineItemFilterInput = {
     /** Connects all subformulas via and */
@@ -2843,6 +3266,10 @@ export type ParentTimelineItemFilterInput = {
     createdBy?: InputMaybe<UserFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type RemovedFromTrackableEvent */
+    isRemovedFromTrackableEventAnd?: InputMaybe<RemovedFromTrackableEventFilterInput>;
+    /** Filter for nodes of type TemplateChangedEvent */
+    isTemplateChangedEventAnd?: InputMaybe<TemplateChangedEventFilterInput>;
     /** Filters for nodes where the related node match this filter */
     issue?: InputMaybe<IssueFilterInput>;
     /** Filter by lastModifiedAt */
@@ -2871,6 +3298,36 @@ export enum PermissionEntry {
     CanCreateTemplates = "CAN_CREATE_TEMPLATES",
 }
 
+/** Filter used to filter PriorityChangedEvent */
+export type PriorityChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<PriorityChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newPriority?: InputMaybe<IssuePriorityFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<PriorityChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldPriority?: InputMaybe<IssuePriorityFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<PriorityChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Filter used to filter Project */
 export type ProjectFilterInput = {
     /** Filter by affectingIssues */
@@ -2881,6 +3338,8 @@ export type ProjectFilterInput = {
     artefacts?: InputMaybe<ArtefactListFilterInput>;
     /** Filter by components */
     components?: InputMaybe<ComponentVersionListFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    defaultView?: InputMaybe<ViewFilterInput>;
     /** Filter by description */
     description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
@@ -2901,10 +3360,16 @@ export type ProjectFilterInput = {
     pinnedIssues?: InputMaybe<IssueListFilterInput>;
     /** Filters for AffectedByIssues which are related to a Trackable */
     relatedTo?: InputMaybe<Scalars["ID"]["input"]>;
+    /** Filter by relationLayouts */
+    relationLayouts?: InputMaybe<RelationLayoutListFilterInput>;
+    /** Filter by relationPartnerLayouts */
+    relationPartnerLayouts?: InputMaybe<RelationPartnerLayoutListFilterInput>;
     /** Filter by repositoryURL */
     repositoryURL?: InputMaybe<NullableStringFilterInput>;
     /** Filter by syncsTo */
     syncsTo?: InputMaybe<ImsProjectListFilterInput>;
+    /** Filter by views */
+    views?: InputMaybe<ViewListFilterInput>;
 };
 
 /** Used to filter by a connection-based property. Fields are joined by AND */
@@ -2978,7 +3443,7 @@ export enum ProjectPermissionEntry {
      *   - change the Template
      *   - add / remove Labels
      *   - add / remove Artefacts
-     *   - change any field on the Issue (title, startDate, dueDate, ...)
+     *   - change any field on the Issue (title, ...)
      *   - change templated fields
      * In contrast to `MODERATOR`, this does not allow editing / removing Comments of other users
      */
@@ -2988,6 +3453,8 @@ export enum ProjectPermissionEntry {
      * Also allows to delete a Label, but only if it is allowed on all Trackable the Label is on.
      */
     ManageLabels = "MANAGE_LABELS",
+    /** Allows to manage the views of this Project. */
+    ManageViews = "MANAGE_VIEWS",
     /**
      * Allows to moderate Issues on this Trackable.
      * This allows everything `MANAGE_ISSUES` allows.
@@ -3050,6 +3517,112 @@ export enum ProjectPermissionOrderField {
     /** Order by name */
     Name = "NAME",
 }
+
+/** Filter used to filter PublicTimelineItem */
+export type PublicTimelineItemFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<PublicTimelineItemFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type AbstractTypeChangedEvent */
+    isAbstractTypeChangedEventAnd?: InputMaybe<AbstractTypeChangedEventFilterInput>;
+    /** Filter for nodes of type AddedAffectedEntityEvent */
+    isAddedAffectedEntityEventAnd?: InputMaybe<AddedAffectedEntityEventFilterInput>;
+    /** Filter for nodes of type AddedArtefactEvent */
+    isAddedArtefactEventAnd?: InputMaybe<AddedArtefactEventFilterInput>;
+    /** Filter for nodes of type AddedLabelEvent */
+    isAddedLabelEventAnd?: InputMaybe<AddedLabelEventFilterInput>;
+    /** Filter for nodes of type AddedToPinnedIssuesEvent */
+    isAddedToPinnedIssuesEventAnd?: InputMaybe<AddedToPinnedIssuesEventFilterInput>;
+    /** Filter for nodes of type AddedToTrackableEvent */
+    isAddedToTrackableEventAnd?: InputMaybe<AddedToTrackableEventFilterInput>;
+    /** Filter for nodes of type Assignment */
+    isAssignmentAnd?: InputMaybe<AssignmentFilterInput>;
+    /** Filter for nodes of type AssignmentTypeChangedEvent */
+    isAssignmentTypeChangedEventAnd?: InputMaybe<AssignmentTypeChangedEventFilterInput>;
+    /** Filter for nodes of type Body */
+    isBodyAnd?: InputMaybe<BodyFilterInput>;
+    /** Filter for nodes of type Comment */
+    isCommentAnd?: InputMaybe<CommentFilterInput>;
+    /** Filter for nodes of type IncomingRelationTypeChangedEvent */
+    isIncomingRelationTypeChangedEventAnd?: InputMaybe<IncomingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type IssueComment */
+    isIssueCommentAnd?: InputMaybe<IssueCommentFilterInput>;
+    /** Filter for nodes of type IssueRelation */
+    isIssueRelationAnd?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for nodes of type OutgoingRelationTypeChangedEvent */
+    isOutgoingRelationTypeChangedEventAnd?: InputMaybe<OutgoingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type PriorityChangedEvent */
+    isPriorityChangedEventAnd?: InputMaybe<PriorityChangedEventFilterInput>;
+    /** Filter for nodes of type RelationTypeChangedEvent */
+    isRelationTypeChangedEventAnd?: InputMaybe<RelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type RemovedAffectedEntityEvent */
+    isRemovedAffectedEntityEventAnd?: InputMaybe<RemovedAffectedEntityEventFilterInput>;
+    /** Filter for nodes of type RemovedArtefactEvent */
+    isRemovedArtefactEventAnd?: InputMaybe<RemovedArtefactEventFilterInput>;
+    /** Filter for nodes of type RemovedAssignmentEvent */
+    isRemovedAssignmentEventAnd?: InputMaybe<RemovedAssignmentEventFilterInput>;
+    /** Filter for nodes of type RemovedFromPinnedIssuesEvent */
+    isRemovedFromPinnedIssuesEventAnd?: InputMaybe<RemovedFromPinnedIssuesEventFilterInput>;
+    /** Filter for nodes of type RemovedLabelEvent */
+    isRemovedLabelEventAnd?: InputMaybe<RemovedLabelEventFilterInput>;
+    /** Filter for nodes of type RemovedTemplatedFieldEvent */
+    isRemovedTemplatedFieldEventAnd?: InputMaybe<RemovedTemplatedFieldEventFilterInput>;
+    /** Filter for nodes of type StateChangedEvent */
+    isStateChangedEventAnd?: InputMaybe<StateChangedEventFilterInput>;
+    /** Filter for nodes of type TemplatedFieldChangedEvent */
+    isTemplatedFieldChangedEventAnd?: InputMaybe<TemplatedFieldChangedEventFilterInput>;
+    /** Filter for nodes of type TitleChangedEvent */
+    isTitleChangedEventAnd?: InputMaybe<TitleChangedEventFilterInput>;
+    /** Filter for nodes of type TypeChangedEvent */
+    isTypeChangedEventAnd?: InputMaybe<TypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<PublicTimelineItemFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<PublicTimelineItemFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RelatedByIssueEvent */
+export type RelatedByIssueEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RelatedByIssueEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RelatedByIssueEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RelatedByIssueEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    relation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
 
 /** Filter used to filter RelationCondition */
 export type RelationConditionFilterInput = {
@@ -3123,6 +3696,48 @@ export type RelationFilterInput = {
     templatedFields?: InputMaybe<Array<InputMaybe<JsonFieldInput>>>;
 };
 
+/** Filter used to filter RelationLayout */
+export type RelationLayoutFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RelationLayoutFilterInput>>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RelationLayoutFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RelationLayoutFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    project?: InputMaybe<ProjectFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    relation?: InputMaybe<RelationFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    view?: InputMaybe<ViewFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type RelationLayoutListFilterInput = {
+    /** Filters for nodes where all of the related nodes match this filter */
+    all?: InputMaybe<RelationLayoutFilterInput>;
+    /** Filters for nodes where any of the related nodes match this filter */
+    any?: InputMaybe<RelationLayoutFilterInput>;
+    /** Filters for nodes where none of the related nodes match this filter */
+    none?: InputMaybe<RelationLayoutFilterInput>;
+};
+
+/** Defines the order of a RelationLayout list */
+export type RelationLayoutOrder = {
+    /** The direction to order by, defaults to ASC */
+    direction?: InputMaybe<OrderDirection>;
+    /** The field to order by, defaults to ID */
+    field?: InputMaybe<RelationLayoutOrderField>;
+};
+
+/** Fields a list of RelationLayout can be sorted by */
+export enum RelationLayoutOrderField {
+    /** Order by id */
+    Id = "ID",
+}
+
 /** Used to filter by a connection-based property. Fields are joined by AND */
 export type RelationListFilterInput = {
     /** Filters for nodes where all of the related nodes match this filter */
@@ -3145,14 +3760,10 @@ export type RelationOrder = {
 export enum RelationOrderField {
     /** Order by end_id */
     EndId = "END_ID",
-    /** Order by end_name */
-    EndName = "END_NAME",
     /** Order by id */
     Id = "ID",
     /** Order by start_id */
     StartId = "START_ID",
-    /** Order by start_name */
-    StartName = "START_NAME",
     /** Order by template_id */
     TemplateId = "TEMPLATE_ID",
     /** Order by template_name */
@@ -3167,14 +3778,14 @@ export type RelationPartnerFilterInput = {
     aggregatedIssues?: InputMaybe<AggregatedIssueListFilterInput>;
     /** Connects all subformulas via and */
     and?: InputMaybe<Array<RelationPartnerFilterInput>>;
-    /** Filter by description */
-    description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
     /** Filter by incomingRelations */
     incomingRelations?: InputMaybe<RelationListFilterInput>;
-    /** Filter by name */
-    name?: InputMaybe<StringFilterInput>;
+    /** Filter for nodes of type ComponentVersion */
+    isComponentVersionAnd?: InputMaybe<ComponentVersionFilterInput>;
+    /** Filter for nodes of type Interface */
+    isInterfaceAnd?: InputMaybe<InterfaceFilterInput>;
     /** Negates the subformula */
     not?: InputMaybe<RelationPartnerFilterInput>;
     /** Connects all subformulas via or */
@@ -3185,9 +3796,49 @@ export type RelationPartnerFilterInput = {
     partOfProject?: InputMaybe<Scalars["ID"]["input"]>;
     /** Filters for AffectedByIssues which are related to a Trackable */
     relatedTo?: InputMaybe<Scalars["ID"]["input"]>;
-    /** Filter for templated fields with matching key and values. Entries are joined by AND */
-    templatedFields?: InputMaybe<Array<InputMaybe<JsonFieldInput>>>;
 };
+
+/** Filter used to filter RelationPartnerLayout */
+export type RelationPartnerLayoutFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RelationPartnerLayoutFilterInput>>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RelationPartnerLayoutFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RelationPartnerLayoutFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    project?: InputMaybe<ProjectFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    relationPartner?: InputMaybe<RelationPartnerFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    view?: InputMaybe<ViewFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type RelationPartnerLayoutListFilterInput = {
+    /** Filters for nodes where all of the related nodes match this filter */
+    all?: InputMaybe<RelationPartnerLayoutFilterInput>;
+    /** Filters for nodes where any of the related nodes match this filter */
+    any?: InputMaybe<RelationPartnerLayoutFilterInput>;
+    /** Filters for nodes where none of the related nodes match this filter */
+    none?: InputMaybe<RelationPartnerLayoutFilterInput>;
+};
+
+/** Defines the order of a RelationPartnerLayout list */
+export type RelationPartnerLayoutOrder = {
+    /** The direction to order by, defaults to ASC */
+    direction?: InputMaybe<OrderDirection>;
+    /** The field to order by, defaults to ID */
+    field?: InputMaybe<RelationPartnerLayoutOrderField>;
+};
+
+/** Fields a list of RelationPartnerLayout can be sorted by */
+export enum RelationPartnerLayoutOrderField {
+    /** Order by id */
+    Id = "ID",
+}
 
 /** Filter used to filter RelationPartnerTemplate */
 export type RelationPartnerTemplateFilterInput = {
@@ -3197,8 +3848,12 @@ export type RelationPartnerTemplateFilterInput = {
     description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type ComponentTemplate */
+    isComponentTemplateAnd?: InputMaybe<ComponentTemplateFilterInput>;
     /** Filter by isDeprecated */
     isDeprecated?: InputMaybe<BooleanFilterInput>;
+    /** Filter for nodes of type InterfaceSpecificationTemplate */
+    isInterfaceSpecificationTemplateAnd?: InputMaybe<InterfaceSpecificationTemplateFilterInput>;
     /** Filter by name */
     name?: InputMaybe<StringFilterInput>;
     /** Negates the subformula */
@@ -3287,6 +3942,328 @@ export enum RelationTemplateOrderField {
     Name = "NAME",
 }
 
+/** Filter used to filter RelationTypeChangedEvent */
+export type RelationTypeChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RelationTypeChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type IncomingRelationTypeChangedEvent */
+    isIncomingRelationTypeChangedEventAnd?: InputMaybe<IncomingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type OutgoingRelationTypeChangedEvent */
+    isOutgoingRelationTypeChangedEventAnd?: InputMaybe<OutgoingRelationTypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issueRelation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newType?: InputMaybe<IssueRelationTypeFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RelationTypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldType?: InputMaybe<IssueRelationTypeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RelationTypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedAffectedEntityEvent */
+export type RemovedAffectedEntityEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedAffectedEntityEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedAffectedEntityEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedAffectedEntityEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedAffectedEntity?: InputMaybe<AffectedByIssueFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedArtefactEvent */
+export type RemovedArtefactEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedArtefactEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedArtefactEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedArtefactEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedArtefact?: InputMaybe<ArtefactFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedAssignmentEvent */
+export type RemovedAssignmentEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedAssignmentEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedAssignmentEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedAssignmentEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedAssignment?: InputMaybe<AssignmentFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedFromPinnedIssuesEvent */
+export type RemovedFromPinnedIssuesEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedFromPinnedIssuesEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedFromPinnedIssuesEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedFromPinnedIssuesEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+    /** Filters for nodes where the related node match this filter */
+    unpinnedOn?: InputMaybe<TrackableFilterInput>;
+};
+
+/** Filter used to filter RemovedFromTrackableEvent */
+export type RemovedFromTrackableEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedFromTrackableEventFilterInput>>;
+    /** Filter by childItems */
+    childItems?: InputMaybe<TimelineItemListFilterInput>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedFromTrackableEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedFromTrackableEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedFromTrackable?: InputMaybe<TrackableFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedIncomingRelationEvent */
+export type RemovedIncomingRelationEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedIncomingRelationEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedIncomingRelationEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedIncomingRelationEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedRelation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedLabelEvent */
+export type RemovedLabelEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedLabelEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedLabelEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedLabelEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedLabel?: InputMaybe<LabelFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedOutgoingRelationEvent */
+export type RemovedOutgoingRelationEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedOutgoingRelationEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedOutgoingRelationEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedOutgoingRelationEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedRelation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedRelationEvent */
+export type RemovedRelationEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedRelationEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type RemovedIncomingRelationEvent */
+    isRemovedIncomingRelationEventAnd?: InputMaybe<RemovedIncomingRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedOutgoingRelationEvent */
+    isRemovedOutgoingRelationEventAnd?: InputMaybe<RemovedOutgoingRelationEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedRelationEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedRelationEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    removedRelation?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter RemovedTemplatedFieldEvent */
+export type RemovedTemplatedFieldEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<RemovedTemplatedFieldEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by fieldName */
+    fieldName?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<RemovedTemplatedFieldEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<RemovedTemplatedFieldEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Type of a Shape */
 export enum ShapeType {
     /** A Circle */
@@ -3300,6 +4277,36 @@ export enum ShapeType {
     /** A Rhombus */
     Rhombus = "RHOMBUS",
 }
+
+/** Filter used to filter StateChangedEvent */
+export type StateChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<StateChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newState?: InputMaybe<IssueStateFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<StateChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldState?: InputMaybe<IssueStateFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<StateChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
 
 /** Filter which can be used to filter for Nodes with a specific String field */
 export type StringFilterInput = {
@@ -3333,6 +4340,10 @@ export type SyncPermissionTargetFilterInput = {
     description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type IMS */
+    isIMSAnd?: InputMaybe<ImsFilterInput>;
+    /** Filter for nodes of type IMSProject */
+    isIMSProjectAnd?: InputMaybe<ImsProjectFilterInput>;
     /** Filter by name */
     name?: InputMaybe<StringFilterInput>;
     /** Negates the subformula */
@@ -3371,6 +4382,66 @@ export enum SyncPermissionTargetOrderField {
     Name = "NAME",
 }
 
+/** Filter used to filter TemplateChangedEvent */
+export type TemplateChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<TemplateChangedEventFilterInput>>;
+    /** Filter by childItems */
+    childItems?: InputMaybe<TimelineItemListFilterInput>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newTemplate?: InputMaybe<IssueTemplateFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<TemplateChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldTemplate?: InputMaybe<IssueTemplateFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<TemplateChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
+/** Filter used to filter TemplatedFieldChangedEvent */
+export type TemplatedFieldChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<TemplatedFieldChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by fieldName */
+    fieldName?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<TemplatedFieldChangedEventFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<TemplatedFieldChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Filter used to filter TimelineItem */
 export type TimelineItemFilterInput = {
     /** Connects all subformulas via and */
@@ -3381,6 +4452,74 @@ export type TimelineItemFilterInput = {
     createdBy?: InputMaybe<UserFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type AbstractTypeChangedEvent */
+    isAbstractTypeChangedEventAnd?: InputMaybe<AbstractTypeChangedEventFilterInput>;
+    /** Filter for nodes of type AddedAffectedEntityEvent */
+    isAddedAffectedEntityEventAnd?: InputMaybe<AddedAffectedEntityEventFilterInput>;
+    /** Filter for nodes of type AddedArtefactEvent */
+    isAddedArtefactEventAnd?: InputMaybe<AddedArtefactEventFilterInput>;
+    /** Filter for nodes of type AddedLabelEvent */
+    isAddedLabelEventAnd?: InputMaybe<AddedLabelEventFilterInput>;
+    /** Filter for nodes of type AddedToPinnedIssuesEvent */
+    isAddedToPinnedIssuesEventAnd?: InputMaybe<AddedToPinnedIssuesEventFilterInput>;
+    /** Filter for nodes of type AddedToTrackableEvent */
+    isAddedToTrackableEventAnd?: InputMaybe<AddedToTrackableEventFilterInput>;
+    /** Filter for nodes of type Assignment */
+    isAssignmentAnd?: InputMaybe<AssignmentFilterInput>;
+    /** Filter for nodes of type AssignmentTypeChangedEvent */
+    isAssignmentTypeChangedEventAnd?: InputMaybe<AssignmentTypeChangedEventFilterInput>;
+    /** Filter for nodes of type Body */
+    isBodyAnd?: InputMaybe<BodyFilterInput>;
+    /** Filter for nodes of type Comment */
+    isCommentAnd?: InputMaybe<CommentFilterInput>;
+    /** Filter for nodes of type IncomingRelationTypeChangedEvent */
+    isIncomingRelationTypeChangedEventAnd?: InputMaybe<IncomingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type IssueComment */
+    isIssueCommentAnd?: InputMaybe<IssueCommentFilterInput>;
+    /** Filter for nodes of type IssueRelation */
+    isIssueRelationAnd?: InputMaybe<IssueRelationFilterInput>;
+    /** Filter for nodes of type OutgoingRelationTypeChangedEvent */
+    isOutgoingRelationTypeChangedEventAnd?: InputMaybe<OutgoingRelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type ParentTimelineItem */
+    isParentTimelineItemAnd?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for nodes of type PriorityChangedEvent */
+    isPriorityChangedEventAnd?: InputMaybe<PriorityChangedEventFilterInput>;
+    /** Filter for nodes of type PublicTimelineItem */
+    isPublicTimelineItemAnd?: InputMaybe<PublicTimelineItemFilterInput>;
+    /** Filter for nodes of type RelatedByIssueEvent */
+    isRelatedByIssueEventAnd?: InputMaybe<RelatedByIssueEventFilterInput>;
+    /** Filter for nodes of type RelationTypeChangedEvent */
+    isRelationTypeChangedEventAnd?: InputMaybe<RelationTypeChangedEventFilterInput>;
+    /** Filter for nodes of type RemovedAffectedEntityEvent */
+    isRemovedAffectedEntityEventAnd?: InputMaybe<RemovedAffectedEntityEventFilterInput>;
+    /** Filter for nodes of type RemovedArtefactEvent */
+    isRemovedArtefactEventAnd?: InputMaybe<RemovedArtefactEventFilterInput>;
+    /** Filter for nodes of type RemovedAssignmentEvent */
+    isRemovedAssignmentEventAnd?: InputMaybe<RemovedAssignmentEventFilterInput>;
+    /** Filter for nodes of type RemovedFromPinnedIssuesEvent */
+    isRemovedFromPinnedIssuesEventAnd?: InputMaybe<RemovedFromPinnedIssuesEventFilterInput>;
+    /** Filter for nodes of type RemovedFromTrackableEvent */
+    isRemovedFromTrackableEventAnd?: InputMaybe<RemovedFromTrackableEventFilterInput>;
+    /** Filter for nodes of type RemovedIncomingRelationEvent */
+    isRemovedIncomingRelationEventAnd?: InputMaybe<RemovedIncomingRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedLabelEvent */
+    isRemovedLabelEventAnd?: InputMaybe<RemovedLabelEventFilterInput>;
+    /** Filter for nodes of type RemovedOutgoingRelationEvent */
+    isRemovedOutgoingRelationEventAnd?: InputMaybe<RemovedOutgoingRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedRelationEvent */
+    isRemovedRelationEventAnd?: InputMaybe<RemovedRelationEventFilterInput>;
+    /** Filter for nodes of type RemovedTemplatedFieldEvent */
+    isRemovedTemplatedFieldEventAnd?: InputMaybe<RemovedTemplatedFieldEventFilterInput>;
+    /** Filter for nodes of type StateChangedEvent */
+    isStateChangedEventAnd?: InputMaybe<StateChangedEventFilterInput>;
+    /** Filter for nodes of type TemplateChangedEvent */
+    isTemplateChangedEventAnd?: InputMaybe<TemplateChangedEventFilterInput>;
+    /** Filter for nodes of type TemplatedFieldChangedEvent */
+    isTemplatedFieldChangedEventAnd?: InputMaybe<TemplatedFieldChangedEventFilterInput>;
+    /** Filter for nodes of type TitleChangedEvent */
+    isTitleChangedEventAnd?: InputMaybe<TitleChangedEventFilterInput>;
+    /** Filter for nodes of type TypeChangedEvent */
+    isTypeChangedEventAnd?: InputMaybe<TypeChangedEventFilterInput>;
     /** Filters for nodes where the related node match this filter */
     issue?: InputMaybe<IssueFilterInput>;
     /** Filter by lastModifiedAt */
@@ -3499,6 +4638,36 @@ export enum TimelineItemType {
     TypeChangedEvent = "TYPE_CHANGED_EVENT",
 }
 
+/** Filter used to filter TitleChangedEvent */
+export type TitleChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<TitleChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filter by newTitle */
+    newTitle?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<TitleChangedEventFilterInput>;
+    /** Filter by oldTitle */
+    oldTitle?: InputMaybe<StringFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<TitleChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Filter used to filter Trackable */
 export type TrackableFilterInput = {
     /** Filter by affectingIssues */
@@ -3511,6 +4680,10 @@ export type TrackableFilterInput = {
     description?: InputMaybe<StringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type Component */
+    isComponentAnd?: InputMaybe<ComponentFilterInput>;
+    /** Filter for nodes of type Project */
+    isProjectAnd?: InputMaybe<ProjectFilterInput>;
     /** Filter by issues */
     issues?: InputMaybe<IssueListFilterInput>;
     /** Filter by labels */
@@ -3557,6 +4730,60 @@ export enum TrackableOrderField {
     Name = "NAME",
 }
 
+/** Filter used to filter TrackablePermission */
+export type TrackablePermissionFilterInput = {
+    /** Filter by allUsers */
+    allUsers?: InputMaybe<BooleanFilterInput>;
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<TrackablePermissionFilterInput>>;
+    /** Filter by description */
+    description?: InputMaybe<StringFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type ComponentPermission */
+    isComponentPermissionAnd?: InputMaybe<ComponentPermissionFilterInput>;
+    /** Filter for nodes of type ProjectPermission */
+    isProjectPermissionAnd?: InputMaybe<ProjectPermissionFilterInput>;
+    /** Filter by name */
+    name?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<TrackablePermissionFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<TrackablePermissionFilterInput>>;
+    /** Filter by users */
+    users?: InputMaybe<GropiusUserListFilterInput>;
+};
+
+/** Filter used to filter TypeChangedEvent */
+export type TypeChangedEventFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<TypeChangedEventFilterInput>>;
+    /** Filter by createdAt */
+    createdAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    createdBy?: InputMaybe<UserFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    issue?: InputMaybe<IssueFilterInput>;
+    /** Filter by lastModifiedAt */
+    lastModifiedAt?: InputMaybe<DateTimeFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    lastModifiedBy?: InputMaybe<UserFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    newType?: InputMaybe<IssueTypeFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<TypeChangedEventFilterInput>;
+    /** Filters for nodes where the related node match this filter */
+    oldType?: InputMaybe<IssueTypeFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<TypeChangedEventFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    parentItem?: InputMaybe<ParentTimelineItemFilterInput>;
+    /** Filter for specific timeline items. Entries are joined by OR */
+    timelineItemTypes?: InputMaybe<Array<TimelineItemType>>;
+};
+
 /** Input for the updateIMSUser mutation */
 export type UpdateImsUserInput = {
     /** The new displayName of the User to update */
@@ -3591,6 +4818,10 @@ export type UserFilterInput = {
     email?: InputMaybe<NullableStringFilterInput>;
     /** Filter by id */
     id?: InputMaybe<IdFilterInput>;
+    /** Filter for nodes of type GropiusUser */
+    isGropiusUserAnd?: InputMaybe<GropiusUserFilterInput>;
+    /** Filter for nodes of type IMSUser */
+    isIMSUserAnd?: InputMaybe<ImsUserFilterInput>;
     /** Negates the subformula */
     not?: InputMaybe<UserFilterInput>;
     /** Connects all subformulas via or */
@@ -3629,6 +4860,56 @@ export enum UserOrderField {
     Id = "ID",
     /** Order by username */
     Username = "USERNAME",
+}
+
+/** Filter used to filter View */
+export type ViewFilterInput = {
+    /** Connects all subformulas via and */
+    and?: InputMaybe<Array<ViewFilterInput>>;
+    /** Filter by description */
+    description?: InputMaybe<StringFilterInput>;
+    /** Filter by filterByTemplate */
+    filterByTemplate?: InputMaybe<ComponentTemplateListFilterInput>;
+    /** Filter by id */
+    id?: InputMaybe<IdFilterInput>;
+    /** Filter by name */
+    name?: InputMaybe<StringFilterInput>;
+    /** Negates the subformula */
+    not?: InputMaybe<ViewFilterInput>;
+    /** Connects all subformulas via or */
+    or?: InputMaybe<Array<ViewFilterInput>>;
+    /** Filters for nodes where the related node match this filter */
+    project?: InputMaybe<ProjectFilterInput>;
+    /** Filter by relationLayouts */
+    relationLayouts?: InputMaybe<RelationLayoutListFilterInput>;
+    /** Filter by relationPartnerLayouts */
+    relationPartnerLayouts?: InputMaybe<RelationPartnerLayoutListFilterInput>;
+};
+
+/** Used to filter by a connection-based property. Fields are joined by AND */
+export type ViewListFilterInput = {
+    /** Filters for nodes where all of the related nodes match this filter */
+    all?: InputMaybe<ViewFilterInput>;
+    /** Filters for nodes where any of the related nodes match this filter */
+    any?: InputMaybe<ViewFilterInput>;
+    /** Filters for nodes where none of the related nodes match this filter */
+    none?: InputMaybe<ViewFilterInput>;
+};
+
+/** Defines the order of a View list */
+export type ViewOrder = {
+    /** The direction to order by, defaults to ASC */
+    direction?: InputMaybe<OrderDirection>;
+    /** The field to order by, defaults to ID */
+    field?: InputMaybe<ViewOrderField>;
+};
+
+/** Fields a list of View can be sorted by */
+export enum ViewOrderField {
+    /** Order by id */
+    Id = "ID",
+    /** Order by name */
+    Name = "NAME",
 }
 
 export type ImsUserWithDetailFragment = {
@@ -3687,7 +4968,6 @@ export type GetBasicImsUserDataQuery = {
         | { __typename: "IncomingRelationTypeChangedEvent"; id: string }
         | { __typename: "Interface"; id: string }
         | { __typename: "InterfaceDefinition"; id: string }
-        | { __typename: "InterfaceDefinitionTemplate"; id: string }
         | { __typename: "InterfacePart"; id: string }
         | { __typename: "InterfacePartTemplate"; id: string }
         | { __typename: "InterfaceSpecification"; id: string }
@@ -3695,9 +4975,9 @@ export type GetBasicImsUserDataQuery = {
         | { __typename: "InterfaceSpecificationTemplate"; id: string }
         | { __typename: "InterfaceSpecificationVersion"; id: string }
         | { __typename: "InterfaceSpecificationVersionTemplate"; id: string }
-        | { __typename: "InterfaceTemplate"; id: string }
         | { __typename: "IntraComponentDependencyParticipant"; id: string }
         | { __typename: "IntraComponentDependencySpecification"; id: string }
+        | { __typename: "IntraComponentDependencySpecificationType"; id: string }
         | { __typename: "Issue"; id: string }
         | { __typename: "IssueComment"; id: string }
         | { __typename: "IssuePriority"; id: string }
@@ -3707,6 +4987,7 @@ export type GetBasicImsUserDataQuery = {
         | { __typename: "IssueTemplate"; id: string }
         | { __typename: "IssueType"; id: string }
         | { __typename: "Label"; id: string }
+        | { __typename: "LegalInformation"; id: string }
         | { __typename: "OutgoingRelationTypeChangedEvent"; id: string }
         | { __typename: "PriorityChangedEvent"; id: string }
         | { __typename: "Project"; id: string }
@@ -3714,6 +4995,8 @@ export type GetBasicImsUserDataQuery = {
         | { __typename: "RelatedByIssueEvent"; id: string }
         | { __typename: "Relation"; id: string }
         | { __typename: "RelationCondition"; id: string }
+        | { __typename: "RelationLayout"; id: string }
+        | { __typename: "RelationPartnerLayout"; id: string }
         | { __typename: "RelationTemplate"; id: string }
         | { __typename: "RemovedAffectedEntityEvent"; id: string }
         | { __typename: "RemovedArtefactEvent"; id: string }
@@ -3730,6 +5013,7 @@ export type GetBasicImsUserDataQuery = {
         | { __typename: "TemplatedFieldChangedEvent"; id: string }
         | { __typename: "TitleChangedEvent"; id: string }
         | { __typename: "TypeChangedEvent"; id: string }
+        | { __typename: "View"; id: string }
         | null;
 };
 
@@ -3787,7 +5071,6 @@ export type GetImsUserDetailsQuery = {
         | { __typename?: "IncomingRelationTypeChangedEvent" }
         | { __typename?: "Interface" }
         | { __typename?: "InterfaceDefinition" }
-        | { __typename?: "InterfaceDefinitionTemplate" }
         | { __typename?: "InterfacePart" }
         | { __typename?: "InterfacePartTemplate" }
         | { __typename?: "InterfaceSpecification" }
@@ -3795,9 +5078,9 @@ export type GetImsUserDetailsQuery = {
         | { __typename?: "InterfaceSpecificationTemplate" }
         | { __typename?: "InterfaceSpecificationVersion" }
         | { __typename?: "InterfaceSpecificationVersionTemplate" }
-        | { __typename?: "InterfaceTemplate" }
         | { __typename?: "IntraComponentDependencyParticipant" }
         | { __typename?: "IntraComponentDependencySpecification" }
+        | { __typename?: "IntraComponentDependencySpecificationType" }
         | { __typename?: "Issue" }
         | { __typename?: "IssueComment" }
         | { __typename?: "IssuePriority" }
@@ -3807,6 +5090,7 @@ export type GetImsUserDetailsQuery = {
         | { __typename?: "IssueTemplate" }
         | { __typename?: "IssueType" }
         | { __typename?: "Label" }
+        | { __typename?: "LegalInformation" }
         | { __typename?: "OutgoingRelationTypeChangedEvent" }
         | { __typename?: "PriorityChangedEvent" }
         | { __typename?: "Project" }
@@ -3814,6 +5098,8 @@ export type GetImsUserDetailsQuery = {
         | { __typename?: "RelatedByIssueEvent" }
         | { __typename?: "Relation" }
         | { __typename?: "RelationCondition" }
+        | { __typename?: "RelationLayout" }
+        | { __typename?: "RelationPartnerLayout" }
         | { __typename?: "RelationTemplate" }
         | { __typename?: "RemovedAffectedEntityEvent" }
         | { __typename?: "RemovedArtefactEvent" }
@@ -3830,6 +5116,7 @@ export type GetImsUserDetailsQuery = {
         | { __typename?: "TemplatedFieldChangedEvent" }
         | { __typename?: "TitleChangedEvent" }
         | { __typename?: "TypeChangedEvent" }
+        | { __typename?: "View" }
         | null;
 };
 
@@ -3857,6 +5144,120 @@ export type CreateNewImsUserInImsMutationVariables = Exact<{
 export type CreateNewImsUserInImsMutation = {
     __typename?: "Mutation";
     createIMSUser: { __typename: "CreateIMSUserPayload"; imsUser: { __typename: "IMSUser"; id: string } };
+};
+
+export type GetLegalInformationQueryVariables = Exact<{
+    id: Scalars["ID"]["input"];
+}>;
+
+export type GetLegalInformationQuery = {
+    __typename?: "Query";
+    node?:
+        | { __typename?: "AddedAffectedEntityEvent" }
+        | { __typename?: "AddedArtefactEvent" }
+        | { __typename?: "AddedLabelEvent" }
+        | { __typename?: "AddedToPinnedIssuesEvent" }
+        | { __typename?: "AddedToTrackableEvent" }
+        | { __typename?: "AggregatedIssue" }
+        | { __typename?: "AggregatedIssueRelation" }
+        | { __typename?: "Artefact" }
+        | { __typename?: "ArtefactTemplate" }
+        | { __typename?: "Assignment" }
+        | { __typename?: "AssignmentType" }
+        | { __typename?: "AssignmentTypeChangedEvent" }
+        | { __typename?: "Body" }
+        | { __typename?: "Component" }
+        | { __typename?: "ComponentPermission" }
+        | { __typename?: "ComponentTemplate" }
+        | { __typename?: "ComponentVersion" }
+        | { __typename?: "ComponentVersionTemplate" }
+        | { __typename?: "FillStyle" }
+        | { __typename?: "GlobalPermission" }
+        | { __typename?: "GropiusUser" }
+        | { __typename?: "IMS" }
+        | { __typename?: "IMSIssue" }
+        | { __typename?: "IMSIssueTemplate" }
+        | { __typename?: "IMSPermission" }
+        | { __typename?: "IMSProject" }
+        | { __typename?: "IMSProjectTemplate" }
+        | { __typename?: "IMSTemplate" }
+        | { __typename?: "IMSUser" }
+        | { __typename?: "IMSUserTemplate" }
+        | { __typename?: "IncomingRelationTypeChangedEvent" }
+        | { __typename?: "Interface" }
+        | { __typename?: "InterfaceDefinition" }
+        | { __typename?: "InterfacePart" }
+        | { __typename?: "InterfacePartTemplate" }
+        | { __typename?: "InterfaceSpecification" }
+        | { __typename?: "InterfaceSpecificationDerivationCondition" }
+        | { __typename?: "InterfaceSpecificationTemplate" }
+        | { __typename?: "InterfaceSpecificationVersion" }
+        | { __typename?: "InterfaceSpecificationVersionTemplate" }
+        | { __typename?: "IntraComponentDependencyParticipant" }
+        | { __typename?: "IntraComponentDependencySpecification" }
+        | { __typename?: "IntraComponentDependencySpecificationType" }
+        | { __typename?: "Issue" }
+        | { __typename?: "IssueComment" }
+        | { __typename?: "IssuePriority" }
+        | { __typename?: "IssueRelation" }
+        | { __typename?: "IssueRelationType" }
+        | { __typename?: "IssueState" }
+        | { __typename?: "IssueTemplate" }
+        | { __typename?: "IssueType" }
+        | { __typename?: "Label" }
+        | { __typename?: "LegalInformation"; text: string; id: string; label: string; priority: number }
+        | { __typename?: "OutgoingRelationTypeChangedEvent" }
+        | { __typename?: "PriorityChangedEvent" }
+        | { __typename?: "Project" }
+        | { __typename?: "ProjectPermission" }
+        | { __typename?: "RelatedByIssueEvent" }
+        | { __typename?: "Relation" }
+        | { __typename?: "RelationCondition" }
+        | { __typename?: "RelationLayout" }
+        | { __typename?: "RelationPartnerLayout" }
+        | { __typename?: "RelationTemplate" }
+        | { __typename?: "RemovedAffectedEntityEvent" }
+        | { __typename?: "RemovedArtefactEvent" }
+        | { __typename?: "RemovedAssignmentEvent" }
+        | { __typename?: "RemovedFromPinnedIssuesEvent" }
+        | { __typename?: "RemovedFromTrackableEvent" }
+        | { __typename?: "RemovedIncomingRelationEvent" }
+        | { __typename?: "RemovedLabelEvent" }
+        | { __typename?: "RemovedOutgoingRelationEvent" }
+        | { __typename?: "RemovedTemplatedFieldEvent" }
+        | { __typename?: "StateChangedEvent" }
+        | { __typename?: "StrokeStyle" }
+        | { __typename?: "TemplateChangedEvent" }
+        | { __typename?: "TemplatedFieldChangedEvent" }
+        | { __typename?: "TitleChangedEvent" }
+        | { __typename?: "TypeChangedEvent" }
+        | { __typename?: "View" }
+        | null;
+};
+
+export type LegalInformationQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LegalInformationQuery = {
+    __typename?: "Query";
+    legalInformation: {
+        __typename?: "LegalInformationConnection";
+        nodes: Array<{ __typename?: "LegalInformation"; id: string; label: string; priority: number }>;
+    };
+};
+
+export type BaseLegalInformationInfoFragment = {
+    __typename?: "LegalInformation";
+    id: string;
+    label: string;
+    priority: number;
+};
+
+export type DefaultLegalInformationInfoFragment = {
+    __typename?: "LegalInformation";
+    text: string;
+    id: string;
+    label: string;
+    priority: number;
 };
 
 export type GetBasicGropiusUserDataQueryVariables = Exact<{
@@ -3899,7 +5300,6 @@ export type GetBasicGropiusUserDataQuery = {
         | { __typename?: "IncomingRelationTypeChangedEvent" }
         | { __typename?: "Interface" }
         | { __typename?: "InterfaceDefinition" }
-        | { __typename?: "InterfaceDefinitionTemplate" }
         | { __typename?: "InterfacePart" }
         | { __typename?: "InterfacePartTemplate" }
         | { __typename?: "InterfaceSpecification" }
@@ -3907,9 +5307,9 @@ export type GetBasicGropiusUserDataQuery = {
         | { __typename?: "InterfaceSpecificationTemplate" }
         | { __typename?: "InterfaceSpecificationVersion" }
         | { __typename?: "InterfaceSpecificationVersionTemplate" }
-        | { __typename?: "InterfaceTemplate" }
         | { __typename?: "IntraComponentDependencyParticipant" }
         | { __typename?: "IntraComponentDependencySpecification" }
+        | { __typename?: "IntraComponentDependencySpecificationType" }
         | { __typename?: "Issue" }
         | { __typename?: "IssueComment" }
         | { __typename?: "IssuePriority" }
@@ -3919,6 +5319,7 @@ export type GetBasicGropiusUserDataQuery = {
         | { __typename?: "IssueTemplate" }
         | { __typename?: "IssueType" }
         | { __typename?: "Label" }
+        | { __typename?: "LegalInformation" }
         | { __typename?: "OutgoingRelationTypeChangedEvent" }
         | { __typename?: "PriorityChangedEvent" }
         | { __typename?: "Project" }
@@ -3926,6 +5327,8 @@ export type GetBasicGropiusUserDataQuery = {
         | { __typename?: "RelatedByIssueEvent" }
         | { __typename?: "Relation" }
         | { __typename?: "RelationCondition" }
+        | { __typename?: "RelationLayout" }
+        | { __typename?: "RelationPartnerLayout" }
         | { __typename?: "RelationTemplate" }
         | { __typename?: "RemovedAffectedEntityEvent" }
         | { __typename?: "RemovedArtefactEvent" }
@@ -3942,6 +5345,7 @@ export type GetBasicGropiusUserDataQuery = {
         | { __typename?: "TemplatedFieldChangedEvent" }
         | { __typename?: "TitleChangedEvent" }
         | { __typename?: "TypeChangedEvent" }
+        | { __typename?: "View" }
         | null;
 };
 
@@ -4000,7 +5404,6 @@ export type CheckUserIsAdminQuery = {
         | { __typename: "IncomingRelationTypeChangedEvent" }
         | { __typename: "Interface" }
         | { __typename: "InterfaceDefinition" }
-        | { __typename: "InterfaceDefinitionTemplate" }
         | { __typename: "InterfacePart" }
         | { __typename: "InterfacePartTemplate" }
         | { __typename: "InterfaceSpecification" }
@@ -4008,9 +5411,9 @@ export type CheckUserIsAdminQuery = {
         | { __typename: "InterfaceSpecificationTemplate" }
         | { __typename: "InterfaceSpecificationVersion" }
         | { __typename: "InterfaceSpecificationVersionTemplate" }
-        | { __typename: "InterfaceTemplate" }
         | { __typename: "IntraComponentDependencyParticipant" }
         | { __typename: "IntraComponentDependencySpecification" }
+        | { __typename: "IntraComponentDependencySpecificationType" }
         | { __typename: "Issue" }
         | { __typename: "IssueComment" }
         | { __typename: "IssuePriority" }
@@ -4020,6 +5423,7 @@ export type CheckUserIsAdminQuery = {
         | { __typename: "IssueTemplate" }
         | { __typename: "IssueType" }
         | { __typename: "Label" }
+        | { __typename: "LegalInformation" }
         | { __typename: "OutgoingRelationTypeChangedEvent" }
         | { __typename: "PriorityChangedEvent" }
         | { __typename: "Project" }
@@ -4027,6 +5431,8 @@ export type CheckUserIsAdminQuery = {
         | { __typename: "RelatedByIssueEvent" }
         | { __typename: "Relation" }
         | { __typename: "RelationCondition" }
+        | { __typename: "RelationLayout" }
+        | { __typename: "RelationPartnerLayout" }
         | { __typename: "RelationTemplate" }
         | { __typename: "RemovedAffectedEntityEvent" }
         | { __typename: "RemovedArtefactEvent" }
@@ -4043,6 +5449,7 @@ export type CheckUserIsAdminQuery = {
         | { __typename: "TemplatedFieldChangedEvent" }
         | { __typename: "TitleChangedEvent" }
         | { __typename: "TypeChangedEvent" }
+        | { __typename: "View" }
         | null;
 };
 
@@ -4111,6 +5518,20 @@ export const ImsUserWithDetailFragmentDoc = gql`
         }
     }
 `;
+export const BaseLegalInformationInfoFragmentDoc = gql`
+    fragment BaseLegalInformationInfo on LegalInformation {
+        id
+        label
+        priority
+    }
+`;
+export const DefaultLegalInformationInfoFragmentDoc = gql`
+    fragment DefaultLegalInformationInfo on LegalInformation {
+        ...BaseLegalInformationInfo
+        text
+    }
+    ${BaseLegalInformationInfoFragmentDoc}
+`;
 export const UserDataFragmentDoc = gql`
     fragment UserData on GropiusUser {
         __typename
@@ -4164,6 +5585,26 @@ export const CreateNewImsUserInImsDocument = gql`
             }
         }
     }
+`;
+export const GetLegalInformationDocument = gql`
+    query getLegalInformation($id: ID!) {
+        node(id: $id) {
+            ... on LegalInformation {
+                ...DefaultLegalInformationInfo
+            }
+        }
+    }
+    ${DefaultLegalInformationInfoFragmentDoc}
+`;
+export const LegalInformationDocument = gql`
+    query legalInformation {
+        legalInformation(orderBy: [{ field: PRIORITY, direction: ASC }]) {
+            nodes {
+                ...BaseLegalInformationInfo
+            }
+        }
+    }
+    ${BaseLegalInformationInfoFragmentDoc}
 `;
 export const GetBasicGropiusUserDataDocument = gql`
     query getBasicGropiusUserData($id: ID!) {
@@ -4289,6 +5730,36 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
                     }),
                 "createNewImsUserInIms",
                 "mutation",
+                variables,
+            );
+        },
+        getLegalInformation(
+            variables: GetLegalInformationQueryVariables,
+            requestHeaders?: GraphQLClientRequestHeaders,
+        ): Promise<GetLegalInformationQuery> {
+            return withWrapper(
+                (wrappedRequestHeaders) =>
+                    client.request<GetLegalInformationQuery>(GetLegalInformationDocument, variables, {
+                        ...requestHeaders,
+                        ...wrappedRequestHeaders,
+                    }),
+                "getLegalInformation",
+                "query",
+                variables,
+            );
+        },
+        legalInformation(
+            variables?: LegalInformationQueryVariables,
+            requestHeaders?: GraphQLClientRequestHeaders,
+        ): Promise<LegalInformationQuery> {
+            return withWrapper(
+                (wrappedRequestHeaders) =>
+                    client.request<LegalInformationQuery>(LegalInformationDocument, variables, {
+                        ...requestHeaders,
+                        ...wrappedRequestHeaders,
+                    }),
+                "legalInformation",
+                "query",
                 variables,
             );
         },
