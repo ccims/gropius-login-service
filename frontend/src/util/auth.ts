@@ -182,7 +182,7 @@ export function clean() {
 export async function loadCSRFHeader() {
     return {
         headers: {
-            "x-csrf-token": (await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf`)).data.csrf
+            "x-csrf-token": (await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf/internal`)).data.csrf
         }
     };
 }
@@ -194,6 +194,6 @@ export async function logout(mode: "current" | "everywhere") {
 }
 
 export async function loadExternalCSRFToken() {
-    const { data } = await axios.get<{ externalCSRF: string }>(`/auth/api/internal/auth/csrf-external`);
+    const { data } = await axios.get<{ externalCSRF: string }>(`/auth/api/internal/auth/csrf/external`);
     return data.externalCSRF;
 }

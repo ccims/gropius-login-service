@@ -55,7 +55,7 @@ export type FlowSession = {
         flow_id?: string;
 
         // internal csrf token
-        csrf?: string;
+        csrf_int?: string;
 
         // external csrf token (used to bind the whole interaction also with external parties)
         csrf_ext?: string;
@@ -211,8 +211,8 @@ export class Context {
         return flow;
     }
 
-    getCSRF() {
-        const CSRF = this.req.session.flow.csrf;
+    getInternalCSRF() {
+        const CSRF = this.req.session.flow.csrf_int;
         if (!CSRF) {
             throw new OAuthHttpException("invalid_request", "CSRF token is missing");
         }
@@ -220,11 +220,11 @@ export class Context {
     }
 
     getExternalCSRF() {
-        const externalCSRF = this.req.session.flow.csrf_ext;
-        if (!externalCSRF) {
+        const CSRF = this.req.session.flow.csrf_ext;
+        if (!CSRF) {
             throw new OAuthHttpException("invalid_request", "External CSRF token is missing");
         }
-        return externalCSRF;
+        return CSRF;
     }
 
     tryStrategyTypeName() {
@@ -254,7 +254,7 @@ export class Context {
         }
         this.req.session.flow = {
             flow_id: uuidv4(),
-            csrf: uuidv4(),
+            csrf_int: uuidv4(),
             csrf_ext: uuidv4(),
             step: "started",
             oauth_request: this.getRequest(),

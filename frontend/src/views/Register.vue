@@ -60,7 +60,7 @@ const schema = toTypedSchema(
 );
 
 const csrf = asyncComputed(async () => {
-    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf-external`);
+    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf/external`);
     return data.csrf;
 });
 

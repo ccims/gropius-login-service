@@ -87,18 +87,18 @@ export class AuthEndpointsController {
         );
     }
 
-    @Get("csrf")
+    @Get("csrf/internal")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access the CSRF token" })
     async csrfToken(@Req() req: Request): Promise<{
         csrf: string;
     }> {
         return {
-            csrf: req.context.getCSRF(),
+            csrf: req.context.getInternalCSRF(),
         };
     }
 
-    @Get("csrf-external")
+    @Get("csrf/external")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access the external CSRF token" })
     async externalCSRF(@Req() req: Request): Promise<{

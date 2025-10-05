@@ -61,9 +61,9 @@ export class ApiInternalModule {
             )
             .forRoutes("auth/api/internal/auth/register/callback");
 
-        consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/csrf");
+        consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/csrf/internal");
 
-        consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/csrf-external");
+        consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/csrf/external");
 
         consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/prompt/data");
 
