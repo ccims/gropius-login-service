@@ -131,53 +131,6 @@ export class Context {
         this.init();
     }
 
-    tryRequest() {
-        return this.req.session.flow?.oauth_request;
-    }
-
-    setRequest(request: OAuthAuthorizeRequest) {
-        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
-        this.req.session.flow.oauth_request = request;
-        return this;
-    }
-
-    getRequest() {
-        const request = this.tryRequest();
-        if (!request) {
-            throw new OAuthHttpException("invalid_request", "Authorization request is missing");
-        }
-
-        return request;
-    }
-
-    isRegisterAdditional() {
-        return this.tryFlowType() === FlowType.REGISTER && this.isAuthenticated();
-    }
-
-    hasFlow() {
-        return !!this.req.session.flow;
-    }
-
-    initFlow() {
-        this.init();
-
-        if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
-            this.req.session.expires_at += MONTH_IN_SECONDS;
-        }
-
-        const iat = now();
-        this.req.session.flow = {
-            flow_id: uuidv4(),
-            issued_at: iat,
-            expires_at: iat + TEN_MINUTES_IN_SECONDS,
-            step: "started",
-            // TODO: workaround
-            oauth_request: this.tryRequest(),
-        };
-
-        return this;
-    }
-
     getUserId() {
         const user = this.req.session.user_id;
         if (!user) {
@@ -226,6 +179,53 @@ export class Context {
     setActiveLogin(activeLogin: ActiveLogin) {
         this.req.session.active_login_id = activeLogin.id;
         this.loaded.activeLogin = activeLogin;
+    }
+
+    tryRequest() {
+        return this.req.session.flow?.oauth_request;
+    }
+
+    setRequest(request: OAuthAuthorizeRequest) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
+        this.req.session.flow.oauth_request = request;
+        return this;
+    }
+
+    getRequest() {
+        const request = this.tryRequest();
+        if (!request) {
+            throw new OAuthHttpException("invalid_request", "Authorization request is missing");
+        }
+
+        return request;
+    }
+
+    isRegisterAdditional() {
+        return this.tryFlowType() === FlowType.REGISTER && this.isAuthenticated();
+    }
+
+    hasFlow() {
+        return !!this.req.session.flow;
+    }
+
+    initFlow() {
+        this.init();
+
+        if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
+            this.req.session.expires_at += MONTH_IN_SECONDS;
+        }
+
+        const iat = now();
+        this.req.session.flow = {
+            flow_id: uuidv4(),
+            issued_at: iat,
+            expires_at: iat + TEN_MINUTES_IN_SECONDS,
+            step: "started",
+            // TODO: workaround
+            oauth_request: this.tryRequest(),
+        };
+
+        return this;
     }
 
     getFlowId() {
