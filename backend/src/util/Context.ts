@@ -7,7 +7,6 @@ import { MONTH_IN_SECONDS, now } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { AuthClient } from "../model/postgres/AuthClient.entity";
-import { TokenScope } from "../backend-services/token.service";
 import { Strategy } from "../strategies/Strategy";
 import { LoginUser } from "../model/postgres/LoginUser.entity";
 
@@ -19,12 +18,12 @@ declare global {
     }
 }
 
-type RequestWithContext = Request & { session: FlowSession };
+type RequestWithContext = Request & { session: ContextSession };
 
 /**
  * This data is stored in the session, i.e., in the cookie.
  */
-export type FlowSession = {
+export type ContextSession = {
     // session id
     session_id: string;
 
@@ -65,17 +64,17 @@ export type FlowSession = {
 
         // current step in the flow process (the steps are sequential as given and might be restarted from "started" any time)
         step?: "started" | "authenticated" | "prompted";
-
         // TODO: 2nd process model for registration?
+
+        // active login id
+        active_login_id?: string;
     };
 };
-
-// TODO: also load user data?
 
 /**
  * Entities that are loaded from the database
  */
-export type FlowLoaded = {
+export type ContextLoaded = {
     user?: LoginUser;
     activeLogin?: ActiveLogin;
 
@@ -91,7 +90,7 @@ export type FlowLoaded = {
 export class Context {
     private readonly req: RequestWithContext;
 
-    loaded: FlowLoaded = {};
+    loaded: ContextLoaded = {};
 
     constructor(req: Request) {
         this.req = req as RequestWithContext;
@@ -150,7 +149,23 @@ export class Context {
     }
 
     isRegisterAdditional() {
-        return this.getRequest().scope.includes(TokenScope.LOGIN_SERVICE_REGISTER);
+        return this.tryFlowType() === FlowType.REGISTER && this.isAuthenticated();
+    }
+
+    // TODO: rework this
+    initRegisterAdditional() {
+        this.init();
+
+        if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
+            this.req.session.expires_at += MONTH_IN_SECONDS;
+        }
+        this.req.session.flow = {
+            flow_id: uuidv4(),
+            csrf_int: uuidv4(),
+            csrf_ext: uuidv4(),
+            step: "started",
+        };
+        return this;
     }
 
     getUserId() {
@@ -201,6 +216,19 @@ export class Context {
     setActiveLogin(activeLogin: ActiveLogin) {
         this.req.session.active_login_id = activeLogin.id;
         this.loaded.activeLogin = activeLogin;
+        this.setFlowActiveLogin(activeLogin);
+    }
+
+    setFlowActiveLogin(activeLogin: ActiveLogin) {
+        this.req.session.flow.active_login_id = activeLogin.id;
+    }
+
+    getFlowActiveLoginId() {
+        const activeLogin = this.req.session.flow.active_login_id;
+        if (!activeLogin) {
+            throw new OAuthHttpException("invalid_request", "Active login id in flow is missing");
+        }
+        return activeLogin;
     }
 
     getFlowId() {

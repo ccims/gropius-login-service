@@ -70,7 +70,9 @@ export class FlowInitMiddleware implements NestMiddleware {
 
         const activeLoginId = req.context.tryActiveLoginId();
         if (activeLoginId) {
-            req.context.setActiveLogin(await this.activeLoginService.findOneBy({ id: req.context.getActiveLoginId() }));
+            const activeLogin = await this.activeLoginService.findOneBy({ id: req.context.getActiveLoginId() });
+            if (!activeLogin) throw new Error("Active login not found");
+            req.context.setActiveLogin(activeLogin);
         }
 
         // TODO: is this even required?!

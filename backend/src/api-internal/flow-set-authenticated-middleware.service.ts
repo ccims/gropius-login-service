@@ -11,6 +11,8 @@ export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
         const userLoginData = await activeLogin.loginInstanceFor;
         const loginUser = await userLoginData.user;
 
+        // TODO: if register-additional, then we need to keep track of already logged in user and newly registered user
+
         if (loginUser) req.context.setUser(loginUser);
 
         req.context.setAuthenticated({

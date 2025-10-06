@@ -187,6 +187,11 @@ export async function loadCSRFHeader() {
     };
 }
 
+export async function linkAccount() {
+    // TODO: proper internal redirect?
+    window.location.href = `/auth/flow/register-additional`;
+}
+
 export async function logout(mode: "current" | "everywhere") {
     await axios.post(`/auth/api/internal/auth/logout/${mode}`, {}, await loadCSRFHeader());
     clean();

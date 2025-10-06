@@ -13,6 +13,7 @@ import { PromptRedirectMiddleware } from "../api-internal/prompt-redirect-middle
 import { FlowInitMiddleware } from "./flow-init-middleware.service";
 import { ClientCredentialsService } from "./client-credentials.service";
 import { AuthorizationCodeService } from "./authorization-code.service";
+import { RegisterRedirectMiddleware } from "../api-internal/register-redirect-middleware.service";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],
@@ -28,6 +29,7 @@ export class ApiOauthModule {
                 RequestExtractMiddleware,
                 FlowSkipMiddleware,
                 PromptRedirectMiddleware,
+                RegisterRedirectMiddleware,
                 CodeRedirectMiddleware,
                 LoginRedirectMiddleware,
             )

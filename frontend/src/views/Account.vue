@@ -26,9 +26,7 @@
                     </v-list-item>
                 </v-sheet>
 
-                <DefaultButton class="w-100 mt-4" @click="() => auth.authorizeUser(['login-register'], {})"
-                    >Link Account</DefaultButton
-                >
+                <DefaultButton class="w-100 mt-4" @click="() => auth.linkAccount()">Link Account</DefaultButton>
 
                 <DefaultButton class="w-100 mt-4" @click="() => auth.logout('current')"> Logout Session</DefaultButton>
 

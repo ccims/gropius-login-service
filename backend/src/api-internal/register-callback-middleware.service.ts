@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
@@ -19,7 +19,9 @@ type Data = {
 };
 
 @Injectable()
-export class RegisterMiddleware implements NestMiddleware {
+export class RegisterCallbackMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(this.constructor.name);
+
     constructor(
         private readonly userService: LoginUserService,
         private readonly backendUserService: BackendUserService,
@@ -29,6 +31,7 @@ export class RegisterMiddleware implements NestMiddleware {
         // Validate input data
         const data: Data = await schema.validateAsync(req.body);
 
+        // TODO: this is overridden when create additional ...
         const activeLogin = req.context.getActiveLogin();
         const loginData = await activeLogin.loginInstanceFor;
         if (!loginData) throw new Error("Login data not found for active login");
@@ -36,6 +39,16 @@ export class RegisterMiddleware implements NestMiddleware {
         // Check if username is still available
         if ((await this.userService.countBy({ username: data.username })) > 0) {
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
+        }
+
+        // Redirect user to account page if register-additional
+        if (req.context.isRegisterAdditional()) {
+            const existingUser = req.context.getUser();
+            await this.backendUserService.linkAccountToUser(existingUser, loginData, activeLogin);
+            req.context.setActiveLogin(activeLogin);
+
+            // TODO: finish register-additional flow, i.e., drop state?
+            return res.redirect(`/auth/flow/account`);
         }
 
         // Create and link new user

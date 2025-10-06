@@ -7,7 +7,7 @@ import { StrategiesModule } from "../strategies/strategies.module";
 import { AuthEndpointsController } from "./auth-endpoints.controller";
 import { CodeRedirectMiddleware } from "./auth-code-redirect-middleware.service";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
-import { RegisterMiddleware } from "./register-middleware.service";
+import { RegisterCallbackMiddleware } from "./register-callback-middleware.service";
 import { ApiLoginModule } from "src/api-login/api-login.module";
 import { UpdateActionController } from "./update-action.controller";
 import { FlowSetAuthenticatedMiddleware } from "./flow-set-authenticated-middleware.service";
@@ -15,6 +15,7 @@ import { PromptRedirectMiddleware } from "./prompt-redirect-middleware.service";
 import { PromptCallbackMiddleware } from "./prompt-callback-middleware.service";
 import { FlowInitMiddleware } from "../api-oauth/flow-init-middleware.service";
 import CSRFMiddleware from "../util/csrf.middleware";
+import { RegisterRedirectMiddleware } from "./register-redirect-middleware.service";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
@@ -32,6 +33,7 @@ export class ApiInternalModule {
                 StrategiesMiddleware,
                 FlowSetAuthenticatedMiddleware,
                 PromptRedirectMiddleware,
+                RegisterRedirectMiddleware,
                 CodeRedirectMiddleware,
             )
             .forRoutes("auth/api/internal/auth/callback/:id");
@@ -54,7 +56,7 @@ export class ApiInternalModule {
         consumer
             .apply(
                 FlowInitMiddleware,
-                RegisterMiddleware,
+                RegisterCallbackMiddleware,
                 FlowSetAuthenticatedMiddleware,
                 PromptRedirectMiddleware,
                 CodeRedirectMiddleware,

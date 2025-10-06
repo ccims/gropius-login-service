@@ -1,51 +1,17 @@
-import { Injectable, Logger, NestMiddleware, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
-import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { Strategy } from "src/strategies/Strategy";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { combineURL } from "../util/utils";
-import { BackendUserService } from "../backend-services/backend-user.service";
-
-/**
- * Return data of the user data suggestion endpoint
- */
-interface UserDataSuggestion {
-    /**
-     * A potential username to use for the registration.
-     * If one is given, it was free the moment the suggestion is retrieved
-     *
-     * @example "testUser"
-     */
-    username?: string;
-
-    /**
-     * A potential name to display in the UI for the new user.
-     *
-     * @example "Test User"
-     */
-    displayName?: string;
-
-    /**
-     * A potential email of the new user.
-     *
-     * @example "test-user@example.com"
-     */
-    email?: string;
-}
 
 @Injectable()
 export class CodeRedirectMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(CodeRedirectMiddleware.name);
+    private readonly logger = new Logger(this.constructor.name);
 
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
-        private readonly backendUserService: BackendUserService,
-        private readonly userService: LoginUserService,
     ) {}
 
     // TODO: this needs to be adapted to the "automatic login thing"
@@ -93,28 +59,6 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         }
     }
 
-    /**
-     * Return username, display name and email suggestions for registering a user
-     */
-    private async getDataSuggestions(loginData: UserLoginData, strategy: Strategy): Promise<UserDataSuggestion> {
-        const initial = strategy.getUserDataSuggestion(loginData);
-        const suggestions: UserDataSuggestion = {};
-
-        // TODO: validate email?!
-        suggestions.email = initial.email;
-
-        if (initial.username) {
-            const exists = await this.userService.exists({ where: { username: initial.username } });
-            if (!exists) {
-                suggestions.username = initial.username;
-            }
-        }
-
-        suggestions.displayName = initial.displayName ?? suggestions.username;
-
-        return suggestions;
-    }
-
     async use(req: Request, res: Response, next: NextFunction) {
         // TODO: this
         if (!req.context.isAuthenticated() && !req.context.tryActiveLoginId()) {
@@ -122,59 +66,6 @@ export class CodeRedirectMiddleware implements NestMiddleware {
             return next();
         }
 
-        const userLoginData = await req.context.getActiveLogin().loginInstanceFor;
-        const request = req.context.getRequest();
-
-        // CASE: link additional account
-        if (req.context.isRegisterAdditional()) {
-            // TODO: revert this change?
-            if (userLoginData.state !== LoginState.WAITING_FOR_REGISTER) {
-                this.logger.warn("State is not valid of login data", userLoginData.id, userLoginData.state);
-                // TODO: throw new OAuthHttpException("invalid_request", "Login is not valid");
-            }
-
-            const activeLogin = req.context.getActiveLogin();
-            const user = req.context.getUser();
-            const loginData = await activeLogin?.loginInstanceFor;
-
-            /**
-            if (loginData.state !== LoginState.WAITING_FOR_REGISTER) {
-                this.logger.warn("State is not waiting for register of login data", loginData.id);
-                throw new UnauthorizedException(undefined, "A user is already registered for this login");
-            }
-
-            // TODO: is this allowed?
-            request.scope = [TokenScope.AUTH, TokenScope.LOGIN_SERVICE];
-            **/
-
-            // TODO: this is only allowed on 2nd time?!
-
-            await this.backendUserService.linkAccountToUser(user, loginData, activeLogin);
-
-            return this.redirectWithCode(req, res);
-        }
-
-        // CASE: registration
-        if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-            const strategy = req.context.getStrategy();
-
-            const url = combineURL(`auth/flow/register`, process.env.GROPIUS_ENDPOINT);
-
-            const suggestions = await this.getDataSuggestions(userLoginData, strategy);
-            if (suggestions.email) url.searchParams.append("email", suggestions.email);
-            if (suggestions.username) url.searchParams.append("username", suggestions.username);
-            if (suggestions.displayName) url.searchParams.append("displayName", suggestions.displayName);
-            if (strategy.forceSuggestedUsername)
-                url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
-
-            return res.redirect(url.toString());
-        }
-
-        // CASE: login
-        return this.redirectWithCode(req, res);
-    }
-
-    private async redirectWithCode(req: Request, res: Response) {
         const request = req.context.getRequest();
         const client = req.context.getClient();
 
