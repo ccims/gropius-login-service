@@ -11,7 +11,7 @@ import { NoCors } from "../util/NoCors.decorator";
  * - Redirect/Callback endpoint
  */
 @Controller()
-export class OauthAuthorizeController {
+export class AuthorizeController {
     /**
      * Authorize endpoint for strategy instance of the given id.
      * Functionality performed is determined by mode parameter.

@@ -3,17 +3,17 @@ import { NextFunction, Request, Response } from "express";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { AuthClientService } from "src/model/services/auth-client.service";
 import { OAuthHttpException } from "./OAuthHttpException";
-import { AuthorizationCodeService } from "./authorization-code.service";
-import { ClientCredentialsService } from "./client-credentials.service";
+import { TokenExchangeAuthorizationCodeService } from "./token-exchange-authorization-code.service";
+import { TokenExchangeClientCredentialsService } from "./token-exchange-client-credentials.service";
 
 @Injectable()
-export class OauthTokenMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(OauthTokenMiddleware.name);
+export class TokenMiddleware implements NestMiddleware {
+    private readonly logger = new Logger(TokenMiddleware.name);
 
     constructor(
         private readonly authClientService: AuthClientService,
-        private readonly authorizationCodeService: AuthorizationCodeService,
-        private readonly clientCredentialsService: ClientCredentialsService,
+        private readonly authorizationCodeService: TokenExchangeAuthorizationCodeService,
+        private readonly clientCredentialsService: TokenExchangeClientCredentialsService,
     ) {}
 
     private async getClient(req: Request): Promise<AuthClient | undefined> {

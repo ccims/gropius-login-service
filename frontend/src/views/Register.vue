@@ -23,7 +23,7 @@
 
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
 
-                    <input type="hidden" name="externalCSRF" :value="csrf" />
+                    <input type="hidden" name="csrf" :value="csrf" />
 
                     <v-card-actions>
                         <v-spacer />
@@ -41,10 +41,10 @@ import { toTypedSchema } from "@vee-validate/yup";
 import { useForm } from "vee-validate";
 import * as yup from "yup";
 import { useRoute } from "vue-router";
-import axios from "axios";
 import { fieldConfig } from "@/util/vuetifyFormConfig";
 import { computed, onMounted } from "vue";
 import { asyncComputed } from "@vueuse/core";
+import * as auth from "@/util/auth";
 
 const route = useRoute();
 const forceSuggestedUsername = computed(
@@ -59,10 +59,7 @@ const schema = toTypedSchema(
     })
 );
 
-const csrf = asyncComputed(async () => {
-    const { data } = await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf/external`);
-    return data.csrf;
-});
+const csrf = asyncComputed(auth.loadCSRFToken);
 
 const { defineField, handleSubmit, setValues } = useForm({
     validationSchema: schema

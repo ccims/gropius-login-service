@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
 import { ActiveLogin } from "../postgres/ActiveLogin.entity";
 import { UserLoginData } from "../postgres/UserLoginData.entity";
+import { LoginUser } from "../postgres/LoginUser.entity";
 
 @Injectable()
 export class ActiveLoginService extends Repository<ActiveLogin> {
@@ -37,5 +38,22 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
             });
         }
         return builder.orderBy("expires", "DESC", "NULLS FIRST").getMany();
+    }
+
+    async deleteForUser(user: LoginUser) {
+        await this.createQueryBuilder()
+            .delete()
+            .from(ActiveLogin)
+            .where(
+                `
+        "loginInstanceForId" IN (
+          SELECT uld.id
+          FROM "user_login_data" uld
+          WHERE uld."userId" = :loginUserId
+        )
+      `,
+            )
+            .setParameter("loginUserId", user.id)
+            .execute();
     }
 }

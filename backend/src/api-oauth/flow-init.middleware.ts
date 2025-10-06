@@ -1,13 +1,11 @@
-import { Inject, Injectable, NestMiddleware } from "@nestjs/common";
+import { Injectable, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { Context } from "../util/Context";
 import { LoginUserService } from "../model/services/login-user.service";
 import { now } from "../util/utils";
-import { JwtService } from "@nestjs/jwt";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { StrategiesService } from "../model/services/strategies.service";
-import { OAuthAuthorizeRequest } from "./OAuthAuthorizeServerState";
 
 @Injectable()
 export class FlowInitMiddleware implements NestMiddleware {
@@ -38,16 +36,13 @@ export class FlowInitMiddleware implements NestMiddleware {
         // Check if revoked
         if (req.context.isAuthenticated()) {
             const loginUser = await this.loginUserService.findOneBy({ id: req.context.getUserId() });
-            // TODO: reg workaround
-            // if (!loginUser) throw new Error("Login user not found");
+            if (!loginUser) throw new Error("Login user not found");
 
-            if (loginUser) {
-                req.context.setUser(loginUser);
+            req.context.setUser(loginUser);
 
-                const revokedAt = loginUser.revokeTokensBefore;
-                if (revokedAt) {
-                    if (now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
-                }
+            const revokedAt = loginUser.revokeTokensBefore;
+            if (revokedAt) {
+                if (now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
             }
         }
 
@@ -75,12 +70,9 @@ export class FlowInitMiddleware implements NestMiddleware {
             req.context.setActiveLogin(activeLogin);
         }
 
-        // TODO: is this even required?!
         const strategyTypeName = req.context.tryStrategyTypeName();
         if (strategyTypeName) {
             req.context.setStrategy(strategyTypeName, this.strategiesService.getStrategyByName(strategyTypeName));
         }
-
-        // req.data.authState = req.session.authState;
     }
 }

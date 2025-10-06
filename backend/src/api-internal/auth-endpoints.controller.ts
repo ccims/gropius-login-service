@@ -9,6 +9,7 @@ import { AuthClientService } from "../model/services/auth-client.service";
 import { NoCors } from "../util/NoCors.decorator";
 import { DefaultReturn } from "../util/default-return.dto";
 import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
+import { ActiveLoginService } from "../model/services/active-login.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -24,6 +25,7 @@ export class AuthEndpointsController {
     constructor(
         private readonly userService: LoginUserService,
         private readonly authClientService: AuthClientService,
+        private readonly activeLoginService: ActiveLoginService,
     ) {}
 
     /**
@@ -87,25 +89,14 @@ export class AuthEndpointsController {
         );
     }
 
-    @Get("csrf/internal")
+    @Get("csrf")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access the CSRF token" })
     async csrfToken(@Req() req: Request): Promise<{
         csrf: string;
     }> {
         return {
-            csrf: req.context.getInternalCSRF(),
-        };
-    }
-
-    @Get("csrf/external")
-    @NoCors()
-    @ApiOperation({ summary: "Endpoint to access the external CSRF token" })
-    async externalCSRF(@Req() req: Request): Promise<{
-        externalCSRF: string;
-    }> {
-        return {
-            externalCSRF: req.context.getExternalCSRF(),
+            csrf: req.context.getCSRF(),
         };
     }
 
@@ -165,8 +156,11 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        if (req.context.tryActiveLoginId()) {
+            await this.activeLoginService.delete({ id: req.context.getActiveLoginId() });
+        }
+
         req.context.drop();
-        // TODO: invalidate activelogin
         return new DefaultReturn("logout/current");
     }
 
@@ -179,6 +173,8 @@ export class AuthEndpointsController {
         if (!user) throw new Error("Did not found user");
         user.revokeTokensBefore = new Date();
         await this.userService.save(user);
+
+        await this.activeLoginService.deleteForUser(user);
 
         req.context.drop();
         return new DefaultReturn("logout/everywhere");

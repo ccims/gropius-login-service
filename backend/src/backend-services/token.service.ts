@@ -38,7 +38,7 @@ export class TokenService {
         const expiryObject = !!expiresIn ? { expiresIn: Math.floor(expiresIn / 1000) } : {};
         this.verifyScope(scope);
         if (scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
-            // TODO: throw new Error("Cannot sign access token with register scope");
+            throw new Error("Cannot sign access token with register scope");
         }
         if (!user.neo4jId) {
             throw new Error("Login user without neo4jId: " + user.id);

@@ -32,7 +32,7 @@
                                 :field="field"
                             />
                             <input type="submit" hidden />
-                            <input type="hidden" name="externalCSRF" :value="externalCSRF" hidden />
+                            <input type="hidden" name="csrf" :value="csrf" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
@@ -65,7 +65,7 @@
                 <v-card color="surface-elevated-3" rounded="lger" class="pa-3" elevation="0">
                     <v-card-title>Allow sync?</v-card-title>
                     <v-card-text>
-                        Shoule we sync issues with this account?<br />You can always agree to this later.
+                        Should we sync issues with this account?<br />You can always agree to this later.
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer />
@@ -187,7 +187,7 @@ const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
 
-const externalCSRF = asyncComputed(async () => await auth.loadExternalCSRFToken());
+const csrf = asyncComputed(async () => await auth.loadCSRFToken());
 
 function formDataAt(id: string) {
     if (!(id in formData.value)) {

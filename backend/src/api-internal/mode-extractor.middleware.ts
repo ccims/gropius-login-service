@@ -21,10 +21,6 @@ export class ModeExtractorMiddleware implements NestMiddleware {
                 throw new Error("Invalid mode");
         }
 
-        if (req.context.isRegisterAdditional()) {
-            req.context.initRegisterAdditional();
-        }
-
         req.context.setFlowType(authFunction);
 
         next();

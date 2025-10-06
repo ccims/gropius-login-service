@@ -10,10 +10,3 @@ export interface OAuthAuthorizeRequest {
     codeChallengeMethod: string;
     responseType: "code";
 }
-
-// TODO: get rid of this
-export interface OAuthAuthorizeServerState {
-    request: OAuthAuthorizeRequest;
-    client: AuthClient;
-    isRegisterAdditional: boolean;
-}

@@ -11,7 +11,8 @@ import { LoginUser } from "./LoginUser.entity";
  * If a number smaller than this is set in the config,
  * this wil clamp it to at least 15
  */
-const MINUMUM_SECRET_LENGTH_BYTES = 15;
+const MINIMUM_SECRET_LENGTH_BYTES = 15;
+
 /**
  * The length of the censored prefix of the secret
  */
@@ -127,7 +128,7 @@ export class AuthClient {
         fingerprint: string;
         censored: string;
     }> {
-        const length = Math.min(MINUMUM_SECRET_LENGTH_BYTES, parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10));
+        const length = Math.min(MINIMUM_SECRET_LENGTH_BYTES, parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10));
         const secretText = (await randomBytesAsync(length)).toString("hex");
         const hash = await bcrypt.hash(secretText, parseInt(process.env.GROPIUS_BCRYPT_HASH_ROUNDS, 10));
         const censored = secretText.substring(0, CENSORED_SECRET_LENGTH);

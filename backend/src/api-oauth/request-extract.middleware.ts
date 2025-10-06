@@ -60,6 +60,7 @@ export class RequestExtractMiddleware implements NestMiddleware {
             throw new OAuthHttpException("invalid_request", "Code challenge required");
         }
 
+        req.context.initFlow();
         req.context.setClient(client);
         req.context.setRequest(unsafe);
 

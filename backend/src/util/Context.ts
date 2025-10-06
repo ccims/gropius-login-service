@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as crypto from "crypto";
-import { compareTimeSafe, MONTH_IN_SECONDS, now } from "./utils";
+import { compareTimeSafe, MONTH_IN_SECONDS, now, TEN_MINUTES_IN_SECONDS } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { AuthClient } from "../model/postgres/AuthClient.entity";
@@ -33,7 +33,7 @@ export type ContextSession = {
     // expires at
     expires_at: number;
 
-    // user id
+    // user id (explicitly stored since active_login_id is overridden during linking)
     user_id?: string;
 
     // active login id
@@ -42,32 +42,33 @@ export type ContextSession = {
     // consent fingerprints of consented oauth authorization request
     consents: string[];
 
+    // csrf token
+    csrf: string;
+
     // flow
-    flow: {
+    flow?: {
+        // flow id
+        flow_id: string;
+
+        // issued at
+        issued_at: number;
+
+        // TODO: implement this
+        // expires at
+        expires_at: number;
+
         // strategy type
         strategy_type?: string;
 
         // flow type
         flow_type?: FlowType;
 
-        // flow id (used to bind the whole interaction)
-        flow_id?: string;
-
-        // internal csrf token
-        csrf_int?: string;
-
-        // external csrf token (used to bind the whole interaction also with external parties)
-        csrf_ext?: string;
-
         // oauth authorization request
         oauth_request?: OAuthAuthorizeRequest;
 
         // current step in the flow process (the steps are sequential as given and might be restarted from "started" any time)
         step?: "started" | "authenticated" | "prompted";
-        // TODO: 2nd process model for registration?
-
-        // active login id
-        active_login_id?: string;
+        // TODO: 2nd process model for registration
     };
 };
 
@@ -103,10 +104,10 @@ export class Context {
         const iat = now();
         this.req.session = {
             session_id: uuidv4(),
+            csrf: uuidv4(),
             issued_at: iat,
             expires_at: iat + MONTH_IN_SECONDS,
             consents: [],
-            flow: {},
         };
         return this;
     }
@@ -131,10 +132,11 @@ export class Context {
     }
 
     tryRequest() {
-        return this.req.session.flow.oauth_request;
+        return this.req.session.flow?.oauth_request;
     }
 
     setRequest(request: OAuthAuthorizeRequest) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
         this.req.session.flow.oauth_request = request;
         return this;
     }
@@ -152,19 +154,27 @@ export class Context {
         return this.tryFlowType() === FlowType.REGISTER && this.isAuthenticated();
     }
 
-    // TODO: rework this
-    initRegisterAdditional() {
+    hasFlow() {
+        return !!this.req.session.flow;
+    }
+
+    initFlow() {
         this.init();
 
         if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
             this.req.session.expires_at += MONTH_IN_SECONDS;
         }
+
+        const iat = now();
         this.req.session.flow = {
             flow_id: uuidv4(),
-            csrf_int: uuidv4(),
-            csrf_ext: uuidv4(),
+            issued_at: iat,
+            expires_at: iat + TEN_MINUTES_IN_SECONDS,
             step: "started",
+            // TODO: workaround
+            oauth_request: this.tryRequest(),
         };
+
         return this;
     }
 
@@ -216,47 +226,26 @@ export class Context {
     setActiveLogin(activeLogin: ActiveLogin) {
         this.req.session.active_login_id = activeLogin.id;
         this.loaded.activeLogin = activeLogin;
-        this.setFlowActiveLogin(activeLogin);
-    }
-
-    setFlowActiveLogin(activeLogin: ActiveLogin) {
-        this.req.session.flow.active_login_id = activeLogin.id;
-    }
-
-    getFlowActiveLoginId() {
-        const activeLogin = this.req.session.flow.active_login_id;
-        if (!activeLogin) {
-            throw new OAuthHttpException("invalid_request", "Active login id in flow is missing");
-        }
-        return activeLogin;
     }
 
     getFlowId() {
-        const flow = this.req.session.flow.flow_id;
+        const flow = this.req.session.flow?.flow_id;
         if (!flow) {
             throw new OAuthHttpException("invalid_request", "Flow id is missing");
         }
         return flow;
     }
 
-    getInternalCSRF() {
-        const CSRF = this.req.session.flow.csrf_int;
+    getCSRF() {
+        const CSRF = this.req.session.csrf;
         if (!CSRF) {
             throw new OAuthHttpException("invalid_request", "CSRF token is missing");
         }
         return CSRF;
     }
 
-    getExternalCSRF() {
-        const CSRF = this.req.session.flow.csrf_ext;
-        if (!CSRF) {
-            throw new OAuthHttpException("invalid_request", "External CSRF token is missing");
-        }
-        return CSRF;
-    }
-
     tryStrategyTypeName() {
-        return this.req.session.flow.strategy_type;
+        return this.req.session.flow?.strategy_type;
     }
 
     tryStrategy() {
@@ -264,6 +253,7 @@ export class Context {
     }
 
     setStrategy(name: string, strategy: Strategy) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
         this.req.session.flow.strategy_type = name;
         this.loaded.strategy = strategy;
     }
@@ -274,31 +264,17 @@ export class Context {
         return strategy;
     }
 
-    setStarted() {
-        this.init();
-
-        if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
-            this.req.session.expires_at += MONTH_IN_SECONDS;
-        }
-        this.req.session.flow = {
-            flow_id: uuidv4(),
-            csrf_int: uuidv4(),
-            csrf_ext: uuidv4(),
-            step: "started",
-            oauth_request: this.getRequest(),
-        };
-        return this;
-    }
-
     // TODO: rework his
     // TODO: req workaround (userId must be string)
     // TODO: setActiveLoginId and setStrategy should only be called from setAuthenticated?
-    setAuthenticated(data: { externalCSRF: string }) {
+    setAuthenticated(data: { csrf: string }) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
+
         if (this.req.session.flow.step !== "started") {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
 
-        if (!compareTimeSafe(data.externalCSRF, this.getExternalCSRF())) {
+        if (!compareTimeSafe(data.csrf, this.getCSRF())) {
             // TODO: throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
@@ -314,6 +290,8 @@ export class Context {
 
     // TODO: rework his
     setPrompted(consent: boolean, flow: string) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
+
         if (this.req.session.flow.step !== "authenticated") {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
@@ -335,6 +313,8 @@ export class Context {
 
     // TODO: rework his
     setFinished(flow: string) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
+
         if (this.req.session.flow.step !== "prompted") {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
@@ -343,7 +323,7 @@ export class Context {
             // TODO: throw new OAuthHttpException("invalid_request", "Another flow is currently running");
         }
 
-        this.req.session.flow = {};
+        this.dropFlow();
 
         return this;
     }
@@ -353,14 +333,14 @@ export class Context {
     }
 
     consentFingerprint() {
-        if (!this.req.session.flow.oauth_request) {
+        if (!this.req.session.flow?.oauth_request) {
             throw new OAuthHttpException("invalid_request", "Authorization request is missing");
         }
 
         const data = JSON.stringify({
-            clientId: this.req.session.flow.oauth_request.clientId,
-            scope: this.req.session.flow.oauth_request.scope,
-            redirect: this.req.session.flow.oauth_request.redirect,
+            clientId: this.req.session.flow?.oauth_request.clientId,
+            scope: this.req.session.flow?.oauth_request.scope,
+            redirect: this.req.session.flow?.oauth_request.redirect,
         });
 
         return crypto.createHash("sha256").update(data).digest("base64url");
@@ -381,7 +361,7 @@ export class Context {
     }
 
     tryFlowType() {
-        return this.req.session.flow.flow_type;
+        return this.req.session.flow?.flow_type;
     }
 
     getFlowType() {
@@ -391,7 +371,12 @@ export class Context {
     }
 
     setFlowType(type: FlowType) {
+        if (!this.req.session.flow) throw new Error(`Flow is not initialized`);
         this.req.session.flow.flow_type = type;
         return this;
+    }
+
+    dropFlow() {
+        delete this.req.session.flow;
     }
 }

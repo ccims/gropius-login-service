@@ -10,118 +10,21 @@ import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
 
 @Injectable()
-export class AuthorizationCodeService {
+export class TokenExchangeAuthorizationCodeService {
     readonly supportedGrantTypes = ["authorization_code", "refresh_token"];
 
-    private readonly logger = new Logger(AuthorizationCodeService.name);
+    private readonly logger = new Logger(TokenExchangeAuthorizationCodeService.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
         private readonly encryptionService: EncryptionService,
     ) {}
 
-    private throwGenericCodeError() {
-        throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
-    }
-
-    private async validateLoginData(loginData?: UserLoginData) {
-        if (!loginData) {
-            this.logger.warn("Login data not found");
-            throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
-        }
-
-        if (loginData.expires != null && loginData.expires <= new Date()) {
-            this.logger.warn("Login data has expired", loginData);
-            throw new OAuthHttpException(
-                "invalid_grant",
-                "Login has expired. Try restarting login/register/link process.",
-            );
-        }
-
-        if (loginData.state === LoginState.BLOCKED) {
-            throw new OAuthHttpException(
-                "invalid_grant",
-                "Login for given grant is not valid any more; Please re-login",
-            );
-        }
-
-        // TODO: when would this even happen?
-        const user = await loginData.user;
-        if (loginData.state === LoginState.VALID) {
-            if (!user) {
-                throw new OAuthHttpException("invalid_state", "No user for valid login");
-            }
-        }
-
-        // TODO: when would this even happen?
-        if (loginData.state === LoginState.WAITING_FOR_REGISTER) {
-            if (user) {
-                throw new OAuthHttpException(
-                    "invalid_state",
-                    "Login still in register state but user already existing",
-                );
-            }
-        }
-    }
-
-    private async updateRefreshTokenIdAndExpirationDate(
-        activeLogin: ActiveLogin,
-        isRegisterLogin: boolean,
-    ): Promise<ActiveLogin> {
-        const loginExpiresIn = parseInt(process.env.GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS, 10);
-        this.logger.debug("Updating active login", isRegisterLogin, loginExpiresIn, activeLogin.supportsSync);
-        if (!isRegisterLogin) {
-            activeLogin = await this.activeLoginService.setActiveLoginExpiration(activeLogin);
-        }
-        activeLogin.nextExpectedRefreshTokenNumber++;
-        return await this.activeLoginService.save(activeLogin);
-    }
-
-    private async createAccessToken(
-        loginData: UserLoginData,
-        activeLogin: ActiveLogin,
-        currentClient: AuthClient,
-        scope: TokenScope[],
-    ): Promise<OauthTokenResponse> {
-        const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
-
-        let accessToken: string;
-        // TODO: when would this even happen?
-        if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
-            accessToken = await this.tokenService.signRegistrationToken(activeLogin.id, tokenExpiresInMs);
-        } else {
-            accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
-        }
-
-        activeLogin = await this.updateRefreshTokenIdAndExpirationDate(
-            activeLogin,
-            loginData.state == LoginState.WAITING_FOR_REGISTER,
-        );
-
-        const refreshToken =
-            loginData.state != LoginState.WAITING_FOR_REGISTER
-                ? await this.tokenService.signActiveLoginCode(
-                      activeLogin.id,
-                      currentClient.id,
-                      activeLogin.nextExpectedRefreshTokenNumber,
-                      scope,
-                      activeLogin.expires ?? undefined,
-                      undefined,
-                  )
-                : undefined;
-        return {
-            access_token: accessToken,
-            token_type: "bearer",
-            expires_in: Math.floor(tokenExpiresInMs / 1000),
-            refresh_token: refreshToken,
-            scope: scope.join(" "),
-        };
-    }
-
     async handle(req: Request, res: Response, client: AuthClient) {
-        const codeVerifier = req.body.code_verifier;
+        /**
+         * Authorization Code/ Refresh Token
+         */
         const token = req.body.code ?? req.body.refresh_token;
-
         let data: ActiveLoginTokenResult;
         try {
             data = await this.tokenService.verifyActiveLoginToken(token, client.id);
@@ -130,6 +33,9 @@ export class AuthorizationCodeService {
             this.throwGenericCodeError();
         }
 
+        /**
+         * Active Login
+         */
         const activeLogin = await this.activeLoginService.findOneBy({
             id: data.activeLoginId,
         });
@@ -166,7 +72,11 @@ export class AuthorizationCodeService {
                 **/
         }
 
+        /**
+         * Code Challenge
+         */
         if (data.codeChallenge) {
+            const codeVerifier = req.body.code_verifier;
             if (!codeVerifier) {
                 this.logger.warn("Code verifier missing");
                 throw new OAuthHttpException("invalid_request", "Code verifier missing");
@@ -185,15 +95,99 @@ export class AuthorizationCodeService {
             }
         }
 
+        /**
+         * Scope
+         */
         for (const requestedScope of data.scope) {
             if (!client.validScopes.includes(requestedScope)) {
                 throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
             }
         }
 
+        /**
+         * Login Data
+         */
         const loginData = await activeLogin.loginInstanceFor;
-        await this.validateLoginData(loginData);
+        if (!loginData) {
+            this.logger.warn("Login data not found");
+            throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
+        }
 
+        if (loginData.expires != null && loginData.expires <= new Date()) {
+            this.logger.warn("Login data has expired", loginData);
+            throw new OAuthHttpException(
+                "invalid_grant",
+                "Login has expired. Try restarting login/register/link process.",
+            );
+        }
+
+        if (loginData.state === LoginState.BLOCKED) {
+            throw new OAuthHttpException(
+                "invalid_grant",
+                "Login for given grant is not valid any more; Please re-login",
+            );
+        }
+
+        const user = await loginData.user;
+        if (loginData.state === LoginState.VALID) {
+            if (!user) {
+                throw new OAuthHttpException("invalid_state", "No user for valid login");
+            }
+        }
+
+        if (loginData.state === LoginState.WAITING_FOR_REGISTER) {
+            if (user) {
+                throw new OAuthHttpException(
+                    "invalid_state",
+                    "Login still in register state but user already existing",
+                );
+            }
+        }
+
+        /**
+         * Access Token
+         */
         return await this.createAccessToken(loginData, activeLogin, client, data.scope);
+    }
+
+    private throwGenericCodeError() {
+        throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
+    }
+
+    private async createAccessToken(
+        loginData: UserLoginData,
+        activeLogin: ActiveLogin,
+        currentClient: AuthClient,
+        scope: TokenScope[],
+    ): Promise<OauthTokenResponse> {
+        const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
+
+        let accessToken: string;
+        // TODO: when would this even happen?
+        if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
+            accessToken = await this.tokenService.signRegistrationToken(activeLogin.id, tokenExpiresInMs);
+        } else {
+            accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
+        }
+
+        activeLogin.nextExpectedRefreshTokenNumber++;
+        await this.activeLoginService.save(activeLogin);
+
+        const refreshToken = await this.tokenService.signActiveLoginCode(
+            activeLogin.id,
+            currentClient.id,
+            activeLogin.nextExpectedRefreshTokenNumber,
+            scope,
+            activeLogin.expires ?? undefined,
+            undefined,
+        );
+
+        return {
+            access_token: accessToken,
+            token_type: "bearer",
+            expires_in: Math.floor(tokenExpiresInMs / 1000),
+            refresh_token: refreshToken,
+            scope: scope.join(" "),
+        };
     }
 }

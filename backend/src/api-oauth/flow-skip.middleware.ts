@@ -13,9 +13,8 @@ export class FlowSkipMiddleware implements NestMiddleware {
 
         // If authenticated, then directly go prompt screen and auth code redirect
         if (req.context.isAuthenticated()) {
-            req.context.setStarted();
             req.context.setAuthenticated({
-                externalCSRF: req.context.getExternalCSRF(),
+                csrf: req.context.getCSRF(),
             });
         }
 

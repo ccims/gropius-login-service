@@ -6,17 +6,15 @@ export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const externalCSRF = req.context.getExternalCSRF();
+        const csrf = req.context.getCSRF();
         const activeLogin = req.context.tryActiveLogin();
         const userLoginData = await activeLogin.loginInstanceFor;
         const loginUser = await userLoginData.user;
 
-        // TODO: if register-additional, then we need to keep track of already logged in user and newly registered user
-
         if (loginUser) req.context.setUser(loginUser);
 
         req.context.setAuthenticated({
-            externalCSRF,
+            csrf: csrf,
         });
 
         this.logger.log("User authenticated in flow context: " + loginUser?.id);

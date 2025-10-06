@@ -9,7 +9,7 @@ const schema = Joi.object({
     displayName: Joi.string(),
     email: Joi.string(),
     // TODO: this
-    externalCSRF: Joi.string().allow("").optional(),
+    csrf: Joi.string().allow("").optional(),
 });
 
 type Data = {
@@ -31,7 +31,6 @@ export class RegisterCallbackMiddleware implements NestMiddleware {
         // Validate input data
         const data: Data = await schema.validateAsync(req.body);
 
-        // TODO: this is overridden when create additional ...
         const activeLogin = req.context.getActiveLogin();
         const loginData = await activeLogin.loginInstanceFor;
         if (!loginData) throw new Error("Login data not found for active login");
@@ -46,8 +45,7 @@ export class RegisterCallbackMiddleware implements NestMiddleware {
             const existingUser = req.context.getUser();
             await this.backendUserService.linkAccountToUser(existingUser, loginData, activeLogin);
             req.context.setActiveLogin(activeLogin);
-
-            // TODO: finish register-additional flow, i.e., drop state?
+            req.context.dropFlow();
             return res.redirect(`/auth/flow/account`);
         }
 

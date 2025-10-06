@@ -1,7 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
-// TODO: drop this
-
 /**
  * Base input type containing all needed fields to create a new user
  */
