@@ -5,17 +5,17 @@ import { ModeExtractorMiddleware } from "./mode-extractor.middleware";
 import { StrategiesMiddleware } from "../strategies/strategies.middleware";
 import { StrategiesModule } from "../strategies/strategies.module";
 import { AuthEndpointsController } from "./auth-endpoints.controller";
-import { CodeRedirectMiddleware } from "./auth-code-redirect-middleware.service";
+import { CodeRedirectMiddleware } from "./code-redirect.middleware";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
-import { RegisterCallbackMiddleware } from "./register-callback-middleware.service";
+import { RegisterCallbackMiddleware } from "./register-callback.middleware";
 import { ApiLoginModule } from "src/api-login/api-login.module";
 import { UpdateActionController } from "./update-action.controller";
-import { FlowSetAuthenticatedMiddleware } from "./flow-set-authenticated-middleware.service";
-import { PromptRedirectMiddleware } from "./prompt-redirect-middleware.service";
-import { PromptCallbackMiddleware } from "./prompt-callback-middleware.service";
-import { FlowInitMiddleware } from "../api-oauth/flow-init-middleware.service";
+import { FlowSetAuthenticatedMiddleware } from "./flow-set-authenticated.middleware";
+import { PromptRedirectMiddleware } from "./prompt-redirect.middleware";
+import { PromptCallbackMiddleware } from "./prompt-callback.middleware";
+import { FlowInitMiddleware } from "../api-oauth/flow-init.middleware";
 import CSRFMiddleware from "../util/csrf.middleware";
-import { RegisterRedirectMiddleware } from "./register-redirect-middleware.service";
+import { RegisterRedirectMiddleware } from "./register-redirect.middleware";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
