@@ -1,5 +1,7 @@
 # Docs
 
+> TODO: add links to external oauth resources (specs, tutorials, ...)
+
 ## Goal
 
 > give gropius client access to resources of user at gropius resource server and IMS resource server
