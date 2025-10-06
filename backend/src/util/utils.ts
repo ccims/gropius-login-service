@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 export function now() {
     return Math.floor(Date.now() / 1000);
 }
@@ -10,4 +12,10 @@ export function combineURL(path: string, base: string): URL {
         fixedBase += "/";
     }
     return new URL(path, fixedBase);
+}
+
+export function compareTimeSafe(found: string, expected: string): boolean {
+    const expectedBuffer = Buffer.from(expected);
+    const foundBuffer = found.length === expected.length ? Buffer.from(found) : Buffer.alloc(expectedBuffer.length);
+    return crypto.timingSafeEqual(foundBuffer, expectedBuffer) && found.length === expected.length;
 }

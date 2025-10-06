@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import * as crypto from "crypto";
-import { MONTH_IN_SECONDS, now } from "./utils";
+import { compareTimeSafe, MONTH_IN_SECONDS, now } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { AuthClient } from "../model/postgres/AuthClient.entity";
@@ -298,7 +298,7 @@ export class Context {
             // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
         }
 
-        if (data.externalCSRF !== this.getExternalCSRF()) {
+        if (!compareTimeSafe(data.externalCSRF, this.getExternalCSRF())) {
             // TODO: throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
         }
 
