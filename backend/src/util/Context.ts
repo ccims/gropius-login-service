@@ -43,6 +43,7 @@ export type ContextSession = {
     consents: string[];
 
     // csrf token
+    // TODO: leaks to IMS auth server
     csrf: string;
 
     // flow
