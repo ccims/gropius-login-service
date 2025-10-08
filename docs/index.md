@@ -1,24 +1,23 @@
 # Docs
 
-> TODO: add links to external oauth resources (specs, tutorials, ...)
-
 ## Goal
 
-> give gropius client access to resources of user at gropius resource server and IMS resource server
+Give gropius client access to resources of user at gropius resource server and IMS resource server.
 
 ## Parties
 
-> "oauth" is relaxed to "oauth, openid connect, provider-specific variations"
+| Party                    | Description                                                                | Example                                  |
+|--------------------------|----------------------------------------------------------------------------|------------------------------------------|
+| user                     | owner of resources at gropius resource server and IMS resource server      | modeler                                  |
+| (browser) gropius client | public oauth client for gropius auth server running in the browser         | gropius-frontend, gropius-login-frontend |
+| (machine) gropius client | private oauth client for gropius auth server running, e.g., as CLI command | gropius template importer                |
+| gropius auth server      | oauth auth server                                                          | gropius-login-backend                    |
+| gropius resource server  | oauth resource server of gropius auth server                               | gropius-backend, gropius-login-backend   |
+| IMS client               | private oauth client for IMS auth server                                   | gropius-login-backend                    |
+| IMS auth server          | oauth auth server                                                          | github, jira, gitlab                     |
+| IMS resource server      | oauth resource server of IMS auth server                                   | github, jira, gitlab                     |
 
-| Party                   | Description                                                           | Example                                  |
-|-------------------------|-----------------------------------------------------------------------|------------------------------------------|
-| user                    | owner of resources at gropius resource server and IMS resource server | modeler                                  |
-| gropius client          | public oauth client for gropius auth server                           | gropius-frontend, gropius-login-frontend |
-| gropius auth server     | oauth auth server                                                     | gropius-login-backend                    |
-| gropius resource server | oauth resource server of gropius auth server                          | gropius-backend, gropius-login-backend   |
-| IMS client              | private oauth client for IMS auth server                              | gropius-login-backend                    |
-| IMS auth server         | oauth auth server                                                     | github, jira, gitlab                     |
-| IMS resource server     | oauth resource server of IMS auth server                              | github, jira, gitlab                     |
+Thereby, "oauth" is relaxed to "oauth, openid connect, provider-specific variations"
 
 ## Accounts
 
@@ -27,26 +26,32 @@
 | gropius account | account at gropius auth server | user  |
 | IMS account     | account at IMS auth server     | user  |
 
-## Flow: Gropius Client Accesses Gropius Resource Server
+## Flow: Browser Gropius Client Accesses Gropius Resource Server
 
-> TODO: there is also client credentials flow?!
+Oauth authorization code flow with pkce for gropius client running in the browser as usual.
 
-Oauth authorization code flow with pkce for gropius client as usual.
-
-- REDIRECT GET {gropius auth server}/auth/oauth/authorize
-- FLOW {user grants access at gropius auth server}
-- REDIRECT GET {gropius client}/{redirect uri}
-- API POST {gropius auth server}/auth/oauth/token
+- `REDIRECT GET {gropius auth server}/auth/oauth/authorize`
+- `FLOW {user grants access at gropius auth server}`
+- `REDIRECT GET {gropius client}/{redirect uri}`
+- `API POST {gropius auth server}/auth/oauth/token`
 
 Resource server can then be accessed with access token as usual.
 Further, refresh token can be used to get new access token as usual.
 
+## Flow: Machine Gropius Client Accesses Gropius Resource Server
+
+Client credentials flow for gropius client running, e.g., as CLI application, as usual.
+
+- `API POST {gropius auth server}/auth/oauth/token`
+
+An access token for the resources of the user who is linked to the oauth client is returned.
+
 
 ## Flow: User grants access at Gropius Auth Server
 
-- FLOW {user authenticates at gropius auth server}
-- REDIRECT GET {gropius auth server}/auth/flow/prompt
-- REDIRECT POST {gropius auth server}/auth/api/internal/auth/prompt/callback
+- `FLOW {user authenticates at gropius auth server}`
+- `REDIRECT GET {gropius auth server}/auth/flow/prompt`
+- `REDIRECT POST {gropius auth server}/auth/api/internal/auth/prompt/callback`
 
 The consent prompt is skipped if user already granted access to gropius client in an earlier flow or if gropius client is configured to not require prompt.
 
@@ -57,10 +62,11 @@ The consent prompt is skipped if user already granted access to gropius client i
 
 > TODO: login
 
-- REDIRECT GET {gropius auth server}/auth/flow/login
-- REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/<strategy>/login <- IMMMER oder nur bei passport local?
+- `REDIRECT GET {gropius auth server}/auth/flow/login`
+- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy id}/login` <- IMMER oder nur bei passport local?
 - ...
 
+The authentication is persisted in a session cookie and used for further requests to the gropius auth server.
 
 > TODO: register
 
@@ -73,45 +79,66 @@ The consent prompt is skipped if user already granted access to gropius client i
 
 ## Flow: User authenticates at IMS auth server
 
-- IMS specific
+The IMS auth server authenticates the user using any IMS specific flow.
 
 
 ## Flow: IMS client accesses IMS resource server
 
-- IMS client uses credentials granted during FLOW {user authenticates at gropius auth server via IMS auth server}
+The IMS client uses credentials granted during `FLOW {user authenticates at gropius auth server via IMS auth server}`.
 
 ## Flow: User links IMS account to gropius account
 
 > TODO: can also link gropius account (ie passport-local) to gropius account?!
 
-- REQUIRES FLOW {gropius client accesses gropius resource server}
+- `REQUIRES FLOW {gropius client accesses gropius resource server}`
 
-- REDIRECT GET {gropius auth server}/auth/flow/register-additional
+- `REDIRECT GET {gropius auth server}/auth/flow/register-additional`
 
-- REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/<strategy>/register
-- REDIRECT GET {IMS auth server}/auth/oauth/authorize
-- FLOW {user authenticates at IMS auth server}
-- REDIRECT GET {gropius auth server}/auth/api/internal/callback/<strategy>
-- REDIRECT GET {gropius auth server}/auth/flow/register
-- REDIRECT GET {gropius auth server}/auth/api/internal/register/callback
+- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy id}/register`
+- `REDIRECT GET {IMS auth server}/auth/oauth/authorize`
+- `FLOW {user authenticates at IMS auth server}`
+- `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy id}`
+- `REDIRECT GET {gropius auth server}/auth/flow/register`
+- `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
 
-- REDIRECT GET {gropius auth server}/auth/flow/account
+- `REDIRECT GET {gropius auth server}/auth/flow/account`
 
 ## Flow: User logs out at gropius client
 
-> TODO: this
+The gropius client deletes all tokens.
+The gropius client should keep the state that the user manually logged out and should not automatically start a new `FLOW {gropius client accesses gropius resource server}` without explicit user interaction.
+Otherwise, since the user might still be logged in at the gropius auth server and the user might be directly logged in again at the gropius client.
 
-## Flow: User logs out at gropius auth server
 
-> TODO: this
+## Flow: User logs out at gropius auth server (current session)
 
-## Data 
+This will delete the current session token and ActiveLogin.
+
+- `API POST {gropius auth server}/auth/api/internal/auth/logout/current`
+
+
+## Flow: User logs out at gropius auth server (every session)
+
+This will delete the current session token and all ActiveLogins of the user.
+
+- `API POST {gropius auth server}/auth/api/internal/auth/logout/everywhere`
+
+
+## Data
 
 > TODO: talk about session and database
 
+| Record               | Storage  | Description     |
+|----------------------|----------|-----------------|
+| LoginUser            | Postgres | gropius account |
+| UserLoginData        | Postgres |                 |
+| UserLoginDataIMSUser | Postgres |                 |
+| ActiveLogin          | Postgres |                 |
+| Session              | Cookie   |                 |
+|                      | Neo4j    |                 |
 
 
 ## Notes
 
-- never manually visit {gropius auth server}/auth/flow/login but only via {gropius auth server}/auth/flow/account
-- never manually visit {gropius auth server}/auth/flow/register but only via {gropius auth server}/auth/flow/account
+- never manually visit `HTTP GET {gropius auth server}/auth/flow/login` but only via `HTTP GET {gropius auth server}/auth/flow/account`
+- never manually visit `HTTP GET {gropius auth server}/auth/flow/register` but only via `HTTP GET {gropius auth server}/auth/flow/account`
