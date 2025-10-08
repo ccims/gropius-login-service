@@ -37,6 +37,13 @@ Oauth authorization code flow with pkce for gropius client running in the browse
 
 Resource server can then be accessed with access token as usual.
 Further, refresh token can be used to get new access token as usual.
+The browser gropius client shall not store any tokens in a persistent way, but only in memory.
+
+
+## Flow: Gropius Client refreshes Access Token
+
+Refresh token flow as usual.
+
 
 ## Flow: Machine Gropius Client Accesses Gropius Resource Server
 
@@ -58,24 +65,41 @@ The consent prompt is skipped if user already granted access to gropius client i
 
 ## Flow: User authenticates at Gropius Auth Server
 
-> TODO: merge this with FLOW {user authenticates at gropius auth server via IMS auth server}?!
-
-> TODO: login
-
 - `REDIRECT GET {gropius auth server}/auth/flow/login`
-- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy id}/login` <- IMMER oder nur bei passport local?
-- ...
+- one of the following flows
+  - `FLOW {user registers at gropius auth server via passport-local}`
+  - `FLOW {user registers at gropius auth server via IMS auth server}`
+  - `FLOW {user authenticates at gropius auth server via IMS auth server}`
+  - `FLOW {user authenticates at gropius auth server via passport-local}`
 
+The user is authenticated after a registration.
 The authentication is persisted in a session cookie and used for further requests to the gropius auth server.
 
-> TODO: register
+
+## Flow: User registers at Gropius Auth Server via passport-local
+
+> TODO: register via passport-local
+
+## Flow: User registers at Gropius Auth Server via IMS auth server
+ 
+> TODO: register via IMS auth server
+
+
+## Flow: User authenticates at Gropius Auth Server via passport-local
+
+- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy id}/login`
 
 
 ## Flow: User authenticates at Gropius Auth Server via IMS auth server
 
 - passport.js specific flows for the IMS auth server
 
+- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy id}/login`
+- `FLOW {user authenticates at IMS auth server}`
+- `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy id}`
+
 > TODO: endpoints
+
 
 ## Flow: User authenticates at IMS auth server
 
@@ -90,11 +114,10 @@ The IMS client uses credentials granted during `FLOW {user authenticates at grop
 
 > TODO: can also link gropius account (ie passport-local) to gropius account?!
 
-- `REQUIRES FLOW {gropius client accesses gropius resource server}`
+- `FLOW {user authenticates at gropius auth server}`
+- `HTTP GET {gropius auth server}/auth/flow/register-additional`
 
-- `REDIRECT GET {gropius auth server}/auth/flow/register-additional`
-
-- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy id}/register`
+- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy id}/{register,register-sync}`
 - `REDIRECT GET {IMS auth server}/auth/oauth/authorize`
 - `FLOW {user authenticates at IMS auth server}`
 - `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy id}`
