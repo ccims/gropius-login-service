@@ -93,7 +93,7 @@ export class Context {
 
     drop() {
         // @ts-ignore
-        this.req.session = null;
+        this.req.session = {};
         this.init();
         return this;
     }

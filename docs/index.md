@@ -133,6 +133,11 @@ The IMS client uses credentials granted during `FLOW {user authenticates at grop
 
 The registration flows shall not create a new gropius account, but link the new loginData to the existing gropius account.
 
+## Flow "User Unlinks IMS Account from Gropius Account"
+
+1. `API POST {gropius auth server}/auth/api/internal/auth/update-action/{login data id}/delete`
+
+
 ## Flow "User Logs Out at the Gropius Client"
 
 The gropius client deletes all tokens.
