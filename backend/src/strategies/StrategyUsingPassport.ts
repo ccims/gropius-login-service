@@ -58,8 +58,8 @@ export abstract class StrategyUsingPassport extends Strategy {
                 {
                     session: false,
                     state: jwtService.sign({
-                        request: context?.tryRequest(),
-                        csrf: req.context?.getCSRF(),
+                        request: context?.flow.tryRequest(),
+                        csrf: context?.auth.getCSRF(),
                     }),
                     ...this.getAdditionalPassportOptions(strategyInstance, context),
                 },

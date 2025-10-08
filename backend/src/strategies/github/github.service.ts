@@ -158,7 +158,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategyInstance: StrategyInstance,
         context: Context | undefined,
     ): passport.AuthenticateOptions {
-        const mode = context?.tryFlowType() ?? FlowType.LOGIN;
+        const mode = context?.flow.tryType() ?? FlowType.LOGIN;
         if (mode == FlowType.REGISTER_WITH_SYNC) {
             return {
                 scope: ["scope", "user:email", "repo"],

@@ -36,7 +36,7 @@ export class TokenExchangeAuthorizationCodeService {
         /**
          * Active Login
          */
-        const activeLogin = await this.activeLoginService.findOneBy({
+        const activeLogin = await this.activeLoginService.findOneByOrFail({
             id: data.activeLoginId,
         });
 

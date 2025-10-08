@@ -9,6 +9,7 @@ import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
 import { Context } from "../util/Context";
+import { ActiveLoginService } from "../model/services/active-login.service";
 
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {
@@ -19,6 +20,7 @@ export class StrategiesMiddleware implements NestMiddleware {
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly performAuthFunctionService: PerformAuthFunctionService,
         private readonly imsUserFindingService: ImsUserFindingService,
+        private readonly activeLoginService: ActiveLoginService,
     ) {}
 
     private async idToStrategyInstance(id: string): Promise<StrategyInstance> {
@@ -33,14 +35,16 @@ export class StrategiesMiddleware implements NestMiddleware {
     }
 
     private async performImsUserSearchIfNeeded(context: Context, instance: StrategyInstance, strategy: Strategy) {
-        const activeLogin = context.tryActiveLogin();
+        const activeLogin = await this.activeLoginService.findOneByOrFail({
+            id: context.auth.getActiveLoginId(),
+        });
 
         if (strategy.canSync && instance.isSyncActive) {
             if (typeof activeLogin == "object" && activeLogin.id) {
                 const imsUserSearchOnModes = process.env.GROPIUS_PERFORM_IMS_USER_SEARCH_ON.split(",").filter(
                     (s) => !!s,
                 );
-                if (imsUserSearchOnModes.includes(context.getFlowType())) {
+                if (imsUserSearchOnModes.includes(context.flow.getFlowType())) {
                     const loginData = await activeLogin.loginInstanceFor;
                     try {
                         await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
@@ -60,7 +64,7 @@ export class StrategiesMiddleware implements NestMiddleware {
 
         const instance = await this.idToStrategyInstance(id);
         const strategy = this.strategiesService.getStrategyByName(instance.type);
-        req.context.setStrategy(instance.type, strategy);
+        req.context.flow.setStrategy(strategy);
 
         const result = await strategy.performAuth(instance, req.context, req, res);
         const authResult = result.result;
@@ -82,7 +86,7 @@ export class StrategiesMiddleware implements NestMiddleware {
             instance,
             strategy,
         );
-        req.context.setActiveLogin(activeLogin);
+        req.context.auth.setActiveLogin(activeLogin);
 
         await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
 

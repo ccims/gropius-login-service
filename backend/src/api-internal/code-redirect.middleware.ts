@@ -4,6 +4,7 @@ import { TokenScope, TokenService } from "src/backend-services/token.service";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
+import { AuthClientService } from "../model/services/auth-client.service";
 
 @Injectable()
 export class CodeRedirectMiddleware implements NestMiddleware {
@@ -12,12 +13,15 @@ export class CodeRedirectMiddleware implements NestMiddleware {
     constructor(
         private readonly tokenService: TokenService,
         private readonly activeLoginService: ActiveLoginService,
+        private readonly authClientService: AuthClientService,
     ) {}
 
     // TODO: this needs to be adapted to the "automatic login thing"
-    private async assignActiveLoginToClient(req: Request, expiresIn: number): Promise<number> {
-        const activeLogin = req.context.getActiveLogin();
-
+    private async assignActiveLoginToClient(
+        req: Request,
+        activeLogin: ActiveLogin,
+        expiresIn: number,
+    ): Promise<number> {
         if (!activeLogin.isValid) {
             // TODO: throw new Error("Active login invalid");
         }
@@ -34,23 +38,25 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         }
         const codeJwtId = ++activeLogin.nextExpectedRefreshTokenNumber;
 
-        req.context.setActiveLogin(await this.activeLoginService.save(activeLogin));
+        await this.activeLoginService.save(activeLogin);
 
         return codeJwtId;
     }
 
     private async generateCode(req: Request, clientId: string, scope: TokenScope[]): Promise<string> {
         try {
-            const activeLogin = req.context.getActiveLogin();
+            const activeLogin = await this.activeLoginService.findOneByOrFail({
+                id: req.context.auth.getActiveLoginId(),
+            });
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
-            const codeJwtId = await this.assignActiveLoginToClient(req, expiresIn);
+            const codeJwtId = await this.assignActiveLoginToClient(req, activeLogin, expiresIn);
             const token = await this.tokenService.signActiveLoginCode(
                 activeLogin.id,
                 clientId,
                 codeJwtId,
                 scope,
                 expiresIn,
-                req.context.getRequest().codeChallenge,
+                req.context.flow.getRequest().codeChallenge,
             );
             return token;
         } catch (err: any) {
@@ -61,13 +67,13 @@ export class CodeRedirectMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // TODO: this
-        if (!req.context.isAuthenticated() && !req.context.tryActiveLoginId()) {
+        if (!req.context.auth.isAuthenticated() && !req.context.auth.tryActiveLoginId()) {
             this.logger.log("Skipping auth core redirect middleware since not authenticated");
             return next();
         }
 
-        const request = req.context.getRequest();
-        const client = req.context.getClient();
+        const request = req.context.flow.getRequest();
+        const client = await this.authClientService.findAuthClient(request.clientId);
 
         const url = new URL(request.redirect);
         const token = await this.generateCode(req, client.id, request.scope);
@@ -75,7 +81,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         url.searchParams.append("state", request.state ?? "");
 
         // Update flow
-        req.context.setFinished(req.body.flow);
+        req.context.flow.setFinished(req.body.flow);
 
         res.redirect(url.toString());
     }

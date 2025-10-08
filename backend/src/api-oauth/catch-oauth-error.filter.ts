@@ -17,7 +17,7 @@ export class CatchOAuthErrorFilter implements ExceptionFilter {
         console.log("session", req.session);
 
         try {
-            const url = new URL(req.context.getRequest().redirect);
+            const url = new URL(req.context.flow.getRequest().redirect);
             if (error.error_type && error.error_message) {
                 url.searchParams.append("error", error.error_type);
                 url.searchParams.append(

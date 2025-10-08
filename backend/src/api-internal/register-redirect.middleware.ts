@@ -5,6 +5,8 @@ import { BackendUserService } from "src/backend-services/backend-user.service";
 import { LoginState, UserLoginData } from "../model/postgres/UserLoginData.entity";
 import { combineURL } from "../util/utils";
 import { Strategy } from "src/strategies/Strategy";
+import { StrategiesService } from "../model/services/strategies.service";
+import { ActiveLoginService } from "../model/services/active-login.service";
 
 /**
  * Return data of the user data suggestion endpoint
@@ -40,19 +42,25 @@ export class RegisterRedirectMiddleware implements NestMiddleware {
     constructor(
         private readonly userService: LoginUserService,
         private readonly backendUserService: BackendUserService,
+        private readonly strategiesService: StrategiesService,
+        private readonly activeLoginService: ActiveLoginService,
     ) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
         // TODO: this
-        if (!req.context.isAuthenticated() && !req.context.tryActiveLoginId()) {
+        if (!req.context.auth.isAuthenticated() && !req.context.auth.tryActiveLoginId()) {
             this.logger.log("Skipping auth core redirect middleware since not authenticated");
             return next();
         }
 
-        const userLoginData = await req.context.getActiveLogin().loginInstanceFor;
+        const userLoginData = await (
+            await this.activeLoginService.findOneByOrFail({
+                id: req.context.auth.getActiveLoginId(),
+            })
+        ).loginInstanceFor;
 
         if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-            const strategy = req.context.getStrategy();
+            const strategy = this.strategiesService.getStrategyByName(req.context.flow.getStrategyTypeName());
 
             const url = combineURL(`auth/flow/register`, process.env.GROPIUS_ENDPOINT);
 

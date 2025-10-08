@@ -9,8 +9,7 @@ export default function CSRFMiddleware(req: Request, res: Response, next: NextFu
     const found = req.body?.csrf ?? req.header("x-csrf-token") ?? req.query?.csrf ?? req.params?.csrf;
     if (!found) throw new Error("No CSRF token provided");
 
-    // TODO: use getSessionCSRF
-    if (!compareTimeSafe(found, req.context.getCSRF())) throw new Error("Invalid CSRF token provided");
+    if (!compareTimeSafe(found, req.context.auth.getCSRF())) throw new Error("Invalid CSRF token provided");
 
     console.log("valid CSRF");
 
