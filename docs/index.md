@@ -112,6 +112,8 @@ The IMS client uses credentials granted during `FLOW {user authenticates at grop
 
 ## Flow: User links IMS account to gropius account
 
+> TODO: cleanup
+
 > TODO: can also link gropius account (ie passport-local) to gropius account?!
 
 - `FLOW {user authenticates at gropius auth server}`
