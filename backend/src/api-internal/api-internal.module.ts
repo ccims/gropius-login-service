@@ -45,7 +45,7 @@ export class ApiInternalModule {
                 StrategiesMiddleware,
                 FlowSetAuthenticatedMiddleware,
                 PromptRedirectMiddleware,
-                // TODO: register redirect middleware missing?
+                RegisterRedirectMiddleware,
                 CodeRedirectMiddleware,
             )
             .forRoutes("auth/api/internal/auth/submit/:id/:mode");
