@@ -85,31 +85,31 @@ Authentication is skipped if user is already authenticated.
 
 ## Flow "User Registers at Gropius Auth Server via passport-local"
 
-- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/{register,register-sync}`
-- `REDIRECT GET {gropius auth server}/auth/flow/register`
-- `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/{register,register-sync}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/register`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
 
 
 ## Flow "User Registers at Gropius Auth Server via IMS Auth Server"
  
-- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/{register,register-sync}`
-- `REDIRECT GET {IMS auth server}/auth/oauth/authorize`
-- `FLOW {user authenticates at IMS auth server}`
-- `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
-- `REDIRECT GET {gropius auth server}/auth/flow/register`
-- `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/{register,register-sync}`
+1. `REDIRECT GET {IMS auth server}/auth/oauth/authorize`
+1. `FLOW {user authenticates at IMS auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/register`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
 
 
 ## Flow "User Authenticates at Gropius Auth Server via passport-local"
 
-- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
 
 
 ## Flow "User Authenticates at Gropius Auth Server via IMS Auth Server"
 
-- `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/login`
-- `FLOW {user authenticates at IMS auth server}`
-- `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/login`
+1. `FLOW {user authenticates at IMS auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
 
 
 ## Flow "User Authenticates at IMS Auth Server"
@@ -124,12 +124,12 @@ The IMS client uses credentials granted during `FLOW {user authenticates at grop
 
 ## Flow "User Links IMS Account to Gropius Account"
 
-- `FLOW {user authenticates at gropius auth server}`
-- `HTTP GET {gropius auth server}/auth/flow/register-additional`
-- one of the following flows
-  - `FLOW {user registers at gropius auth server via passport-local}`
-  - `FLOW {user registers at gropius auth server via IMS auth server}`
-- `REDIRECT GET {gropius auth server}/auth/flow/account`
+1. `FLOW {user authenticates at gropius auth server}`
+1. `HTTP GET {gropius auth server}/auth/flow/register-additional`
+1. one of the following flows
+   1. `FLOW {user registers at gropius auth server via passport-local}`
+   1. `FLOW {user registers at gropius auth server via IMS auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/account`
 
 The registration flows shall not create a new gropius account, but link the new loginData to the existing gropius account.
 
@@ -146,7 +146,7 @@ Note, technically, the user never "logged into" the gropius client, but only aut
 
 This will delete the current session token and ActiveLogin.
 
-- `API POST {gropius auth server}/auth/api/internal/auth/logout/current`
+1. `API POST {gropius auth server}/auth/api/internal/auth/logout/current`
 
 
 ## Flow "User Logs Out Everywhere at Gropius Auth Server"
@@ -154,7 +154,7 @@ This will delete the current session token and ActiveLogin.
 This will delete the current session token and all ActiveLogins of the user.
 This will also invalidate all issued tokens.
 
-- `API POST {gropius auth server}/auth/api/internal/auth/logout/everywhere`
+1. `API POST {gropius auth server}/auth/api/internal/auth/logout/everywhere`
 
 
 ## Data
@@ -172,5 +172,5 @@ This will also invalidate all issued tokens.
 
 ## Notes
 
-- never manually visit `HTTP GET {gropius auth server}/auth/flow/login` but only via `HTTP GET {gropius auth server}/auth/flow/account`
-- never manually visit `HTTP GET {gropius auth server}/auth/flow/register` but only via `HTTP GET {gropius auth server}/auth/flow/account`
+1. never manually visit `HTTP GET {gropius auth server}/auth/flow/login` but only via `HTTP GET {gropius auth server}/auth/flow/account`
+1. never manually visit `HTTP GET {gropius auth server}/auth/flow/register` but only via `HTTP GET {gropius auth server}/auth/flow/account`
