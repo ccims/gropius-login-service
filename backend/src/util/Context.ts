@@ -197,7 +197,7 @@ class Flow {
     }
 
     tryActiveLoginId() {
-        return this.req.session.active_login_id;
+        return this.req.session.flow.active_login_id;
     }
 
     getActiveLoginId() {
@@ -207,7 +207,7 @@ class Flow {
     }
 
     setActiveLogin(activeLogin: ActiveLogin) {
-        this.req.session.active_login_id = activeLogin.id;
+        this.req.session.flow.active_login_id = activeLogin.id;
         return this;
     }
 
