@@ -11,7 +11,5 @@ export default function CSRFMiddleware(req: Request, res: Response, next: NextFu
 
     if (!compareTimeSafe(found, req.context.auth.getCSRF())) throw new Error("Invalid CSRF token provided");
 
-    console.log("valid CSRF");
-
     next();
 }

@@ -154,7 +154,7 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        req.context.drop();
+        req.context.regenerate();
         return new DefaultReturn("logout/current");
     }
 
@@ -169,7 +169,7 @@ export class AuthEndpointsController {
 
         await this.activeLoginService.deleteForUser(user);
 
-        req.context.drop();
+        req.context.regenerate();
         return new DefaultReturn("logout/everywhere");
     }
 }

@@ -78,10 +78,12 @@ export class Context {
 
     constructor(req: Request) {
         this.req = req as RequestWithContext;
+        this.auth = new Auth(this, this.req);
+        this.flow = new Flow(this, this.req);
         this.init();
     }
 
-    drop() {
+    regenerate() {
         // @ts-ignore
         this.req.session = {};
         this.init();
@@ -89,8 +91,6 @@ export class Context {
     }
 
     private init() {
-        this.auth = new Auth(this, this.req);
-        this.flow = new Flow(this, this.req);
         this.auth.init();
         return this;
     }

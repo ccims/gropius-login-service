@@ -44,7 +44,6 @@ export class FlowInitMiddleware implements NestMiddleware {
                 // Check if active login is valid
                 if (!activeLogin.isValid) throw new Error("Active login invalid");
 
-                // TODO: expire is not in sync with cookie expiration ...
                 // Check if active login expired
                 if (activeLogin.isExpired) throw new Error("Active login expired");
 
@@ -73,7 +72,7 @@ export class FlowInitMiddleware implements NestMiddleware {
             }
         } catch (e: any) {
             this.logger.error(e);
-            req.context.drop();
+            req.context.regenerate();
         }
 
         next();
