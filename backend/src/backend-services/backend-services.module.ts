@@ -5,6 +5,10 @@ import { TokenService } from "./token.service";
 import { BackendUserService } from "./backend-user.service";
 import { ImsUserFindingService } from "./ims-user-finding.service";
 import { EncryptionService } from "./encryption.service";
+import { CodeRedirectService } from "./x-code-redirect.service";
+import { FlowInitService } from "./x-flow-init.service";
+import { PromptRedirectService } from "./x-prompt-redirect.service";
+import { RequestExtractService } from "./x-request-extract.service";
 
 @Module({
     imports: [
@@ -33,7 +37,20 @@ import { EncryptionService } from "./encryption.service";
         BackendUserService,
         ImsUserFindingService,
         EncryptionService,
+        CodeRedirectService,
+        FlowInitService,
+        PromptRedirectService,
+        RequestExtractService,
     ],
-    exports: [TokenService, BackendUserService, ImsUserFindingService, EncryptionService],
+    exports: [
+        TokenService,
+        BackendUserService,
+        ImsUserFindingService,
+        EncryptionService,
+        CodeRedirectService,
+        FlowInitService,
+        PromptRedirectService,
+        RequestExtractService,
+    ],
 })
 export class BackendServicesModule {}

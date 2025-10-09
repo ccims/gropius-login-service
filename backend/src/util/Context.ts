@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
+import { OAuthAuthorizeRequest } from "../api-oauth/types";
 import * as crypto from "crypto";
 import { MONTH_IN_SECONDS, now, TEN_MINUTES_IN_SECONDS } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
@@ -197,7 +197,7 @@ class Flow {
     }
 
     tryActiveLoginId() {
-        return this.req.session.flow.active_login_id;
+        return this.req.session.flow?.active_login_id;
     }
 
     getActiveLoginId() {

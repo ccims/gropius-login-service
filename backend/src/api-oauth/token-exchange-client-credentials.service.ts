@@ -7,8 +7,6 @@ import { OAuthHttpException } from "./OAuthHttpException";
 
 @Injectable()
 export class TokenExchangeClientCredentialsService {
-    readonly supportedGrantTypes = ["client_credentials"];
-
     private readonly logger = new Logger(TokenExchangeClientCredentialsService.name);
 
     constructor(private readonly tokenService: TokenService) {}

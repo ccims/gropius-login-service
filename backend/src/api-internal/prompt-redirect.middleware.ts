@@ -2,12 +2,16 @@ import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { combineURL } from "../util/utils";
 import { AuthClientService } from "../model/services/auth-client.service";
+import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 
 @Injectable()
 export class PromptRedirectMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
 
-    constructor(private readonly authClientService: AuthClientService) {}
+    constructor(
+        private readonly authClientService: AuthClientService,
+        private readonly promptRedirectService: PromptRedirectService,
+    ) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
         // Check if register additional
@@ -32,6 +36,6 @@ export class PromptRedirectMiddleware implements NestMiddleware {
         }
 
         // Prompt user for consent
-        res.redirect(combineURL(`auth/flow/prompt`, process.env.GROPIUS_ENDPOINT).toString());
+        return this.promptRedirectService.use(req, res);
     }
 }

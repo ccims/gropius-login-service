@@ -5,7 +5,7 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { AuthResult, AuthStateServerData } from "./AuthResult";
-import { OAuthAuthorizeRequest } from "src/api-oauth/OAuthAuthorizeServerState";
+import { OAuthAuthorizeRequest } from "src/api-oauth/types";
 import { Schema } from "jtd";
 import { Context } from "../util/Context";
 

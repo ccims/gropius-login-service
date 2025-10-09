@@ -1,7 +1,14 @@
-import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
+import { Controller, Get, Logger, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { NoCors } from "../util/NoCors.decorator";
+import { Request, Response } from "express";
+import { AuthClientService } from "../model/services/auth-client.service";
+import { combineURL } from "../util/utils";
+import { FlowInitService } from "../backend-services/x-flow-init.service";
+import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
+import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
+import { RequestExtractService } from "../backend-services/x-request-extract.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -12,6 +19,16 @@ import { NoCors } from "../util/NoCors.decorator";
  */
 @Controller()
 export class AuthorizeController {
+    private readonly logger = new Logger(this.constructor.name);
+
+    constructor(
+        private readonly flowInitService: FlowInitService,
+        private readonly authClientService: AuthClientService,
+        private readonly codeService: CodeRedirectService,
+        private readonly promptRedirectService: PromptRedirectService,
+        private readonly requestExtractService: RequestExtractService,
+    ) {}
+
     /**
      * Authorize endpoint for strategy instance of the given id.
      * Functionality performed is determined by mode parameter.
@@ -54,10 +71,45 @@ export class AuthorizeController {
         description: "The code challenge method to use for PKCE, only S256 is supported",
     })
     @ApiTags(OpenApiTag.OAUTH_API)
-    authorizeEndpoint() {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async authorizeEndpoint(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        this.logger.log("Staring new authorize request");
+
+        /**
+         * Init flow
+         */
+        await this.flowInitService.use(req, res);
+        req.context.flow.init();
+        // TODO: set normal auth flow
+
+        /**
+         * Request
+         */
+        const request = await this.requestExtractService.use(req, res);
+        req.context.flow.setRequest(request);
+
+        /**
+         * Authentication
+         */
+        if (!req.context.auth.isAuthenticated()) {
+            this.logger.log("User not authenticated, redirecting to login");
+            return res.redirect(combineURL(`auth/flow/login`, process.env.GROPIUS_ENDPOINT).toString());
+        }
+        this.logger.log("User is authenticated");
+
+        /**
+         * Consent Prompt
+         */
+        const client = await this.authClientService.findAuthClient(request.clientId);
+        if (!(!client.isInternal || req.context.flow.didConsent())) {
+            this.logger.log("User did not consent yet, redirecting to consent prompt");
+            return this.promptRedirectService.use(req, res);
+        }
+        this.logger.log("User consented already");
+
+        /**
+         * Authorization Code
+         */
+        this.logger.log("Generating authorization code and redirecting to client");
+        return this.codeService.use(req, res);
     }
 }

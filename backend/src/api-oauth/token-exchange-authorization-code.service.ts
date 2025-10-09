@@ -11,8 +11,6 @@ import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
 
 @Injectable()
 export class TokenExchangeAuthorizationCodeService {
-    readonly supportedGrantTypes = ["authorization_code", "refresh_token"];
-
     private readonly logger = new Logger(TokenExchangeAuthorizationCodeService.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
@@ -20,7 +18,7 @@ export class TokenExchangeAuthorizationCodeService {
         private readonly encryptionService: EncryptionService,
     ) {}
 
-    async handle(req: Request, res: Response, client: AuthClient) {
+    async handle(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         /**
          * Authorization Code/ Refresh Token
          */
@@ -52,7 +50,7 @@ export class TokenExchangeAuthorizationCodeService {
 
         if (activeLogin.isExpired) {
             this.logger.warn("Active login is expired", data.activeLoginId);
-            return this.throwGenericCodeError();
+            this.throwGenericCodeError();
         }
 
         const codeUniqueId = parseInt(data.tokenUniqueId, 10);

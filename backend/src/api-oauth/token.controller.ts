@@ -1,18 +1,77 @@
-import { Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
+import { Controller, Post, Req, Res } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
+import { Request, Response } from "express";
+import { OAuthHttpException } from "./OAuthHttpException";
+import { AuthClient } from "../model/postgres/AuthClient.entity";
+import { AuthClientService } from "../model/services/auth-client.service";
+import { TokenExchangeAuthorizationCodeService } from "./token-exchange-authorization-code.service";
+import { TokenExchangeClientCredentialsService } from "./token-exchange-client-credentials.service";
 
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)
 export class TokenController {
+    constructor(
+        private readonly authClientService: AuthClientService,
+        private readonly authorizationCodeService: TokenExchangeAuthorizationCodeService,
+        private readonly clientCredentialsService: TokenExchangeClientCredentialsService,
+    ) {}
+
     @Post("token")
     @ApiOperation({ summary: "Token OAuth Endpoint" })
     @ApiOkResponse({ type: OauthTokenResponse })
-    async token(): Promise<OauthTokenResponse> {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async token(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<OauthTokenResponse> {
+        const handler = this.getHandler(req);
+        if (!handler)
+            throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
+
+        const client = await this.getClient(req);
+        if (!client)
+            throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
+
+        return handler.handle(req, res, client);
+    }
+
+    private getHandler(req: Request) {
+        switch (req.body.grant_type) {
+            case "authorization_code":
+                return this.authorizationCodeService;
+            case "refresh_token":
+                return this.authorizationCodeService;
+            case "client_credentials":
+                return this.clientCredentialsService;
+        }
+    }
+
+    private async getClient(req: Request): Promise<AuthClient | undefined> {
+        let clientId: string;
+        let clientSecret: string | undefined;
+
+        const header = req.headers["authorization"];
+        if (header && header.startsWith("Basic ")) {
+            const clientIdSecret = Buffer.from(header.substring(6), "base64")
+                ?.toString("utf-8")
+                ?.split(":")
+                ?.map((text) => decodeURIComponent(text));
+
+            if (clientIdSecret && clientIdSecret.length == 2) {
+                clientId = clientIdSecret[0];
+                clientSecret = clientIdSecret[1];
+            }
+        }
+
+        if (req.body.client_id) {
+            clientId = req.body.client_id;
+            clientSecret = req.body.client_secret;
+        }
+
+        const client = await this.authClientService.findAuthClient(clientId);
+        if (!client) return;
+        if (!client.isValid) return;
+        if (!client.requiresSecret) return client;
+
+        const authenticated = client.verifySecret(clientSecret);
+        if (authenticated) return client;
     }
 }

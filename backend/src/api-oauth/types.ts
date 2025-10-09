@@ -1,5 +1,4 @@
 import { TokenScope } from "src/backend-services/token.service";
-import { AuthClient } from "src/model/postgres/AuthClient.entity";
 
 export interface OAuthAuthorizeRequest {
     state?: string;
