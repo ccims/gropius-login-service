@@ -33,33 +33,34 @@ export class FlowInitMiddleware implements NestMiddleware {
                 if (revokedAt && now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
             }
 
-            // Check active login
-            const activeLoginId = req.context.flow.tryActiveLoginId();
-            if (activeLoginId) {
-                // Check active login exists
-                const activeLogin = await this.activeLoginService.findOneByOrFail({
-                    id: req.context.flow.getActiveLoginId(),
-                });
-
-                // Check if active login is valid
-                if (!activeLogin.isValid) throw new Error("Active login invalid");
-
-                // Check if active login expired
-                if (activeLogin.isExpired) throw new Error("Active login expired");
-
-                // Check if login data exists
-                const loginData = await activeLogin.loginInstanceFor;
-                if (!loginData) throw new Error("Login data not found");
-
-                // Check if login data expired
-                if (loginData.isExpired) throw new Error("Login data expired");
-            }
-
+            // Check flow if exists
             if (req.context.flow.exists()) {
                 // Check if flow expired
                 if (req.context.flow.isExpired()) {
                     console.log("flow expired ...");
                     req.context.flow.drop();
+                }
+
+                // Check active login
+                const activeLoginId = req.context.flow.tryActiveLoginId();
+                if (activeLoginId) {
+                    // Check active login exists
+                    const activeLogin = await this.activeLoginService.findOneByOrFail({
+                        id: req.context.flow.getActiveLoginId(),
+                    });
+
+                    // Check if active login is valid
+                    if (!activeLogin.isValid) throw new Error("Active login invalid");
+
+                    // Check if active login expired
+                    if (activeLogin.isExpired) throw new Error("Active login expired");
+
+                    // Check if login data exists
+                    const loginData = await activeLogin.loginInstanceFor;
+                    if (!loginData) throw new Error("Login data not found");
+
+                    // Check if login data expired
+                    if (loginData.isExpired) throw new Error("Login data expired");
                 }
 
                 // Check client is valid

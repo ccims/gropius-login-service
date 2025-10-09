@@ -34,6 +34,12 @@ const routes: RouteRecordRaw[] = [
         name: "update",
         beforeEnter: requiresAuth,
         component: () => import("../views/Update.vue")
+    },
+    {
+        path: "/debug",
+        name: "debug",
+        beforeEnter: requiresAuth,
+        component: () => import("../views/Debug.vue")
     }
 ];
 
