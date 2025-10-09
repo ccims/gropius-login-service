@@ -1,5 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import router from "@/router";
 
 export type Token = {
     iat: number;
@@ -185,11 +186,6 @@ export async function loadCSRFHeader() {
             "x-csrf-token": await loadCSRFToken()
         }
     };
-}
-
-export async function linkAccount() {
-    // TODO: proper internal redirect?
-    window.location.href = `/auth/flow/register-additional`;
 }
 
 export async function logout(mode: "current" | "everywhere") {

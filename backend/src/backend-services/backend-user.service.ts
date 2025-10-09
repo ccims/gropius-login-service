@@ -178,7 +178,6 @@ export class BackendUserService {
     /**
      * Helper function performing tha actual linking of login data with user.
      */
-    // TODO: update context after saving things
     public async linkAccountToUser(
         userToLinkTo: LoginUser,
         loginData: UserLoginData,

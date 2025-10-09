@@ -84,7 +84,6 @@ export class RegisterRedirectMiddleware implements NestMiddleware {
         const initial = strategy.getUserDataSuggestion(loginData);
         const suggestions: UserDataSuggestion = {};
 
-        // TODO: validate email?!
         suggestions.email = initial.email;
 
         if (initial.username) {

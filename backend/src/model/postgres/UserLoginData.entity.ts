@@ -130,6 +130,10 @@ export class UserLoginData {
     @ApiHideProperty()
     loginsUsingThis: Promise<ActiveLogin[]>;
 
+    get isExpired() {
+        return this.expires != null && this.expires <= new Date();
+    }
+
     toJSON() {
         return { id: this.id, state: this.state, expires: this.expires };
     }

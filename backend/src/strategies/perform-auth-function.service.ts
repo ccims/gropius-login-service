@@ -105,7 +105,7 @@ export class PerformAuthFunctionService {
         }
         if (authResult.loginData) {
             // successfully found login data matching the authentication
-            if (authResult.loginData.expires != null && authResult.loginData.expires <= new Date()) {
+            if (authResult.loginData.isExpired) {
                 // Found login data is expired =>
                 // shouldn't happen as expired login data are filtered when searhcing for them
                 throw new OAuthHttpException("server_error", "Login data expired, please try registering again");

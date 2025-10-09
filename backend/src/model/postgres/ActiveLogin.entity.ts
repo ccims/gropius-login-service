@@ -117,6 +117,10 @@ export class ActiveLogin {
     @ApiHideProperty()
     loginInstanceFor: Promise<UserLoginData | null>;
 
+    get isExpired() {
+        return this.expires != null && this.expires <= new Date();
+    }
+
     toJSON() {
         return {
             id: this.id,

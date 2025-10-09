@@ -47,12 +47,12 @@ export class TokenExchangeAuthorizationCodeService {
 
         if (!activeLogin.isValid) {
             this.logger.warn("Active login set invalid", data.activeLoginId);
-            // TODO: this.throwGenericCodeError();
+            this.throwGenericCodeError();
         }
 
-        if (activeLogin.expires != null && activeLogin.expires <= new Date()) {
+        if (activeLogin.isExpired) {
             this.logger.warn("Active login is expired", data.activeLoginId);
-            // TODO: return this.throwGenericCodeError();
+            return this.throwGenericCodeError();
         }
 
         const codeUniqueId = parseInt(data.tokenUniqueId, 10);
@@ -113,7 +113,7 @@ export class TokenExchangeAuthorizationCodeService {
             throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
 
-        if (loginData.expires != null && loginData.expires <= new Date()) {
+        if (loginData.isExpired) {
             this.logger.warn("Login data has expired", loginData);
             throw new OAuthHttpException(
                 "invalid_grant",

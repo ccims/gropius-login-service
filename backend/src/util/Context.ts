@@ -260,9 +260,6 @@ class Flow {
 
         // TODO: clean up data
 
-        // TODO: reg workaround
-        // TODO: delete this.req.session.csrf_ext;
-
         return this;
     }
 

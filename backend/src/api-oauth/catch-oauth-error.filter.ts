@@ -4,17 +4,15 @@ import { OAuthHttpException } from "./OAuthHttpException";
 
 @Catch(OAuthHttpException)
 export class CatchOAuthErrorFilter implements ExceptionFilter {
-    private readonly logger = new Logger(CatchOAuthErrorFilter.name);
+    private readonly logger = new Logger(this.constructor.name);
 
     catch(error: OAuthHttpException, host: ArgumentsHost) {
-        console.log(error);
-
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();
         const res = context.getResponse<Response>();
 
-        // TODO: remove logs
-        console.log("session", req.session);
+        this.logger.error(error);
+        this.logger.debug("session", req.session);
 
         try {
             const url = new URL(req.context.flow.getRequest().redirect);

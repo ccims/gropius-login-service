@@ -18,7 +18,6 @@ import { ActiveLoginService } from "../model/services/active-login.service";
  * - Authorize endpoint
  * - Redirect/Callback endpoint
  */
-// TODO: doc decorator for required cookie?
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
 export class AuthEndpointsController {
@@ -151,7 +150,6 @@ export class AuthEndpointsController {
         );
     }
 
-    // TODO: doc decorator for CSRF protection?
     @Post("logout/current")
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
@@ -164,7 +162,6 @@ export class AuthEndpointsController {
         return new DefaultReturn("logout/current");
     }
 
-    // TODO: doc decorator for CSRF protection?
     @Post("logout/everywhere")
     @NoCors()
     @ApiOperation({ summary: "Logout everywhere" })
