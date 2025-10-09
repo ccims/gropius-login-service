@@ -10,6 +10,8 @@ import { NoCors } from "../util/NoCors.decorator";
 import { DefaultReturn } from "../util/default-return.dto";
 import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
 import { ActiveLoginService } from "../model/services/active-login.service";
+import { FlowInitService } from "../backend-services/x-flow-init.service";
+import { CSRFService } from "../backend-services/x-csrf.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -25,6 +27,8 @@ export class AuthEndpointsController {
         private readonly userService: LoginUserService,
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
+        private readonly flowInitService: FlowInitService,
+        private readonly csrfService: CSRFService,
     ) {}
 
     /**
@@ -91,9 +95,14 @@ export class AuthEndpointsController {
     @Get("csrf")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access the CSRF token" })
-    async csrfToken(@Req() req: Request): Promise<{
+    async csrfToken(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<{
         csrf: string;
     }> {
+        await this.flowInitService.use(req, res);
+
         return {
             csrf: req.context.auth.getCSRF(),
         };
@@ -102,7 +111,10 @@ export class AuthEndpointsController {
     @Get("prompt/data")
     @NoCors()
     @ApiOperation({ summary: "Endpoint to access data that should be displayed to the user" })
-    async promptData(@Req() req: Request): Promise<{
+    async promptData(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<{
         userId: string;
         username: string;
         flow: string;
@@ -111,6 +123,8 @@ export class AuthEndpointsController {
         clientId: string;
         clientName: string;
     }> {
+        await this.flowInitService.use(req, res);
+
         if (!req.context.auth.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
@@ -154,6 +168,9 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        await this.flowInitService.use(req, res);
+        await this.csrfService.use(req, res);
+
         req.context.regenerate();
         return new DefaultReturn("logout/current");
     }
@@ -162,6 +179,9 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout everywhere" })
     async logoutEverywhere(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        await this.flowInitService.use(req, res);
+        await this.csrfService.use(req, res);
+
         const user = await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() });
         if (!user) throw new Error("Did not found user");
         user.revokeTokensBefore = new Date();

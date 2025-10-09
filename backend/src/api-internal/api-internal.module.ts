@@ -14,7 +14,6 @@ import { FlowSetAuthenticatedMiddleware } from "./flow-set-authenticated.middlew
 import { PromptRedirectMiddleware } from "./prompt-redirect.middleware";
 import { PromptCallbackMiddleware } from "./prompt-callback.middleware";
 import { FlowInitMiddleware } from "./flow-init.middleware";
-import CSRFMiddleware from "../util/csrf.middleware";
 import { RegisterRedirectMiddleware } from "./register-redirect.middleware";
 
 @Module({
@@ -63,13 +62,5 @@ export class ApiInternalModule {
                 CodeRedirectMiddleware,
             )
             .forRoutes("auth/api/internal/auth/register/callback");
-
-        consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/csrf");
-
-        consumer.apply(FlowInitMiddleware).forRoutes("auth/api/internal/auth/prompt/data");
-
-        consumer.apply(FlowInitMiddleware, CSRFMiddleware).forRoutes("auth/api/internal/auth/logout/current");
-
-        consumer.apply(FlowInitMiddleware, CSRFMiddleware).forRoutes("auth/api/internal/auth/logout/everywhere");
     }
 }
