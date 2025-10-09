@@ -13,7 +13,7 @@ import { UpdateActionController } from "./update-action.controller";
 import { FlowSetAuthenticatedMiddleware } from "./flow-set-authenticated.middleware";
 import { PromptRedirectMiddleware } from "./prompt-redirect.middleware";
 import { PromptCallbackMiddleware } from "./prompt-callback.middleware";
-import { FlowInitMiddleware } from "../api-oauth/flow-init.middleware";
+import { FlowInitMiddleware } from "./flow-init.middleware";
 import CSRFMiddleware from "../util/csrf.middleware";
 import { RegisterRedirectMiddleware } from "./register-redirect.middleware";
 

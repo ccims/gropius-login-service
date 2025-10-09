@@ -9,6 +9,8 @@ import { CodeRedirectService } from "./x-code-redirect.service";
 import { FlowInitService } from "./x-flow-init.service";
 import { PromptRedirectService } from "./x-prompt-redirect.service";
 import { RequestExtractService } from "./x-request-extract.service";
+import { TokenExchangeAuthorizationCodeService } from "./x-token-exchange-authorization-code.service";
+import { TokenExchangeClientCredentialsService } from "./x-token-exchange-client-credentials.service";
 
 @Module({
     imports: [
@@ -41,6 +43,8 @@ import { RequestExtractService } from "./x-request-extract.service";
         FlowInitService,
         PromptRedirectService,
         RequestExtractService,
+        TokenExchangeAuthorizationCodeService,
+        TokenExchangeClientCredentialsService,
     ],
     exports: [
         TokenService,
@@ -51,6 +55,9 @@ import { RequestExtractService } from "./x-request-extract.service";
         FlowInitService,
         PromptRedirectService,
         RequestExtractService,
+
+        TokenExchangeAuthorizationCodeService,
+        TokenExchangeClientCredentialsService,
     ],
 })
 export class BackendServicesModule {}

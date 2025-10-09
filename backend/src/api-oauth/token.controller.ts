@@ -1,13 +1,13 @@
 import { Controller, Post, Req, Res } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
-import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
 import { Request, Response } from "express";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { AuthClient } from "../model/postgres/AuthClient.entity";
 import { AuthClientService } from "../model/services/auth-client.service";
-import { TokenExchangeAuthorizationCodeService } from "./token-exchange-authorization-code.service";
-import { TokenExchangeClientCredentialsService } from "./token-exchange-client-credentials.service";
+import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service";
+import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service";
+import { OauthTokenResponse } from "./types";
 
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)

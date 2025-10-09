@@ -4,8 +4,8 @@ import { AuthorizeController as OAuthAuthorizeController } from "./authorize.con
 import { TokenController } from "./token.controller";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { StrategiesModule } from "src/strategies/strategies.module";
-import { TokenExchangeClientCredentialsService } from "./token-exchange-client-credentials.service";
-import { TokenExchangeAuthorizationCodeService } from "./token-exchange-authorization-code.service";
+import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service";
+import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],

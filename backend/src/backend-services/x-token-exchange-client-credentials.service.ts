@@ -2,8 +2,8 @@ import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { NextFunction, Request, Response } from "express";
 import { TokenScope, TokenService } from "src/backend-services/token.service";
-import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
-import { OAuthHttpException } from "./OAuthHttpException";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { OauthTokenResponse } from "../api-oauth/types";
 
 @Injectable()
 export class TokenExchangeClientCredentialsService {

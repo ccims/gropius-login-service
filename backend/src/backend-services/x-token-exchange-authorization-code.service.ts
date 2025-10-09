@@ -3,11 +3,12 @@ import { NextFunction, Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { OAuthHttpException } from "./OAuthHttpException";
-import { EncryptionService } from "../backend-services/encryption.service";
+import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { EncryptionService } from "./encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { OauthTokenResponse } from "./dto/oauth-token-response.dto";
+
+import { OauthTokenResponse } from "../api-oauth/types";
 
 @Injectable()
 export class TokenExchangeAuthorizationCodeService {
