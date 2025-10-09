@@ -34,7 +34,7 @@ export class RegisterCallbackMiddleware implements NestMiddleware {
         const data: Data = await schema.validateAsync(req.body);
 
         const activeLogin = await this.activeLoginService.findOneByOrFail({
-            id: req.context.auth.getActiveLoginId(),
+            id: req.context.flow.getActiveLoginId(),
         });
         const loginData = await activeLogin.loginInstanceFor;
         if (!loginData) throw new Error("Login data not found for active login");

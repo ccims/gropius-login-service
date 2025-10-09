@@ -18,7 +18,7 @@ export class PromptCallbackMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         // Ensure that user is authenticated
         // TODO: this
-        if (!req.context.auth.isAuthenticated() && !req.context.auth.tryActiveLoginId()) {
+        if (!req.context.auth.isAuthenticated() && !req.context.flow.tryActiveLoginId()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
 
@@ -26,7 +26,7 @@ export class PromptCallbackMiddleware implements NestMiddleware {
         const data: Data = await schema.validateAsync(req.body);
 
         // Update flow and ensure state
-        req.context.flow.setPrompted(data.consent, data.flow);
+        if (data.consent) req.context.flow.setGranted();
 
         // Abort without consent
         if (!data.consent) {

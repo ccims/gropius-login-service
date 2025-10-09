@@ -34,11 +34,11 @@ export class FlowInitMiddleware implements NestMiddleware {
             }
 
             // Check active login
-            const activeLoginId = req.context.auth.tryActiveLoginId();
+            const activeLoginId = req.context.flow.tryActiveLoginId();
             if (activeLoginId) {
                 // Check active login exists
                 const activeLogin = await this.activeLoginService.findOneByOrFail({
-                    id: req.context.auth.getActiveLoginId(),
+                    id: req.context.flow.getActiveLoginId(),
                 });
 
                 // Check if active login is valid

@@ -2,7 +2,7 @@ import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/OAuthAuthorizeServerState";
 import * as crypto from "crypto";
-import { compareTimeSafe, MONTH_IN_SECONDS, now, TEN_MINUTES_IN_SECONDS } from "./utils";
+import { MONTH_IN_SECONDS, now, TEN_MINUTES_IN_SECONDS } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
@@ -34,9 +34,6 @@ export type ContextSession = {
     // user id
     user_id?: string;
 
-    // active login id
-    active_login_id?: string;
-
     // consent fingerprints of consented oauth authorization request
     consents: string[];
 
@@ -51,7 +48,6 @@ export type ContextSession = {
         // issued at
         issued_at: number;
 
-        // TODO: implement this
         // expires at
         expires_at: number;
 
@@ -61,17 +57,11 @@ export type ContextSession = {
         // flow type
         flow_type?: FlowType;
 
-        // TODO: implement this
         // active login id
         active_login_id?: string;
 
         // oauth authorization request
         oauth_request?: OAuthAuthorizeRequest;
-
-        // current step in the flow process (the steps are sequential as given and might be restarted from "started" any time)
-        step?: "started" | "authenticated" | "prompted";
-
-        // TODO: 2nd process model for registration
     };
 };
 
@@ -102,6 +92,7 @@ export class Context {
         this.auth = new Auth(this, this.req);
         this.flow = new Flow(this, this.req);
         this.auth.init();
+        return this;
     }
 }
 
@@ -130,6 +121,7 @@ class Auth {
         if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
             this.req.session.expires_at += MONTH_IN_SECONDS;
         }
+        return this;
     }
 
     isAuthenticated() {
@@ -148,20 +140,7 @@ class Auth {
 
     setUser(user: LoginUser) {
         this.req.session.user_id = user.id;
-    }
-
-    tryActiveLoginId() {
-        return this.req.session.active_login_id;
-    }
-
-    getActiveLoginId() {
-        const activeLogin = this.tryActiveLoginId();
-        if (!activeLogin) throw new Error("Active login id is missing");
-        return activeLogin;
-    }
-
-    setActiveLogin(activeLogin: ActiveLogin) {
-        this.req.session.active_login_id = activeLogin.id;
+        return this;
     }
 
     getCSRF() {
@@ -183,6 +162,11 @@ class Flow {
         return !!this.req.session.flow?.flow_id;
     }
 
+    assert() {
+        if (!this.exists()) throw new Error("Flow does not exist");
+        return this;
+    }
+
     init() {
         this.context.auth.extend();
 
@@ -191,14 +175,15 @@ class Flow {
             flow_id: uuidv4(),
             issued_at: iat,
             expires_at: iat + TEN_MINUTES_IN_SECONDS,
-            step: "started",
             // TODO: hotfix
             oauth_request: this.tryRequest(),
         };
+        return this;
     }
 
     drop() {
         this.req.session.flow = undefined;
+        return this;
     }
 
     getId() {
@@ -209,6 +194,21 @@ class Flow {
 
     isExpired() {
         return now() > this.req.session.flow.expires_at;
+    }
+
+    tryActiveLoginId() {
+        return this.req.session.active_login_id;
+    }
+
+    getActiveLoginId() {
+        const activeLogin = this.tryActiveLoginId();
+        if (!activeLogin) throw new Error("Active login id is missing");
+        return activeLogin;
+    }
+
+    setActiveLogin(activeLogin: ActiveLogin) {
+        this.req.session.active_login_id = activeLogin.id;
+        return this;
     }
 
     tryRequest() {
@@ -242,60 +242,6 @@ class Flow {
 
     setStrategy(strategy: Strategy) {
         this.req.session.flow.strategy_type = strategy.typeName;
-    }
-
-    // TODO: rework his
-    // TODO: req workaround (userId must be string)
-    // TODO: setActiveLoginId and setStrategy should only be called from setAuthenticated?
-    setAuthenticated(data: { csrf: string }) {
-        if (this.req.session.flow.step !== "started") {
-            // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
-        }
-
-        if (!compareTimeSafe(data.csrf, this.context.auth.getCSRF())) {
-            // TODO: throw new OAuthHttpException("invalid_request", "Another external flow is currently running");
-        }
-
-        this.req.session.flow.step = "authenticated";
-
-        // TODO: clean up data
-
-        return this;
-    }
-
-    // TODO: rework his
-    setPrompted(consent: boolean, flow: string) {
-        if (this.req.session.flow.step !== "authenticated") {
-            // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
-        }
-
-        if (flow !== this.req.session.flow.flow_id) {
-            // TODO: throw new OAuthHttpException("invalid_request", "Another flow is currently running");
-        }
-
-        if (consent) {
-            const fingerprint = this.consentFingerprint();
-            if (!this.req.session.consents.includes(fingerprint)) {
-                this.req.session.consents.push(fingerprint);
-            }
-        }
-
-        this.req.session.flow.step = "prompted";
-        return this;
-    }
-
-    // TODO: rework his
-    setFinished(flow: string) {
-        if (this.req.session.flow.step !== "prompted") {
-            // TODO: throw new OAuthHttpException("invalid_request", "Steps are executed in the wrong order");
-        }
-
-        if (flow !== this.req.session.flow.flow_id) {
-            // TODO: throw new OAuthHttpException("invalid_request", "Another flow is currently running");
-        }
-
-        this.drop();
-
         return this;
     }
 
@@ -303,7 +249,7 @@ class Flow {
         return this.req.session.flow?.flow_type;
     }
 
-    getFlowType() {
+    getType() {
         const type = this.tryType();
         if (!type) throw new Error("FlowType missing");
         return type;
@@ -316,6 +262,14 @@ class Flow {
 
     didConsent() {
         return this.req.session.consents.includes(this.consentFingerprint());
+    }
+
+    setGranted() {
+        const fingerprint = this.consentFingerprint();
+        if (!this.req.session.consents.includes(fingerprint)) {
+            this.req.session.consents.push(fingerprint);
+        }
+        return this;
     }
 
     consentFingerprint() {

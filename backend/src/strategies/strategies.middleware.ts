@@ -36,7 +36,7 @@ export class StrategiesMiddleware implements NestMiddleware {
 
     private async performImsUserSearchIfNeeded(context: Context, instance: StrategyInstance, strategy: Strategy) {
         const activeLogin = await this.activeLoginService.findOneByOrFail({
-            id: context.auth.getActiveLoginId(),
+            id: context.flow.getActiveLoginId(),
         });
 
         if (strategy.canSync && instance.isSyncActive) {
@@ -44,7 +44,7 @@ export class StrategiesMiddleware implements NestMiddleware {
                 const imsUserSearchOnModes = process.env.GROPIUS_PERFORM_IMS_USER_SEARCH_ON.split(",").filter(
                     (s) => !!s,
                 );
-                if (imsUserSearchOnModes.includes(context.flow.getFlowType())) {
+                if (imsUserSearchOnModes.includes(context.flow.getType())) {
                     const loginData = await activeLogin.loginInstanceFor;
                     try {
                         await this.imsUserFindingService.createAndLinkImsUsersForLoginData(loginData);
@@ -86,7 +86,7 @@ export class StrategiesMiddleware implements NestMiddleware {
             instance,
             strategy,
         );
-        req.context.auth.setActiveLogin(activeLogin);
+        req.context.flow.setActiveLogin(activeLogin);
 
         await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
 

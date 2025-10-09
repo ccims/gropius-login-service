@@ -25,7 +25,7 @@ export class PerformAuthFunctionService {
     ) {}
 
     public checkFunctionIsAllowed(context: Context, instance: StrategyInstance, strategy: Strategy): string | null {
-        const type = context.flow.getFlowType();
+        const type = context.flow.getType();
 
         if (type == FlowType.REGISTER_WITH_SYNC && !strategy.canSync) {
             context.flow.setType(FlowType.REGISTER);
@@ -97,7 +97,7 @@ export class PerformAuthFunctionService {
         instance: StrategyInstance,
         strategy: Strategy,
     ): Promise<ActiveLogin> {
-        const flowType = context.flow.getFlowType();
+        const flowType = context.flow.getType();
         const wantsToDoImplicitRegister =
             strategy.allowsImplicitSignup && instance.doesImplicitRegister && flowType == FlowType.LOGIN;
         if (flowType != FlowType.LOGIN && !authResult.mayRegister) {

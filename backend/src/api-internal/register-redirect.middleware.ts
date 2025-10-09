@@ -48,14 +48,14 @@ export class RegisterRedirectMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // TODO: this
-        if (!req.context.auth.isAuthenticated() && !req.context.auth.tryActiveLoginId()) {
+        if (!req.context.auth.isAuthenticated() && !req.context.flow.tryActiveLoginId()) {
             this.logger.log("Skipping auth core redirect middleware since not authenticated");
             return next();
         }
 
         const userLoginData = await (
             await this.activeLoginService.findOneByOrFail({
-                id: req.context.auth.getActiveLoginId(),
+                id: req.context.flow.getActiveLoginId(),
             })
         ).loginInstanceFor;
 

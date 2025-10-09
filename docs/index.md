@@ -149,9 +149,12 @@ Note, technically, the user never "logged into" the gropius client, but only aut
 
 ## Flow "User Logs Out at Gropius Auth Server"
 
-This will delete the current session token and ActiveLogin.
+This will delete the current session cookie.
 
 1. `API POST {gropius auth server}/auth/api/internal/auth/logout/current`
+
+The activeLogin is still valid.
+See `FLOW {user logs out everywhere at gropius auth server}` to invalidate all ActiveLogins.
 
 
 ## Flow "User Logs Out Everywhere at Gropius Auth Server"

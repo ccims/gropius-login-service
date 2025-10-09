@@ -46,7 +46,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
     private async generateCode(req: Request, clientId: string, scope: TokenScope[]): Promise<string> {
         try {
             const activeLogin = await this.activeLoginService.findOneByOrFail({
-                id: req.context.auth.getActiveLoginId(),
+                id: req.context.flow.getActiveLoginId(),
             });
             const expiresIn = parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10);
             const codeJwtId = await this.assignActiveLoginToClient(req, activeLogin, expiresIn);
@@ -67,7 +67,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // TODO: this
-        if (!req.context.auth.isAuthenticated() && !req.context.auth.tryActiveLoginId()) {
+        if (!req.context.auth.isAuthenticated() && !req.context.flow.tryActiveLoginId()) {
             this.logger.log("Skipping auth core redirect middleware since not authenticated");
             return next();
         }
@@ -81,7 +81,7 @@ export class CodeRedirectMiddleware implements NestMiddleware {
         url.searchParams.append("state", request.state ?? "");
 
         // Update flow
-        req.context.flow.setFinished(req.body.flow);
+        req.context.flow.drop();
 
         res.redirect(url.toString());
     }

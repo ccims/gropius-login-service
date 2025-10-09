@@ -119,7 +119,8 @@ async function onUpdate() {
 async function onDelete() {
     if (!window.confirm("Delete this login data?")) return;
     await axios.post(`/auth/api/internal/update-action/${id.value}/delete`, {}, await auth.loadAuthorizationHeader());
-    await router.push("account");
+    // DIRTY: reload page to handle problem that we might have deleted the current active login
+    window.location.href = "/auth/flow/account";
 }
 
 onMounted(async () => {

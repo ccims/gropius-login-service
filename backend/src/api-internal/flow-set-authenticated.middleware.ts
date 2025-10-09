@@ -11,16 +11,12 @@ export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         const csrf = req.context.auth.getCSRF();
         const activeLogin = await this.activeLoginService.findOneByOrFail({
-            id: req.context.auth.getActiveLoginId(),
+            id: req.context.flow.getActiveLoginId(),
         });
         const userLoginData = await activeLogin.loginInstanceFor;
         const loginUser = await userLoginData.user;
 
         if (loginUser) req.context.auth.setUser(loginUser);
-
-        req.context.flow.setAuthenticated({
-            csrf: csrf,
-        });
 
         this.logger.log("User authenticated in flow context: " + loginUser?.id);
         next();

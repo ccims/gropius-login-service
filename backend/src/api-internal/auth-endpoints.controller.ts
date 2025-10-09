@@ -154,10 +154,6 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        if (req.context.auth.tryActiveLoginId()) {
-            await this.activeLoginService.delete({ id: req.context.auth.getActiveLoginId() });
-        }
-
         req.context.drop();
         return new DefaultReturn("logout/current");
     }

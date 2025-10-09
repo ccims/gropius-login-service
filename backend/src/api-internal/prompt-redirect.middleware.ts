@@ -27,7 +27,6 @@ export class PromptRedirectMiddleware implements NestMiddleware {
 
         // Do not prompt for internal clients or if consent is already given
         if (client.isInternal || req.context.flow.didConsent()) {
-            req.context.flow.setPrompted(true, req.context.flow.getId());
             this.logger.log("Skipping prompt redirect middleware since client internal or already did consent");
             return next();
         }
