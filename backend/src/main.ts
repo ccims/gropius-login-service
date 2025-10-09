@@ -81,7 +81,6 @@ async function bootstrap() {
     );
 
     app.use((req: Request, res: Response, next: NextFunction) => {
-        // TODO: wtf is "(res.locals.state as ApiStateData)"?!
         if (!res.locals) {
             res.locals = {};
         }
