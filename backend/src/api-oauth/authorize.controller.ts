@@ -100,7 +100,7 @@ export class AuthorizeController {
          * Consent Prompt
          */
         const client = await this.authClientService.findAuthClient(request.clientId);
-        if (!(!client.isInternal || req.context.flow.didConsent())) {
+        if (!(client.isInternal || req.context.flow.didConsent())) {
             this.logger.log("User did not consent yet, redirecting to consent prompt");
             return this.promptRedirectService.use(req, res);
         }

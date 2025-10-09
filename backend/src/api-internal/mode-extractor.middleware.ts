@@ -21,6 +21,8 @@ export class ModeExtractorMiddleware implements NestMiddleware {
                 throw new Error("Invalid mode");
         }
 
+        // TODO: if link, then flow.init(). otherwise, flow.assert()
+
         req.context.flow.init();
         req.context.flow.setType(authFunction);
 
