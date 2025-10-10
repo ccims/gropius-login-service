@@ -2,6 +2,7 @@ import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
 import { NextFunction, Request, Response } from "express";
 import { ActiveLoginService } from "../model/services/active-login.service";
 
+// TODO: migrate
 @Injectable()
 export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
@@ -9,7 +10,6 @@ export class FlowSetAuthenticatedMiddleware implements NestMiddleware {
     constructor(private readonly activeLoginService: ActiveLoginService) {}
 
     async use(req: Request, res: Response, next: NextFunction) {
-        const csrf = req.context.auth.getCSRF();
         const activeLogin = await this.activeLoginService.findOneByOrFail({
             id: req.context.flow.getActiveLoginId(),
         });

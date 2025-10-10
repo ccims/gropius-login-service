@@ -35,6 +35,7 @@ interface UserDataSuggestion {
     email?: string;
 }
 
+// TODO: migrate
 @Injectable()
 export class RegisterRedirectMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);

@@ -15,7 +15,7 @@ export class CatchAuthErrorFilter implements ExceptionFilter {
         this.logger.error(error);
         this.logger.debug("session", req.session);
 
-        const target = req.context.flow.isRegisterAdditional() ? "register-additional" : "login";
+        const target = req.context.flow.isLinkFlow() ? "register-additional" : "login";
         const url = `auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}`;
         res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
     }

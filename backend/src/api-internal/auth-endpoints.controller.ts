@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { AuthFunctionInput } from "./dto/auth-function.dto";
@@ -14,6 +14,8 @@ import { FlowInitService } from "../backend-services/x-flow-init.service";
 import { CSRFService } from "../backend-services/x-csrf.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptCallbackService } from "../backend-services/x-prompt-callback.service";
+import { StrategiesMiddleware } from "../strategies/strategies.middleware";
+import { FlowViaService } from "../backend-services/x-flow-via.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -33,6 +35,8 @@ export class AuthEndpointsController {
         private readonly csrfService: CSRFService,
         private readonly codeRedirectService: CodeRedirectService,
         private readonly promptCallbackService: PromptCallbackService,
+        private readonly strategiesMiddleware: StrategiesMiddleware,
+        private readonly flowViaService: FlowViaService,
     ) {}
 
     /**
@@ -52,11 +56,26 @@ export class AuthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    loginStrategyRedirect(@Param("id") id: string, @Param("mode") mode?: AuthFunctionInput) {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async loginStrategyRedirect(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+        @Param("id") id: string,
+        @Param("mode") mode?: AuthFunctionInput,
+    ) {
+        /**
+         * Init flow
+         */
+        await this.flowInitService.use(req, res);
+
+        /**
+         * Extract Mode
+         */
+        await this.flowViaService.use(req, res);
+
+        /**
+         * Strategies
+         */
+        await this.strategiesMiddleware.use(req, res, () => {});
     }
 
     /**
@@ -72,11 +91,39 @@ export class AuthEndpointsController {
         name: "id",
         description: "The id of the strategy instance which initiated the funcation calling the callback.",
     })
-    loginStrategyCallback() {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async loginStrategyCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        /**
+         * Init flow
+         */
+        await this.flowInitService.use(req, res);
+        req.context.flow.assert();
+
+        /**
+         * Strategies
+         */
+        await this.strategiesMiddleware.use(req, res, () => {});
+
+        /**
+         * TODO: oauth + login
+         * set activelogin
+         * set user
+         * prompt redirect
+         * auth code redirect
+         */
+
+        /**
+         * TODO: oauth + register
+         * set activelogin
+         * register redirect
+         */
+
+        /**
+         * TODO: link
+         * set activelogin
+         * register redirect
+         */
+
+        throw new Error("not implemented");
     }
 
     @Get("submit/:id/:mode")
@@ -89,11 +136,44 @@ export class AuthEndpointsController {
         required: false,
         description: "The function/mode how to authenticate. Defaults to 'login'",
     })
-    loginStrategySubmit() {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async loginStrategySubmit(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        /**
+         * Init flow
+         */
+        await this.flowInitService.use(req, res);
+
+        /**
+         * Extract Mode
+         */
+        await this.flowViaService.use(req, res);
+
+        /**
+         * Strategies
+         */
+        await this.strategiesMiddleware.use(req, res, () => {});
+
+        /**
+         * TODO: oauth + login
+         * set activelogin
+         * set user
+         * prompt redirect
+         * auth code redirect
+         * drop flow
+         */
+
+        /**
+         * TODO: oauth + register
+         * set activelogin
+         * register redirect
+         */
+
+        /**
+         * TODO: link
+         * set activelogin
+         * register redirect
+         */
+
+        throw new Error("not implemented");
     }
 
     @Get("csrf")
@@ -128,6 +208,7 @@ export class AuthEndpointsController {
         clientName: string;
     }> {
         await this.flowInitService.use(req, res);
+        req.context.flow.assert();
 
         if (!req.context.auth.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
@@ -161,14 +242,10 @@ export class AuthEndpointsController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
-
-        /**
-         * Preconditions
-         */
-        if (!req.context.auth.isAuthenticated()) throw new Error("User not authenticated");
+        await this.csrfService.use(req, res);
         req.context.flow.assert();
+        if (!req.context.auth.isAuthenticated()) throw new Error("User not authenticated");
         if (!req.context.flow.tryActiveLoginId()) throw new Error("No active login id in flow");
-        // TODO: check which kind of flow?!
 
         /**
          * Prompt Callback
@@ -178,18 +255,36 @@ export class AuthEndpointsController {
         /**
          * Authorization Code
          */
-
         await this.codeRedirectService.use(req, res);
     }
 
     @Post("register/callback")
     @NoCors()
     @ApiOperation({ summary: "Complete a registration" })
-    register(@Body() input: BaseUserInput) {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async register(@Req() req: Request, @Res({ passthrough: true }) res: Response, @Body() input: BaseUserInput) {
+        /**
+         * Init flow
+         */
+        await this.flowInitService.use(req, res);
+        req.context.flow.assert();
+
+        /**
+         * TODO: oauth + register
+         * create new user
+         * link account to new user
+         * authenticate (set user)
+         * prompt
+         * auth code redirect
+         */
+
+        /**
+         * TODO: link
+         * link account to existing user
+         * drop flow
+         * redirect to account
+         */
+
+        throw new Error("not implemented");
     }
 
     @Post("logout/current")

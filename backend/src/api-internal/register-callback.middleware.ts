@@ -19,6 +19,8 @@ type Data = {
     email: string;
 };
 
+// TODO: migrate
+
 @Injectable()
 export class RegisterCallbackMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
@@ -45,7 +47,7 @@ export class RegisterCallbackMiddleware implements NestMiddleware {
         }
 
         // Redirect user to account page if register-additional
-        if (req.context.flow.isRegisterAdditional()) {
+        if (req.context.flow.isLinkFlow()) {
             const existingUser = await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() });
             await this.backendUserService.linkAccountToUser(existingUser, loginData, activeLogin);
             req.context.flow.drop();

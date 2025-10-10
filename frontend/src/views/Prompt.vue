@@ -44,6 +44,7 @@
                     >
                         <input type="text" name="consent" :value="consent" hidden />
                         <input type="text" name="flow" :value="data.flow" hidden />
+                        <input type="text" name="csrf" :value="csrf" hidden />
                     </v-form>
 
                     <DefaultButton class="w-100 mb-4" @click="onGrant">Grant Access</DefaultButton>
@@ -59,6 +60,9 @@ import BaseLayout from "@/components/BaseLayout.vue";
 import GropiusCard from "@/components/GropiusCard.vue";
 import * as auth from "../util/auth";
 import { nextTick, onMounted, ref } from "vue";
+import { asyncComputed } from "@vueuse/core/index";
+
+const csrf = asyncComputed(auth.loadCSRFToken);
 
 const form = ref<HTMLFormElement>();
 

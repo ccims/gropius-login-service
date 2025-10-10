@@ -14,6 +14,8 @@ import { TokenExchangeClientCredentialsService } from "./x-token-exchange-client
 import { CSRFService } from "./x-csrf.service";
 import { LoginRedirectService } from "./x-login-redirect.service";
 import { PromptCallbackService } from "./x-prompt-callback.service";
+import { StrategiesModule } from "../strategies/strategies.module";
+import { FlowViaService } from "./x-flow-via.service";
 
 @Module({
     imports: [
@@ -51,6 +53,7 @@ import { PromptCallbackService } from "./x-prompt-callback.service";
         CSRFService,
         LoginRedirectService,
         PromptCallbackService,
+        FlowViaService,
     ],
     exports: [
         TokenService,
@@ -66,6 +69,7 @@ import { PromptCallbackService } from "./x-prompt-callback.service";
         CSRFService,
         LoginRedirectService,
         PromptCallbackService,
+        FlowViaService,
     ],
 })
 export class BackendServicesModule {}

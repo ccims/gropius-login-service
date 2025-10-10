@@ -30,7 +30,7 @@ export class PerformAuthFunctionService {
         if (type == FlowType.REGISTER_WITH_SYNC && !strategy.canSync) {
             context.flow.setType(FlowType.REGISTER);
         }
-        if (context.flow.isRegisterAdditional()) {
+        if (context.flow.isLinkFlow()) {
             return null;
         }
         if (!strategy.canLoginRegister) {

@@ -54,8 +54,12 @@ export type ContextSession = {
         // strategy type
         strategy_type?: string;
 
+        // TODO: omit this in favor of "via"
         // flow type
         flow_type?: FlowType;
+
+        // whether authentication is done via login or register
+        via?: "login" | "register";
 
         // active login id
         active_login_id?: string;
@@ -176,7 +180,7 @@ class Flow {
             issued_at: iat,
             expires_at: iat + TEN_MINUTES_IN_SECONDS,
             // TODO: hotfix
-            oauth_request: this.tryRequest(),
+            // oauth_request: this.tryRequest(),
         };
         return this;
     }
@@ -226,8 +230,27 @@ class Flow {
         return request;
     }
 
-    isRegisterAdditional() {
-        return this.tryType() === FlowType.REGISTER && this.context.auth.isAuthenticated();
+    isAuthFlow() {
+        return !!this.tryRequest();
+    }
+
+    isLinkFlow() {
+        return !this.isAuthFlow();
+    }
+
+    setVia(via: "login" | "register") {
+        this.req.session.flow.via = via;
+        return this;
+    }
+
+    // TODO: use this
+    viaLogin() {
+        return this.req.session.flow?.via === "login";
+    }
+
+    // TODO: use this
+    viaRegister() {
+        return this.req.session.flow?.via === "register";
     }
 
     tryStrategyTypeName() {

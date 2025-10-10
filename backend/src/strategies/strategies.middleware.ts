@@ -11,6 +11,8 @@ import { AuthException } from "src/api-internal/AuthException";
 import { Context } from "../util/Context";
 import { ActiveLoginService } from "../model/services/active-login.service";
 
+// TODO: make this a service
+
 @Injectable()
 export class StrategiesMiddleware implements NestMiddleware {
     private readonly logger = new Logger(StrategiesMiddleware.name);

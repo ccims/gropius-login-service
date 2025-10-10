@@ -80,13 +80,12 @@ export class AuthorizeController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
-        req.context.flow.init();
-        // TODO: set normal auth flow
 
         /**
          * Request
          */
         const request = await this.requestExtractService.use(req, res);
+        req.context.flow.init();
         req.context.flow.setRequest(request);
 
         /**

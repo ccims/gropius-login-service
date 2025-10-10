@@ -4,6 +4,7 @@ import { combineURL } from "../util/utils";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 
+// TODO: migrate
 @Injectable()
 export class PromptRedirectMiddleware implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
@@ -15,7 +16,7 @@ export class PromptRedirectMiddleware implements NestMiddleware {
 
     async use(req: Request, res: Response, next: NextFunction) {
         // Check if register additional
-        if (req.context.flow.isRegisterAdditional()) {
+        if (req.context.flow.isLinkFlow()) {
             this.logger.log("Skipping prompt redirect middleware since register additional");
             return next();
         }
