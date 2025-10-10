@@ -12,7 +12,6 @@ import { ApiLoginModule } from "src/api-login/api-login.module";
 import { UpdateActionController } from "./update-action.controller";
 import { FlowSetAuthenticatedMiddleware } from "./flow-set-authenticated.middleware";
 import { PromptRedirectMiddleware } from "./prompt-redirect.middleware";
-import { PromptCallbackMiddleware } from "./prompt-callback.middleware";
 import { FlowInitMiddleware } from "./flow-init.middleware";
 import { RegisterRedirectMiddleware } from "./register-redirect.middleware";
 
@@ -48,10 +47,6 @@ export class ApiInternalModule {
                 CodeRedirectMiddleware,
             )
             .forRoutes("auth/api/internal/auth/submit/:id/:mode");
-
-        consumer
-            .apply(FlowInitMiddleware, PromptCallbackMiddleware, CodeRedirectMiddleware)
-            .forRoutes("auth/api/internal/auth/prompt/callback");
 
         consumer
             .apply(

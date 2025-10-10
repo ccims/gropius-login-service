@@ -12,6 +12,8 @@ import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { FlowInitService } from "../backend-services/x-flow-init.service";
 import { CSRFService } from "../backend-services/x-csrf.service";
+import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
+import { PromptCallbackService } from "../backend-services/x-prompt-callback.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -29,6 +31,8 @@ export class AuthEndpointsController {
         private readonly activeLoginService: ActiveLoginService,
         private readonly flowInitService: FlowInitService,
         private readonly csrfService: CSRFService,
+        private readonly codeRedirectService: CodeRedirectService,
+        private readonly promptCallbackService: PromptCallbackService,
     ) {}
 
     /**
@@ -147,11 +151,35 @@ export class AuthEndpointsController {
     @Post("prompt/callback")
     @NoCors()
     @ApiOperation({ summary: "Callback endpoint for granting permissions" })
-    promptCallback(@Body() flow: string, @Body() consent: boolean) {
-        throw new HttpException(
-            "This controller shouldn't be reached as all functionality is handled in middleware",
-            HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+    async promptCallback(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+        @Body() flow: string,
+        @Body() consent: boolean,
+    ) {
+        /**
+         * Init flow
+         */
+        await this.flowInitService.use(req, res);
+
+        /**
+         * Preconditions
+         */
+        if (!req.context.auth.isAuthenticated()) throw new Error("User not authenticated");
+        req.context.flow.assert();
+        if (!req.context.flow.tryActiveLoginId()) throw new Error("No active login id in flow");
+        // TODO: check which kind of flow?!
+
+        /**
+         * Prompt Callback
+         */
+        await this.promptCallbackService.use(req, res);
+
+        /**
+         * Authorization Code
+         */
+
+        await this.codeRedirectService.use(req, res);
     }
 
     @Post("register/callback")
