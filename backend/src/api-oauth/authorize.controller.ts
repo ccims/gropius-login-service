@@ -9,6 +9,7 @@ import { FlowInitService } from "../backend-services/x-flow-init.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 import { RequestExtractService } from "../backend-services/x-request-extract.service";
+import { LoginRedirectService } from "../backend-services/x-login-redirect.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -27,6 +28,7 @@ export class AuthorizeController {
         private readonly codeService: CodeRedirectService,
         private readonly promptRedirectService: PromptRedirectService,
         private readonly requestExtractService: RequestExtractService,
+        private readonly loginRedirectService: LoginRedirectService,
     ) {}
 
     /**
@@ -92,7 +94,7 @@ export class AuthorizeController {
          */
         if (!req.context.auth.isAuthenticated()) {
             this.logger.log("User not authenticated, redirecting to login");
-            return res.redirect(combineURL(`auth/flow/login`, process.env.GROPIUS_ENDPOINT).toString());
+            return this.loginRedirectService.use(req, res);
         }
         this.logger.log("User is authenticated");
 

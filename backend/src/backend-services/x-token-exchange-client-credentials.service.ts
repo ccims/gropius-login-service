@@ -1,7 +1,7 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
-import { NextFunction, Request, Response } from "express";
-import { TokenScope, TokenService } from "src/backend-services/token.service";
+import { Request, Response } from "express";
+import { TokenService } from "src/backend-services/token.service";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { OauthTokenResponse } from "../api-oauth/types";
 
@@ -11,7 +11,7 @@ export class TokenExchangeClientCredentialsService {
 
     constructor(private readonly tokenService: TokenService) {}
 
-    async handle(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
+    async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         if (!client.requiresSecret) {
             throw new OAuthHttpException("invalid_client", "Client does not support client credentials flow");
         }

@@ -19,7 +19,7 @@ export class TokenExchangeAuthorizationCodeService {
         private readonly encryptionService: EncryptionService,
     ) {}
 
-    async handle(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
+    async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         /**
          * Authorization Code/ Refresh Token
          */

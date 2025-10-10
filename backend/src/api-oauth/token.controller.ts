@@ -22,18 +22,18 @@ export class TokenController {
     @ApiOperation({ summary: "Token OAuth Endpoint" })
     @ApiOkResponse({ type: OauthTokenResponse })
     async token(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<OauthTokenResponse> {
-        const handler = this.getHandler(req);
-        if (!handler)
+        const service = this.getService(req);
+        if (!service)
             throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
 
         const client = await this.getClient(req);
         if (!client)
             throw new OAuthHttpException("unauthorized_client", "Unknown client or invalid client credentials");
 
-        return handler.handle(req, res, client);
+        return service.use(req, res, client);
     }
 
-    private getHandler(req: Request) {
+    private getService(req: Request) {
         switch (req.body.grant_type) {
             case "authorization_code":
                 return this.authorizationCodeService;

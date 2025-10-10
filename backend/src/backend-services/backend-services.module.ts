@@ -12,6 +12,7 @@ import { RequestExtractService } from "./x-request-extract.service";
 import { TokenExchangeAuthorizationCodeService } from "./x-token-exchange-authorization-code.service";
 import { TokenExchangeClientCredentialsService } from "./x-token-exchange-client-credentials.service";
 import { CSRFService } from "./x-csrf.service";
+import { LoginRedirectService } from "./x-login-redirect.service";
 
 @Module({
     imports: [
@@ -47,6 +48,7 @@ import { CSRFService } from "./x-csrf.service";
         TokenExchangeAuthorizationCodeService,
         TokenExchangeClientCredentialsService,
         CSRFService,
+        LoginRedirectService,
     ],
     exports: [
         TokenService,
@@ -60,6 +62,7 @@ import { CSRFService } from "./x-csrf.service";
         TokenExchangeAuthorizationCodeService,
         TokenExchangeClientCredentialsService,
         CSRFService,
+        LoginRedirectService,
     ],
 })
 export class BackendServicesModule {}
