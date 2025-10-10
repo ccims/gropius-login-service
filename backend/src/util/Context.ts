@@ -243,12 +243,10 @@ class Flow {
         return this;
     }
 
-    // TODO: use this
     viaLogin() {
         return this.req.session.flow?.via === "login";
     }
 
-    // TODO: use this
     viaRegister() {
         return this.req.session.flow?.via === "register";
     }

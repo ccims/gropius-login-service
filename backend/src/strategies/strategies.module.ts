@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { ModelModule } from "src/model/model.module";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
-import { StrategiesMiddleware } from "./strategies.middleware";
+import { StrategiesService } from "./strategies.service";
 import { UserpassStrategyService } from "./userpass/userpass.service";
 import { BackendServicesModule } from "src/backend-services/backend-services.module";
 import { GithubStrategyService } from "./github/github.service";
@@ -41,12 +41,8 @@ import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira
         JiraTokenCloudStrategyService,
         JiraTokenDatacenterStrategyService,
         { provide: "StateJwtService", useExisting: JwtService },
-        StrategiesMiddleware,
+        StrategiesService,
     ],
-    exports: [
-        StrategiesMiddleware,
-        { provide: "StateJwtService", useExisting: JwtService },
-        PerformAuthFunctionService,
-    ],
+    exports: [StrategiesService, { provide: "StateJwtService", useExisting: JwtService }, PerformAuthFunctionService],
 })
 export class StrategiesModule {}

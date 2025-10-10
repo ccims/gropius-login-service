@@ -14,8 +14,10 @@ import { TokenExchangeClientCredentialsService } from "./x-token-exchange-client
 import { CSRFService } from "./x-csrf.service";
 import { LoginRedirectService } from "./x-login-redirect.service";
 import { PromptCallbackService } from "./x-prompt-callback.service";
-import { StrategiesModule } from "../strategies/strategies.module";
 import { FlowViaService } from "./x-flow-via.service";
+import { AuthUserService } from "./x-auth-user.service";
+import { RegisterRedirectService } from "./x-register-redirect.service";
+import { RegisterCallbackService } from "./x-register-callback.service";
 
 @Module({
     imports: [
@@ -54,6 +56,9 @@ import { FlowViaService } from "./x-flow-via.service";
         LoginRedirectService,
         PromptCallbackService,
         FlowViaService,
+        AuthUserService,
+        RegisterRedirectService,
+        RegisterCallbackService,
     ],
     exports: [
         TokenService,
@@ -70,6 +75,9 @@ import { FlowViaService } from "./x-flow-via.service";
         LoginRedirectService,
         PromptCallbackService,
         FlowViaService,
+        AuthUserService,
+        RegisterRedirectService,
+        RegisterCallbackService,
     ],
 })
 export class BackendServicesModule {}

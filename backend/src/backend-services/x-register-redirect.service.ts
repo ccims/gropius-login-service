@@ -1,7 +1,6 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { NextFunction, Request, Response } from "express";
+import { Injectable, Logger } from "@nestjs/common";
+import { Request, Response } from "express";
 import { LoginUserService } from "src/model/services/login-user.service";
-import { BackendUserService } from "src/backend-services/backend-user.service";
 import { LoginState, UserLoginData } from "../model/postgres/UserLoginData.entity";
 import { combineURL } from "../util/utils";
 import { Strategy } from "src/strategies/Strategy";
@@ -35,47 +34,38 @@ interface UserDataSuggestion {
     email?: string;
 }
 
-// TODO: migrate
 @Injectable()
-export class RegisterRedirectMiddleware implements NestMiddleware {
+export class RegisterRedirectService {
     private readonly logger = new Logger(this.constructor.name);
 
     constructor(
         private readonly userService: LoginUserService,
-        private readonly backendUserService: BackendUserService,
         private readonly strategiesService: StrategiesService,
         private readonly activeLoginService: ActiveLoginService,
     ) {}
 
-    async use(req: Request, res: Response, next: NextFunction) {
-        // TODO: this
-        if (!req.context.auth.isAuthenticated() && !req.context.flow.tryActiveLoginId()) {
-            this.logger.log("Skipping auth core redirect middleware since not authenticated");
-            return next();
-        }
-
+    async use(req: Request, res: Response) {
         const userLoginData = await (
             await this.activeLoginService.findOneByOrFail({
                 id: req.context.flow.getActiveLoginId(),
             })
         ).loginInstanceFor;
 
-        if (userLoginData.state === LoginState.WAITING_FOR_REGISTER) {
-            const strategy = this.strategiesService.getStrategyByName(req.context.flow.getStrategyTypeName());
+        if (userLoginData.state !== LoginState.WAITING_FOR_REGISTER)
+            throw new Error("UserLoginData is not in state waiting for register");
 
-            const url = combineURL(`auth/flow/register`, process.env.GROPIUS_ENDPOINT);
+        const strategy = this.strategiesService.getStrategyByName(req.context.flow.getStrategyTypeName());
 
-            const suggestions = await this.getDataSuggestions(userLoginData, strategy);
-            if (suggestions.email) url.searchParams.append("email", suggestions.email);
-            if (suggestions.username) url.searchParams.append("username", suggestions.username);
-            if (suggestions.displayName) url.searchParams.append("displayName", suggestions.displayName);
-            if (strategy.forceSuggestedUsername)
-                url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
+        const url = combineURL(`auth/flow/register`, process.env.GROPIUS_ENDPOINT);
 
-            return res.redirect(url.toString());
-        }
+        const suggestions = await this.getDataSuggestions(userLoginData, strategy);
+        if (suggestions.email) url.searchParams.append("email", suggestions.email);
+        if (suggestions.username) url.searchParams.append("username", suggestions.username);
+        if (suggestions.displayName) url.searchParams.append("displayName", suggestions.displayName);
+        if (strategy.forceSuggestedUsername)
+            url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
 
-        return next();
+        return res.redirect(url.toString());
     }
 
     /**

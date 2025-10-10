@@ -1,24 +1,22 @@
 import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
-import { StrategiesService } from "../model/services/strategies.service";
+import { StrategiesService as StrategiesRepository } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
 import { Context } from "../util/Context";
 import { ActiveLoginService } from "../model/services/active-login.service";
 
-// TODO: make this a service
-
 @Injectable()
-export class StrategiesMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(StrategiesMiddleware.name);
+export class StrategiesService implements NestMiddleware {
+    private readonly logger = new Logger(this.constructor.name);
 
     constructor(
-        private readonly strategiesService: StrategiesService,
+        private readonly strategiesRepository: StrategiesRepository,
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly performAuthFunctionService: PerformAuthFunctionService,
         private readonly imsUserFindingService: ImsUserFindingService,
@@ -61,11 +59,11 @@ export class StrategiesMiddleware implements NestMiddleware {
         }
     }
 
-    async use(req: Request, res: Response, next: NextFunction) {
+    async use(req: Request, res: Response) {
         const id = req.params.id;
 
         const instance = await this.idToStrategyInstance(id);
-        const strategy = this.strategiesService.getStrategyByName(instance.type);
+        const strategy = this.strategiesRepository.getStrategyByName(instance.type);
         req.context.flow.setStrategy(strategy);
 
         const result = await strategy.performAuth(instance, req.context, req, res);
@@ -93,6 +91,5 @@ export class StrategiesMiddleware implements NestMiddleware {
         await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
 
         this.logger.debug("Strategy Middleware completed. Calling next");
-        next();
     }
 }

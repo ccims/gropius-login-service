@@ -1,7 +1,7 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Param, Post, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
-import { AuthFunctionInput } from "./dto/auth-function.dto";
+import { AuthFunctionInput } from "./types";
 import { Request, Response } from "express";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { LoginUserService } from "../model/services/login-user.service";
@@ -14,8 +14,12 @@ import { FlowInitService } from "../backend-services/x-flow-init.service";
 import { CSRFService } from "../backend-services/x-csrf.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptCallbackService } from "../backend-services/x-prompt-callback.service";
-import { StrategiesMiddleware } from "../strategies/strategies.middleware";
+import { StrategiesService } from "../strategies/strategies.service";
 import { FlowViaService } from "../backend-services/x-flow-via.service";
+import { RegisterCallbackService } from "../backend-services/x-register-callback.service";
+import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
+import { AuthUserService } from "../backend-services/x-auth-user.service";
+import { RegisterRedirectService } from "../backend-services/x-register-redirect.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -27,6 +31,8 @@ import { FlowViaService } from "../backend-services/x-flow-via.service";
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
 export class AuthEndpointsController {
+    private readonly logger = new Logger(this.constructor.name);
+
     constructor(
         private readonly userService: LoginUserService,
         private readonly authClientService: AuthClientService,
@@ -35,8 +41,13 @@ export class AuthEndpointsController {
         private readonly csrfService: CSRFService,
         private readonly codeRedirectService: CodeRedirectService,
         private readonly promptCallbackService: PromptCallbackService,
-        private readonly strategiesMiddleware: StrategiesMiddleware,
+        private readonly strategiesService: StrategiesService,
         private readonly flowViaService: FlowViaService,
+        private readonly registerCallbackService: RegisterCallbackService,
+        private readonly codeService: CodeRedirectService,
+        private readonly promptRedirectService: PromptRedirectService,
+        private readonly authUserService: AuthUserService,
+        private readonly registerRedirectService: RegisterRedirectService,
     ) {}
 
     /**
@@ -66,16 +77,12 @@ export class AuthEndpointsController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
-
-        /**
-         * Extract Mode
-         */
         await this.flowViaService.use(req, res);
 
         /**
          * Strategies
          */
-        await this.strategiesMiddleware.use(req, res, () => {});
+        await this.strategiesService.use(req, res);
     }
 
     /**
@@ -99,31 +106,56 @@ export class AuthEndpointsController {
         req.context.flow.assert();
 
         /**
-         * Strategies
+         * Strategies (sets ActiveLogin)
          */
-        await this.strategiesMiddleware.use(req, res, () => {});
+        await this.strategiesService.use(req, res);
 
         /**
-         * TODO: oauth + login
-         * set activelogin
-         * set user
-         * prompt redirect
-         * auth code redirect
+         * Auth Flow with Login
          */
+        if (req.context.flow.isAuthFlow() && req.context.flow.viaLogin()) {
+            /**
+             * Authentication
+             */
+            await this.authUserService.use(req, res);
+
+            /**
+             * Consent Prompt
+             */
+            if (await this.promptRedirectService.if(req, res)) {
+                this.logger.log("User did not consent yet, redirecting to consent prompt");
+                return this.promptRedirectService.use(req, res);
+            }
+            this.logger.log("User consented already");
+
+            /**
+             * Authorization Code
+             */
+            this.logger.log("Generating authorization code and redirecting to client");
+            return this.codeService.use(req, res);
+        }
 
         /**
-         * TODO: oauth + register
-         * set activelogin
-         * register redirect
+         * Auth Flow with Registration
          */
+        if (req.context.flow.isAuthFlow() && req.context.flow.viaRegister()) {
+            /**
+             * Register Redirect
+             */
+            return this.registerRedirectService.use(req, res);
+        }
 
         /**
-         * TODO: link
-         * set activelogin
-         * register redirect
+         * Link Flow
          */
+        if (req.context.flow.isLinkFlow()) {
+            /**
+             * Register Redirect
+             */
+            return this.registerRedirectService.use(req, res);
+        }
 
-        throw new Error("not implemented");
+        throw new Error("Endpoint is called in a wrong context");
     }
 
     @Get("submit/:id/:mode")
@@ -141,39 +173,59 @@ export class AuthEndpointsController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
-
-        /**
-         * Extract Mode
-         */
         await this.flowViaService.use(req, res);
 
         /**
-         * Strategies
+         * Strategies (sets ActiveLogin)
          */
-        await this.strategiesMiddleware.use(req, res, () => {});
+        await this.strategiesService.use(req, res);
 
         /**
-         * TODO: oauth + login
-         * set activelogin
-         * set user
-         * prompt redirect
-         * auth code redirect
-         * drop flow
+         * Auth Flow with Login
          */
+        if (req.context.flow.isAuthFlow() && req.context.flow.viaLogin()) {
+            /**
+             * Authentication
+             */
+            await this.authUserService.use(req, res);
+
+            /**
+             * Consent Prompt
+             */
+            if (await this.promptRedirectService.if(req, res)) {
+                this.logger.log("User did not consent yet, redirecting to consent prompt");
+                return this.promptRedirectService.use(req, res);
+            }
+            this.logger.log("User consented already");
+
+            /**
+             * Authorization Code
+             */
+            this.logger.log("Generating authorization code and redirecting to client");
+            return this.codeService.use(req, res);
+        }
 
         /**
-         * TODO: oauth + register
-         * set activelogin
-         * register redirect
+         * Auth Flow with Registration
          */
+        if (req.context.flow.isAuthFlow() && req.context.flow.viaRegister()) {
+            /**
+             * Register Redirect
+             */
+            return this.registerRedirectService.use(req, res);
+        }
 
         /**
-         * TODO: link
-         * set activelogin
-         * register redirect
+         * Link Flow
          */
+        if (req.context.flow.isLinkFlow()) {
+            /**
+             * Register Redirect
+             */
+            return this.registerRedirectService.use(req, res);
+        }
 
-        throw new Error("not implemented");
+        throw new Error("Endpoint is called in a wrong context");
     }
 
     @Get("csrf")
@@ -267,24 +319,47 @@ export class AuthEndpointsController {
          */
         await this.flowInitService.use(req, res);
         req.context.flow.assert();
+        await this.csrfService.use(req, res);
 
         /**
-         * TODO: oauth + register
-         * create new user
-         * link account to new user
-         * authenticate (set user)
-         * prompt
-         * auth code redirect
+         * Registration Callback
          */
+        await this.registerCallbackService.use(req, res);
 
         /**
-         * TODO: link
-         * link account to existing user
-         * drop flow
-         * redirect to account
+         * Link Flow
          */
+        if (req.context.flow.isLinkFlow()) {
+            req.context.flow.drop();
+            return res.redirect(`/auth/flow/account`);
+        }
 
-        throw new Error("not implemented");
+        /**
+         * Auth Flow with Registration
+         */
+        if (req.context.flow.isAuthFlow() && req.context.flow.viaRegister()) {
+            /**
+             * Authentication
+             */
+            await this.authUserService.use(req, res);
+
+            /**
+             * Consent Prompt
+             */
+            if (await this.promptRedirectService.if(req, res)) {
+                this.logger.log("User did not consent yet, redirecting to consent prompt");
+                return this.promptRedirectService.use(req, res);
+            }
+            this.logger.log("User consented already");
+
+            /**
+             * Authorization Code
+             */
+            this.logger.log("Generating authorization code and redirecting to client");
+            return this.codeService.use(req, res);
+        }
+
+        throw new Error("Endpoint is called in a wrong context");
     }
 
     @Post("logout/current")

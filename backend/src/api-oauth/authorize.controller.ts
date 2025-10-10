@@ -4,7 +4,6 @@ import { OpenApiTag } from "src/util/openapi-tag";
 import { NoCors } from "../util/NoCors.decorator";
 import { Request, Response } from "express";
 import { AuthClientService } from "../model/services/auth-client.service";
-import { combineURL } from "../util/utils";
 import { FlowInitService } from "../backend-services/x-flow-init.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
@@ -24,7 +23,6 @@ export class AuthorizeController {
 
     constructor(
         private readonly flowInitService: FlowInitService,
-        private readonly authClientService: AuthClientService,
         private readonly codeService: CodeRedirectService,
         private readonly promptRedirectService: PromptRedirectService,
         private readonly requestExtractService: RequestExtractService,
@@ -100,8 +98,7 @@ export class AuthorizeController {
         /**
          * Consent Prompt
          */
-        const client = await this.authClientService.findAuthClient(request.clientId);
-        if (!(client.isInternal || req.context.flow.didConsent())) {
+        if (await this.promptRedirectService.if(req, res)) {
             this.logger.log("User did not consent yet, redirecting to consent prompt");
             return this.promptRedirectService.use(req, res);
         }

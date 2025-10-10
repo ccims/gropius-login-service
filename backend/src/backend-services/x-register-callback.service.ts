@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import * as Joi from "joi";
@@ -9,7 +9,6 @@ const schema = Joi.object({
     username: Joi.string(),
     displayName: Joi.string(),
     email: Joi.string(),
-    // TODO: this
     csrf: Joi.string().allow("").optional(),
 });
 
@@ -19,10 +18,8 @@ type Data = {
     email: string;
 };
 
-// TODO: migrate
-
 @Injectable()
-export class RegisterCallbackMiddleware implements NestMiddleware {
+export class RegisterCallbackService implements NestMiddleware {
     private readonly logger = new Logger(this.constructor.name);
 
     constructor(
@@ -31,7 +28,7 @@ export class RegisterCallbackMiddleware implements NestMiddleware {
         private readonly activeLoginService: ActiveLoginService,
     ) {}
 
-    async use(req: Request, res: Response, next: NextFunction) {
+    async use(req: Request, res: Response) {
         // Validate input data
         const data: Data = await schema.validateAsync(req.body);
 
@@ -46,18 +43,11 @@ export class RegisterCallbackMiddleware implements NestMiddleware {
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
         }
 
-        // Redirect user to account page if register-additional
-        if (req.context.flow.isLinkFlow()) {
-            const existingUser = await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() });
-            await this.backendUserService.linkAccountToUser(existingUser, loginData, activeLogin);
-            req.context.flow.drop();
-            return res.redirect(`/auth/flow/account`);
-        }
+        // If link flow, use existing user. Otherwise, create new user.
+        const user = req.context.flow.isLinkFlow()
+            ? await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() })
+            : await this.backendUserService.createNewUser(data, false);
 
-        // Create and link new user
-        const newUser = await this.backendUserService.createNewUser(data, false);
-        await this.backendUserService.linkAccountToUser(newUser, loginData, activeLogin);
-
-        next();
+        await this.backendUserService.linkAccountToUser(user, loginData, activeLogin);
     }
 }
