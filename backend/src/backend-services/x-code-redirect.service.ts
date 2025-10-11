@@ -27,8 +27,7 @@ export class CodeRedirectService {
 
         // if the login service handles the registration, two tokens were already generated: the code and the access token
         if (activeLogin.nextExpectedRefreshTokenNumber != ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED) {
-            // TODO: this needs to be adapted to the "automatic login thing"?!
-            // throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
+            throw new Error("Refresh token id is not initial anymore even though no token was retrieved");
         }
         if (activeLogin.isExpired) {
             throw new Error("Active login expired");
