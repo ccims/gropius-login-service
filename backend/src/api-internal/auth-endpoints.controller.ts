@@ -385,6 +385,8 @@ export class AuthEndpointsController {
         await this.flowInitService.use(req, res);
         await this.csrfService.use(req, res);
 
+        // TODO: delete refresh token table entry
+
         req.context.regenerate();
         return new DefaultReturn("logout/current");
     }
@@ -401,6 +403,7 @@ export class AuthEndpointsController {
         user.revokeTokensBefore = new Date();
         await this.userService.save(user);
 
+        // TODO: clean refresh token table entries
         await this.activeLoginService.deleteForUser(user);
 
         req.context.regenerate();
