@@ -5,6 +5,7 @@ import { LoginUserService } from "../model/services/login-user.service";
 import { now } from "../util/utils";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
+import { UserLoginDataService } from "../model/services/user-login-data.service";
 
 @Injectable()
 export class FlowInitService {
@@ -14,6 +15,7 @@ export class FlowInitService {
         private readonly loginUserService: LoginUserService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly authClientService: AuthClientService,
+        private readonly userLoginDataService: UserLoginDataService,
     ) {}
 
     async use(req: Request, res: Response) {
@@ -31,6 +33,17 @@ export class FlowInitService {
 
                 const revokedAt = loginUser.revokeTokensBefore;
                 if (revokedAt && now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
+            }
+
+            // Check user login data login
+            if (req.context.auth.tryUseLoginDataId()) {
+                // Check user login data
+                const userLoginData = await this.userLoginDataService.findOneByOrFail({
+                    id: req.context.auth.getUserLoginDataId(),
+                });
+
+                // Check if login data expired
+                if (userLoginData.isExpired) throw new Error("Login data expired");
             }
 
             // Check flow if exists

@@ -7,6 +7,7 @@ import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
 import { LoginUser } from "../model/postgres/LoginUser.entity";
+import { UserLoginData } from "../model/postgres/UserLoginData.entity";
 
 declare global {
     namespace Express {
@@ -34,6 +35,9 @@ export type ContextSession = {
     // user id
     user_id?: string;
 
+    // user login data id
+    user_login_data_id?: string;
+
     // consent fingerprints of consented oauth authorization request
     consents: string[];
 
@@ -58,11 +62,11 @@ export type ContextSession = {
         // flow type
         flow_type?: FlowType;
 
-        // whether authentication is done via login or register
-        via?: "login" | "register";
-
         // active login id
         active_login_id?: string;
+
+        // whether authentication is done via login or register
+        via?: "login" | "register";
 
         // oauth authorization request
         oauth_request?: OAuthAuthorizeRequest;
@@ -147,6 +151,21 @@ class Auth {
         return this;
     }
 
+    tryUseLoginDataId() {
+        return this.req.session.user_login_data_id;
+    }
+
+    getUserLoginDataId() {
+        const id = this.tryUseLoginDataId();
+        if (!id) throw new Error("Active login id is missing");
+        return id;
+    }
+
+    setUserLoginData(data: UserLoginData) {
+        this.req.session.user_login_data_id = data.id;
+        return this;
+    }
+
     getCSRF() {
         const CSRF = this.req.session.csrf;
         if (!CSRF) throw new Error("CSRF token is missing");
@@ -200,21 +219,6 @@ class Flow {
         return now() > this.req.session.flow.expires_at;
     }
 
-    tryActiveLoginId() {
-        return this.req.session.flow?.active_login_id;
-    }
-
-    getActiveLoginId() {
-        const activeLogin = this.tryActiveLoginId();
-        if (!activeLogin) throw new Error("Active login id is missing");
-        return activeLogin;
-    }
-
-    setActiveLogin(activeLogin: ActiveLogin) {
-        this.req.session.flow.active_login_id = activeLogin.id;
-        return this;
-    }
-
     tryRequest() {
         return this.req.session.flow?.oauth_request;
     }
@@ -228,6 +232,21 @@ class Flow {
         const request = this.tryRequest();
         if (!request) throw new Error("Authorization request is missing");
         return request;
+    }
+
+    tryActiveLoginId() {
+        return this.req.session.flow.active_login_id;
+    }
+
+    getActiveLoginId() {
+        const activeLogin = this.tryActiveLoginId();
+        if (!activeLogin) throw new Error("Active login id is missing");
+        return activeLogin;
+    }
+
+    setActiveLogin(activeLogin: ActiveLogin) {
+        this.req.session.flow.active_login_id = activeLogin.id;
+        return this;
     }
 
     isAuthFlow() {

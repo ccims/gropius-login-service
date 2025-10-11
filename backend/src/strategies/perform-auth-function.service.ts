@@ -42,7 +42,7 @@ export class PerformAuthFunctionService {
         return null;
     }
 
-    private async createActiveLogin(
+    async createActiveLogin(
         instance: StrategyInstance,
         data: object,
         loginData: UserLoginData,
@@ -66,13 +66,13 @@ export class PerformAuthFunctionService {
         instance: StrategyInstance,
         supportsSync: boolean,
     ): Promise<ActiveLogin> {
-        let loginData = authResult.loginData;
+        const loginData = authResult.loginData;
         loginData.data = authResult.dataUserLoginData;
         const newExpiryDate = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
         if (loginData.expires != null) {
             loginData.expires = newExpiryDate;
         }
-        loginData = await this.userLoginDataService.save(loginData);
+        await this.userLoginDataService.save(loginData);
         return this.createActiveLogin(instance, authResult.dataActiveLogin, authResult.loginData, supportsSync);
     }
 

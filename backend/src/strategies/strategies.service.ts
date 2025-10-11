@@ -10,6 +10,7 @@ import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
 import { Context } from "../util/Context";
 import { ActiveLoginService } from "../model/services/active-login.service";
+import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 
 @Injectable()
 export class StrategiesService implements NestMiddleware {
@@ -20,7 +21,6 @@ export class StrategiesService implements NestMiddleware {
         private readonly strategyInstanceService: StrategyInstanceService,
         private readonly performAuthFunctionService: PerformAuthFunctionService,
         private readonly imsUserFindingService: ImsUserFindingService,
-        private readonly activeLoginService: ActiveLoginService,
     ) {}
 
     private async idToStrategyInstance(id: string): Promise<StrategyInstance> {
@@ -34,11 +34,12 @@ export class StrategiesService implements NestMiddleware {
         return instance;
     }
 
-    private async performImsUserSearchIfNeeded(context: Context, instance: StrategyInstance, strategy: Strategy) {
-        const activeLogin = await this.activeLoginService.findOneByOrFail({
-            id: context.flow.getActiveLoginId(),
-        });
-
+    private async performImsUserSearchIfNeeded(
+        context: Context,
+        instance: StrategyInstance,
+        strategy: Strategy,
+        activeLogin: ActiveLogin,
+    ) {
         if (strategy.canSync && instance.isSyncActive) {
             if (typeof activeLogin == "object" && activeLogin.id) {
                 const imsUserSearchOnModes = process.env.GROPIUS_PERFORM_IMS_USER_SEARCH_ON.split(",").filter(
@@ -88,7 +89,7 @@ export class StrategiesService implements NestMiddleware {
         );
         req.context.flow.setActiveLogin(activeLogin);
 
-        await this.performImsUserSearchIfNeeded(req.context, instance, strategy);
+        await this.performImsUserSearchIfNeeded(req.context, instance, strategy, activeLogin);
 
         this.logger.debug("Strategy Middleware completed. Calling next");
     }
