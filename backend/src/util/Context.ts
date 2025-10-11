@@ -198,8 +198,6 @@ class Flow {
             flow_id: uuidv4(),
             issued_at: iat,
             expires_at: iat + TEN_MINUTES_IN_SECONDS,
-            // TODO: hotfix
-            // oauth_request: this.tryRequest(),
         };
         return this;
     }
