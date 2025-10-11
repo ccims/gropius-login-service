@@ -57,7 +57,7 @@ export class AuthEndpointsController {
      * For defined behaviour of the authorize endpoint see {@link https://www.rfc-editor.org/rfc/rfc6749}
      *
      */
-    @Get("redirect/:id/:mode")
+    @Post("redirect/:id/:mode")
     @NoCors()
     @ApiOperation({ summary: "Authorize endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to initiate" })
@@ -77,6 +77,7 @@ export class AuthEndpointsController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
+        await this.csrfService.use(req, res);
         await this.flowViaService.use(req, res);
 
         /**
@@ -158,7 +159,7 @@ export class AuthEndpointsController {
         throw new Error("Endpoint is called in a wrong context");
     }
 
-    @Get("submit/:id/:mode")
+    @Post("submit/:id/:mode")
     @NoCors()
     @ApiOperation({ summary: "Submit endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to submit" })
@@ -174,6 +175,7 @@ export class AuthEndpointsController {
          */
         await this.flowInitService.use(req, res);
         await this.flowViaService.use(req, res);
+        await this.csrfService.use(req, res);
 
         /**
          * Strategies (sets ActiveLogin)

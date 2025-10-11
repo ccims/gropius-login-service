@@ -23,6 +23,7 @@
                         <v-form
                             :ref="(el: any) => forms.set(index, el)"
                             :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
+                            method="POST"
                             @submit.prevent="submitForm"
                         >
                             <InputField
@@ -74,6 +75,10 @@
                     </v-card-actions>
                 </v-card>
             </v-dialog>
+
+            <v-form ref="redirectForm" :action="redirectAction" method="POST" style="display: none">
+                <input type="hidden" name="csrf" :value="csrf" />
+            </v-form>
         </template>
     </BaseLayout>
 </template>
@@ -96,6 +101,8 @@ import InputField from "@/components/InputField.vue";
 import * as auth from "@/util/auth";
 
 const route = useRoute();
+
+const csrf = asyncComputed(auth.loadCSRFToken);
 
 const forms = ref(new Map<number, any>());
 
@@ -187,8 +194,6 @@ const showSyncDialog = ref(false);
 const afterSelectSync = ref<undefined | ((sync: boolean) => void)>();
 const formData = ref<Record<string, Record<string, string>>>({});
 
-const csrf = asyncComputed(async () => await auth.loadCSRFToken());
-
 function formDataAt(id: string) {
     if (!(id in formData.value)) {
         formData.value[id] = {};
@@ -224,6 +229,15 @@ function submitFormWithMode(formMode: "login" | "register" | "register-sync") {
     nextTick(() => forms.value.get(credentialTab.value).submit());
 }
 
+const redirectForm = ref<HTMLFormElement | null>(null);
+const redirectAction = ref<string>("");
+
+async function submitRedirectPost(action: string) {
+    redirectAction.value = action;
+    await nextTick();
+    redirectForm.value?.submit();
+}
+
 function redirect(strategy: RedirectStrategyInstance) {
     if (isLogin.value && !isRegisterAdditional.value) {
         redirectLogin(strategy);
@@ -241,12 +255,12 @@ function redirect(strategy: RedirectStrategyInstance) {
 }
 
 async function redirectLogin(strategyInstance: RedirectStrategyInstance) {
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login`;
+    await submitRedirectPost(`/auth/api/internal/auth/redirect/${strategyInstance.id}/login`);
 }
 
 async function redirectRegister(strategyInstance: RedirectStrategyInstance, sync: boolean) {
     const mode = sync ? "register-sync" : "register";
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}`;
+    await submitRedirectPost(`/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}`);
 }
 </script>
 <style scoped>
