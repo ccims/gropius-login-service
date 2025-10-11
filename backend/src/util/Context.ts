@@ -190,6 +190,11 @@ class Flow {
         return this;
     }
 
+    ensure() {
+        if (!this.exists()) this.init();
+        return this;
+    }
+
     init() {
         this.context.auth.extend();
 

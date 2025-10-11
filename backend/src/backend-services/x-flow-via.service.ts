@@ -9,8 +9,6 @@ export class FlowViaService {
     private readonly logger = new Logger(this.constructor.name);
 
     async use(req: Request, res: Response) {
-        if (!req.context.flow.exists()) req.context.flow.init();
-
         switch (req.params.mode) {
             case AuthFunctionInput.REGISTER:
                 req.context.flow.setType(FlowType.REGISTER);

@@ -20,6 +20,7 @@ import { RegisterCallbackService } from "../backend-services/x-register-callback
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 import { AuthUserService } from "../backend-services/x-auth-user.service";
 import { RegisterRedirectService } from "../backend-services/x-register-redirect.service";
+import { FlowMatchService } from "../backend-services/x-flow-match.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -48,6 +49,7 @@ export class AuthEndpointsController {
         private readonly promptRedirectService: PromptRedirectService,
         private readonly authUserService: AuthUserService,
         private readonly registerRedirectService: RegisterRedirectService,
+        private readonly flowMatchService: FlowMatchService,
     ) {}
 
     /**
@@ -78,6 +80,9 @@ export class AuthEndpointsController {
          */
         await this.flowInitService.use(req, res);
         await this.csrfService.use(req, res);
+        req.context.flow.ensure();
+        // TODO: only if not link
+        await this.flowMatchService.use(req, res);
         await this.flowViaService.use(req, res);
 
         /**
@@ -109,6 +114,8 @@ export class AuthEndpointsController {
         /**
          * Strategies (sets ActiveLogin)
          */
+        // TODO: check CSRF
+        // TODO: check flow
         await this.strategiesService.use(req, res);
 
         /**
@@ -174,8 +181,11 @@ export class AuthEndpointsController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
-        await this.flowViaService.use(req, res);
         await this.csrfService.use(req, res);
+        req.context.flow.ensure();
+        // TODO: only if not link
+        await this.flowMatchService.use(req, res);
+        await this.flowViaService.use(req, res);
 
         /**
          * Strategies (sets ActiveLogin)
@@ -264,6 +274,8 @@ export class AuthEndpointsController {
         await this.flowInitService.use(req, res);
         req.context.flow.assert();
 
+        // TODO: flow match?
+
         if (!req.context.auth.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
@@ -298,6 +310,7 @@ export class AuthEndpointsController {
         await this.flowInitService.use(req, res);
         await this.csrfService.use(req, res);
         req.context.flow.assert();
+        await this.flowMatchService.use(req, res);
         if (!req.context.auth.isAuthenticated()) throw new Error("User not authenticated");
         if (!req.context.flow.tryActiveLoginId()) throw new Error("No active login id in flow");
 
@@ -320,8 +333,9 @@ export class AuthEndpointsController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
-        req.context.flow.assert();
         await this.csrfService.use(req, res);
+        req.context.flow.assert();
+        await this.flowMatchService.use(req, res);
 
         /**
          * Registration Callback

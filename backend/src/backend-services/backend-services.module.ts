@@ -18,6 +18,7 @@ import { FlowViaService } from "./x-flow-via.service";
 import { AuthUserService } from "./x-auth-user.service";
 import { RegisterRedirectService } from "./x-register-redirect.service";
 import { RegisterCallbackService } from "./x-register-callback.service";
+import { FlowMatchService } from "./x-flow-match.service";
 
 @Module({
     imports: [
@@ -59,6 +60,7 @@ import { RegisterCallbackService } from "./x-register-callback.service";
         AuthUserService,
         RegisterRedirectService,
         RegisterCallbackService,
+        FlowMatchService,
     ],
     exports: [
         TokenService,
@@ -78,6 +80,7 @@ import { RegisterCallbackService } from "./x-register-callback.service";
         AuthUserService,
         RegisterRedirectService,
         RegisterCallbackService,
+        FlowMatchService,
     ],
 })
 export class BackendServicesModule {}
