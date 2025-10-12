@@ -15,8 +15,9 @@ export const validationSchema = Joi.object({
     GROPIUS_JWT_ISSUER: Joi.string().default("gropius-login"),
     GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS: Joi.number()
         .min(0)
-        .max(48 * 60 * 60 * 1000)
+        .max(10 * 60 * 1000)
         .required(),
+    // TODO: rename this?!
     GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS: Joi.number().min(0).default(0),
     GROPIUS_PERFORM_IMS_USER_SEARCH_ON: Joi.string()
         .pattern(/^((LOGIN|REG|REG_SYNC),)*(LOGIN|REG|REG_SYNC)?$/)

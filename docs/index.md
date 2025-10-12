@@ -178,8 +178,22 @@ This will also invalidate all issued tokens.
 | Session              | Cookie   |                 |
 |                      | Neo4j    |                 |
 
-
 Please note that the cookie itself is formally not a JWT but a signed JSON object.
+
+
+## Expirations
+
+| Record            | Expiration                                                            |
+|-------------------|-----------------------------------------------------------------------|
+| UserLoginData     | 10 min while not registered, otherwise never                          |
+| ActiveLogin       | 1 month, extended by 1 month if used, but at max 12 months            |
+| ActiveLoginAccess | expired if its ActiveLogin is expired                                 |
+| Session           | 10 min while not authenticated, expired if its ActiveLogin is expired |
+| AuthorizationCode | 10 min                                                                |
+| AccessToken       | 10 min                                                                |
+| RefreshToken      | 2 hours                                                               |
+
+Further, any record is only valid if itself and its parent are valid.
 
 ## Notes
 
