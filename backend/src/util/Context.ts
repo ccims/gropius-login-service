@@ -118,13 +118,16 @@ class Auth {
             session_id: uuidv4(),
             csrf: uuidv4(),
             issued_at: iat,
+            // TODO: EXPIRATION: this (in sync with activeLogin? but exists earlier)
             expires_at: iat + MONTH_IN_SECONDS,
             consents: [],
         };
         return this;
     }
 
+    // TODO: EXPIRATION: when to call this?
     extend() {
+        // TODO: EXPIRATION: this (in sync with activeLogin? but exists earlier)
         if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
             this.req.session.expires_at += MONTH_IN_SECONDS;
         }
@@ -191,6 +194,7 @@ class Flow {
         this.req.session.flow = {
             flow_id: uuidv4(),
             issued_at: iat,
+            // TODO: EXPIRATION: this (in sync with activeLogin? but exists earlier)
             expires_at: iat + TEN_MINUTES_IN_SECONDS,
         };
         return this;

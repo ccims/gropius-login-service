@@ -68,10 +68,6 @@ export class PerformAuthFunctionService {
     ): Promise<ActiveLogin> {
         const loginData = authResult.loginData;
         loginData.data = authResult.dataUserLoginData;
-        const newExpiryDate = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
-        if (loginData.expires != null) {
-            loginData.expires = newExpiryDate;
-        }
         await this.userLoginDataService.save(loginData);
         return this.createActiveLogin(instance, authResult.dataActiveLogin, authResult.loginData, supportsSync);
     }

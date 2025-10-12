@@ -1,5 +1,5 @@
 import { ApiHideProperty } from "@nestjs/swagger";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ActiveLogin } from "./ActiveLogin.entity";
 
 /**
@@ -8,12 +8,11 @@ import { ActiveLogin } from "./ActiveLogin.entity";
  */
 @Entity()
 export class ActiveLoginAccess {
-    constructor(activeLogin: ActiveLogin, expires: Date) {
+    constructor(activeLogin: ActiveLogin, counter = 0) {
         this.activeLogin = activeLogin;
         this.created = new Date();
-        this.expires = expires;
         this.isValid = true;
-        this.refreshTokenCounter = 0;
+        this.refreshTokenCounter = counter;
     }
 
     @PrimaryGeneratedColumn("uuid")
@@ -21,9 +20,6 @@ export class ActiveLoginAccess {
 
     @Column()
     created: Date;
-
-    @Column()
-    expires: Date;
 
     @Column()
     isValid: boolean;
@@ -49,16 +45,12 @@ export class ActiveLoginAccess {
     @ManyToOne(() => ActiveLogin, undefined, {
         eager: true,
         nullable: false,
+        onDelete: "CASCADE",
     })
     @ApiHideProperty()
     activeLogin: ActiveLogin;
 
-    get isExpired() {
-        return this.expires != null && this.expires <= new Date();
-    }
-
     assert() {
         if (!this.isValid) throw new Error("Access is not valid");
-        if (this.isExpired) throw new Error("Access is expired");
     }
 }

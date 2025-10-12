@@ -1,6 +1,6 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { NextFunction, Request, Response } from "express";
-import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
+import { Injectable, Logger } from "@nestjs/common";
+import { Request, Response } from "express";
+import { AuthorizationCodeResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
@@ -10,8 +10,8 @@ import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 
 import { OauthTokenResponse } from "../api-oauth/types";
 import { compareTimeSafe } from "../util/utils";
-import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
+import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 
 @Injectable()
 export class TokenExchangeAuthorizationCodeService {
@@ -29,7 +29,7 @@ export class TokenExchangeAuthorizationCodeService {
          * Authorization Code
          */
         const token = req.body.code;
-        let data: ActiveLoginTokenResult;
+        let data: AuthorizationCodeResult;
         try {
             data = await this.tokenService.verifyAuthorizationCode(token, client.id);
         } catch (err: any) {
@@ -40,7 +40,7 @@ export class TokenExchangeAuthorizationCodeService {
         /**
          * Active Login
          */
-        const activeLogin = await this.activeLoginService.getValid(data.activeLoginId);
+        const activeLogin = await this.activeLoginService.getValid(data.activeLoginAccessId);
 
         /**
          * Code Challenge
@@ -108,27 +108,15 @@ export class TokenExchangeAuthorizationCodeService {
     ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
-        let accessToken: string;
-        // TODO: when would this even happen?
-        if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
-            accessToken = await this.tokenService.signRegistrationToken(activeLogin.id, tokenExpiresInMs);
-        } else {
-            accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
-        }
+        const accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
 
-        // TODO: this
-        const expires = new Date(new Date().getTime() + 1_000_000_000_000);
-
-        const activeLoginAccess = await this.activeLoginAccessService.createSave(activeLogin, expires);
-        activeLoginAccess.refreshTokenCounter++;
-        await this.activeLoginAccessService.save(activeLoginAccess);
+        const activeLoginAccess = await this.activeLoginAccessService.save(new ActiveLoginAccess(activeLogin, 1));
 
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,
             currentClient.id,
             activeLoginAccess.refreshTokenCounter,
             scope,
-            activeLoginAccess.expires,
         );
 
         return {

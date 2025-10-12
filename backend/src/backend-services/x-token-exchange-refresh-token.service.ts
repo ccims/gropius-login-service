@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
-import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
+import { RefreshTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
@@ -23,7 +23,7 @@ export class TokenExchangeRefreshTokenService {
          * Refresh Token
          */
         const token = req.body.refresh_token;
-        let data: ActiveLoginTokenResult;
+        let data: RefreshTokenResult;
         try {
             data = await this.tokenService.verifyRefreshToken(token, client.id);
         } catch (err: any) {
@@ -115,7 +115,6 @@ export class TokenExchangeRefreshTokenService {
             currentClient.id,
             activeLoginAccess.refreshTokenCounter,
             scope,
-            activeLoginAccess.expires,
         );
 
         return {

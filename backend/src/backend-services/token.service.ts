@@ -7,12 +7,18 @@ import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 
-export interface ActiveLoginTokenResult {
+export interface AuthorizationCodeResult {
+    activeLoginAccessId: string;
+    clientId: string;
+    scope: TokenScope[];
+    codeChallenge: string;
+}
+
+export interface RefreshTokenResult {
     activeLoginId: string;
     clientId: string;
     tokenUniqueId: string;
     scope: TokenScope[];
-    codeChallenge?: string;
 }
 
 export enum TokenScope {
@@ -21,12 +27,6 @@ export enum TokenScope {
     BACKEND = "backend",
     AUTH = "auth",
 }
-
-enum RefreshTokenScope {
-    REFRESH_TOKEN = "token",
-}
-
-// TODO: cleanup
 
 @Injectable()
 export class TokenService {
@@ -37,35 +37,25 @@ export class TokenService {
         private readonly loginUserService: LoginUserService,
     ) {}
 
-    async signAccessToken(user: LoginUser, scope: string[], expiresIn?: number): Promise<string> {
-        const expiryObject = !!expiresIn ? { expiresIn: Math.floor(expiresIn / 1000) } : {};
+    async signAccessToken(user: LoginUser, scope: string[], expiresIn: number): Promise<string> {
         this.verifyScope(scope);
+
         if (scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             throw new Error("Cannot sign access token with register scope");
         }
+
         if (!user.neo4jId) {
             throw new Error("Login user without neo4jId: " + user.id);
         }
+
         return this.backendJwtService.sign(
             {
                 kind: "access_token",
             },
             {
                 subject: user.neo4jId,
-                ...expiryObject,
+                expiresIn: Math.floor(expiresIn / 1000),
                 audience: scope,
-            },
-        );
-    }
-
-    async signRegistrationToken(activeLoginId: string, expiresIn?: number): Promise<string> {
-        const expiryObject = !!expiresIn ? { expiresIn: Math.floor(expiresIn / 1000) } : {};
-        return this.backendJwtService.signAsync(
-            {},
-            {
-                subject: activeLoginId,
-                ...expiryObject,
-                audience: [TokenScope.LOGIN_SERVICE_REGISTER],
             },
         );
     }
@@ -90,7 +80,7 @@ export class TokenService {
             throw new Error("Active login expired");
         }
 
-        const expiresIn = Math.floor(parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10) / 1000);
+        const expiresIn = Math.floor(parseInt(process.env.GROPIUS_AUTHORIZATION_CODE_EXPIRATION_TIME_MS, 10) / 1000);
 
         return await this.backendJwtService.signAsync(
             {
@@ -101,13 +91,13 @@ export class TokenService {
             },
             {
                 subject: activeLoginId,
-                expiresIn: expiresIn,
+                expiresIn,
                 audience: process.env.GROPIUS_JWT_ISSUER,
             },
         );
     }
 
-    async verifyAuthorizationCode(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
+    async verifyAuthorizationCode(token: string, requiredClientId: string): Promise<AuthorizationCodeResult> {
         const payload = await this.backendJwtService.verifyAsync(token, {
             audience: process.env.GROPIUS_JWT_ISSUER,
         });
@@ -125,41 +115,34 @@ export class TokenService {
         }
 
         return {
-            activeLoginId: payload.sub,
+            activeLoginAccessId: payload.sub,
             clientId: payload.client_id,
-            // TODO: omit this?
-            tokenUniqueId: payload.jti,
             scope: payload.scope,
             codeChallenge: payload.code_challenge,
         };
     }
 
-    // TODO: rewrite for RefreshToken
     async signRefreshToken(
         activeLoginId: string,
         clientId: string,
         uniqueId: string | number,
         scope: TokenScope[],
-        expiresInAt: number | Date | undefined,
     ): Promise<string> {
         this.verifyScope(scope);
-        const expiresInObject = typeof expiresInAt == "number" ? { expiresIn: expiresInAt / 1000 } : {};
-        const expiresAtObject =
-            typeof expiresInAt == "object" && expiresInAt instanceof Date
-                ? { exp: Math.floor(expiresInAt.getTime() / 1000) }
-                : {};
+
+        const expiresIn = Math.floor(parseInt(process.env.GROPIUS_REFRESH_TOKEN_EXPIRATION_TIME_MS, 10) / 1000);
+
         return await this.backendJwtService.signAsync(
             {
-                ...expiresAtObject,
                 client_id: clientId,
                 scope,
                 kind: "refresh_token",
             },
             {
                 subject: activeLoginId,
-                ...expiresInObject,
+                expiresIn,
                 jwtid: uniqueId.toString(),
-                audience: [RefreshTokenScope.REFRESH_TOKEN],
+                audience: process.env.GROPIUS_JWT_ISSUER,
             },
         );
     }
@@ -174,7 +157,7 @@ export class TokenService {
         }
 
         const audience: string[] = payload.aud as string[];
-        let user: LoginUser | null = null;
+        let user: LoginUser | null;
         if (!audience.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
             user = await this.loginUserService.findOneBy({
                 neo4jId: payload.sub,
@@ -191,10 +174,9 @@ export class TokenService {
         return { user };
     }
 
-    // TODO: rewrite for RefreshToken
-    async verifyRefreshToken(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
+    async verifyRefreshToken(token: string, requiredClientId: string): Promise<RefreshTokenResult> {
         const payload = await this.backendJwtService.verifyAsync(token, {
-            audience: [RefreshTokenScope.REFRESH_TOKEN],
+            audience: process.env.GROPIUS_JWT_ISSUER,
         });
 
         if (payload.kind !== "refresh_token") {
@@ -214,7 +196,6 @@ export class TokenService {
             clientId: payload.client_id,
             tokenUniqueId: payload.jti,
             scope: payload.scope,
-            codeChallenge: payload.code_challenge,
         };
     }
 
