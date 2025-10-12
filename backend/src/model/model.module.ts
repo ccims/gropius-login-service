@@ -14,6 +14,7 @@ import { StrategiesService } from "./services/strategies.service";
 import { StrategyInstanceService } from "./services/strategy-instance.service";
 import { UserLoginDataImsUserService } from "./services/user-login-data-ims-user";
 import { UserLoginDataService } from "./services/user-login-data.service";
+import { ActiveLoginAccessService } from "./services/active-login-access.service";
 
 const modelModuleExportedServices = [
     StrategiesService,
@@ -24,6 +25,7 @@ const modelModuleExportedServices = [
     ActiveLoginService,
     AuthClientService,
     GraphqlService,
+    ActiveLoginAccessService,
 ];
 
 @Module({

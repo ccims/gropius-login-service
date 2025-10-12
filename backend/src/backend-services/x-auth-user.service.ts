@@ -18,7 +18,6 @@ export class AuthUserService {
         const loginUser = await userLoginData.user;
         if (!loginUser) throw new Error("ActiveLogin has no associated user");
 
-        req.context.auth.setUser(loginUser);
-        req.context.auth.setUserLoginData(userLoginData);
+        req.context.auth.setUser(loginUser, activeLogin);
     }
 }

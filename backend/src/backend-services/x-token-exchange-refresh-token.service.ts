@@ -5,9 +5,9 @@ import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-
 import { OauthTokenResponse } from "../api-oauth/types";
+import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
+import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 
 @Injectable()
 export class TokenExchangeRefreshTokenService {
@@ -15,6 +15,7 @@ export class TokenExchangeRefreshTokenService {
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
+        private readonly activeLoginAccessService: ActiveLoginAccessService,
     ) {}
 
     async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
@@ -31,46 +32,23 @@ export class TokenExchangeRefreshTokenService {
         }
 
         /**
-         * TODO: ActiveLoginAccess
+         * ActiveLoginAccess
          */
-
-        /**
-         * Active Login
-         */
-        const activeLogin = await this.activeLoginService.findOneByOrFail({
-            id: data.activeLoginId,
-        });
-
-        if (!activeLogin) {
-            this.logger.warn("No active login with id", data.activeLoginId);
-            this.throwGenericCodeError();
-        }
-
-        if (!activeLogin.isValid) {
-            this.logger.warn("Active login set invalid", data.activeLoginId);
-            this.throwGenericCodeError();
-        }
-
-        if (activeLogin.isExpired) {
-            this.logger.warn("Active login is expired", data.activeLoginId);
-            this.throwGenericCodeError();
-        }
+        // TODO: activeLoginId is actually activeLoginAccessId here
+        const activeLoginAccess = await this.activeLoginAccessService.getAsserted(data.activeLoginId);
 
         const codeUniqueId = parseInt(data.tokenUniqueId, 10);
-        if (!isFinite(codeUniqueId) || codeUniqueId !== activeLogin.nextExpectedRefreshTokenNumber) {
+        if (!isFinite(codeUniqueId) || codeUniqueId !== activeLoginAccess.refreshTokenCounter) {
             this.logger.warn(
                 "Code is no longer valid as it was already used and a token was already generated.\n " +
                     "Active login has been made invalid",
                 data.activeLoginId,
             );
 
-            // TODO: this
-            /**
             //Make active login invalid if code/refresh token is reused
-            activeLogin.isValid = false;
-            await this.activeLoginService.save(activeLogin);
+            activeLoginAccess.isValid = false;
+            await this.activeLoginService.save(activeLoginAccess);
             throw new OAuthHttpException("invalid_grant", "Given code was likely reused. Login and codes invalidated");
-                **/
         }
 
         /**
@@ -83,49 +61,36 @@ export class TokenExchangeRefreshTokenService {
         }
 
         /**
+         * Active Login
+         */
+        const activeLogin = await activeLoginAccess.activeLogin;
+        activeLogin.assert();
+
+        /**
          * Login Data
          */
         const loginData = await activeLogin.loginInstanceFor;
         if (!loginData) {
-            this.logger.warn("Login data not found");
             throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
 
         if (loginData.isExpired) {
-            this.logger.warn("Login data has expired", loginData);
-            throw new OAuthHttpException(
-                "invalid_grant",
-                "Login has expired. Try restarting login/register/link process.",
-            );
+            throw new OAuthHttpException("invalid_grant", "Login data has expired");
         }
 
-        if (loginData.state === LoginState.BLOCKED) {
-            throw new OAuthHttpException(
-                "invalid_grant",
-                "Login for given grant is not valid any more; Please re-login",
-            );
+        if (loginData.state !== LoginState.VALID) {
+            throw new OAuthHttpException("invalid_grant", "Login data state is not valid");
         }
 
         const user = await loginData.user;
-        if (loginData.state === LoginState.VALID) {
-            if (!user) {
-                throw new OAuthHttpException("invalid_state", "No user for valid login");
-            }
-        }
-
-        if (loginData.state === LoginState.WAITING_FOR_REGISTER) {
-            if (user) {
-                throw new OAuthHttpException(
-                    "invalid_state",
-                    "Login still in register state but user already existing",
-                );
-            }
+        if (!user) {
+            throw new OAuthHttpException("invalid_state", "No user for valid login");
         }
 
         /**
          * Access Token
          */
-        return await this.createAccessToken(loginData, activeLogin, client, data.scope);
+        return await this.createAccessToken(loginData, activeLoginAccess, client, data.scope);
     }
 
     private throwGenericCodeError() {
@@ -134,34 +99,22 @@ export class TokenExchangeRefreshTokenService {
 
     private async createAccessToken(
         loginData: UserLoginData,
-        activeLogin: ActiveLogin,
+        activeLoginAccess: ActiveLoginAccess,
         currentClient: AuthClient,
         scope: TokenScope[],
     ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
-        let accessToken: string;
-        // TODO: when would this even happen?
-        if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
-            accessToken = await this.tokenService.signRegistrationToken(activeLogin.id, tokenExpiresInMs);
-        } else {
-            accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
-        }
+        const accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
 
-        /**
-         * TODO: ActiveLoginAccess
-         */
-
-        activeLogin.nextExpectedRefreshTokenNumber++;
-        await this.activeLoginService.save(activeLogin);
-
+        activeLoginAccess.refreshTokenCounter++;
+        await this.activeLoginService.save(activeLoginAccess);
         const refreshToken = await this.tokenService.signRefreshToken(
-            activeLogin.id,
+            activeLoginAccess.id,
             currentClient.id,
-            activeLogin.nextExpectedRefreshTokenNumber,
+            activeLoginAccess.refreshTokenCounter,
             scope,
-            activeLogin.expires ?? undefined,
-            undefined,
+            activeLoginAccess.expires,
         );
 
         return {

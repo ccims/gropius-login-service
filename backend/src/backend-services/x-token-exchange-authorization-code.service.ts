@@ -10,6 +10,8 @@ import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 
 import { OauthTokenResponse } from "../api-oauth/types";
 import { compareTimeSafe } from "../util/utils";
+import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
+import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 
 @Injectable()
 export class TokenExchangeAuthorizationCodeService {
@@ -18,6 +20,7 @@ export class TokenExchangeAuthorizationCodeService {
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
         private readonly encryptionService: EncryptionService,
+        private readonly activeLoginAccessService: ActiveLoginAccessService,
     ) {}
 
     // TODO: ensure that auth code is only exchanged once?
@@ -79,34 +82,16 @@ export class TokenExchangeAuthorizationCodeService {
         }
 
         if (loginData.isExpired) {
-            this.logger.warn("Login data has expired", loginData);
-            throw new OAuthHttpException(
-                "invalid_grant",
-                "Login has expired. Try restarting login/register/link process.",
-            );
+            throw new OAuthHttpException("invalid_grant", "Login data has expired.");
         }
 
-        if (loginData.state === LoginState.BLOCKED) {
-            throw new OAuthHttpException(
-                "invalid_grant",
-                "Login for given grant is not valid any more; Please re-login",
-            );
+        if (loginData.state !== LoginState.VALID) {
+            throw new OAuthHttpException("invalid_grant", "Login data state is not valid");
         }
 
         const user = await loginData.user;
-        if (loginData.state === LoginState.VALID) {
-            if (!user) {
-                throw new OAuthHttpException("invalid_state", "No user for valid login");
-            }
-        }
-
-        if (loginData.state === LoginState.WAITING_FOR_REGISTER) {
-            if (user) {
-                throw new OAuthHttpException(
-                    "invalid_state",
-                    "Login still in register state but user already existing",
-                );
-            }
+        if (!user) {
+            throw new OAuthHttpException("invalid_state", "No user for valid login");
         }
 
         /**
@@ -131,20 +116,19 @@ export class TokenExchangeAuthorizationCodeService {
             accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
         }
 
-        /**
-         * TODO: ActiveLoginAccess
-         */
+        // TODO: this
+        const expires = new Date(new Date().getTime() + 1_000_000_000_000);
 
-        activeLogin.nextExpectedRefreshTokenNumber++;
-        await this.activeLoginService.save(activeLogin);
+        const activeLoginAccess = await this.activeLoginAccessService.createSave(activeLogin, expires);
+        const jwtId = activeLoginAccess.refreshTokenCounter++;
+        await this.activeLoginAccessService.save(activeLoginAccess);
 
         const refreshToken = await this.tokenService.signRefreshToken(
-            activeLogin.id,
+            activeLoginAccess.id,
             currentClient.id,
-            activeLogin.nextExpectedRefreshTokenNumber,
+            jwtId,
             scope,
-            activeLogin.expires ?? undefined,
-            undefined,
+            activeLoginAccess.expires,
         );
 
         return {

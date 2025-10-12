@@ -3,16 +3,12 @@ import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { NoCors } from "../util/NoCors.decorator";
 import { Request, Response } from "express";
-import { AuthClientService } from "../model/services/auth-client.service";
 import { FlowInitService } from "../backend-services/x-flow-init.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 import { RequestExtractService } from "../backend-services/x-request-extract.service";
 import { LoginRedirectService } from "../backend-services/x-login-redirect.service";
 import { ActiveLoginService } from "../model/services/active-login.service";
-import { PerformAuthFunctionService } from "../strategies/perform-auth-function.service";
-import { UserLoginDataService } from "../model/services/user-login-data.service";
-import { StrategyInstanceService } from "../model/services/strategy-instance.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -32,9 +28,6 @@ export class AuthorizeController {
         private readonly requestExtractService: RequestExtractService,
         private readonly loginRedirectService: LoginRedirectService,
         private readonly activeLoginService: ActiveLoginService,
-        private readonly performAuthFunctionService: PerformAuthFunctionService,
-        private readonly userLoginDataService: UserLoginDataService,
-        private readonly strategyInstanceService: StrategyInstanceService,
     ) {}
 
     /**
@@ -104,22 +97,9 @@ export class AuthorizeController {
         this.logger.log("User is authenticated");
 
         /**
-         * TODO: ActiveLoginAccess
-         */
-        /**
          * Active Login
          */
-        const userLoginData = await this.userLoginDataService.findOneByOrFail({
-            id: req.context.auth.getUserLoginDataId(),
-        });
-        const strategyInstance = await userLoginData.strategyInstance;
-        const activeLogin = await this.performAuthFunctionService.createActiveLogin(
-            strategyInstance,
-            // TODO: copy it from another one?! access token for github is missing now ...
-            {},
-            userLoginData,
-            false, // TODO: or true?!
-        );
+        const activeLogin = await this.activeLoginService.findOneByOrFail({ id: req.context.auth.getActiveLoginId() });
         req.context.flow.setActiveLogin(activeLogin);
 
         /**

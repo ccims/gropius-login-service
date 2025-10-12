@@ -10,14 +10,12 @@ import { ActiveLogin } from "./ActiveLogin.entity";
  */
 @Entity()
 export class ActiveLoginAccess {
-    static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED = -1;
-
     constructor(activeLogin: ActiveLogin, expires: Date) {
         this.activeLogin = Promise.resolve(activeLogin);
         this.created = new Date();
         this.expires = expires;
         this.isValid = true;
-        this.nextExpectedRefreshTokenNumber = ActiveLoginAccess.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED;
+        this.refreshTokenCounter = 0;
     }
 
     @PrimaryGeneratedColumn("uuid")
@@ -48,7 +46,7 @@ export class ActiveLoginAccess {
         default: 0,
     })
     @ApiHideProperty()
-    nextExpectedRefreshTokenNumber: number;
+    refreshTokenCounter: number;
 
     @ManyToOne(() => ActiveLogin)
     @ApiHideProperty()
@@ -56,5 +54,10 @@ export class ActiveLoginAccess {
 
     get isExpired() {
         return this.expires != null && this.expires <= new Date();
+    }
+
+    assert() {
+        if (!this.isValid) throw new Error("Access is not valid");
+        if (!this.isExpired) throw new Error("Access is expired");
     }
 }

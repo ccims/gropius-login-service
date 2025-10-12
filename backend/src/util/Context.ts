@@ -7,7 +7,6 @@ import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
 import { LoginUser } from "../model/postgres/LoginUser.entity";
-import { UserLoginData } from "../model/postgres/UserLoginData.entity";
 
 declare global {
     namespace Express {
@@ -35,8 +34,8 @@ export type ContextSession = {
     // user id
     user_id?: string;
 
-    // user login data id
-    user_login_data_id?: string;
+    // active login id
+    active_login_id?: string;
 
     // consent fingerprints of consented oauth authorization request
     consents: string[];
@@ -146,24 +145,16 @@ class Auth {
         return user;
     }
 
-    setUser(user: LoginUser) {
+    setUser(user: LoginUser, activeLogin: ActiveLogin) {
         this.req.session.user_id = user.id;
+        this.req.session.active_login_id = activeLogin.id;
         return this;
     }
 
-    tryUseLoginDataId() {
-        return this.req.session.user_login_data_id;
-    }
-
-    getUserLoginDataId() {
-        const id = this.tryUseLoginDataId();
+    getActiveLoginId() {
+        const id = this.req.session.active_login_id;
         if (!id) throw new Error("Active login id is missing");
         return id;
-    }
-
-    setUserLoginData(data: UserLoginData) {
-        this.req.session.user_login_data_id = data.id;
-        return this;
     }
 
     getCSRF() {

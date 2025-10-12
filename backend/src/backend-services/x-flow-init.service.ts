@@ -15,7 +15,6 @@ export class FlowInitService {
         private readonly loginUserService: LoginUserService,
         private readonly activeLoginService: ActiveLoginService,
         private readonly authClientService: AuthClientService,
-        private readonly userLoginDataService: UserLoginDataService,
     ) {}
 
     async use(req: Request, res: Response) {
@@ -33,17 +32,24 @@ export class FlowInitService {
 
                 const revokedAt = loginUser.revokeTokensBefore;
                 if (revokedAt && now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
-            }
 
-            // Check user login data login
-            if (req.context.auth.tryUseLoginDataId()) {
-                // Check user login data
-                const userLoginData = await this.userLoginDataService.findOneByOrFail({
-                    id: req.context.auth.getUserLoginDataId(),
+                // Check active login exists
+                const activeLogin = await this.activeLoginService.findOneByOrFail({
+                    id: req.context.flow.getActiveLoginId(),
                 });
 
+                // Check if active login is valid
+                if (!activeLogin.isValid) throw new Error("Active login invalid");
+
+                // Check if active login expired
+                if (activeLogin.isExpired) throw new Error("Active login expired");
+
+                // Check if login data exists
+                const loginData = await activeLogin.loginInstanceFor;
+                if (!loginData) throw new Error("Login data not found");
+
                 // Check if login data expired
-                if (userLoginData.isExpired) throw new Error("Login data expired");
+                if (loginData.isExpired) throw new Error("Login data expired");
             }
 
             // Check flow if exists

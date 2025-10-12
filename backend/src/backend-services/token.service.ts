@@ -26,6 +26,8 @@ enum RefreshTokenScope {
     REFRESH_TOKEN = "token",
 }
 
+// TODO: cleanup
+
 @Injectable()
 export class TokenService {
     constructor(
@@ -139,7 +141,6 @@ export class TokenService {
         uniqueId: string | number,
         scope: TokenScope[],
         expiresInAt: number | Date | undefined,
-        codeChallenge: string | undefined,
     ): Promise<string> {
         this.verifyScope(scope);
         const expiresInObject = typeof expiresInAt == "number" ? { expiresIn: expiresInAt / 1000 } : {};
@@ -152,7 +153,6 @@ export class TokenService {
                 ...expiresAtObject,
                 client_id: clientId,
                 scope,
-                code_challenge: codeChallenge,
                 kind: "refresh_token",
             },
             {

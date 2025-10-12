@@ -12,7 +12,7 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
 
     async getValid(id: string): Promise<ActiveLogin> {
         const activeLogin = await this.findOneByOrFail({ id });
-        activeLogin.validate();
+        activeLogin.assert();
         return activeLogin;
     }
 

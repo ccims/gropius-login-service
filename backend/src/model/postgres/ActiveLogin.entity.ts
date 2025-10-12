@@ -125,7 +125,7 @@ export class ActiveLogin {
         return this.expires != null && this.expires <= new Date();
     }
 
-    validate() {
+    assert() {
         if (!this.isValid) throw new Error(`Active login set invalid`);
         if (this.isExpired) throw new Error(`Active login is expired`);
     }
