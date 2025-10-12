@@ -58,10 +58,7 @@ export class FlowInitService {
             // Check flow if exists
             if (req.context.flow.exists()) {
                 // Check if flow expired
-                if (req.context.flow.isExpired()) {
-                    console.log("flow expired ...");
-                    req.context.flow.drop();
-                }
+                if (req.context.flow.isExpired()) req.context.flow.drop();
 
                 // Check active login
                 const activeLoginId = req.context.flow.tryActiveLoginId();
