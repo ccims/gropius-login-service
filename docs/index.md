@@ -178,6 +178,8 @@ This will also invalidate all issued tokens.
 |                      | Neo4j    |                 |
 
 
+Please note that the cookie itself is formally not a JWT but a signed JSON object.
+
 ## Notes
 
 1. never manually visit `HTTP GET {gropius auth server}/auth/flow/login` but only via `HTTP GET {gropius auth server}/auth/flow/account`

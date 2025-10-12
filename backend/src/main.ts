@@ -8,8 +8,8 @@ import session = require("cookie-session");
 import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
 import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
 import { NextFunction, Request, Response } from "express";
-import config from "./util/config";
 import { NestExpressApplication } from "@nestjs/platform-express";
+import { ConfigService } from "@nestjs/config";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -22,6 +22,7 @@ async function bootstrap() {
     });
 
     await ConfigModule.envVariablesLoaded;
+    const config = app.get(ConfigService);
 
     if (
         (process.env.GROPIUS_LOGIN_ENABLE_OPENAPI as unknown) != false &&
@@ -63,19 +64,19 @@ async function bootstrap() {
 
     app.enableCors();
 
-    app.set("trust proxy", config.trustProxy);
+    app.set("trust proxy", config.get<string | number | boolean>("GROPIUS_LOGIN_TRUST_PROXY"));
 
     app.use(
         session({
             name: "gropius-login-session",
-            secret: config.cookieSecret,
+            secret: config.get<string>("GROPIUS_LOGIN_SESSION_SECRET"),
             // "/auth/api/internal" and "/auth/oauth/authorize" need the cookie but "/auth/flow" not ...
             path: "/auth",
             httpOnly: true,
             // "strict" would prohibit the cookie being sent along when redirecting back from an IMS auth server
             sameSite: "lax",
             // expects HTTPS and, hence, the proxy itself must forward the protocol etc correctly and the upstream must trust the proxy
-            secure: config.cookieSecure,
+            secure: config.get<boolean>("GROPIUS_LOGIN_COOKIE_SECURE"),
             // no need to set "domain" since the default is already the most restrictive
         }),
     );
