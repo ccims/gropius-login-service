@@ -173,6 +173,7 @@ This will also invalidate all issued tokens.
 | UserLoginData        | Postgres |                 |
 | UserLoginDataIMSUser | Postgres |                 |
 | ActiveLogin          | Postgres |                 |
+| ActiveLoginAccess    | Postgres |                 |
 | StrategyInstance     | Postgres |                 |
 | Session              | Cookie   |                 |
 |                      | Neo4j    |                 |
