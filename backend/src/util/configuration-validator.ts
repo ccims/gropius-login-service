@@ -50,12 +50,7 @@ export const validationSchema = Joi.object({
     GROPIUS_LOGIN_SPECIFIC_PRIVATE_KEY: Joi.string().required(),
 
     GROPIUS_LOGIN_TRUST_PROXY: Joi.alternatives()
-        .try(
-            Joi.boolean().truthy("true").falsy("false"),
-            Joi.number().integer().min(0),
-            Joi.string().valid("loopback", "linklocal", "uniquelocal"),
-            Joi.string().pattern(/^(\s*[^,]+(\s*,\s*[^,]+)*)$/), // allow CSV of CIDRs/IPs if you want
-        )
+        .try(Joi.boolean().truthy("true").falsy("false"), Joi.number().integer().min(0), Joi.string())
         .default(false),
     GROPIUS_LOGIN_SESSION_SECRET: Joi.string().default("SOME_SECRET"),
     GROPIUS_LOGIN_COOKIE_SECURE: Joi.boolean().truthy("true").falsy("false").default(false),
