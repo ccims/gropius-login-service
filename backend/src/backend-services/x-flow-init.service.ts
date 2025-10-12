@@ -1,11 +1,11 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { NextFunction, Request, Response } from "express";
+import { Injectable, Logger } from "@nestjs/common";
+import { Request, Response } from "express";
 import { Context } from "../util/Context";
 import { LoginUserService } from "../model/services/login-user.service";
 import { now } from "../util/utils";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
-import { UserLoginDataService } from "../model/services/user-login-data.service";
+import { LoginState } from "../model/postgres/UserLoginData.entity";
 
 @Injectable()
 export class FlowInitService {
@@ -50,6 +50,9 @@ export class FlowInitService {
 
                 // Check if login data expired
                 if (loginData.isExpired) throw new Error("Login data expired");
+
+                // Check if login data valid
+                if (loginData.state !== LoginState.VALID) throw new Error("Login data not in valid state");
             }
 
             // Check flow if exists
