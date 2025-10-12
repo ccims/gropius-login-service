@@ -13,6 +13,7 @@ import { UserLoginData } from "./UserLoginData.entity";
  */
 @Entity()
 export class ActiveLogin {
+    // TODO: remove this
     static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED = -1;
 
     constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
@@ -38,6 +39,7 @@ export class ActiveLogin {
     @Column()
     created: Date;
 
+    // TODO: remove this
     /**
      * If not `null`, this login should be considered *invalid* on any date+time AFTER this.
      * This is to ensure logout and time restrict registration etc.
@@ -70,6 +72,7 @@ export class ActiveLogin {
     @Column()
     supportsSync: boolean;
 
+    // TODO: remove this
     /**
      * The numeric identifier of the last refresh token given out (the next one expected).
      *
@@ -117,15 +120,20 @@ export class ActiveLogin {
     @ApiHideProperty()
     loginInstanceFor: Promise<UserLoginData | null>;
 
+    // TODO: remove this
     get isExpired() {
         return this.expires != null && this.expires <= new Date();
+    }
+
+    validate() {
+        if (!this.isValid) throw new Error(`Active login set invalid`);
+        if (this.isExpired) throw new Error(`Active login is expired`);
     }
 
     toJSON() {
         return {
             id: this.id,
             created: this.created,
-            expires: this.expires,
             isValid: this.isValid,
             supportsSync: this.supportsSync,
         };

@@ -104,6 +104,9 @@ export class AuthorizeController {
         this.logger.log("User is authenticated");
 
         /**
+         * TODO: ActiveLoginAccess
+         */
+        /**
          * Active Login
          */
         const userLoginData = await this.userLoginDataService.findOneByOrFail({

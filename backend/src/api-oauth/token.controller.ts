@@ -8,6 +8,7 @@ import { AuthClientService } from "../model/services/auth-client.service";
 import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service";
 import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service";
 import { OauthTokenResponse } from "./types";
+import { TokenExchangeRefreshTokenService } from "../backend-services/x-token-exchange-refresh-token.service";
 
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)
@@ -16,6 +17,7 @@ export class TokenController {
         private readonly authClientService: AuthClientService,
         private readonly authorizationCodeService: TokenExchangeAuthorizationCodeService,
         private readonly clientCredentialsService: TokenExchangeClientCredentialsService,
+        private readonly refreshTokenService: TokenExchangeRefreshTokenService,
     ) {}
 
     @Post("token")
@@ -38,7 +40,7 @@ export class TokenController {
             case "authorization_code":
                 return this.authorizationCodeService;
             case "refresh_token":
-                return this.authorizationCodeService;
+                return this.refreshTokenService;
             case "client_credentials":
                 return this.clientCredentialsService;
         }

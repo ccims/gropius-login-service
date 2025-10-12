@@ -1,63 +1,76 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { NextFunction, Request, Response } from "express";
+import { Injectable, Logger } from "@nestjs/common";
+import { Request, Response } from "express";
 import { ActiveLoginTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
-import { EncryptionService } from "./encryption.service";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 
 import { OauthTokenResponse } from "../api-oauth/types";
-import { compareTimeSafe } from "../util/utils";
 
 @Injectable()
-export class TokenExchangeAuthorizationCodeService {
-    private readonly logger = new Logger(TokenExchangeAuthorizationCodeService.name);
+export class TokenExchangeRefreshTokenService {
+    private readonly logger = new Logger(TokenExchangeRefreshTokenService.name);
     constructor(
         private readonly activeLoginService: ActiveLoginService,
         private readonly tokenService: TokenService,
-        private readonly encryptionService: EncryptionService,
     ) {}
 
-    // TODO: ensure that auth code is only exchanged once?
     async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         /**
-         * Authorization Code
+         * Refresh Token
          */
-        const token = req.body.code;
+        const token = req.body.refresh_token;
         let data: ActiveLoginTokenResult;
         try {
-            data = await this.tokenService.verifyAuthorizationCode(token, client.id);
+            data = await this.tokenService.verifyRefreshToken(token, client.id);
         } catch (err: any) {
             this.logger.warn(err);
-            throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
+            this.throwGenericCodeError();
         }
+
+        /**
+         * TODO: ActiveLoginAccess
+         */
 
         /**
          * Active Login
          */
-        const activeLogin = await this.activeLoginService.getValid(data.activeLoginId);
+        const activeLogin = await this.activeLoginService.findOneByOrFail({
+            id: data.activeLoginId,
+        });
 
-        /**
-         * Code Challenge
-         */
-        const codeVerifier = req.body.code_verifier;
-        if (!codeVerifier) {
-            this.logger.warn("Code verifier missing");
-            throw new OAuthHttpException("invalid_request", "Code verifier missing");
+        if (!activeLogin) {
+            this.logger.warn("No active login with id", data.activeLoginId);
+            this.throwGenericCodeError();
         }
 
-        if (typeof codeVerifier !== "string") {
-            this.logger.warn("Code verifier is not a string");
-            throw new OAuthHttpException("invalid_request", "Code verifier has invalid format");
+        if (!activeLogin.isValid) {
+            this.logger.warn("Active login set invalid", data.activeLoginId);
+            this.throwGenericCodeError();
         }
 
-        const decryptedCodeChallenge = this.encryptionService.decrypt(data.codeChallenge);
-        const codeChallenge = this.tokenService.calculateCodeChallenge(codeVerifier);
-        if (!compareTimeSafe(decryptedCodeChallenge, codeChallenge)) {
-            this.logger.warn("Code verifier does not match code challenge");
-            throw new OAuthHttpException("invalid_request", "Code verifier does not match code challenge");
+        if (activeLogin.isExpired) {
+            this.logger.warn("Active login is expired", data.activeLoginId);
+            this.throwGenericCodeError();
+        }
+
+        const codeUniqueId = parseInt(data.tokenUniqueId, 10);
+        if (!isFinite(codeUniqueId) || codeUniqueId !== activeLogin.nextExpectedRefreshTokenNumber) {
+            this.logger.warn(
+                "Code is no longer valid as it was already used and a token was already generated.\n " +
+                    "Active login has been made invalid",
+                data.activeLoginId,
+            );
+
+            // TODO: this
+            /**
+            //Make active login invalid if code/refresh token is reused
+            activeLogin.isValid = false;
+            await this.activeLoginService.save(activeLogin);
+            throw new OAuthHttpException("invalid_grant", "Given code was likely reused. Login and codes invalidated");
+                **/
         }
 
         /**
@@ -113,6 +126,10 @@ export class TokenExchangeAuthorizationCodeService {
          * Access Token
          */
         return await this.createAccessToken(loginData, activeLogin, client, data.scope);
+    }
+
+    private throwGenericCodeError() {
+        throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
     }
 
     private async createAccessToken(

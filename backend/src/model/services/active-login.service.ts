@@ -10,6 +10,12 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
         super(ActiveLogin, dataSource.createEntityManager());
     }
 
+    async getValid(id: string): Promise<ActiveLogin> {
+        const activeLogin = await this.findOneByOrFail({ id });
+        activeLogin.validate();
+        return activeLogin;
+    }
+
     async setActiveLoginExpiration(activeLogin: ActiveLogin): Promise<ActiveLogin> {
         const loginExpiresIn = parseInt(process.env.GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS, 10);
         if (loginExpiresIn && loginExpiresIn > 0 && !activeLogin.supportsSync) {

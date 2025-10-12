@@ -5,6 +5,7 @@ import { JsonWebTokenError } from "jsonwebtoken";
 import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";
+import { AuthClientService } from "../model/services/auth-client.service";
 
 export interface ActiveLoginTokenResult {
     activeLoginId: string;
@@ -44,7 +45,9 @@ export class TokenService {
             throw new Error("Login user without neo4jId: " + user.id);
         }
         return this.backendJwtService.sign(
-            {},
+            {
+                kind: "access_token",
+            },
             {
                 subject: user.neo4jId,
                 ...expiryObject,
@@ -65,7 +68,72 @@ export class TokenService {
         );
     }
 
-    async signActiveLoginCode(
+    async signAuthorizationCode(
+        activeLoginId: string,
+        clientId: string,
+        scope: TokenScope[],
+        codeChallenge: string,
+    ): Promise<string> {
+        this.verifyScope(scope);
+
+        const activeLogin = await this.activeLoginService.findOneByOrFail({
+            id: activeLoginId,
+        });
+
+        if (!activeLogin.isValid) {
+            throw new Error("Active login invalid");
+        }
+
+        if (activeLogin.isExpired) {
+            throw new Error("Active login expired");
+        }
+
+        const expiresIn = Math.floor(parseInt(process.env.GROPIUS_OAUTH_CODE_EXPIRATION_TIME_MS, 10) / 1000);
+
+        return await this.backendJwtService.signAsync(
+            {
+                client_id: clientId,
+                scope,
+                code_challenge: codeChallenge,
+                kind: "authorization_code",
+            },
+            {
+                subject: activeLoginId,
+                expiresIn: expiresIn,
+                audience: process.env.GROPIUS_JWT_ISSUER,
+            },
+        );
+    }
+
+    async verifyAuthorizationCode(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
+        const payload = await this.backendJwtService.verifyAsync(token, {
+            audience: process.env.GROPIUS_JWT_ISSUER,
+        });
+
+        if (payload.kind !== "authorization_code") {
+            throw new JsonWebTokenError("Token is not an authorization code");
+        }
+
+        if (payload.client_id !== requiredClientId) {
+            throw new JsonWebTokenError("Token is not for current client");
+        }
+
+        if (!payload.sub) {
+            throw new JsonWebTokenError("Active login token (code) doesn't contain an id");
+        }
+
+        return {
+            activeLoginId: payload.sub,
+            clientId: payload.client_id,
+            // TODO: omit this?
+            tokenUniqueId: payload.jti,
+            scope: payload.scope,
+            codeChallenge: payload.code_challenge,
+        };
+    }
+
+    // TODO: rewrite for RefreshToken
+    async signRefreshToken(
         activeLoginId: string,
         clientId: string,
         uniqueId: string | number,
@@ -85,6 +153,7 @@ export class TokenService {
                 client_id: clientId,
                 scope,
                 code_challenge: codeChallenge,
+                kind: "refresh_token",
             },
             {
                 subject: activeLoginId,
@@ -99,6 +168,11 @@ export class TokenService {
         const payload = await this.backendJwtService.verifyAsync(token, {
             audience: [scope],
         });
+
+        if (payload.kind !== "access_token") {
+            throw new JsonWebTokenError("Token is not an access token");
+        }
+
         const audience: string[] = payload.aud as string[];
         let user: LoginUser | null = null;
         if (!audience.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
@@ -117,23 +191,24 @@ export class TokenService {
         return { user };
     }
 
-    async verifyRegistrationToken(token: string): Promise<string> {
-        const payload = await this.backendJwtService.verifyAsync(token, {
-            audience: [TokenScope.LOGIN_SERVICE_REGISTER],
-        });
-        return payload.sub;
-    }
-
-    async verifyActiveLoginToken(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
+    // TODO: rewrite for RefreshToken
+    async verifyRefreshToken(token: string, requiredClientId: string): Promise<ActiveLoginTokenResult> {
         const payload = await this.backendJwtService.verifyAsync(token, {
             audience: [RefreshTokenScope.REFRESH_TOKEN],
         });
+
+        if (payload.kind !== "refresh_token") {
+            throw new JsonWebTokenError("Token is not an refresh token");
+        }
+
         if (payload.client_id !== requiredClientId) {
             throw new JsonWebTokenError("Token is not for current client");
         }
+
         if (!payload.sub) {
             throw new JsonWebTokenError("Active login token (code) doesn't contain an id");
         }
+
         return {
             activeLoginId: payload.sub,
             clientId: payload.client_id,
