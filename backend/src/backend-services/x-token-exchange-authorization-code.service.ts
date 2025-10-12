@@ -120,13 +120,13 @@ export class TokenExchangeAuthorizationCodeService {
         const expires = new Date(new Date().getTime() + 1_000_000_000_000);
 
         const activeLoginAccess = await this.activeLoginAccessService.createSave(activeLogin, expires);
-        const jwtId = activeLoginAccess.refreshTokenCounter++;
+        activeLoginAccess.refreshTokenCounter++;
         await this.activeLoginAccessService.save(activeLoginAccess);
 
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,
             currentClient.id,
-            jwtId,
+            activeLoginAccess.refreshTokenCounter,
             scope,
             activeLoginAccess.expires,
         );

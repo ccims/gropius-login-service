@@ -15,6 +15,7 @@ import { StrategyInstanceService } from "./services/strategy-instance.service";
 import { UserLoginDataImsUserService } from "./services/user-login-data-ims-user";
 import { UserLoginDataService } from "./services/user-login-data.service";
 import { ActiveLoginAccessService } from "./services/active-login-access.service";
+import { ActiveLoginAccess } from "./postgres/ActiveLoginAccess.entity";
 
 const modelModuleExportedServices = [
     StrategiesService,
@@ -37,6 +38,7 @@ const modelModuleExportedServices = [
             UserLoginData,
             UserLoginDataImsUser,
             AuthClient,
+            ActiveLoginAccess,
         ]),
     ],
     providers: modelModuleExportedServices,

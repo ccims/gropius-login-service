@@ -47,7 +47,7 @@ export class TokenExchangeRefreshTokenService {
 
             //Make active login invalid if code/refresh token is reused
             activeLoginAccess.isValid = false;
-            await this.activeLoginService.save(activeLoginAccess);
+            await this.activeLoginAccessService.save(activeLoginAccess);
             throw new OAuthHttpException("invalid_grant", "Given code was likely reused. Login and codes invalidated");
         }
 
@@ -63,7 +63,7 @@ export class TokenExchangeRefreshTokenService {
         /**
          * Active Login
          */
-        const activeLogin = await activeLoginAccess.activeLogin;
+        const activeLogin = activeLoginAccess.activeLogin;
         activeLogin.assert();
 
         /**
@@ -108,7 +108,8 @@ export class TokenExchangeRefreshTokenService {
         const accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
 
         activeLoginAccess.refreshTokenCounter++;
-        await this.activeLoginService.save(activeLoginAccess);
+        await this.activeLoginAccessService.save(activeLoginAccess);
+
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,
             currentClient.id,

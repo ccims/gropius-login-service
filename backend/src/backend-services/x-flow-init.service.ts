@@ -35,7 +35,7 @@ export class FlowInitService {
 
                 // Check active login exists
                 const activeLogin = await this.activeLoginService.findOneByOrFail({
-                    id: req.context.flow.getActiveLoginId(),
+                    id: req.context.auth.getActiveLoginId(),
                 });
 
                 // Check if active login is valid

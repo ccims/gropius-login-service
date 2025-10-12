@@ -2,8 +2,6 @@ import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ActiveLogin } from "./ActiveLogin.entity";
 
-// TODO: create database migration
-
 /**
  * Entity representing the access to an ActiveLogin.
  * Essentially, one ActiveLogin has many ActiveLoginAccesses, each representing an OAuth client.
@@ -11,7 +9,7 @@ import { ActiveLogin } from "./ActiveLogin.entity";
 @Entity()
 export class ActiveLoginAccess {
     constructor(activeLogin: ActiveLogin, expires: Date) {
-        this.activeLogin = Promise.resolve(activeLogin);
+        this.activeLogin = activeLogin;
         this.created = new Date();
         this.expires = expires;
         this.isValid = true;
@@ -48,9 +46,12 @@ export class ActiveLoginAccess {
     @ApiHideProperty()
     refreshTokenCounter: number;
 
-    @ManyToOne(() => ActiveLogin)
+    @ManyToOne(() => ActiveLogin, undefined, {
+        eager: true,
+        nullable: false,
+    })
     @ApiHideProperty()
-    activeLogin: Promise<ActiveLogin>;
+    activeLogin: ActiveLogin;
 
     get isExpired() {
         return this.expires != null && this.expires <= new Date();
@@ -58,6 +59,6 @@ export class ActiveLoginAccess {
 
     assert() {
         if (!this.isValid) throw new Error("Access is not valid");
-        if (!this.isExpired) throw new Error("Access is expired");
+        if (this.isExpired) throw new Error("Access is expired");
     }
 }
