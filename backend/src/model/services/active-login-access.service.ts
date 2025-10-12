@@ -19,4 +19,33 @@ export class ActiveLoginAccessService extends Repository<ActiveLoginAccess> {
         access.assert();
         return access;
     }
+
+    async deleteByUserId(userId: string) {
+        await this.createQueryBuilder()
+            .delete()
+            .from(ActiveLoginAccess)
+            .where(
+                `
+    "activeLoginId" IN (
+      SELECT al.id
+      FROM "active_login" al
+      WHERE al."loginInstanceForId" IN (
+        SELECT uld.id
+        FROM "user_login_data" uld
+        WHERE uld."userId" = :loginUserId
+      )
+    )
+  `,
+            )
+            .setParameter("loginUserId", userId)
+            .execute();
+    }
+
+    async deleteByActiveLoginId(activeLoginId: string) {
+        await this.createQueryBuilder()
+            .delete()
+            .from(ActiveLoginAccess)
+            .where(`"activeLoginId" = :activeLoginId`, { activeLoginId })
+            .execute();
+    }
 }

@@ -21,6 +21,7 @@ import { PromptRedirectService } from "../backend-services/x-prompt-redirect.ser
 import { AuthUserService } from "../backend-services/x-auth-user.service";
 import { RegisterRedirectService } from "../backend-services/x-register-redirect.service";
 import { FlowMatchService } from "../backend-services/x-flow-match.service";
+import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -50,6 +51,7 @@ export class AuthEndpointsController {
         private readonly authUserService: AuthUserService,
         private readonly registerRedirectService: RegisterRedirectService,
         private readonly flowMatchService: FlowMatchService,
+        private readonly activeLoginAccessService: ActiveLoginAccessService,
     ) {}
 
     /**
@@ -385,7 +387,7 @@ export class AuthEndpointsController {
         await this.flowInitService.use(req, res);
         await this.csrfService.use(req, res);
 
-        // TODO: delete refresh token table entry
+        await this.activeLoginAccessService.deleteByActiveLoginId(req.context.auth.getActiveLoginId());
 
         req.context.regenerate();
         return new DefaultReturn("logout/current");
@@ -403,8 +405,7 @@ export class AuthEndpointsController {
         user.revokeTokensBefore = new Date();
         await this.userService.save(user);
 
-        // TODO: clean refresh token table entries
-        await this.activeLoginService.deleteForUser(user);
+        await this.activeLoginAccessService.deleteByUserId(user.id);
 
         req.context.regenerate();
         return new DefaultReturn("logout/everywhere");

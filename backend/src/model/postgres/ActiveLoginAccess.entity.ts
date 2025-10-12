@@ -1,5 +1,5 @@
 import { ApiHideProperty } from "@nestjs/swagger";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ActiveLogin } from "./ActiveLogin.entity";
 
 /**
