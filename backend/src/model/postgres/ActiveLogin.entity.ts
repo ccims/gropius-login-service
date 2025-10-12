@@ -3,8 +3,6 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "t
 import { StrategyInstance } from "./StrategyInstance.entity";
 import { UserLoginData } from "./UserLoginData.entity";
 
-// TODO: database mgiration?!
-
 /**
  * Entity representing a single login event by one user using a specific strategy.
  *
