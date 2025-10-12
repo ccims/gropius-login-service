@@ -3,6 +3,8 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "t
 import { StrategyInstance } from "./StrategyInstance.entity";
 import { UserLoginData } from "./UserLoginData.entity";
 
+// TODO: database mgiration?!
+
 /**
  * Entity representing a single login event by one user using a specific strategy.
  *
@@ -13,15 +15,11 @@ import { UserLoginData } from "./UserLoginData.entity";
  */
 @Entity()
 export class ActiveLogin {
-    // TODO: remove this
-    static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED = -1;
-
     constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
         this.usedStrategyInstance = Promise.resolve(usedStrategyInstance);
         this.created = new Date();
         this.expires = expires || null;
         this.isValid = true;
-        this.nextExpectedRefreshTokenNumber = ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED;
     }
 
     /**
@@ -39,7 +37,6 @@ export class ActiveLogin {
     @Column()
     created: Date;
 
-    // TODO: remove this
     /**
      * If not `null`, this login should be considered *invalid* on any date+time AFTER this.
      * This is to ensure logout and time restrict registration etc.
@@ -72,25 +69,6 @@ export class ActiveLogin {
     @Column()
     supportsSync: boolean;
 
-    // TODO: remove this
-    /**
-     * The numeric identifier of the last refresh token given out (the next one expected).
-     *
-     * **ONLY** the token with this id should be accepted as refresh token for this login event.
-     * If a **valid** token with an **older** id is used, this login event should be made invalid,
-     * as it is a reuse of the refresh token, which likely means it has been abused.
-     *
-     * For a new instance this starts at LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED=-1 and
-     * gets incremented once the first refresh token is created.
-     *
-     * @example 0
-     */
-    @Column({
-        default: -1,
-    })
-    @ApiHideProperty()
-    nextExpectedRefreshTokenNumber: number;
-
     /**
      * Data which needs to be stored on a per-login basis (e.g. issued tokens from auth provider)
      */
@@ -120,7 +98,6 @@ export class ActiveLogin {
     @ApiHideProperty()
     loginInstanceFor: Promise<UserLoginData | null>;
 
-    // TODO: remove this
     get isExpired() {
         return this.expires != null && this.expires <= new Date();
     }
