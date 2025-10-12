@@ -173,8 +173,6 @@ class Auth {
     }
 }
 
-// TODO: guard that flow is defined?!
-
 class Flow {
     constructor(
         private readonly context: Context,
