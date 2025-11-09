@@ -9,7 +9,8 @@ const schema = Joi.object({
     username: Joi.string(),
     displayName: Joi.string(),
     email: Joi.string(),
-    csrf: Joi.string().allow("").optional(),
+    csrf: Joi.string(),
+    flow: Joi.string(),
 });
 
 type Data = {

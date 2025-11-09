@@ -73,20 +73,21 @@ export abstract class StrategyUsingPassport extends Strategy {
                         this.logger.error("Error while authenticating with passport", err);
                         reject(err);
                     } else {
+                        let returnedState: PerformAuthState = {};
+
                         const stateToken = info.state || req.query?.state;
-                        if (!stateToken) return reject("No state returned by passport strategy");
-                        const statePayload = JSON.parse(this.encryptionService.decrypt(stateToken)) as PerformAuthState;
+                        if (stateToken) {
+                            const statePayload = JSON.parse(
+                                this.encryptionService.decrypt(stateToken),
+                            ) as PerformAuthState;
 
-                        if (statePayload.kind !== "passport_state")
-                            return reject("Invalid state returned by passport strategy");
+                            if (statePayload.kind !== "passport_state")
+                                return reject("Invalid state returned by passport strategy");
 
-                        if (!compareTimeSafe(statePayload.csrf, req.context.auth.getCSRF()))
-                            return reject("Invalid CSRF token provided");
+                            returnedState = statePayload;
+                        }
 
-                        if (!compareTimeSafe(statePayload.flow, req.context.flow.getId()))
-                            return reject("Invalid flow id provided");
-
-                        return resolve({ result: user || null, returnedState: statePayload, info });
+                        return resolve({ result: user || null, returnedState: returnedState, info });
                     }
                 },
             )(req, res, (a) => {

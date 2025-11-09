@@ -6,7 +6,7 @@ import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
 const schema = Joi.object({
     flow: Joi.string(),
     consent: Joi.bool(),
-    csrf: Joi.string().allow("").optional(),
+    csrf: Joi.string(),
 });
 
 type Data = {
