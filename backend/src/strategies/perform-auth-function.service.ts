@@ -80,7 +80,6 @@ export class PerformAuthFunctionService {
         this.logger.debug("Registering new user with login data", authResult.dataUserLoginData);
         let loginData = new UserLoginData();
         loginData.data = authResult.dataUserLoginData;
-        loginData.expires = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
         loginData.state = LoginState.WAITING_FOR_REGISTER;
         loginData.strategyInstance = Promise.resolve(instance);
         loginData = await this.userLoginDataService.save(loginData);
@@ -101,11 +100,6 @@ export class PerformAuthFunctionService {
         }
         if (authResult.loginData) {
             // successfully found login data matching the authentication
-            if (authResult.loginData.isExpired) {
-                // Found login data is expired =>
-                // shouldn't happen as expired login data are filtered when searhcing for them
-                throw new OAuthHttpException("server_error", "Login data expired, please try registering again");
-            }
             switch (authResult.loginData.state) {
                 case LoginState.WAITING_FOR_REGISTER:
                     if (

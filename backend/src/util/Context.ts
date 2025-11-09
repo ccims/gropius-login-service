@@ -8,7 +8,8 @@ import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
 import { LoginUser } from "../model/postgres/LoginUser.entity";
 
-// TODO: env variable
+// TODO: env variable (GROPIUS_REGISTRATION_EXPIRATION_TIME_MS?)
+// parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10)
 const FLOW_EXPIRATION_IN_SECONDS = 10 * 60;
 
 declare global {

@@ -188,7 +188,6 @@ export class BackendUserService {
         }
 
         loginData.user = Promise.resolve(userToLinkTo);
-        loginData.expires = null;
         loginData = await this.userLoginDataService.save(loginData);
 
         await this.activeLoginService.setActiveLoginExpiration(activeLogin);

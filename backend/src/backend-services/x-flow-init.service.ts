@@ -48,9 +48,6 @@ export class FlowInitService {
                 const loginData = await activeLogin.loginInstanceFor;
                 if (!loginData) throw new Error("Login data not found");
 
-                // Check if login data expired
-                if (loginData.isExpired) throw new Error("Login data expired");
-
                 // Check if login data valid
                 if (loginData.state !== LoginState.VALID) throw new Error("Login data not in valid state");
             }
@@ -77,9 +74,6 @@ export class FlowInitService {
                     // Check if login data exists
                     const loginData = await activeLogin.loginInstanceFor;
                     if (!loginData) throw new Error("Login data not found");
-
-                    // Check if login data expired
-                    if (loginData.isExpired) throw new Error("Login data expired");
                 }
 
                 // Check client is valid

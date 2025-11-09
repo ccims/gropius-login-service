@@ -204,7 +204,6 @@ export class UsersController {
                 return {
                     id: loginData.id,
                     state: loginData.state,
-                    expires: loginData.expires,
                     strategyInstance: instance,
                     description: await strategy.getLoginDataDescription(loginData),
                 } satisfies UserLoginDataResponse;

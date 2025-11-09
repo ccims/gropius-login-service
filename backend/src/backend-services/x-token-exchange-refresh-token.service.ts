@@ -74,10 +74,6 @@ export class TokenExchangeRefreshTokenService {
             throw new OAuthHttpException("invalid_grant", "No login found for given grant (refresh token/code)");
         }
 
-        if (loginData.isExpired) {
-            throw new OAuthHttpException("invalid_grant", "Login data has expired");
-        }
-
         if (loginData.state !== LoginState.VALID) {
             throw new OAuthHttpException("invalid_grant", "Login data state is not valid");
         }
