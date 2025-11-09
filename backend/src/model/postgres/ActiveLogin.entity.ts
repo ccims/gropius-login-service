@@ -16,7 +16,8 @@ export class ActiveLogin {
     constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
         this.usedStrategyInstance = Promise.resolve(usedStrategyInstance);
         this.created = new Date();
-        this.expires = expires || null;
+        this.expires = this.created;
+        this.extendExpiration();
         this.isValid = true;
     }
 
@@ -36,13 +37,11 @@ export class ActiveLogin {
     created: Date;
 
     /**
-     * If not `null`, this login should be considered *invalid* on any date+time AFTER this.
+     * This login should be considered *invalid* on any date+time AFTER this.
      * This is to ensure logout and time restrict registration etc.
-     *
-     * If `null`, the login should not expire by date.
      */
-    @Column({ nullable: true })
-    expires: Date | null;
+    @Column()
+    expires: Date;
 
     /**
      * Whether this login is valid to be used.
@@ -98,6 +97,12 @@ export class ActiveLogin {
 
     get isExpired() {
         return this.expires != null && this.expires <= new Date();
+    }
+
+    extendExpiration() {
+        const max = this.created.getTime() + parseInt(process.env.GROPIUS_ACTIVE_LOGIN_MAX_EXPIRATION_TIME_MS);
+        const goal = new Date().getTime() + parseInt(process.env.GROPIUS_ACTIVE_LOGIN_EXPIRATION_TIME_MS);
+        this.expires = goal > max ? new Date(max) : new Date(goal);
     }
 
     assert() {

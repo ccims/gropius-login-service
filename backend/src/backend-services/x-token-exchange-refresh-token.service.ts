@@ -65,6 +65,7 @@ export class TokenExchangeRefreshTokenService {
          */
         const activeLogin = activeLoginAccess.activeLogin;
         activeLogin.assert();
+        await this.activeLoginService.extendExpiration(activeLogin);
 
         /**
          * Login Data

@@ -48,6 +48,6 @@ export class RegisterCallbackService implements NestMiddleware {
             ? await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() })
             : await this.backendUserService.createNewUser(data, false);
 
-        await this.backendUserService.linkAccountToUser(user, loginData, activeLogin);
+        await this.backendUserService.linkAccountToUser(user, loginData);
     }
 }

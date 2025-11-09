@@ -17,13 +17,8 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
         return activeLogin;
     }
 
-    async setActiveLoginExpiration(activeLogin: ActiveLogin): Promise<ActiveLogin> {
-        const loginExpiresIn = parseInt(process.env.GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS, 10);
-        if (loginExpiresIn && loginExpiresIn > 0 && !activeLogin.supportsSync) {
-            activeLogin.expires = new Date(Date.now() + loginExpiresIn);
-        } else {
-            activeLogin.expires = null;
-        }
+    async extendExpiration(activeLogin: ActiveLogin): Promise<ActiveLogin> {
+        activeLogin.extendExpiration();
         return this.save(activeLogin);
     }
 

@@ -11,14 +11,16 @@ export const validationSchema = Joi.object({
     GROPIUS_LOGIN_DATABASE_PASSWORD: Joi.string().default("postgres"),
     GROPIUS_LOGIN_DATABASE_DATABASE: Joi.string().default("gropius"),
 
-    GROPIUS_REGISTRATION_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
+    GROPIUS_FLOW_EXPIRATION_TIME_MS: Joi.number().min(0).default(600000),
     GROPIUS_JWT_ISSUER: Joi.string().default("gropius-login"),
     GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS: Joi.number()
         .min(0)
         .max(10 * 60 * 1000)
         .required(),
-    // TODO: rename this?!
-    GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS: Joi.number().min(0).default(0),
+    GROPIUS_ACTIVE_LOGIN_EXPIRATION_TIME_MS: Joi.number().min(0).default(0),
+    GROPIUS_ACTIVE_LOGIN_MAX_EXPIRATION_TIME_MS: Joi.number()
+        .min(0)
+        .default(12 * 30 * 24 * 60 * 60 * 1000),
     GROPIUS_PERFORM_IMS_USER_SEARCH_ON: Joi.string()
         .pattern(/^((LOGIN|REG|REG_SYNC),)*(LOGIN|REG|REG_SYNC)?$/)
         .default("LOGIN,REG,REG_SYNC"),

@@ -181,7 +181,6 @@ export class BackendUserService {
     public async linkAccountToUser(
         userToLinkTo: LoginUser,
         loginData: UserLoginData,
-        activeLogin: ActiveLogin,
     ): Promise<{ loggedInUser: LoginUser; loginData: UserLoginData }> {
         if (loginData.state == LoginState.WAITING_FOR_REGISTER) {
             loginData.state = LoginState.VALID;
@@ -189,8 +188,6 @@ export class BackendUserService {
 
         loginData.user = Promise.resolve(userToLinkTo);
         loginData = await this.userLoginDataService.save(loginData);
-
-        await this.activeLoginService.setActiveLoginExpiration(activeLogin);
 
         userToLinkTo = await this.userService.findOneBy({
             id: userToLinkTo.id,

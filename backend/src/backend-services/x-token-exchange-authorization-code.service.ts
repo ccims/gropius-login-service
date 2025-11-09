@@ -41,6 +41,7 @@ export class TokenExchangeAuthorizationCodeService {
          * Active Login
          */
         const activeLogin = await this.activeLoginService.getValid(data.activeLoginAccessId);
+        await this.activeLoginService.extendExpiration(activeLogin);
 
         /**
          * Code Challenge

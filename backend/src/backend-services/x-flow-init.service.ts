@@ -44,6 +44,9 @@ export class FlowInitService {
                 // Check if active login expired
                 if (activeLogin.isExpired) throw new Error("Active login expired");
 
+                // Extend active login expiration
+                await this.activeLoginService.extendExpiration(activeLogin);
+
                 // Check if login data exists
                 const loginData = await activeLogin.loginInstanceFor;
                 if (!loginData) throw new Error("Login data not found");
@@ -70,6 +73,9 @@ export class FlowInitService {
 
                     // Check if active login expired
                     if (activeLogin.isExpired) throw new Error("Active login expired");
+
+                    // Extend active login expiration
+                    await this.activeLoginService.extendExpiration(activeLogin);
 
                     // Check if login data exists
                     const loginData = await activeLogin.loginInstanceFor;

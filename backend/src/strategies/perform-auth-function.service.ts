@@ -52,7 +52,6 @@ export class PerformAuthFunctionService {
         activeLogin.data = data;
         activeLogin.loginInstanceFor = Promise.resolve(loginData);
         activeLogin.supportsSync = supportsSync;
-        activeLogin.expires = new Date(Date.now() + parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10));
         return this.activeLoginService.save(activeLogin);
     }
 

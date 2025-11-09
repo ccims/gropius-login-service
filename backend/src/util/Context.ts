@@ -8,10 +8,6 @@ import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
 import { LoginUser } from "../model/postgres/LoginUser.entity";
 
-// TODO: env variable (GROPIUS_REGISTRATION_EXPIRATION_TIME_MS?)
-// parseInt(process.env.GROPIUS_REGISTRATION_EXPIRATION_TIME_MS, 10)
-const FLOW_EXPIRATION_IN_SECONDS = 10 * 60;
-
 declare global {
     namespace Express {
         export interface Request {
@@ -122,7 +118,7 @@ class Auth {
             session_id: uuidv4(),
             csrf: uuidv4(),
             issued_at: iat,
-            expires_at: iat + FLOW_EXPIRATION_IN_SECONDS,
+            expires_at: iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS),
             consents: [],
         };
         return this;
@@ -194,7 +190,7 @@ class Flow {
 
     init() {
         const iat = now();
-        const eat = iat + FLOW_EXPIRATION_IN_SECONDS;
+        const eat = iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS);
 
         // TODO: call this explicitly
         this.context.auth.setExpiration(eat);
