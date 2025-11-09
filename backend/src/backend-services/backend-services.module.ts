@@ -20,6 +20,7 @@ import { RegisterRedirectService } from "./x-register-redirect.service";
 import { RegisterCallbackService } from "./x-register-callback.service";
 import { FlowMatchService } from "./x-flow-match.service";
 import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-token.service";
+import { FlowStateService } from "./x-flow-state.service";
 
 @Module({
     imports: [
@@ -63,6 +64,7 @@ import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-tok
         RegisterCallbackService,
         FlowMatchService,
         TokenExchangeRefreshTokenService,
+        FlowStateService,
     ],
     exports: [
         TokenService,
@@ -84,6 +86,7 @@ import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-tok
         RegisterCallbackService,
         FlowMatchService,
         TokenExchangeRefreshTokenService,
+        FlowStateService,
     ],
 })
 export class BackendServicesModule {}

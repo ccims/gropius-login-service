@@ -7,7 +7,7 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { Request } from "express";
-import { Context } from "../util/Context";
+import { Context, FlowState } from "../util/Context";
 import { compareTimeSafe } from "../util/utils";
 import { EncryptionService } from "../backend-services/encryption.service";
 
@@ -52,6 +52,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         req: Request,
         res: any,
     ): Promise<PerformAuthResult> {
+        req.context.flow.setState(FlowState.REDIRECT);
         return new Promise((resolve, reject) => {
             const passportStrategy = this.createPassportStrategyInstance(strategyInstance);
             passport.authenticate(

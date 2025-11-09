@@ -18,6 +18,23 @@ declare global {
 
 type RequestWithContext = Request & { session: ContextSession };
 
+export enum FlowState {
+    // when starting a new flow
+    START = "START",
+
+    // when redirecting the user to login form
+    LOGIN = "LOGIN",
+
+    // when redirecting the user to external auth server
+    REDIRECT = "REDIRECT",
+
+    // when redirecting the user for consent
+    PROMPT = "PROMPT",
+
+    // when redirecting the user for registration
+    REGISTER = "REGISTER",
+}
+
 /**
  * This data is stored in the session, i.e., in the cookie.
  */
@@ -69,6 +86,9 @@ export type ContextSession = {
 
         // oauth authorization request
         oauth_request?: OAuthAuthorizeRequest;
+
+        // state between redirects
+        state: FlowState;
     };
 };
 
@@ -193,6 +213,7 @@ class Flow {
             flow_id: uuidv4(),
             issued_at: iat,
             expires_at: eat,
+            state: FlowState.START,
         };
         return this;
     }
@@ -319,5 +340,16 @@ class Flow {
         });
 
         return crypto.createHash("sha256").update(data).digest("base64url");
+    }
+
+    getState() {
+        const state = this.req.session.flow.state;
+        if (!state) throw new Error("Flow state is missing");
+        return state;
+    }
+
+    setState(state: FlowState) {
+        this.req.session.flow.state = state;
+        return this;
     }
 }

@@ -6,6 +6,7 @@ import { combineURL } from "../util/utils";
 import { Strategy } from "src/strategies/Strategy";
 import { StrategiesService } from "../model/services/strategies.service";
 import { ActiveLoginService } from "../model/services/active-login.service";
+import { FlowState } from "../util/Context";
 
 /**
  * Return data of the user data suggestion endpoint
@@ -65,6 +66,7 @@ export class RegisterRedirectService {
         if (strategy.forceSuggestedUsername)
             url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
 
+        req.context.flow.setState(FlowState.REGISTER);
         return res.redirect(url.toString());
     }
 

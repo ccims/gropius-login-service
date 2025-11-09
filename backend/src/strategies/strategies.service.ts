@@ -8,10 +8,8 @@ import { StrategiesService as StrategiesRepository } from "../model/services/str
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
 import { AuthException } from "src/api-internal/AuthException";
-import { Context } from "../util/Context";
-import { ActiveLoginService } from "../model/services/active-login.service";
+import { Context, FlowState } from "../util/Context";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
-import { compareTimeSafe } from "../util/utils";
 
 @Injectable()
 export class StrategiesService implements NestMiddleware {
