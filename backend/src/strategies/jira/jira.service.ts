@@ -12,6 +12,7 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
+import { EncryptionService } from "../../backend-services/encryption.service";
 
 @Injectable()
 export class JiraStrategyService extends StrategyUsingPassport {
@@ -20,11 +21,10 @@ export class JiraStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("StateJwtService")
-        stateJwtService: JwtService,
+        encryptionService: EncryptionService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
+        super("jira", strategyInstanceService, strategiesService, encryptionService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {

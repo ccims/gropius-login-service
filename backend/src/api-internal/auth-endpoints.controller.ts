@@ -114,10 +114,8 @@ export class AuthEndpointsController {
         req.context.flow.assert();
 
         /**
-         * Strategies (sets ActiveLogin)
+         * Strategies (sets ActiveLogin, checks CSRF, checks Flow)
          */
-        // TODO: check CSRF
-        // TODO: check flow
         await this.strategiesService.use(req, res);
 
         /**

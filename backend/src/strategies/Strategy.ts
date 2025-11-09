@@ -4,7 +4,7 @@ import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthResult, AuthStateServerData } from "./AuthResult";
+import { AuthResult, AuthStateData, AuthStateServerData } from "./AuthResult";
 import { OAuthAuthorizeRequest } from "src/api-oauth/types";
 import { Schema } from "jtd";
 import { Context } from "../util/Context";
@@ -22,11 +22,14 @@ export interface StrategyUpdateAction {
     variables: StrategyVariable[];
 }
 
+export interface PerformAuthState {
+    csrf?: string;
+    flow?: string;
+}
+
 export interface PerformAuthResult {
     result: AuthResult | null;
-    returnedState: Partial<Pick<AuthStateServerData, "authState"> & { request: OAuthAuthorizeRequest }> & {
-        CSRF?: string;
-    };
+    returnedState: PerformAuthState;
     info: any;
 }
 

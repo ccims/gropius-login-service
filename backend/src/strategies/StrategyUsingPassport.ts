@@ -1,5 +1,5 @@
 import * as passport from "passport";
-import { PerformAuthResult, Strategy } from "./Strategy";
+import { PerformAuthResult, PerformAuthState, Strategy } from "./Strategy";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { AuthResult } from "./AuthResult";
 import { JwtService } from "@nestjs/jwt";
@@ -8,6 +8,8 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { Request } from "express";
 import { Context } from "../util/Context";
+import { compareTimeSafe } from "../util/utils";
+import { EncryptionService } from "../backend-services/encryption.service";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -16,7 +18,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
         strategiesService: StrategiesService,
-        protected readonly stateJwtService: JwtService,
+        private readonly encryptionService: EncryptionService,
         canLoginRegister = true,
         canSync = false,
         needsRedirectFlow = false,
@@ -52,15 +54,16 @@ export abstract class StrategyUsingPassport extends Strategy {
     ): Promise<PerformAuthResult> {
         return new Promise((resolve, reject) => {
             const passportStrategy = this.createPassportStrategyInstance(strategyInstance);
-            const jwtService = this.stateJwtService;
             passport.authenticate(
                 passportStrategy,
                 {
                     session: false,
-                    state: jwtService.sign({
-                        request: context?.flow.tryRequest(),
-                        csrf: context?.auth.getCSRF(),
-                    }),
+                    state: this.encryptionService.encrypt(
+                        JSON.stringify({
+                            csrf: context?.auth.getCSRF(),
+                            flow: context?.flow.getId(),
+                        }),
+                    ),
                     ...this.getAdditionalPassportOptions(strategyInstance, context),
                 },
                 (err, user: AuthResult | false, info) => {
@@ -68,17 +71,17 @@ export abstract class StrategyUsingPassport extends Strategy {
                         this.logger.error("Error while authenticating with passport", err);
                         reject(err);
                     } else {
-                        let returnedState: any = {};
-                        const state = info.state || req.query?.state;
-                        if (state && typeof state == "string") {
-                            returnedState = jwtService.verify(state);
-                        } else if (state) {
-                            reject("State not returned as JWT");
-                        }
+                        const stateToken = info.state || req.query?.state;
+                        if (!stateToken) return reject("No state returned by passport strategy");
+                        const statePayload = JSON.parse(this.encryptionService.decrypt(stateToken)) as PerformAuthState;
 
-                        returnedState.CSRF = returnedState?.CSRF ?? req.query?.CSRF;
+                        if (!compareTimeSafe(statePayload.csrf, req.context.auth.getCSRF()))
+                            throw new Error("Invalid CSRF token provided");
 
-                        resolve({ result: user || null, returnedState, info });
+                        if (!compareTimeSafe(statePayload.flow, req.context.flow.getId()))
+                            throw new Error("Invalid flow id provided");
+
+                        return resolve({ result: user || null, returnedState: statePayload, info });
                     }
                 },
             )(req, res, (a) => {

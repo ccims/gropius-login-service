@@ -17,7 +17,9 @@ export const validationSchema = Joi.object({
         .min(0)
         .max(10 * 60 * 1000)
         .required(),
-    GROPIUS_ACTIVE_LOGIN_EXPIRATION_TIME_MS: Joi.number().min(0).default(0),
+    GROPIUS_ACTIVE_LOGIN_EXPIRATION_TIME_MS: Joi.number()
+        .min(0)
+        .default(30 * 24 * 60 * 60 * 1000),
     GROPIUS_ACTIVE_LOGIN_MAX_EXPIRATION_TIME_MS: Joi.number()
         .min(0)
         .default(12 * 30 * 24 * 60 * 60 * 1000),

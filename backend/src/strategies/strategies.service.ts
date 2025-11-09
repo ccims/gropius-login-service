@@ -11,6 +11,7 @@ import { AuthException } from "src/api-internal/AuthException";
 import { Context } from "../util/Context";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
+import { compareTimeSafe } from "../util/utils";
 
 @Injectable()
 export class StrategiesService implements NestMiddleware {
@@ -68,6 +69,7 @@ export class StrategiesService implements NestMiddleware {
         req.context.flow.setStrategy(strategy);
 
         const result = await strategy.performAuth(instance, req.context, req, res);
+
         const authResult = result.result;
         if (!authResult) {
             throw new AuthException(

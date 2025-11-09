@@ -13,6 +13,7 @@ import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
 import { Context } from "../../util/Context";
+import { EncryptionService } from "../../backend-services/encryption.service";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
@@ -22,11 +23,10 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("StateJwtService")
-        stateJwtService: JwtService,
+        encryptionService: EncryptionService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
+        super("github", strategyInstanceService, strategiesService, encryptionService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {
