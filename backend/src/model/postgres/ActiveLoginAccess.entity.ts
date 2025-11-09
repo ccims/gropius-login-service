@@ -3,8 +3,9 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ActiveLogin } from "./ActiveLogin.entity";
 
 /**
- * Entity representing the access to an ActiveLogin.
- * Essentially, one ActiveLogin has many ActiveLoginAccesses, each representing an OAuth client.
+ * Entity representing the access of an OAuth client to an ActiveLogin.
+ * It is used to keep track of refresh tokens per OAuth client per ActiveLogin.
+ * Hence, one ActiveLogin has many ActiveLoginAccesses.
  */
 @Entity()
 export class ActiveLoginAccess {

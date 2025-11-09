@@ -197,7 +197,7 @@ Further, any record is only valid if itself and its parent are valid.
 
 ## Attacker Model
 
-Given the [FAPI 2.0 Attacker Model](https://openid.net/specs/fapi-attacker-model-2_0-final.html), we have the same security goals _Authorization_, _Authentication_, and _Session Integrity_ under the attackers _A1 - Web Attacker_ and _A2 - Network Attacker_.
+Given the [FAPI 2.0 Attacker Model](https://openid.net/specs/fapi-attacker-model-2_0-final.html), we have the same security goals _Authorization_, _Authentication_, and _Session Integrity_ but only under the attackers _A1 - Web Attacker_ and _A2 - Network Attacker_.
 
 
 ## Notes
