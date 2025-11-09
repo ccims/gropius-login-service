@@ -2,11 +2,14 @@ import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/types";
 import * as crypto from "crypto";
-import { MONTH_IN_SECONDS, now, TEN_MINUTES_IN_SECONDS } from "./utils";
+import { now } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
 import { LoginUser } from "../model/postgres/LoginUser.entity";
+
+// TODO: env variable
+const FLOW_EXPIRATION_IN_SECONDS = 10 * 60;
 
 declare global {
     namespace Express {
@@ -29,7 +32,7 @@ export type ContextSession = {
     issued_at: number;
 
     // expires at
-    expires_at: number;
+    expires_at?: number;
 
     // user id
     user_id?: string;
@@ -118,19 +121,17 @@ class Auth {
             session_id: uuidv4(),
             csrf: uuidv4(),
             issued_at: iat,
-            // TODO: EXPIRATION: this (in sync with activeLogin? but exists earlier)
-            expires_at: iat + MONTH_IN_SECONDS,
+            expires_at: iat + FLOW_EXPIRATION_IN_SECONDS,
             consents: [],
         };
         return this;
     }
 
-    // TODO: EXPIRATION: when to call this?
-    extend() {
-        // TODO: EXPIRATION: this (in sync with activeLogin? but exists earlier)
-        if (this.req.session.expires_at !== this.req.session.issued_at + MONTH_IN_SECONDS) {
-            this.req.session.expires_at += MONTH_IN_SECONDS;
-        }
+    setExpiration(date: number) {
+        // Authenticated session does not expire (but its ActiveLogin might)
+        if (this.isAuthenticated()) return this;
+
+        this.req.session.expires_at = date;
         return this;
     }
 
@@ -139,6 +140,7 @@ class Auth {
     }
 
     isExpired() {
+        if (!this.req.session.expires_at) return false;
         return now() > this.req.session.expires_at;
     }
 
@@ -151,6 +153,7 @@ class Auth {
     setUser(user: LoginUser, activeLogin: ActiveLogin) {
         this.req.session.user_id = user.id;
         this.req.session.active_login_id = activeLogin.id;
+        delete this.req.session.expires_at;
         return this;
     }
 
@@ -183,19 +186,22 @@ class Flow {
     }
 
     ensure() {
+        // TODO: call this explicitly
         if (!this.exists()) this.init();
         return this;
     }
 
     init() {
-        this.context.auth.extend();
-
         const iat = now();
+        const eat = iat + FLOW_EXPIRATION_IN_SECONDS;
+
+        // TODO: call this explicitly
+        this.context.auth.setExpiration(eat);
+
         this.req.session.flow = {
             flow_id: uuidv4(),
             issued_at: iat,
-            // TODO: EXPIRATION: this (in sync with activeLogin? but exists earlier)
-            expires_at: iat + TEN_MINUTES_IN_SECONDS,
+            expires_at: eat,
         };
         return this;
     }

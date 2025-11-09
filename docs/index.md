@@ -183,17 +183,18 @@ Please note that the cookie itself is formally not a JWT but a signed JSON objec
 
 ## Expirations
 
-| Record            | Expiration                                                            |
-|-------------------|-----------------------------------------------------------------------|
-| UserLoginData     | 10 min while not registered, otherwise never                          |
-| ActiveLogin       | 1 month, extended by 1 month if used, but at max 12 months            |
-| ActiveLoginAccess | expired if its ActiveLogin is expired                                 |
-| Session           | 10 min while not authenticated, expired if its ActiveLogin is expired |
-| AuthorizationCode | 10 min                                                                |
-| AccessToken       | 10 min                                                                |
-| RefreshToken      | 2 hours                                                               |
+| Record            | Parent            | Expiration                                                                                                                                  | Comment                                |
+|-------------------|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
+| UserLoginData     | LoginUser         | 10 min while not registered, otherwise never                                                                                                |                                        |
+| ActiveLogin       | UserLoginData     | 1 month, extended by 1 month if used, but at max 12 months                                                                                  | to limit any API flow by OAuth clients |
+| ActiveLoginAccess | ActiveLogin       | _none_                                                                                                                                      | limited by ActiveLogin                 |
+| Session           | ActiveLogin       | 10 min while not authenticated, never while authenticated, synced to session flow expiration if new flow is started (and not authenticated) | to limit browser session               |
+| SessionFlow       | Session           | 10 min                                                                                                                                      | to limit any browser flow              |
+| AuthorizationCode | ActiveLogin       | 10 min                                                                                                                                      | to limit self-contained auth code      |
+| AccessToken       | _none_            | 10 min                                                                                                                                      | to limit self-contained access token   |
+| RefreshToken      | ActiveLoginAccess | 2 hours                                                                                                                                     | to expire self-contained refresh token |
 
-Further, any record is only valid if itself and its parent are valid.
+Further, any record is only valid if itself and its parent are not expired.
 
 ## Attacker Model
 
