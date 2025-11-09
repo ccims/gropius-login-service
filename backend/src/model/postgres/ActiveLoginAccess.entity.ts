@@ -4,15 +4,16 @@ import { ActiveLogin } from "./ActiveLogin.entity";
 
 /**
  * Entity representing the access of an OAuth client to an ActiveLogin.
- * It is used to keep track of refresh tokens per OAuth client per ActiveLogin.
+ * It is used to keep track of used auth code and issued refresh tokens per OAuth client per ActiveLogin.
  * Hence, one ActiveLogin has many ActiveLoginAccesses.
  */
 @Entity()
 export class ActiveLoginAccess {
-    constructor(activeLogin: ActiveLogin, counter = 0) {
+    constructor(activeLogin: ActiveLogin, authCodeFingerprint: string, counter: number) {
         this.activeLogin = activeLogin;
         this.created = new Date();
         this.isValid = true;
+        this.authCodeFingerprint = authCodeFingerprint;
         this.refreshTokenCounter = counter;
     }
 
@@ -24,6 +25,12 @@ export class ActiveLoginAccess {
 
     @Column()
     isValid: boolean;
+
+    /**
+     * Track used auth code to prevent reuse.
+     */
+    @Column()
+    authCodeFingerprint: string;
 
     /**
      * The numeric identifier of the last refresh token given out (the next one expected).

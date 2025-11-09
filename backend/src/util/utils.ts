@@ -17,3 +17,7 @@ export function compareTimeSafe(found: string, expected: string): boolean {
     const foundBuffer = found.length === expected.length ? Buffer.from(found) : Buffer.alloc(expectedBuffer.length);
     return crypto.timingSafeEqual(foundBuffer, expectedBuffer) && found.length === expected.length;
 }
+
+export function hash(data: string): string {
+    return crypto.createHash("sha256").update(data).digest("base64url");
+}

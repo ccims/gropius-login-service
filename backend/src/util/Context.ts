@@ -2,7 +2,7 @@ import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/types";
 import * as crypto from "crypto";
-import { now } from "./utils";
+import { hash, now } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
@@ -74,7 +74,6 @@ export type ContextSession = {
         // strategy type
         strategy_type?: string;
 
-        // TODO: omit this in favor of "via"
         // flow type
         flow_type?: FlowType;
 
@@ -206,7 +205,6 @@ class Flow {
         const iat = now();
         const eat = iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS);
 
-        // TODO: call this explicitly
         this.context.auth.setExpiration(eat);
 
         this.req.session.flow = {
@@ -339,7 +337,7 @@ class Flow {
             redirect: request.redirect,
         });
 
-        return crypto.createHash("sha256").update(data).digest("base64url");
+        return hash(data);
     }
 
     getState() {

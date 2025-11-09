@@ -8,14 +8,14 @@ import { LoginUserService } from "src/model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 
 export interface AuthorizationCodeResult {
-    activeLoginAccessId: string;
+    activeLoginId: string;
     clientId: string;
     scope: TokenScope[];
     codeChallenge: string;
 }
 
 export interface RefreshTokenResult {
-    activeLoginId: string;
+    activeLoginAccessId: string;
     clientId: string;
     tokenUniqueId: string;
     scope: TokenScope[];
@@ -115,7 +115,7 @@ export class TokenService {
         }
 
         return {
-            activeLoginAccessId: payload.sub,
+            activeLoginId: payload.sub,
             clientId: payload.client_id,
             scope: payload.scope,
             codeChallenge: payload.code_challenge,
@@ -192,7 +192,7 @@ export class TokenService {
         }
 
         return {
-            activeLoginId: payload.sub,
+            activeLoginAccessId: payload.sub,
             clientId: payload.client_id,
             tokenUniqueId: payload.jti,
             scope: payload.scope,

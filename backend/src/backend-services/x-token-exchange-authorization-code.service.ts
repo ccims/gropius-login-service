@@ -9,7 +9,7 @@ import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.enti
 import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
 
 import { OauthTokenResponse } from "../api-oauth/types";
-import { compareTimeSafe } from "../util/utils";
+import { compareTimeSafe, hash } from "../util/utils";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 
@@ -23,7 +23,6 @@ export class TokenExchangeAuthorizationCodeService {
         private readonly activeLoginAccessService: ActiveLoginAccessService,
     ) {}
 
-    // TODO: ensure that auth code is only exchanged once?
     async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         /**
          * Authorization Code
@@ -40,8 +39,14 @@ export class TokenExchangeAuthorizationCodeService {
         /**
          * Active Login
          */
-        const activeLogin = await this.activeLoginService.getValid(data.activeLoginAccessId);
+        const activeLogin = await this.activeLoginService.getValid(data.activeLoginId);
         await this.activeLoginService.extendExpiration(activeLogin);
+
+        /**
+         * Check if auth code has been used
+         */
+        const activeLoginAccess = await this.activeLoginAccessService.findOneBy({ authCodeFingerprint: hash(token) });
+        if (activeLoginAccess) throw new Error("Authorization code has already been used");
 
         /**
          * Code Challenge
@@ -94,7 +99,7 @@ export class TokenExchangeAuthorizationCodeService {
         /**
          * Access Token
          */
-        return await this.createAccessToken(loginData, activeLogin, client, data.scope);
+        return await this.createAccessToken(loginData, activeLogin, client, data.scope, token);
     }
 
     private async createAccessToken(
@@ -102,12 +107,15 @@ export class TokenExchangeAuthorizationCodeService {
         activeLogin: ActiveLogin,
         currentClient: AuthClient,
         scope: TokenScope[],
+        authCode: string,
     ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
 
         const accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
 
-        const activeLoginAccess = await this.activeLoginAccessService.save(new ActiveLoginAccess(activeLogin, 1));
+        const activeLoginAccess = await this.activeLoginAccessService.save(
+            new ActiveLoginAccess(activeLogin, hash(authCode), 1),
+        );
 
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,

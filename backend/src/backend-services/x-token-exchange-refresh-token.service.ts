@@ -34,15 +34,14 @@ export class TokenExchangeRefreshTokenService {
         /**
          * ActiveLoginAccess
          */
-        // TODO: activeLoginId is actually activeLoginAccessId here
-        const activeLoginAccess = await this.activeLoginAccessService.getAsserted(data.activeLoginId);
+        const activeLoginAccess = await this.activeLoginAccessService.getAsserted(data.activeLoginAccessId);
 
         const codeUniqueId = parseInt(data.tokenUniqueId, 10);
         if (!isFinite(codeUniqueId) || codeUniqueId !== activeLoginAccess.refreshTokenCounter) {
             this.logger.warn(
                 "Code is no longer valid as it was already used and a token was already generated.\n " +
                     "Active login has been made invalid",
-                data.activeLoginId,
+                data.activeLoginAccessId,
             );
 
             //Make active login invalid if code/refresh token is reused
