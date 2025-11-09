@@ -6,7 +6,7 @@ import { BackendUserService } from "./backend-user.service";
 import { ImsUserFindingService } from "./ims-user-finding.service";
 import { EncryptionService } from "./encryption.service";
 import { CodeRedirectService } from "./x-code-redirect.service";
-import { FlowInitService } from "./x-flow-init.service";
+import { ContextInitService } from "./x-context-init.service";
 import { PromptRedirectService } from "./x-prompt-redirect.service";
 import { RequestExtractService } from "./x-request-extract.service";
 import { TokenExchangeAuthorizationCodeService } from "./x-token-exchange-authorization-code.service";
@@ -49,7 +49,7 @@ import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-tok
         ImsUserFindingService,
         EncryptionService,
         CodeRedirectService,
-        FlowInitService,
+        ContextInitService,
         PromptRedirectService,
         RequestExtractService,
         TokenExchangeAuthorizationCodeService,
@@ -70,7 +70,7 @@ import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-tok
         ImsUserFindingService,
         EncryptionService,
         CodeRedirectService,
-        FlowInitService,
+        ContextInitService,
         PromptRedirectService,
         RequestExtractService,
         TokenExchangeAuthorizationCodeService,

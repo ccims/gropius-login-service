@@ -182,12 +182,6 @@ class Flow {
         return this;
     }
 
-    ensure() {
-        // TODO: call this explicitly
-        if (!this.exists()) this.init();
-        return this;
-    }
-
     init() {
         const iat = now();
         const eat = iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS);
@@ -208,8 +202,12 @@ class Flow {
         return this;
     }
 
+    tryId() {
+        return this.req.session.flow?.flow_id;
+    }
+
     getId() {
-        const flow = this.req.session.flow?.flow_id;
+        const flow = this.tryId();
         if (!flow) throw new Error("Flow id is missing");
         return flow;
     }

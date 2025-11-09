@@ -34,6 +34,7 @@
                             />
                             <input type="submit" hidden />
                             <input type="hidden" name="csrf" :value="csrf" hidden />
+                            <input type="hidden" name="flow" :value="flow" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
@@ -78,6 +79,7 @@
 
             <v-form ref="redirectForm" :action="redirectAction" method="POST" style="display: none">
                 <input type="hidden" name="csrf" :value="csrf" />
+                <input type="hidden" name="flow" :value="flow" hidden />
             </v-form>
         </template>
     </BaseLayout>
@@ -103,6 +105,7 @@ import * as auth from "@/util/auth";
 const route = useRoute();
 
 const csrf = asyncComputed(auth.loadCSRFToken);
+const flow = asyncComputed(auth.loadFlowToken);
 
 const forms = ref(new Map<number, any>());
 

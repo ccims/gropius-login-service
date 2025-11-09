@@ -8,7 +8,7 @@ import { AuthClientService } from "../model/services/auth-client.service";
 import { LoginState } from "../model/postgres/UserLoginData.entity";
 
 @Injectable()
-export class FlowInitService {
+export class ContextInitService {
     private readonly logger = new Logger(this.constructor.name);
 
     constructor(

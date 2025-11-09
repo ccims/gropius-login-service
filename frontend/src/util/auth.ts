@@ -197,3 +197,7 @@ export async function logout(mode: "current" | "everywhere") {
 export async function loadCSRFToken() {
     return (await axios.get<{ csrf: string }>(`/auth/api/internal/auth/csrf`)).data.csrf;
 }
+
+export async function loadFlowToken() {
+    return (await axios.get<{ id?: string }>(`/auth/api/internal/auth/flow`)).data.id;
+}

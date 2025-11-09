@@ -205,7 +205,7 @@ Given the [FAPI 2.0 Attacker Model](https://openid.net/specs/fapi-attacker-model
 ## CSRF
 
 All state-changing requests for which the cookie is sent requires CSRF protection.
-We always require the session-bound CSRF token `cookie#csrf` for any such request.
+Therefore, we always require the session-bound CSRF token `cookie#csrf` for any such request.
 
 We require additional CSRF protection for flow-related state-changing requests to bind the requests to the correct flow. 
 Therefore, we always require the flow-bound CSRF token `cookie#flow#id` for any such request.

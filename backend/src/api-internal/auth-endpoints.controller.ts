@@ -10,7 +10,7 @@ import { NoCors } from "../util/NoCors.decorator";
 import { DefaultReturn } from "../util/default-return.dto";
 import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
 import { ActiveLoginService } from "../model/services/active-login.service";
-import { FlowInitService } from "../backend-services/x-flow-init.service";
+import { ContextInitService } from "../backend-services/x-context-init.service";
 import { CSRFService } from "../backend-services/x-csrf.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptCallbackService } from "../backend-services/x-prompt-callback.service";
@@ -39,7 +39,7 @@ export class AuthEndpointsController {
         private readonly userService: LoginUserService,
         private readonly authClientService: AuthClientService,
         private readonly activeLoginService: ActiveLoginService,
-        private readonly flowInitService: FlowInitService,
+        private readonly contextInitService: ContextInitService,
         private readonly csrfService: CSRFService,
         private readonly codeRedirectService: CodeRedirectService,
         private readonly promptCallbackService: PromptCallbackService,
@@ -78,13 +78,23 @@ export class AuthEndpointsController {
         @Param("mode") mode?: AuthFunctionInput,
     ) {
         /**
-         * Init flow
+         * Init Context and start Link Flow if required
          */
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         await this.csrfService.use(req, res);
-        req.context.flow.ensure();
-        // TODO: only if not link
-        await this.flowMatchService.use(req, res);
+        if (req.context.flow.exists()) {
+            // Restart Link Flow
+            if (req.context.flow.isLinkFlow()) {
+                req.context.flow.drop();
+                req.context.flow.init();
+            } else {
+                // Match existing Flow
+                await this.flowMatchService.use(req, res);
+            }
+        } else {
+            // Start Link Flow
+            req.context.flow.init();
+        }
         await this.flowViaService.use(req, res);
 
         /**
@@ -104,13 +114,13 @@ export class AuthEndpointsController {
     @ApiOperation({ summary: "Redirect/Callback endpoint for a strategy instance" })
     @ApiParam({
         name: "id",
-        description: "The id of the strategy instance which initiated the funcation calling the callback.",
+        description: "The id of the strategy instance which initiated the function calling the callback.",
     })
     async loginStrategyCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         /**
-         * Init flow
+         * Init Context
          */
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         req.context.flow.assert();
 
         /**
@@ -178,13 +188,23 @@ export class AuthEndpointsController {
     })
     async loginStrategySubmit(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         /**
-         * Init flow
+         * Init Context and start Link Flow if required
          */
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         await this.csrfService.use(req, res);
-        req.context.flow.ensure();
-        // TODO: only if not link
-        await this.flowMatchService.use(req, res);
+        if (req.context.flow.exists()) {
+            // Restart Link Flow
+            if (req.context.flow.isLinkFlow()) {
+                req.context.flow.drop();
+                req.context.flow.init();
+            } else {
+                // Match existing Flow
+                await this.flowMatchService.use(req, res);
+            }
+        } else {
+            // Create new Link Flow
+            req.context.flow.init();
+        }
         await this.flowViaService.use(req, res);
 
         /**
@@ -249,10 +269,26 @@ export class AuthEndpointsController {
     ): Promise<{
         csrf: string;
     }> {
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
 
         return {
             csrf: req.context.auth.getCSRF(),
+        };
+    }
+
+    @Get("flow")
+    @NoCors()
+    @ApiOperation({ summary: "Endpoint to access the flow data" })
+    async flowData(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+    ): Promise<{
+        id?: string;
+    }> {
+        await this.contextInitService.use(req, res);
+
+        return {
+            id: req.context.flow.tryId(),
         };
     }
 
@@ -271,7 +307,7 @@ export class AuthEndpointsController {
         clientId: string;
         clientName: string;
     }> {
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         req.context.flow.assert();
 
         // TODO: flow match?
@@ -305,9 +341,9 @@ export class AuthEndpointsController {
         @Body() consent: boolean,
     ) {
         /**
-         * Init flow
+         * Init Context
          */
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         await this.csrfService.use(req, res);
         req.context.flow.assert();
         await this.flowMatchService.use(req, res);
@@ -330,9 +366,9 @@ export class AuthEndpointsController {
     @ApiOperation({ summary: "Complete a registration" })
     async register(@Req() req: Request, @Res({ passthrough: true }) res: Response, @Body() input: BaseUserInput) {
         /**
-         * Init flow
+         * Init Context
          */
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         await this.csrfService.use(req, res);
         req.context.flow.assert();
         await this.flowMatchService.use(req, res);
@@ -382,7 +418,7 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         await this.csrfService.use(req, res);
 
         await this.activeLoginAccessService.deleteByActiveLoginId(req.context.auth.getActiveLoginId());
@@ -395,7 +431,7 @@ export class AuthEndpointsController {
     @NoCors()
     @ApiOperation({ summary: "Logout everywhere" })
     async logoutEverywhere(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        await this.flowInitService.use(req, res);
+        await this.contextInitService.use(req, res);
         await this.csrfService.use(req, res);
 
         const user = await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() });

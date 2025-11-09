@@ -3,7 +3,7 @@ import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { NoCors } from "../util/NoCors.decorator";
 import { Request, Response } from "express";
-import { FlowInitService } from "../backend-services/x-flow-init.service";
+import { ContextInitService } from "../backend-services/x-context-init.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 import { RequestExtractService } from "../backend-services/x-request-extract.service";
@@ -22,7 +22,7 @@ export class AuthorizeController {
     private readonly logger = new Logger(this.constructor.name);
 
     constructor(
-        private readonly flowInitService: FlowInitService,
+        private readonly flowInitService: ContextInitService,
         private readonly codeService: CodeRedirectService,
         private readonly promptRedirectService: PromptRedirectService,
         private readonly requestExtractService: RequestExtractService,
@@ -81,7 +81,7 @@ export class AuthorizeController {
         await this.flowInitService.use(req, res);
 
         /**
-         * Request
+         * Start Auth Flow
          */
         const request = await this.requestExtractService.use(req, res);
         req.context.flow.init();

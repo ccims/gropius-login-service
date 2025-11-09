@@ -24,6 +24,7 @@
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
 
                     <input type="hidden" name="csrf" :value="csrf" />
+                    <input type="hidden" name="flow" :value="flow" />
 
                     <v-card-actions>
                         <v-spacer />
@@ -60,6 +61,7 @@ const schema = toTypedSchema(
 );
 
 const csrf = asyncComputed(auth.loadCSRFToken);
+const flow = asyncComputed(auth.loadFlowToken);
 
 const { defineField, handleSubmit, setValues } = useForm({
     validationSchema: schema
