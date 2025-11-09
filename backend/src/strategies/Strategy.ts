@@ -23,8 +23,9 @@ export interface StrategyUpdateAction {
 }
 
 export interface PerformAuthState {
-    csrf?: string;
-    flow?: string;
+    kind: string;
+    csrf: string;
+    flow: string;
 }
 
 export interface PerformAuthResult {

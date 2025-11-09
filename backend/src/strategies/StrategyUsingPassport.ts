@@ -60,6 +60,7 @@ export abstract class StrategyUsingPassport extends Strategy {
                     session: false,
                     state: this.encryptionService.encrypt(
                         JSON.stringify({
+                            kind: "passport_state",
                             csrf: context?.auth.getCSRF(),
                             flow: context?.flow.getId(),
                         }),
@@ -75,11 +76,14 @@ export abstract class StrategyUsingPassport extends Strategy {
                         if (!stateToken) return reject("No state returned by passport strategy");
                         const statePayload = JSON.parse(this.encryptionService.decrypt(stateToken)) as PerformAuthState;
 
+                        if (statePayload.kind !== "passport_state")
+                            return reject("Invalid state returned by passport strategy");
+
                         if (!compareTimeSafe(statePayload.csrf, req.context.auth.getCSRF()))
-                            throw new Error("Invalid CSRF token provided");
+                            return reject("Invalid CSRF token provided");
 
                         if (!compareTimeSafe(statePayload.flow, req.context.flow.getId()))
-                            throw new Error("Invalid flow id provided");
+                            return reject("Invalid flow id provided");
 
                         return resolve({ result: user || null, returnedState: statePayload, info });
                     }
