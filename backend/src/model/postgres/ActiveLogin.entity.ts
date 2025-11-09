@@ -13,7 +13,7 @@ import { UserLoginData } from "./UserLoginData.entity";
  */
 @Entity()
 export class ActiveLogin {
-    constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
+    constructor(usedStrategyInstance: StrategyInstance) {
         this.usedStrategyInstance = Promise.resolve(usedStrategyInstance);
         this.created = new Date();
         this.expires = this.created;

@@ -30,10 +30,7 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
             .where(`"loginInstanceForId" = :loginDataId`, {
                 loginDataId: loginData.id,
             })
-            .andWhere(`"isValid" = true`, {})
-            .andWhere(`"expires" > :expires`, {
-                expires: new Date(),
-            });
+            .andWhere(`"isValid" = true`, {});
         if (supportsSync !== null) {
             builder = builder.andWhere(`"supportsSync" = :supportsSync`, {
                 supportsSync,
