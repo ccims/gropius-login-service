@@ -27,7 +27,6 @@ import { Response } from "express";
 import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { DefaultReturn } from "src/util/default-return.dto";
-import { NoCors } from "../util/NoCors.decorator";
 import { ActiveLoginService } from "../model/services/active-login.service";
 
 @Controller("update-action")

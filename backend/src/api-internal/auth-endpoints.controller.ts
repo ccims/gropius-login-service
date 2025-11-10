@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Logger, Param, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Param, Post, Req, Res, UseFilters } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { AuthFunctionInput } from "./types";
 import { Request, Response } from "express";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { LoginUserService } from "../model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { NoCors } from "../util/NoCors.decorator";
@@ -24,6 +24,9 @@ import { FlowMatchService } from "../backend-services/x-flow-match.service";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 import { FlowStateService } from "../backend-services/x-flow-state.service";
 import { FlowState } from "../util/Context";
+import { RedirectOnOAuthErrorFilter } from "../errors/redirect-on-oauth-error.filter";
+import { RedirectOnAuthErrorFilter } from "../errors/redirect-on-auth-error.filter";
+import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -66,6 +69,7 @@ export class AuthEndpointsController {
      */
     @Post("redirect/:id/:mode")
     @NoCors()
+    @RedirectOnError()
     @ApiOperation({ summary: "Authorize endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to initiate" })
     @ApiParam({
@@ -115,6 +119,7 @@ export class AuthEndpointsController {
      */
     @Get("callback/:id")
     @NoCors()
+    @RedirectOnError()
     @ApiOperation({ summary: "Redirect/Callback endpoint for a strategy instance" })
     @ApiParam({
         name: "id",
@@ -183,6 +188,7 @@ export class AuthEndpointsController {
 
     @Post("submit/:id/:mode")
     @NoCors()
+    @RedirectOnError()
     @ApiOperation({ summary: "Submit endpoint for a strategy instance" })
     @ApiParam({ name: "id", type: String, description: "The id of the strategy instance to submit" })
     @ApiParam({
@@ -337,6 +343,7 @@ export class AuthEndpointsController {
 
     @Post("prompt/callback")
     @NoCors()
+    @RedirectOnError()
     @ApiOperation({ summary: "Callback endpoint for granting permissions" })
     async promptCallback(
         @Req() req: Request,
@@ -368,6 +375,7 @@ export class AuthEndpointsController {
 
     @Post("register/callback")
     @NoCors()
+    @RedirectOnError()
     @ApiOperation({ summary: "Complete a registration" })
     async register(@Req() req: Request, @Res({ passthrough: true }) res: Response, @Body() input: BaseUserInput) {
         /**

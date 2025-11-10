@@ -1,4 +1,4 @@
-import { Controller, Get, Logger, Req, Res } from "@nestjs/common";
+import { Controller, Get, Logger, Req, Res, UseFilters } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { NoCors } from "../util/NoCors.decorator";
@@ -9,6 +9,11 @@ import { PromptRedirectService } from "../backend-services/x-prompt-redirect.ser
 import { RequestExtractService } from "../backend-services/x-request-extract.service";
 import { LoginRedirectService } from "../backend-services/x-login-redirect.service";
 import { ActiveLoginService } from "../model/services/active-login.service";
+import { RedirectOnOAuthErrorFilter } from "../errors/redirect-on-oauth-error.filter";
+import { RedirectOnAuthErrorFilter } from "../errors/redirect-on-auth-error.filter";
+import { RedirectOnAnyErrorFilter } from "../errors/redirect-on-any-error.filter";
+import { RedirectOnError } from "../errors/redirect-on-error.decorator";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 
 /**
  * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
@@ -38,7 +43,7 @@ export class AuthorizeController {
      *
      */
     @Get("authorize")
-    @NoCors()
+    @RedirectOnError()
     @ApiOperation({ summary: "Authorize OAuth endpoint" })
     @ApiQuery({ name: "client_id", type: String, description: "The id of the client to initiate" })
     @ApiQuery({
@@ -79,6 +84,9 @@ export class AuthorizeController {
          * Init flow
          */
         await this.flowInitService.use(req, res);
+
+        const t = true;
+        if (t) throw new Error("something went super wrong");
 
         /**
          * Start Auth Flow

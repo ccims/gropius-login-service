@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { RefreshTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { OauthTokenResponse } from "../api-oauth/types";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";

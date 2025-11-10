@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { OAuthAuthorizeRequest } from "../api-oauth/types";
 import { TokenScope, TokenService } from "./token.service";
 import { EncryptionService } from "./encryption.service";

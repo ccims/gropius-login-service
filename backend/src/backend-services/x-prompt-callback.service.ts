@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import * as Joi from "joi";
-import { OAuthHttpException } from "../api-oauth/OAuthHttpException";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 
 const schema = Joi.object({
     flow: Joi.string(),

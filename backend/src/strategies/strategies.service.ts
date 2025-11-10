@@ -6,8 +6,8 @@ import { StrategyInstanceService } from "src/model/services/strategy-instance.se
 import { PerformAuthFunctionService } from "./perform-auth-function.service";
 import { StrategiesService as StrategiesRepository } from "../model/services/strategies.service";
 import { Strategy } from "./Strategy";
-import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
-import { AuthException } from "src/api-internal/AuthException";
+import { OAuthHttpException } from "src/errors/OAuthHttpException";
+import { AuthException } from "src/errors/AuthException";
 import { Context, FlowState } from "../util/Context";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { compareTimeSafe } from "../util/utils";

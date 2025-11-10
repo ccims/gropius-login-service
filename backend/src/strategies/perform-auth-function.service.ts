@@ -6,8 +6,8 @@ import { ActiveLoginService } from "src/model/services/active-login.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { AuthResult, FlowType } from "./AuthResult";
 import { Strategy } from "./Strategy";
-import { OAuthHttpException } from "src/api-oauth/OAuthHttpException";
-import { AuthException } from "src/api-internal/AuthException";
+import { OAuthHttpException } from "src/errors/OAuthHttpException";
+import { AuthException } from "src/errors/AuthException";
 import { Context } from "../util/Context";
 
 /**

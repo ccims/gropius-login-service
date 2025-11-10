@@ -5,8 +5,6 @@ import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
 import session = require("cookie-session");
-import { CatchOAuthErrorFilter } from "./api-oauth/catch-oauth-error.filter";
-import { CatchAuthErrorFilter } from "./api-internal/catch-auth-error.filter";
 import { NextFunction, Request, Response } from "express";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
@@ -91,8 +89,6 @@ async function bootstrap() {
 
         next();
     });
-
-    app.useGlobalFilters(new CatchOAuthErrorFilter(), new CatchAuthErrorFilter());
 
     await app.listen(portNumber);
 }
