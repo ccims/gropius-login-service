@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param, Post, Req, Res, UseFilters } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Param, Post, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
 import { AuthFunctionInput } from "./types";
@@ -9,7 +9,6 @@ import { AuthClientService } from "../model/services/auth-client.service";
 import { NoCors } from "../util/NoCors.decorator";
 import { DefaultReturn } from "../util/default-return.dto";
 import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
-import { ActiveLoginService } from "../model/services/active-login.service";
 import { ContextInitService } from "../backend-services/x-context-init.service";
 import { AuthCSRFService } from "../backend-services/x-auth-csrf.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
@@ -26,13 +25,6 @@ import { FlowStateService } from "../backend-services/x-flow-state.service";
 import { FlowState } from "../util/Context";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 
-/**
- * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
- *
- * This includes:
- * - Authorize endpoint
- * - Redirect/Callback endpoint
- */
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
 export class AuthEndpointsController {
@@ -48,7 +40,6 @@ export class AuthEndpointsController {
         private readonly strategiesService: StrategiesService,
         private readonly flowViaService: FlowViaService,
         private readonly registerCallbackService: RegisterCallbackService,
-        private readonly codeService: CodeRedirectService,
         private readonly promptRedirectService: PromptRedirectService,
         private readonly authUserService: AuthUserService,
         private readonly registerRedirectService: RegisterRedirectService,
@@ -60,9 +51,6 @@ export class AuthEndpointsController {
     /**
      * Authorize endpoint for strategy instance of the given id.
      * Functionality performed is determined by mode parameter.
-     *
-     * For defined behaviour of the authorize endpoint see {@link https://www.rfc-editor.org/rfc/rfc6749}
-     *
      */
     @Post("redirect/:id/:mode")
     @NoCors()
@@ -137,7 +125,7 @@ export class AuthEndpointsController {
         /**
          * Auth Flow with Login
          */
-        if (req.context.flow.isAuthFlow() && req.context.flow.viaLogin()) {
+        if (req.context.flow.isOAuthFlow() && req.context.flow.viaLogin()) {
             /**
              * Authentication
              */
@@ -156,13 +144,13 @@ export class AuthEndpointsController {
              * Authorization Code
              */
             this.logger.log("Generating authorization code and redirecting to client");
-            return this.codeService.use(req, res);
+            return this.codeRedirectService.use(req, res);
         }
 
         /**
          * Auth Flow with Registration
          */
-        if (req.context.flow.isAuthFlow() && req.context.flow.viaRegister()) {
+        if (req.context.flow.isOAuthFlow() && req.context.flow.viaRegister()) {
             /**
              * Register Redirect
              */
@@ -222,7 +210,7 @@ export class AuthEndpointsController {
         /**
          * Auth Flow with Login
          */
-        if (req.context.flow.isAuthFlow() && req.context.flow.viaLogin()) {
+        if (req.context.flow.isOAuthFlow() && req.context.flow.viaLogin()) {
             /**
              * Authentication
              */
@@ -241,13 +229,13 @@ export class AuthEndpointsController {
              * Authorization Code
              */
             this.logger.log("Generating authorization code and redirecting to client");
-            return this.codeService.use(req, res);
+            return this.codeRedirectService.use(req, res);
         }
 
         /**
          * Auth Flow with Registration
          */
-        if (req.context.flow.isAuthFlow() && req.context.flow.viaRegister()) {
+        if (req.context.flow.isOAuthFlow() && req.context.flow.viaRegister()) {
             /**
              * Register Redirect
              */
@@ -269,7 +257,7 @@ export class AuthEndpointsController {
 
     @Get("csrf")
     @NoCors()
-    @ApiOperation({ summary: "Endpoint to access the CSRF token" })
+    @ApiOperation({ summary: "Endpoint to access the session-bound CSRF token" })
     async csrfToken(
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
@@ -285,7 +273,7 @@ export class AuthEndpointsController {
 
     @Get("flow")
     @NoCors()
-    @ApiOperation({ summary: "Endpoint to access the flow data" })
+    @ApiOperation({ summary: "Endpoint to access the flow-bound CSRF token" })
     async flowData(
         @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
@@ -314,17 +302,21 @@ export class AuthEndpointsController {
         clientId: string;
         clientName: string;
     }> {
+        /**
+         * Init Context
+         */
         await this.contextInitService.use(req, res);
         req.context.flow.assert();
-
         if (!req.context.auth.isAuthenticated()) {
             throw new OAuthHttpException("access_denied", "The user is not authenticated");
         }
 
+        /**
+         * Response
+         */
         const request = req.context.flow.getRequest();
         const user = await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() });
         const client = await this.authClientService.findAuthClient(request.clientId);
-
         return {
             userId: req.context.auth.getUserId(),
             username: user.username,
@@ -383,7 +375,7 @@ export class AuthEndpointsController {
         await this.flowStateService.use(FlowState.REGISTER, req, res);
 
         /**
-         * Registration Callback
+         * Registration Callback (also links account in Link Flow)
          */
         await this.registerCallbackService.use(req, res);
 
@@ -398,7 +390,7 @@ export class AuthEndpointsController {
         /**
          * Auth Flow with Registration
          */
-        if (req.context.flow.isAuthFlow() && req.context.flow.viaRegister()) {
+        if (req.context.flow.isOAuthFlow() && req.context.flow.viaRegister()) {
             /**
              * Authentication
              */
@@ -417,7 +409,7 @@ export class AuthEndpointsController {
              * Authorization Code
              */
             this.logger.log("Generating authorization code and redirecting to client");
-            return this.codeService.use(req, res);
+            return this.codeRedirectService.use(req, res);
         }
 
         throw new Error("Endpoint is called in a wrong context");

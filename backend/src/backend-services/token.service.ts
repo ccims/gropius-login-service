@@ -92,15 +92,12 @@ export class TokenService {
             {
                 subject: activeLoginId,
                 expiresIn,
-                audience: process.env.GROPIUS_JWT_ISSUER,
             },
         );
     }
 
     async verifyAuthorizationCode(token: string, requiredClientId: string): Promise<AuthorizationCodeResult> {
-        const payload = await this.backendJwtService.verifyAsync(token, {
-            audience: process.env.GROPIUS_JWT_ISSUER,
-        });
+        const payload = await this.backendJwtService.verifyAsync(token);
 
         if (payload.kind !== "authorization_code") {
             throw new JsonWebTokenError("Token is not an authorization code");
@@ -142,7 +139,6 @@ export class TokenService {
                 subject: activeLoginId,
                 expiresIn,
                 jwtid: uniqueId.toString(),
-                audience: process.env.GROPIUS_JWT_ISSUER,
             },
         );
     }
@@ -175,9 +171,7 @@ export class TokenService {
     }
 
     async verifyRefreshToken(token: string, requiredClientId: string): Promise<RefreshTokenResult> {
-        const payload = await this.backendJwtService.verifyAsync(token, {
-            audience: process.env.GROPIUS_JWT_ISSUER,
-        });
+        const payload = await this.backendJwtService.verifyAsync(token);
 
         if (payload.kind !== "refresh_token") {
             throw new JsonWebTokenError("Token is not an refresh token");

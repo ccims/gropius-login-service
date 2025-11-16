@@ -42,7 +42,7 @@ export class PerformAuthFunctionService {
         return null;
     }
 
-    async createActiveLogin(
+    private async createActiveLogin(
         instance: StrategyInstance,
         data: object,
         loginData: UserLoginData,

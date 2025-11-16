@@ -71,8 +71,8 @@ export type ContextSession = {
         // expires at
         expires_at: number;
 
-        // strategy type
-        strategy_type?: string;
+        // strategy type name
+        strategy_type_name?: string;
 
         // flow type
         flow_type?: FlowType;
@@ -94,7 +94,7 @@ export type ContextSession = {
 /**
  * Persistent session-based authentication used, e.g., for permission prompts and silent authentication.
  * Session data is exposed to the client and MUST NOT contain sensitive information.
- * This session data MUST ONLY be used for an OAuth flow and not, e.g., to authenticate a user against a resource server.
+ * This session must be only used for flows.
  */
 export class Context {
     private readonly req: RequestWithContext;
@@ -106,17 +106,12 @@ export class Context {
         this.req = req as RequestWithContext;
         this.auth = new Auth(this, this.req);
         this.flow = new Flow(this, this.req);
-        this.init();
+        this.auth.init();
     }
 
     regenerate() {
         // @ts-ignore
         this.req.session = {};
-        this.init();
-        return this;
-    }
-
-    private init() {
         this.auth.init();
         return this;
     }
@@ -250,7 +245,7 @@ class Flow {
     }
 
     tryActiveLoginId() {
-        return this.req.session.flow.active_login_id;
+        return this.req.session.flow?.active_login_id;
     }
 
     getActiveLoginId() {
@@ -264,12 +259,12 @@ class Flow {
         return this;
     }
 
-    isAuthFlow() {
+    isOAuthFlow() {
         return !!this.tryRequest();
     }
 
     isLinkFlow() {
-        return !this.isAuthFlow();
+        return !this.isOAuthFlow();
     }
 
     setVia(via: "login" | "register") {
@@ -286,7 +281,7 @@ class Flow {
     }
 
     tryStrategyTypeName() {
-        return this.req.session.flow?.strategy_type;
+        return this.req.session.flow?.strategy_type_name;
     }
 
     getStrategyTypeName() {
@@ -296,7 +291,7 @@ class Flow {
     }
 
     setStrategy(strategy: Strategy) {
-        this.req.session.flow.strategy_type = strategy.typeName;
+        this.req.session.flow.strategy_type_name = strategy.typeName;
         return this;
     }
 

@@ -8,7 +8,7 @@ import { StrategiesService as StrategiesRepository } from "../model/services/str
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/errors/OAuthHttpException";
 import { AuthException } from "src/errors/AuthException";
-import { Context, FlowState } from "../util/Context";
+import { Context } from "../util/Context";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { compareTimeSafe } from "../util/utils";
 
@@ -71,10 +71,10 @@ export class StrategiesService implements NestMiddleware {
 
         if (strategy.needsRedirectFlow) {
             if (!compareTimeSafe(result.returnedState.csrf, req.context.auth.getCSRF()))
-                throw new Error("Invalid CSRF token provided");
+                throw new Error("Invalid session-bound CSRF token provided");
 
             if (!compareTimeSafe(result.returnedState.flow, req.context.flow.getId()))
-                throw new Error("Invalid flow id provided");
+                throw new Error("Invalid flow-bound CSRF token provided");
         }
 
         const authResult = result.result;
