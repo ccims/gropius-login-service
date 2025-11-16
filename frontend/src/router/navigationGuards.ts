@@ -9,6 +9,7 @@ export async function requiresAuth(
     const code = to.query.code;
     if (code) {
         await auth.exchangeToken(code.toString());
+        auth.removeCodeVerifier();
 
         const next = auth.getRedirectTo() ?? "/account";
         auth.removeRedirectTo();

@@ -8,6 +8,9 @@ import { AuthFunctionInput } from "../api-internal/types";
 export class FlowViaService {
     private readonly logger = new Logger(this.constructor.name);
 
+    /**
+     * Set the flow type and via based on the mode parameter
+     */
     async use(req: Request, res: Response) {
         switch (req.params.mode) {
             case AuthFunctionInput.REGISTER:

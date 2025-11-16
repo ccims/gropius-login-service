@@ -36,18 +36,14 @@ export class TokenExchangeRefreshTokenService {
          */
         const activeLoginAccess = await this.activeLoginAccessService.getAsserted(data.activeLoginAccessId);
 
-        const codeUniqueId = parseInt(data.tokenUniqueId, 10);
-        if (!isFinite(codeUniqueId) || codeUniqueId !== activeLoginAccess.refreshTokenCounter) {
-            this.logger.warn(
-                "Code is no longer valid as it was already used and a token was already generated.\n " +
-                    "Active login has been made invalid",
-                data.activeLoginAccessId,
-            );
-
-            //Make active login invalid if code/refresh token is reused
+        /**
+         * Check refresh token counter
+         */
+        if (parseInt(data.tokenUniqueId) !== activeLoginAccess.refreshTokenCounter) {
+            this.logger.warn("Refresh token counter does not match", data.activeLoginAccessId);
             activeLoginAccess.isValid = false;
             await this.activeLoginAccessService.save(activeLoginAccess);
-            throw new OAuthHttpException("invalid_grant", "Given code was likely reused. Login and codes invalidated");
+            throw new OAuthHttpException("invalid_grant", "Refresh token has been used already");
         }
 
         /**

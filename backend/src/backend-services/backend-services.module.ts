@@ -11,14 +11,14 @@ import { PromptRedirectService } from "./x-prompt-redirect.service";
 import { RequestExtractService } from "./x-request-extract.service";
 import { TokenExchangeAuthorizationCodeService } from "./x-token-exchange-authorization-code.service";
 import { TokenExchangeClientCredentialsService } from "./x-token-exchange-client-credentials.service";
-import { CSRFService } from "./x-csrf.service";
+import { AuthCSRFService } from "./x-auth-csrf.service";
 import { LoginRedirectService } from "./x-login-redirect.service";
 import { PromptCallbackService } from "./x-prompt-callback.service";
 import { FlowViaService } from "./x-flow-via.service";
 import { AuthUserService } from "./x-auth-user.service";
 import { RegisterRedirectService } from "./x-register-redirect.service";
 import { RegisterCallbackService } from "./x-register-callback.service";
-import { FlowMatchService } from "./x-flow-match.service";
+import { FlowCSRFService } from "./x-flow-csrf.service";
 import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-token.service";
 import { FlowStateService } from "./x-flow-state.service";
 
@@ -55,14 +55,14 @@ import { FlowStateService } from "./x-flow-state.service";
         RequestExtractService,
         TokenExchangeAuthorizationCodeService,
         TokenExchangeClientCredentialsService,
-        CSRFService,
+        AuthCSRFService,
         LoginRedirectService,
         PromptCallbackService,
         FlowViaService,
         AuthUserService,
         RegisterRedirectService,
         RegisterCallbackService,
-        FlowMatchService,
+        FlowCSRFService,
         TokenExchangeRefreshTokenService,
         FlowStateService,
     ],
@@ -77,14 +77,14 @@ import { FlowStateService } from "./x-flow-state.service";
         RequestExtractService,
         TokenExchangeAuthorizationCodeService,
         TokenExchangeClientCredentialsService,
-        CSRFService,
+        AuthCSRFService,
         LoginRedirectService,
         PromptCallbackService,
         FlowViaService,
         AuthUserService,
         RegisterRedirectService,
         RegisterCallbackService,
-        FlowMatchService,
+        FlowCSRFService,
         TokenExchangeRefreshTokenService,
         FlowStateService,
     ],

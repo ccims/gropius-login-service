@@ -1,6 +1,5 @@
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import router from "@/router";
 
 export type Token = {
     iat: number;
@@ -13,14 +12,6 @@ export interface TokenResponse {
     expires_in: number;
     refresh_token: string;
     scope: string;
-}
-
-export enum TokenScope {
-    LOGIN_SERVICE = "login",
-    LOGIN_SERVICE_REGISTER = "login-register",
-    BACKEND = "backend",
-    REFRESH_TOKEN = "token",
-    NONE = "none"
 }
 
 export interface PromptData {
@@ -72,7 +63,7 @@ export function removeResponse() {
     _refreshToken = undefined;
 }
 
-const LOCAL_STORAGE_REDIRECT_TO = constructKey("routerTo");
+const LOCAL_STORAGE_REDIRECT_TO = constructKey("redirectTo");
 
 export function setRedirectTo(from: string) {
     localStorage.setItem(LOCAL_STORAGE_REDIRECT_TO, from);
@@ -90,7 +81,7 @@ export async function loadToken(): Promise<string> {
     // Current access token
     let token = getAccessToken();
 
-    // Check if access token expires soon
+    // Return not expired access token
     if (token) {
         const decoded = jwtDecode(token) as Token;
         const now = Math.floor(Date.now() / 1000);
@@ -99,10 +90,10 @@ export async function loadToken(): Promise<string> {
         if (!expired) return token;
     }
 
-    // Refresh token
+    // Refresh access token using refresh token
     await refreshToken();
 
-    // Renewed access token
+    // Return renewed access token
     token = getAccessToken();
     if (!token) throw new Error("No access token after refresh");
     return token;
@@ -125,7 +116,6 @@ export async function exchangeToken(code: string) {
     });
 
     setResponse(data);
-    removeCodeVerifier();
 }
 
 export async function refreshToken() {

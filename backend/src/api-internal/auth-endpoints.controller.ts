@@ -11,7 +11,7 @@ import { DefaultReturn } from "../util/default-return.dto";
 import { BaseUserInput } from "../api-login/auth/dto/user-inputs.dto";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { ContextInitService } from "../backend-services/x-context-init.service";
-import { CSRFService } from "../backend-services/x-csrf.service";
+import { AuthCSRFService } from "../backend-services/x-auth-csrf.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
 import { PromptCallbackService } from "../backend-services/x-prompt-callback.service";
 import { StrategiesService } from "../strategies/strategies.service";
@@ -20,12 +20,10 @@ import { RegisterCallbackService } from "../backend-services/x-register-callback
 import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
 import { AuthUserService } from "../backend-services/x-auth-user.service";
 import { RegisterRedirectService } from "../backend-services/x-register-redirect.service";
-import { FlowMatchService } from "../backend-services/x-flow-match.service";
+import { FlowCSRFService } from "../backend-services/x-flow-csrf.service";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 import { FlowStateService } from "../backend-services/x-flow-state.service";
 import { FlowState } from "../util/Context";
-import { RedirectOnOAuthErrorFilter } from "../errors/redirect-on-oauth-error.filter";
-import { RedirectOnAuthErrorFilter } from "../errors/redirect-on-auth-error.filter";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 
 /**
@@ -43,9 +41,8 @@ export class AuthEndpointsController {
     constructor(
         private readonly userService: LoginUserService,
         private readonly authClientService: AuthClientService,
-        private readonly activeLoginService: ActiveLoginService,
         private readonly contextInitService: ContextInitService,
-        private readonly csrfService: CSRFService,
+        private readonly authCSRFService: AuthCSRFService,
         private readonly codeRedirectService: CodeRedirectService,
         private readonly promptCallbackService: PromptCallbackService,
         private readonly strategiesService: StrategiesService,
@@ -55,7 +52,7 @@ export class AuthEndpointsController {
         private readonly promptRedirectService: PromptRedirectService,
         private readonly authUserService: AuthUserService,
         private readonly registerRedirectService: RegisterRedirectService,
-        private readonly flowMatchService: FlowMatchService,
+        private readonly flowCSRFService: FlowCSRFService,
         private readonly activeLoginAccessService: ActiveLoginAccessService,
         private readonly flowStateService: FlowStateService,
     ) {}
@@ -88,20 +85,19 @@ export class AuthEndpointsController {
          * Init Context and start Link Flow if required
          */
         await this.contextInitService.use(req, res);
-        await this.csrfService.use(req, res);
+        await this.authCSRFService.use(req, res);
         if (req.context.flow.exists()) {
             // Restart Link Flow
             if (req.context.flow.isLinkFlow()) {
-                req.context.flow.drop();
-                req.context.flow.init();
+                req.context.flow.start();
             } else {
                 // Match existing Flow
-                await this.flowMatchService.use(req, res);
+                await this.flowCSRFService.use(req, res);
                 await this.flowStateService.use(FlowState.LOGIN, req, res);
             }
         } else {
             // Start Link Flow
-            req.context.flow.init();
+            req.context.flow.start();
         }
         await this.flowViaService.use(req, res);
 
@@ -202,20 +198,19 @@ export class AuthEndpointsController {
          * Init Context and start Link Flow if required
          */
         await this.contextInitService.use(req, res);
-        await this.csrfService.use(req, res);
+        await this.authCSRFService.use(req, res);
         if (req.context.flow.exists()) {
             // Restart Link Flow
             if (req.context.flow.isLinkFlow()) {
-                req.context.flow.drop();
-                req.context.flow.init();
+                req.context.flow.start();
             } else {
                 // Match existing Flow
-                await this.flowMatchService.use(req, res);
+                await this.flowCSRFService.use(req, res);
                 await this.flowStateService.use(FlowState.LOGIN, req, res);
             }
         } else {
             // Create new Link Flow
-            req.context.flow.init();
+            req.context.flow.start();
         }
         await this.flowViaService.use(req, res);
 
@@ -355,9 +350,9 @@ export class AuthEndpointsController {
          * Init Context
          */
         await this.contextInitService.use(req, res);
-        await this.csrfService.use(req, res);
+        await this.authCSRFService.use(req, res);
         req.context.flow.assert();
-        await this.flowMatchService.use(req, res);
+        await this.flowCSRFService.use(req, res);
         await this.flowStateService.use(FlowState.PROMPT, req, res);
         if (!req.context.auth.isAuthenticated()) throw new Error("User not authenticated");
         if (!req.context.flow.tryActiveLoginId()) throw new Error("No active login id in flow");
@@ -382,9 +377,9 @@ export class AuthEndpointsController {
          * Init Context
          */
         await this.contextInitService.use(req, res);
-        await this.csrfService.use(req, res);
+        await this.authCSRFService.use(req, res);
         req.context.flow.assert();
-        await this.flowMatchService.use(req, res);
+        await this.flowCSRFService.use(req, res);
         await this.flowStateService.use(FlowState.REGISTER, req, res);
 
         /**
@@ -396,7 +391,7 @@ export class AuthEndpointsController {
          * Link Flow
          */
         if (req.context.flow.isLinkFlow()) {
-            req.context.flow.drop();
+            req.context.flow.end();
             return res.redirect(`/auth/flow/account`);
         }
 
@@ -433,7 +428,7 @@ export class AuthEndpointsController {
     @ApiOperation({ summary: "Logout current session" })
     async logoutCurrent(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         await this.contextInitService.use(req, res);
-        await this.csrfService.use(req, res);
+        await this.authCSRFService.use(req, res);
 
         await this.activeLoginAccessService.deleteByActiveLoginId(req.context.auth.getActiveLoginId());
 
@@ -446,7 +441,7 @@ export class AuthEndpointsController {
     @ApiOperation({ summary: "Logout everywhere" })
     async logoutEverywhere(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         await this.contextInitService.use(req, res);
-        await this.csrfService.use(req, res);
+        await this.authCSRFService.use(req, res);
 
         const user = await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() });
         if (!user) throw new Error("Did not found user");

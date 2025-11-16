@@ -29,6 +29,9 @@ export class RegisterCallbackService implements NestMiddleware {
         private readonly activeLoginService: ActiveLoginService,
     ) {}
 
+    /**
+     * Register new user
+     */
     async use(req: Request, res: Response) {
         // Validate input data
         const data: Data = await schema.validateAsync(req.body);
@@ -40,7 +43,8 @@ export class RegisterCallbackService implements NestMiddleware {
         if (!loginData) throw new Error("Login data not found for active login");
 
         // Check if username is still available
-        if ((await this.userService.countBy({ username: data.username })) > 0) {
+        const usernameCollisions = await this.userService.countBy({ username: data.username });
+        if (usernameCollisions > 0) {
             throw new HttpException("Username is not available anymore", HttpStatus.BAD_REQUEST);
         }
 
@@ -49,6 +53,7 @@ export class RegisterCallbackService implements NestMiddleware {
             ? await this.userService.findOneByOrFail({ id: req.context.auth.getUserId() })
             : await this.backendUserService.createNewUser(data, false);
 
+        // Link accounts
         await this.backendUserService.linkAccountToUser(user, loginData);
     }
 }

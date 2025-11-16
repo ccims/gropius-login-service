@@ -15,6 +15,7 @@ export class TokenExchangeClientCredentialsService {
         if (!client.requiresSecret) {
             throw new OAuthHttpException("invalid_client", "Client does not support client credentials flow");
         }
+
         const scope = req.body.scope?.split(" ") ?? client.validScopes;
         for (const requestedScope of scope) {
             if (!client.validScopes.includes(requestedScope)) {

@@ -18,6 +18,9 @@ type Data = {
 export class PromptCallbackService {
     private readonly logger = new Logger(this.constructor.name);
 
+    /**
+     * Handle prompt consent
+     */
     async use(req: Request, res: Response) {
         // Validate input data
         const data: Data = await schema.validateAsync(req.body);

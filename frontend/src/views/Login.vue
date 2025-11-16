@@ -78,7 +78,7 @@
             </v-dialog>
 
             <v-form ref="redirectForm" :action="redirectAction" method="POST" style="display: none">
-                <input type="hidden" name="csrf" :value="csrf" />
+                <input type="hidden" name="csrf" :value="csrf" hidden />
                 <input type="hidden" name="flow" :value="flow" hidden />
             </v-form>
         </template>

@@ -144,9 +144,6 @@ class Auth {
     }
 
     setExpiration(date: number) {
-        // Authenticated session does not expire (but its ActiveLogin might)
-        if (this.isAuthenticated()) return this;
-
         this.req.session.expires_at = date;
         return this;
     }
@@ -201,11 +198,13 @@ class Flow {
         return this;
     }
 
-    init() {
+    start() {
         const iat = now();
         const eat = iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS);
 
-        this.context.auth.setExpiration(eat);
+        if (!this.context.auth.isAuthenticated()) {
+            this.context.auth.setExpiration(eat);
+        }
 
         this.req.session.flow = {
             flow_id: uuidv4(),
@@ -216,7 +215,7 @@ class Flow {
         return this;
     }
 
-    drop() {
+    end() {
         this.req.session.flow = undefined;
         return this;
     }

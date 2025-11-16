@@ -54,8 +54,8 @@ export class UpdateActionController {
     async deleteAction(@Param("id") id: string, @Res({ passthrough: true }) res: Response) {
         const loginData = await this.getLoginData(id, res);
 
-        const found = await this.loginDataService.countBy({ user: { id: (await loginData.user).id } });
-        if (found == 1) {
+        const loginDataCount = await this.loginDataService.countBy({ user: { id: (await loginData.user).id } });
+        if (loginDataCount == 1) {
             throw new HttpException(`Can't delete the only login data of a user`, HttpStatus.BAD_REQUEST);
         }
 

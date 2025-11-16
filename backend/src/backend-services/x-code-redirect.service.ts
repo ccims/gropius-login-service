@@ -8,6 +8,9 @@ export class CodeRedirectService {
 
     constructor(private readonly tokenService: TokenService) {}
 
+    /**
+     * Redirect user to client with authorization code
+     */
     async use(req: Request, res: Response) {
         const request = req.context.flow.getRequest();
 
@@ -23,7 +26,7 @@ export class CodeRedirectService {
         url.searchParams.append("state", request.state ?? "");
 
         // Update flow
-        req.context.flow.drop();
+        req.context.flow.end();
 
         res.redirect(url.toString());
     }

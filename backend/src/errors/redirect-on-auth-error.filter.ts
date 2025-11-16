@@ -15,7 +15,9 @@ export class RedirectOnAuthErrorFilter implements ExceptionFilter {
         const res = context.getResponse<Response>();
 
         const target = req.context.flow.isLinkFlow() ? "register-additional" : "login";
-        const url = `auth/flow/${target}?error=${encodeURIComponent(error.authErrorMessage)}&strategy_instance=${encodeURIComponent(error.strategyInstanceId)}`;
-        res.redirect(combineURL(url, process.env.GROPIUS_ENDPOINT).toString());
+        const url = combineURL(`auth/flow/${target}`, process.env.GROPIUS_ENDPOINT);
+        url.searchParams.append("error", error.authErrorMessage);
+        url.searchParams.append("strategy_instance", error.strategyInstanceId);
+        res.redirect(url.toString());
     }
 }

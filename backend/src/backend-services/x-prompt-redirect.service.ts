@@ -10,11 +10,25 @@ export class PromptRedirectService {
 
     constructor(private readonly authClientService: AuthClientService) {}
 
+    /**
+     * Check if we need to prompt the user for consent
+     */
     async if(req: Request, res: Response) {
         const client = await this.authClientService.findAuthClient(req.context.flow.getRequest().clientId);
-        return !(client.isInternal || req.context.flow.didConsent());
+
+        // Do not prompt for internal clients
+        if (client.isInternal) return false;
+
+        // Do not prompt if already prompted
+        if (req.context.flow.didConsent()) return false;
+
+        // Otherwise, prompt
+        return true;
     }
 
+    /**
+     * Redirect user to prompt page
+     */
     async use(req: Request, res: Response) {
         req.context.flow.setState(FlowState.PROMPT);
         return res.redirect(combineURL(`auth/flow/prompt`, process.env.GROPIUS_ENDPOINT).toString());

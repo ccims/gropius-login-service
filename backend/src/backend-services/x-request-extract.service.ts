@@ -61,6 +61,7 @@ export class RequestExtractService {
         if (!request.codeChallenge) {
             throw new OAuthHttpException("invalid_request", "Code challenge required");
         }
+
         return request;
     }
 }

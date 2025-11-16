@@ -23,8 +23,8 @@
 
                     <v-text-field v-model="email" name="email" v-bind="emailProps" label="Email" class="mb-1" />
 
-                    <input type="hidden" name="csrf" :value="csrf" />
-                    <input type="hidden" name="flow" :value="flow" />
+                    <input type="hidden" name="csrf" :value="csrf" hidden />
+                    <input type="hidden" name="flow" :value="flow" hidden />
 
                     <v-card-actions>
                         <v-spacer />

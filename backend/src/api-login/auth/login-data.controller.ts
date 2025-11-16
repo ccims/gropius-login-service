@@ -37,7 +37,7 @@ export class LoginDataController {
      *
      * @param id The uuid string of the existing user to get the loginData for or 'self'
      * @param res The response object containing the request state
-     * @returns If user exits, login data for the user with the specified id
+     * @returns If user exists, login data for the user with the specified id
      */
     @Get(":id")
     @ApiOperation({ summary: "Get a loginData by id" })

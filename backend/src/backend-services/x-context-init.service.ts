@@ -17,48 +17,44 @@ export class ContextInitService {
         private readonly authClientService: AuthClientService,
     ) {}
 
+    /**
+     * Init context
+     */
     async use(req: Request, res: Response) {
         // Init flow session
         req.context = new Context(req);
 
         try {
-            // Check if auth expired
-            if (req.context.auth.isExpired()) throw new Error("Auth expired");
+            // Check auth expiration
+            if (req.context.auth.isExpired()) throw new Error("Auth context expired");
 
-            // Check if revoked
+            // Check authentication
             if (req.context.auth.isAuthenticated()) {
                 const loginUser = await this.loginUserService.findOneByOrFail({ id: req.context.auth.getUserId() });
                 if (!loginUser) throw new Error("Login user not found");
 
+                // Check if revoked
                 const revokedAt = loginUser.revokeTokensBefore;
                 if (revokedAt && now() > revokedAt.getTime()) throw new Error("Login user revoked tokens");
 
-                // Check active login exists
+                // Check active login
                 const activeLogin = await this.activeLoginService.findOneByOrFail({
                     id: req.context.auth.getActiveLoginId(),
                 });
-
-                // Check if active login is valid
                 if (!activeLogin.isValid) throw new Error("Active login invalid");
-
-                // Check if active login expired
                 if (activeLogin.isExpired) throw new Error("Active login expired");
-
-                // Extend active login expiration
                 await this.activeLoginService.extendExpiration(activeLogin);
 
-                // Check if login data exists
+                // Check login data
                 const loginData = await activeLogin.loginInstanceFor;
                 if (!loginData) throw new Error("Login data not found");
-
-                // Check if login data valid
                 if (loginData.state !== LoginState.VALID) throw new Error("Login data not in valid state");
             }
 
             // Check flow if exists
             if (req.context.flow.exists()) {
-                // Check if flow expired
-                if (req.context.flow.isExpired()) req.context.flow.drop();
+                // Check if flow expired (do not throw but silently end)
+                if (req.context.flow.isExpired()) req.context.flow.end();
 
                 // Check active login
                 const activeLoginId = req.context.flow.tryActiveLoginId();
@@ -67,15 +63,9 @@ export class ContextInitService {
                     const activeLogin = await this.activeLoginService.findOneByOrFail({
                         id: req.context.flow.getActiveLoginId(),
                     });
-
-                    // Check if active login is valid
                     if (!activeLogin.isValid) throw new Error("Active login invalid");
-
-                    // Check if active login expired
                     if (activeLogin.isExpired) throw new Error("Active login expired");
-
-                    // Extend active login expiration
-                    await this.activeLoginService.extendExpiration(activeLogin);
+                    // Do not extend expiration here since the flow has a fixed expiration
 
                     // Check if login data exists
                     const loginData = await activeLogin.loginInstanceFor;

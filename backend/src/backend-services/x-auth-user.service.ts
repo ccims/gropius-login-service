@@ -10,6 +10,9 @@ export class AuthUserService {
 
     constructor(private readonly activeLoginService: ActiveLoginService) {}
 
+    /**
+     * Persist authenticated user from the flow into the auth context
+     */
     async use(req: Request, res: Response) {
         const activeLogin = await this.activeLoginService.findOneByOrFail({
             id: req.context.flow.getActiveLoginId(),

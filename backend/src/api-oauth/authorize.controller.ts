@@ -1,7 +1,6 @@
-import { Controller, Get, Logger, Req, Res, UseFilters } from "@nestjs/common";
+import { Controller, Get, Logger, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { OpenApiTag } from "src/util/openapi-tag";
-import { NoCors } from "../util/NoCors.decorator";
 import { Request, Response } from "express";
 import { ContextInitService } from "../backend-services/x-context-init.service";
 import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
@@ -9,19 +8,8 @@ import { PromptRedirectService } from "../backend-services/x-prompt-redirect.ser
 import { RequestExtractService } from "../backend-services/x-request-extract.service";
 import { LoginRedirectService } from "../backend-services/x-login-redirect.service";
 import { ActiveLoginService } from "../model/services/active-login.service";
-import { RedirectOnOAuthErrorFilter } from "../errors/redirect-on-oauth-error.filter";
-import { RedirectOnAuthErrorFilter } from "../errors/redirect-on-auth-error.filter";
-import { RedirectOnAnyErrorFilter } from "../errors/redirect-on-any-error.filter";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
 
-/**
- * Controller for the openapi generator to find the oauth server routes that are handled exclusively in middleware.
- *
- * This includes:
- * - Authorize endpoint
- * - Redirect/Callback endpoint
- */
 @Controller()
 export class AuthorizeController {
     private readonly logger = new Logger(this.constructor.name);
@@ -85,14 +73,11 @@ export class AuthorizeController {
          */
         await this.flowInitService.use(req, res);
 
-        const t = true;
-        if (t) throw new Error("something went super wrong");
-
         /**
          * Start Auth Flow
          */
         const request = await this.requestExtractService.use(req, res);
-        req.context.flow.init();
+        req.context.flow.start();
         req.context.flow.setRequest(request);
 
         /**
