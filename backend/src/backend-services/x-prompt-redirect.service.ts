@@ -16,11 +16,11 @@ export class PromptRedirectService {
     async if(req: Request, res: Response) {
         const client = await this.authClientService.findAuthClient(req.context.flow.getRequest().clientId);
 
-        // Do not prompt for internal clients
-        if (client.isInternal) return false;
-
         // Do not prompt if already prompted
         if (req.context.flow.didConsent()) return false;
+
+        // Do not prompt for internal clients
+        if (client.isInternal) return false;
 
         // Otherwise, prompt
         return true;
