@@ -4,8 +4,7 @@ import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthResult, AuthStateData, AuthStateServerData } from "./AuthResult";
-import { OAuthAuthorizeRequest } from "src/api-oauth/types";
+import { AuthResult } from "./AuthResult";
 import { Schema } from "jtd";
 import { Context } from "../util/Context";
 
@@ -23,8 +22,13 @@ export interface StrategyUpdateAction {
 }
 
 export interface PerformAuthState {
+    // token kind; must be "passport_state"
     kind?: string;
+
+    // session-bound CSRF token
     csrf?: string;
+
+    // flow-bound CSRF token
     flow?: string;
 }
 

@@ -1,13 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
-import { RefreshTokenResult, TokenScope, TokenService } from "src/backend-services/token.service";
+import { RefreshTokenResult, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "../errors/OAuthHttpException";
-import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
+import { LoginState } from "src/model/postgres/UserLoginData.entity";
 import { OauthTokenResponse } from "../api-oauth/types";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
-import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 
 @Injectable()
 export class TokenExchangeRefreshTokenService {
@@ -18,6 +17,9 @@ export class TokenExchangeRefreshTokenService {
         private readonly activeLoginAccessService: ActiveLoginAccessService,
     ) {}
 
+    /**
+     * Exchange refresh token for access token
+     */
     async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         /**
          * Refresh Token
@@ -28,13 +30,14 @@ export class TokenExchangeRefreshTokenService {
             data = await this.tokenService.verifyRefreshToken(token, client.id);
         } catch (err: any) {
             this.logger.warn(err);
-            this.throwGenericCodeError();
+            throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
         }
 
         /**
          * ActiveLoginAccess
          */
-        const activeLoginAccess = await this.activeLoginAccessService.getAsserted(data.activeLoginAccessId);
+        const activeLoginAccess = await this.activeLoginAccessService.findOneByOrFail({ id: data.activeLoginAccessId });
+        activeLoginAccess.assert();
 
         /**
          * Check refresh token counter
@@ -80,33 +83,19 @@ export class TokenExchangeRefreshTokenService {
         }
 
         /**
-         * Access Token
+         * Response
          */
-        return await this.createAccessToken(loginData, activeLoginAccess, client, data.scope);
-    }
-
-    private throwGenericCodeError() {
-        throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
-    }
-
-    private async createAccessToken(
-        loginData: UserLoginData,
-        activeLoginAccess: ActiveLoginAccess,
-        currentClient: AuthClient,
-        scope: TokenScope[],
-    ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
-
-        const accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
+        const accessToken = await this.tokenService.signAccessToken(await loginData.user, data.scope, tokenExpiresInMs);
 
         activeLoginAccess.refreshTokenCounter++;
         await this.activeLoginAccessService.save(activeLoginAccess);
 
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,
-            currentClient.id,
+            client.id,
             activeLoginAccess.refreshTokenCounter,
-            scope,
+            data.scope,
         );
 
         return {
@@ -114,7 +103,7 @@ export class TokenExchangeRefreshTokenService {
             token_type: "bearer",
             expires_in: Math.floor(tokenExpiresInMs / 1000),
             refresh_token: refreshToken,
-            scope: scope.join(" "),
+            scope: data.scope.join(" "),
         };
     }
 }

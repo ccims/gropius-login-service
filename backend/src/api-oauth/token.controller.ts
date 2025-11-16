@@ -75,7 +75,7 @@ export class TokenController {
         if (!client.isValid) return;
         if (!client.requiresSecret) return client;
 
-        const authenticated = client.verifySecret(clientSecret);
+        const authenticated = await client.verifySecret(clientSecret);
         if (authenticated) return client;
     }
 }

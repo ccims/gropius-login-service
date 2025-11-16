@@ -96,7 +96,6 @@ export class AuthClient {
     clientCredentialFlowUser: Promise<LoginUser | null>;
 
     /**
-     * If this client is internal.
      * Internal clients are immutable, i.e., cannot be changed or deleted.
      */
     isInternal: boolean = false;

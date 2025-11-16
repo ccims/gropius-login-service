@@ -75,7 +75,7 @@ async function bootstrap() {
             sameSite: "lax",
             // expects HTTPS and, hence, the proxy itself must forward the protocol etc correctly and the upstream must trust the proxy
             secure: config.get<boolean>("GROPIUS_LOGIN_COOKIE_SECURE"),
-            // no need to set "domain" since the default is already the most restrictive
+            // no need to set "domain" since the default is already the most restrictive (in fact more restrictive than setting "domain" to the current domain)
         }),
     );
 

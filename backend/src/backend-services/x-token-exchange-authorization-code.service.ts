@@ -1,13 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
-import { AuthorizationCodeResult, TokenScope, TokenService } from "src/backend-services/token.service";
+import { AuthorizationCodeResult, TokenService } from "src/backend-services/token.service";
 import { AuthClient } from "src/model/postgres/AuthClient.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { EncryptionService } from "./encryption.service";
-import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-
+import { LoginState } from "src/model/postgres/UserLoginData.entity";
 import { OauthTokenResponse } from "../api-oauth/types";
 import { compareTimeSafe, hash } from "../util/utils";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
@@ -23,6 +21,9 @@ export class TokenExchangeAuthorizationCodeService {
         private readonly activeLoginAccessService: ActiveLoginAccessService,
     ) {}
 
+    /**
+     * Exchange authorization code for access token
+     */
     async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         /**
          * Authorization Code
@@ -39,14 +40,15 @@ export class TokenExchangeAuthorizationCodeService {
         /**
          * Active Login
          */
-        const activeLogin = await this.activeLoginService.getValid(data.activeLoginId);
+        const activeLogin = await this.activeLoginService.findOneByOrFail({ id: data.activeLoginId });
+        activeLogin.assert();
         await this.activeLoginService.extendExpiration(activeLogin);
 
         /**
-         * Check if auth code has been used
+         * Check if auth code has been already used
          */
-        const activeLoginAccess = await this.activeLoginAccessService.findOneBy({ authCodeFingerprint: hash(token) });
-        if (activeLoginAccess) throw new Error("Authorization code has already been used");
+        const existingAccess = await this.activeLoginAccessService.findOneBy({ authCodeFingerprint: hash(token) });
+        if (existingAccess) throw new Error("Authorization code has already been used");
 
         /**
          * Code Challenge
@@ -97,31 +99,19 @@ export class TokenExchangeAuthorizationCodeService {
         }
 
         /**
-         * Access Token
+         * Response
          */
-        return await this.createAccessToken(loginData, activeLogin, client, data.scope, token);
-    }
-
-    private async createAccessToken(
-        loginData: UserLoginData,
-        activeLogin: ActiveLogin,
-        currentClient: AuthClient,
-        scope: TokenScope[],
-        authCode: string,
-    ): Promise<OauthTokenResponse> {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
-
-        const accessToken = await this.tokenService.signAccessToken(await loginData.user, scope, tokenExpiresInMs);
+        const accessToken = await this.tokenService.signAccessToken(user, data.scope, tokenExpiresInMs);
 
         const activeLoginAccess = await this.activeLoginAccessService.save(
-            new ActiveLoginAccess(activeLogin, hash(authCode), 1),
+            new ActiveLoginAccess(activeLogin, hash(token), 1),
         );
-
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,
-            currentClient.id,
+            client.id,
             activeLoginAccess.refreshTokenCounter,
-            scope,
+            data.scope,
         );
 
         return {
@@ -129,7 +119,7 @@ export class TokenExchangeAuthorizationCodeService {
             token_type: "bearer",
             expires_in: Math.floor(tokenExpiresInMs / 1000),
             refresh_token: refreshToken,
-            scope: scope.join(" "),
+            scope: data.scope.join(" "),
         };
     }
 }

@@ -154,6 +154,10 @@ export class GithubStrategyService extends StrategyUsingPassport {
         };
     }
 
+    /**
+     * Scopes to use.
+     * Please note that "user:email" only returns an email if the user has a public verified email at his GitHub profile
+     */
     protected override getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
         context: Context | undefined,

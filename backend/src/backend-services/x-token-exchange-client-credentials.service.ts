@@ -11,6 +11,9 @@ export class TokenExchangeClientCredentialsService {
 
     constructor(private readonly tokenService: TokenService) {}
 
+    /**
+     * Exchange client credentials for access token
+     */
     async use(req: Request, res: Response, client: AuthClient): Promise<OauthTokenResponse> {
         if (!client.requiresSecret) {
             throw new OAuthHttpException("invalid_client", "Client does not support client credentials flow");

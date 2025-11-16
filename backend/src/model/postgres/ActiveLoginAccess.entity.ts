@@ -33,16 +33,7 @@ export class ActiveLoginAccess {
     authCodeFingerprint: string;
 
     /**
-     * The numeric identifier of the last refresh token given out (the next one expected).
-     *
-     * **ONLY** the token with this id should be accepted as refresh token for this login event.
-     * If a **valid** token with an **older** id is used, this login event should be made invalid,
-     * as it is a reuse of the refresh token, which likely means it has been abused.
-     *
-     * For a new instance this starts at LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIEVED=-1 and
-     * gets incremented once the first refresh token is created.
-     *
-     * @example 0
+     * Counter to track issued refresh tokens.
      */
     @Column({
         default: 0,

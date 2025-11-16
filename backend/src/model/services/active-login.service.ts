@@ -11,12 +11,6 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
         super(ActiveLogin, dataSource.createEntityManager());
     }
 
-    async getValid(id: string): Promise<ActiveLogin> {
-        const activeLogin = await this.findOneByOrFail({ id });
-        activeLogin.assert();
-        return activeLogin;
-    }
-
     async extendExpiration(activeLogin: ActiveLogin): Promise<ActiveLogin> {
         activeLogin.extendExpiration();
         return this.save(activeLogin);

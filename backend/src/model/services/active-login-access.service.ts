@@ -8,12 +8,6 @@ export class ActiveLoginAccessService extends Repository<ActiveLoginAccess> {
         super(ActiveLoginAccess, dataSource.createEntityManager());
     }
 
-    async getAsserted(id: string): Promise<ActiveLoginAccess> {
-        const access = await this.findOneByOrFail({ id });
-        access.assert();
-        return access;
-    }
-
     async deleteByUserId(userId: string) {
         await this.createQueryBuilder()
             .delete()

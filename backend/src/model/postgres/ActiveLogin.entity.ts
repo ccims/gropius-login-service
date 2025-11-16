@@ -96,7 +96,7 @@ export class ActiveLogin {
     loginInstanceFor: Promise<UserLoginData | null>;
 
     get isExpired() {
-        return this.expires != null && this.expires <= new Date();
+        return this.expires <= new Date();
     }
 
     extendExpiration() {

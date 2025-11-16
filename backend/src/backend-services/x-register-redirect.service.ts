@@ -45,6 +45,9 @@ export class RegisterRedirectService {
         private readonly activeLoginService: ActiveLoginService,
     ) {}
 
+    /**
+     * Redirect user to register page with data suggestions
+     */
     async use(req: Request, res: Response) {
         const userLoginData = await (
             await this.activeLoginService.findOneByOrFail({

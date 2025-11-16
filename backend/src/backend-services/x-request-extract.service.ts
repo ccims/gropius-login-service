@@ -16,6 +16,9 @@ export class RequestExtractService {
         private readonly authClientService: AuthClientService,
     ) {}
 
+    /**
+     * Extract and validate OAuth authorize request
+     */
     async use(req: Request, res: Response) {
         const codeChallenge = req.query.code_challenge as string | undefined;
         if (!codeChallenge) {

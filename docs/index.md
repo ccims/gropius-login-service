@@ -28,36 +28,31 @@ Thereby, "oauth" is relaxed to oauth, openid connect, and any provider-specific 
 
 ## Flow "Browser Gropius Client Accesses Gropius Resource Server"
 
-Authorization code flow with PKCE for gropius client running in the browser as usual.
+Authorization code flow with PKCE for browser gropius client.
 
 1. `REDIRECT GET {gropius auth server}/auth/oauth/authorize`
 1. `FLOW {user grants access at gropius auth server}`
 1. `REDIRECT GET {gropius client}/{redirect uri}`
 1. `API POST {gropius auth server}/auth/oauth/token`
 
-Resource server can then be accessed with access token as usual.
-Further, refresh token can be used to get new access token as usual.
-The browser gropius client shall not persist any tokens.
+Resource server can then be accessed with access token.
+Further, refresh token can be used to get new access token.
+The browser gropius client shall not persist any tokens but issue new flow if needed, e.g., on a page reload.
 
 
 ## Flow "Machine Gropius Client Accesses Gropius Resource Server"
 
-Client credentials flow for gropius client running, e.g., as CLI application, as usual.
-An access token for the resources of the user who is linked to the oauth client is returned.
+Client credentials flow for machine gropius client running.
+An access token for the resources of the user linked to the client is returned.
 
 1. `API POST {gropius auth server}/auth/oauth/token`
 
 
 ## Flow "Gropius Client Refreshes Access Token"
 
-Refresh token flow as usual.
+Refresh token flow.
 
-
-## Flow "Gropius Client Accesses User Account"
-
-The user is not authenticated at the gropius client but only authorizes the gropius client to access resources at the gropius resource server using the `FLOW {browser gropius client accesses gropius resource server}`.
-For displaying purposes, the gropius client can access the user account.
-
+1. `API POST {gropius auth server}/auth/oauth/token`
 
 
 ## Flow "User Grants Access at Gropius Auth Server"
@@ -87,7 +82,7 @@ Authentication is skipped if user is already authenticated.
 
 1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/{register,register-sync}`
 1. `REDIRECT GET {gropius auth server}/auth/flow/register`
-1. `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/register/callback`
 
 
 ## Flow "User Registers at Gropius Auth Server via IMS Auth Server"
@@ -97,24 +92,26 @@ Authentication is skipped if user is already authenticated.
 1. `FLOW {user authenticates at IMS auth server}`
 1. `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
 1. `REDIRECT GET {gropius auth server}/auth/flow/register`
-1. `REDIRECT GET {gropius auth server}/auth/api/internal/register/callback`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/register/callback`
 
 
 ## Flow "User Authenticates at Gropius Auth Server via passport-local"
 
-1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
 
 
 ## Flow "User Authenticates at Gropius Auth Server via IMS Auth Server"
 
-1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/login`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/login`
 1. `FLOW {user authenticates at IMS auth server}`
 1. `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
+
+Afterward, the gropius auth server has access to the resources of the user at the IMS resource server.
 
 
 ## Flow "User Authenticates at IMS Auth Server"
 
-The IMS auth server authenticates the user using any IMS-specific flow.
+The IMS auth server authenticates the user using any IMS-specific flow and grants access to the IMS resource server to the gropius auth server.
 
 
 ## Flow "IMS Client Accesses IMS Resource Server"
@@ -144,25 +141,23 @@ The gropius client deletes all tokens.
 The gropius client shall keep the state that the user manually logged out and shall not automatically start a new `FLOW {gropius client accesses gropius resource server}` without explicit user interaction.
 Otherwise, since the user might still be logged in at the gropius auth server, the user might be directly logged in again at the gropius client.
 
-Note, technically, the user never "logged into" the gropius client, but only authorized it to access their resources.
+Note, formally, the user never "logged into" the gropius client, but only authorized it to access their resources.
 
 
 ## Flow "User Logs Out at Gropius Auth Server"
 
-This will delete the current session cookie.
-
 1. `API POST {gropius auth server}/auth/api/internal/auth/logout/current`
 
+This will delete the current session cookie and all activeLoginAccesses of the current ActiveLogin.
 The activeLogin is still valid.
-See `FLOW {user logs out everywhere at gropius auth server}` to invalidate all ActiveLogins.
 
 
 ## Flow "User Logs Out Everywhere at Gropius Auth Server"
 
-This will delete the current session token and all ActiveLogins of the user.
-This will also invalidate all issued tokens.
-
 1. `API POST {gropius auth server}/auth/api/internal/auth/logout/everywhere`
+
+This will delete the current session cookie and all ActiveLoginAccesses of the user.
+This will also invalidate all issued tokens.
 
 
 ## Data
@@ -176,44 +171,45 @@ This will also invalidate all issued tokens.
 | ActiveLoginAccess    | Postgres |                 |
 | StrategyInstance     | Postgres |                 |
 | Session              | Cookie   |                 |
+| SessionFlow          | Session  |                 |
 |                      | Neo4j    |                 |
 
-Please note that the cookie itself is formally not a JWT but a signed JSON object.
+Please note that the cookie itself is not a JWT but a signed JSON object.
 
 
 ## Expirations
 
-| Record            | Parent            | Expiration                                                                                                                                  | Comment                                                                                                                                                                           |
-|-------------------|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| UserLoginData     | LoginUser         | _never_                                                                                                                                     | expiration is covered by Session (and by its state)                                                                                                                               |
-| ActiveLogin       | UserLoginData     | 1 month, extended by 1 month if used, but at max 12 months                                                                                  | to limit any API flow by OAuth clients; "used" refers to "session is used", "auth code is used", and "refresh token is used"; ActiveLogin is still valid for Sync even if expired |
-| ActiveLoginAccess | ActiveLogin       | _none_                                                                                                                                      | limited by ActiveLogin                                                                                                                                                            |
-| Session           | ActiveLogin       | 10 min while not authenticated, never while authenticated, synced to session flow expiration if new flow is started (and not authenticated) | to limit browser session                                                                                                                                                          |
-| SessionFlow       | Session           | 10 min                                                                                                                                      | to limit any browser flow                                                                                                                                                         |
-| AuthorizationCode | ActiveLogin       | 10 min                                                                                                                                      | to limit self-contained auth code                                                                                                                                                 |
-| AccessToken       | _none_            | 10 min                                                                                                                                      | to limit self-contained access token                                                                                                                                              |
-| RefreshToken      | ActiveLoginAccess | 2 hours                                                                                                                                     | to expire self-contained refresh token                                                                                                                                            |
+| Record            | Parent            | Expiration                                                                                                                                           | Comment                                                                                                                                                                           |
+|-------------------|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| UserLoginData     | LoginUser         | _never_                                                                                                                                              | expiration is covered by Session (and by its state)                                                                                                                               |
+| ActiveLogin       | UserLoginData     | 1 month, extended up to 1 month if used, but at max 12 months                                                                                        | to limit any API flow by OAuth clients; "used" refers to "session is used", "auth code is used", and "refresh token is used"; ActiveLogin is still valid for Sync even if expired |
+| ActiveLoginAccess | ActiveLogin       | _none_                                                                                                                                               | limited by ActiveLogin                                                                                                                                                            |
+| Session           | ActiveLogin       | 10 min while not authenticated, never while authenticated, synced to session flow expiration if new flow is started and the use is not authenticated | to limit browser session                                                                                                                                                          |
+| SessionFlow       | Session           | 10 min                                                                                                                                               | to limit any browser flow                                                                                                                                                         |
+| AuthorizationCode | ActiveLogin       | 10 min                                                                                                                                               | to limit self-contained auth code                                                                                                                                                 |
+| AccessToken       | _none_            | 10 min                                                                                                                                               | to limit self-contained access token                                                                                                                                              |
+| RefreshToken      | ActiveLoginAccess | 2 hours                                                                                                                                              | to expire self-contained refresh token                                                                                                                                            |
 
 Further, any record is only valid if itself and its parent are not expired.
 Also, "extended" refers to "NOW + EXPIRATION".
 
 ## Attacker Model
 
-Given the [FAPI 2.0 Attacker Model](https://openid.net/specs/fapi-attacker-model-2_0-final.html), we have the same security goals _Authorization_, _Authentication_, and _Session Integrity_ but only under the attackers _A1 - Web Attacker_ and _A2 - Network Attacker_.
+Given the [FAPI 2.0 Attacker Model](https://openid.net/specs/fapi-attacker-model-2_0-final.html), we have the security goals _Authorization_, _Authentication_, and _Session Integrity_ under the attackers _A1 - Web Attacker_ and _A2 - Network Attacker_.
 
 
 ## CSRF
 
 All state-changing requests for which the cookie is sent requires CSRF protection.
-Therefore, we always require the session-bound CSRF token `cookie#csrf` for any such request.
+Therefore, such a request must submit the session-bound CSRF token stored in `cookie#csrf`.
 
 We require additional CSRF protection for flow-related state-changing requests to bind the requests to the correct flow. 
-Therefore, we always require the flow-bound CSRF token `cookie#flow#id` for any such request.
-Please note that while the flow-bound CSRF token already would provide sufficient protection in flow-related state-changing requests, we still require the session-bound CSRF token to provide consistent protection for all state-changing requests.
+Therefore, such a request must submit the flow-bound CSRF token stored in `cookie#flow#id`.
+Please note that while the flow-bound CSRF token already would provide sufficient protection in flow-related state-changing requests, we still require the session-bound CSRF token for flow-related state-changing requests to provide consistent protection for all state-changing requests.
 
-In addition to the flow-binding, we also require the correct flow step to be executed.
-Corresponding endpoints must check that the current step is correct.
-The history is stored in `cookie#flow#history`.
+In addition to the session-binding and flow-binding, we also require flow steps are executed in the correct order.
+If a flow is interrupted by a user redirect, the called endpoint must check that the current step is correct.
+Therefore, the history is stored in `cookie#flow#history`.
 
 
 ## Notes
