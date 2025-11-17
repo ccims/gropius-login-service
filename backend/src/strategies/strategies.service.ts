@@ -8,7 +8,7 @@ import { StrategiesService as StrategiesRepository } from "../model/services/str
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/errors/OAuthHttpException";
 import { AuthException } from "src/errors/AuthException";
-import { Context } from "../util/Context";
+import { Context, FlowState } from "../util/Context";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { compareTimeSafe } from "../util/utils";
 
@@ -66,6 +66,11 @@ export class StrategiesService implements NestMiddleware {
         const instance = await this.idToStrategyInstance(id);
         const strategy = this.strategiesRepository.getStrategyByName(instance.type);
         req.context.flow.setStrategy(strategy);
+
+        // Ensure that the state is checked before since otherwise we would always set the correct state
+        if (strategy.needsRedirectFlow) {
+            req.context.flow.setState(FlowState.REDIRECT);
+        }
 
         const result = await strategy.performAuth(instance, req.context, req, res);
 

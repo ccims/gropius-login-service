@@ -52,7 +52,6 @@ export abstract class StrategyUsingPassport extends Strategy {
         req: Request,
         res: any,
     ): Promise<PerformAuthResult> {
-        req.context.flow.setState(FlowState.REDIRECT);
         return new Promise((resolve, reject) => {
             const passportStrategy = this.createPassportStrategyInstance(strategyInstance);
             passport.authenticate(
