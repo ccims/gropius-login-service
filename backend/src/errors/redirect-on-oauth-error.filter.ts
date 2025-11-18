@@ -8,6 +8,7 @@ export class RedirectOnOAuthErrorFilter implements ExceptionFilter {
 
     catch(error: OAuthHttpException, host: ArgumentsHost) {
         this.logger.error(error);
+        console.log(error);
 
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();

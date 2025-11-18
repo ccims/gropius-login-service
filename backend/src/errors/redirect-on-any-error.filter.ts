@@ -9,6 +9,7 @@ export class RedirectOnAnyErrorFilter implements ExceptionFilter {
 
     catch(error: unknown, host: ArgumentsHost) {
         this.logger.error(error);
+        console.log(error);
 
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();

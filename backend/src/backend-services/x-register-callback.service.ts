@@ -8,7 +8,7 @@ import { ActiveLoginService } from "../model/services/active-login.service";
 const schema = Joi.object({
     username: Joi.string(),
     displayName: Joi.string(),
-    email: Joi.string(),
+    email: Joi.string().valid("").optional(),
     csrf: Joi.string(),
     flow: Joi.string(),
 });
@@ -35,6 +35,7 @@ export class RegisterCallbackService implements NestMiddleware {
     async use(req: Request, res: Response) {
         // Validate input data
         const data: Data = await schema.validateAsync(req.body);
+        if (data.email === "") delete data.email;
 
         const activeLogin = await this.activeLoginService.findOneByOrFail({
             id: req.context.flow.getActiveLoginId(),
