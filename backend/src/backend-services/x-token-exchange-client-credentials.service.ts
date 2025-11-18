@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { TokenService } from "src/backend-services/token.service";
 import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { OauthTokenResponse } from "../api-oauth/types";
+import { ms2s } from "../util/utils";
 
 @Injectable()
 export class TokenExchangeClientCredentialsService {
@@ -37,7 +38,7 @@ export class TokenExchangeClientCredentialsService {
         return {
             access_token: accessToken,
             token_type: "bearer",
-            expires_in: Math.floor(tokenExpiresInMs / 1000),
+            expires_in: ms2s(tokenExpiresInMs),
             scope: scope.join(" "),
         };
     }

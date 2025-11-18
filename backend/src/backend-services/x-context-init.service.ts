@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { Context } from "../util/Context";
 import { LoginUserService } from "../model/services/login-user.service";
-import { now } from "../util/utils";
+import { ms2s, now } from "../util/utils";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { AuthClientService } from "../model/services/auth-client.service";
 import { LoginState } from "../model/postgres/UserLoginData.entity";
@@ -43,7 +43,10 @@ export class ContextInitService {
                 });
                 if (!activeLogin.isValid) throw new Error("Active login invalid");
                 if (activeLogin.isExpired) throw new Error("Active login expired");
+
+                // Extend expiration of active login and cookie
                 await this.activeLoginService.extendExpiration(activeLogin);
+                req.context.auth.setExpiration(ms2s(activeLogin.expires.getTime()));
 
                 // Check login data
                 const loginData = await activeLogin.loginInstanceFor;

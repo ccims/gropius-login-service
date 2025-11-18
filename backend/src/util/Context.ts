@@ -1,8 +1,7 @@
 import { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { OAuthAuthorizeRequest } from "../api-oauth/types";
-import * as crypto from "crypto";
-import { hash, now } from "./utils";
+import { hash, ms2s, now } from "./utils";
 import { FlowType } from "../strategies/AuthResult";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { Strategy } from "../strategies/Strategy";
@@ -42,11 +41,11 @@ export type ContextSession = {
     // session id
     session_id: string;
 
-    // issued at
+    // issued at (in seconds)
     issued_at: number;
 
-    // expires at
-    expires_at?: number;
+    // expires at (in seconds)
+    expires_at: number;
 
     // user id
     user_id?: string;
@@ -132,14 +131,16 @@ class Auth {
             session_id: uuidv4(),
             csrf: uuidv4(),
             issued_at: iat,
-            expires_at: iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS),
+            touched_at: iat,
+            expires_at: iat + ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS)),
             consents: [],
         };
         return this;
     }
 
-    setExpiration(date: number) {
-        this.req.session.expires_at = date;
+    setExpiration(eat: number) {
+        this.req.session.expires_at = eat;
+        this.req.sessionOptions.expires = new Date(eat * 1000);
         return this;
     }
 
@@ -148,7 +149,6 @@ class Auth {
     }
 
     isExpired() {
-        if (!this.req.session.expires_at) return false;
         return now() > this.req.session.expires_at;
     }
 
@@ -161,7 +161,8 @@ class Auth {
     setUser(user: LoginUser, activeLogin: ActiveLogin) {
         this.req.session.user_id = user.id;
         this.req.session.active_login_id = activeLogin.id;
-        delete this.req.session.expires_at;
+        this.req.session.expires_at = ms2s(activeLogin.expires.getTime());
+        this.req.sessionOptions.expires = activeLogin.expires;
         return this;
     }
 
@@ -195,7 +196,7 @@ class Flow {
 
     start() {
         const iat = now();
-        const eat = iat + parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS);
+        const eat = iat + ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS));
 
         if (!this.context.auth.isAuthenticated()) {
             this.context.auth.setExpiration(eat);

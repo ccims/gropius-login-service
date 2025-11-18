@@ -1,7 +1,11 @@
 import * as crypto from "crypto";
 
 export function now() {
-    return Math.floor(Date.now() / 1000);
+    return ms2s(Date.now());
+}
+
+export function ms2s(ms: number): number {
+    return Math.floor(ms / 1000);
 }
 
 export function combineURL(path: string, base: string): URL {

@@ -7,6 +7,7 @@ import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { LoginState } from "src/model/postgres/UserLoginData.entity";
 import { OauthTokenResponse } from "../api-oauth/types";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
+import { ms2s } from "../util/utils";
 
 @Injectable()
 export class TokenExchangeRefreshTokenService {
@@ -101,7 +102,7 @@ export class TokenExchangeRefreshTokenService {
         return {
             access_token: accessToken,
             token_type: "bearer",
-            expires_in: Math.floor(tokenExpiresInMs / 1000),
+            expires_in: ms2s(tokenExpiresInMs),
             refresh_token: refreshToken,
             scope: data.scope.join(" "),
         };

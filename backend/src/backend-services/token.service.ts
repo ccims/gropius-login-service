@@ -6,6 +6,7 @@ import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { AuthClientService } from "../model/services/auth-client.service";
+import { ms2s } from "../util/utils";
 
 export interface AuthorizationCodeResult {
     activeLoginId: string;
@@ -54,7 +55,7 @@ export class TokenService {
             },
             {
                 subject: user.neo4jId,
-                expiresIn: Math.floor(expiresIn / 1000),
+                expiresIn: ms2s(expiresIn),
                 audience: scope,
             },
         );
@@ -80,7 +81,7 @@ export class TokenService {
             throw new Error("Active login expired");
         }
 
-        const expiresIn = Math.floor(parseInt(process.env.GROPIUS_AUTHORIZATION_CODE_EXPIRATION_TIME_MS, 10) / 1000);
+        const expiresIn = ms2s(parseInt(process.env.GROPIUS_AUTHORIZATION_CODE_EXPIRATION_TIME_MS, 10));
 
         return await this.backendJwtService.signAsync(
             {
@@ -127,7 +128,7 @@ export class TokenService {
     ): Promise<string> {
         this.verifyScope(scope);
 
-        const expiresIn = Math.floor(parseInt(process.env.GROPIUS_REFRESH_TOKEN_EXPIRATION_TIME_MS, 10) / 1000);
+        const expiresIn = ms2s(parseInt(process.env.GROPIUS_REFRESH_TOKEN_EXPIRATION_TIME_MS, 10));
 
         return await this.backendJwtService.signAsync(
             {
@@ -163,7 +164,7 @@ export class TokenService {
         }
         const tokenIssuedAt = payload.iat as number;
         const revokeBefore = user?.revokeTokensBefore.getTime();
-        if (revokeBefore !== undefined && Math.floor(revokeBefore / 1000) > tokenIssuedAt) {
+        if (revokeBefore !== undefined && ms2s(revokeBefore) > tokenIssuedAt) {
             throw new Error("Token invalid");
         }
         user = user ?? null;

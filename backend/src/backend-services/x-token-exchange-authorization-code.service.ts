@@ -7,7 +7,7 @@ import { OAuthHttpException } from "../errors/OAuthHttpException";
 import { EncryptionService } from "./encryption.service";
 import { LoginState } from "src/model/postgres/UserLoginData.entity";
 import { OauthTokenResponse } from "../api-oauth/types";
-import { compareTimeSafe, hash } from "../util/utils";
+import { compareTimeSafe, hash, ms2s } from "../util/utils";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 
@@ -117,7 +117,7 @@ export class TokenExchangeAuthorizationCodeService {
         return {
             access_token: accessToken,
             token_type: "bearer",
-            expires_in: Math.floor(tokenExpiresInMs / 1000),
+            expires_in: ms2s(tokenExpiresInMs),
             refresh_token: refreshToken,
             scope: data.scope.join(" "),
         };
