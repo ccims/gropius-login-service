@@ -67,11 +67,6 @@ export class StrategiesService implements NestMiddleware {
         const strategy = this.strategiesRepository.getStrategyByName(instance.type);
         req.context.flow.setStrategy(strategy);
 
-        // Ensure that the state is checked before since otherwise we would always set the correct state
-        if (strategy.needsRedirectFlow) {
-            req.context.flow.setState(FlowState.REDIRECT);
-        }
-
         const result = await strategy.performAuth(instance, req.context, req, res);
 
         if (strategy.needsRedirectFlow) {

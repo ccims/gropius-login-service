@@ -94,6 +94,7 @@ export class AuthEndpointsController {
         /**
          * Strategies
          */
+        req.context.flow.setState(FlowState.REDIRECT);
         await this.strategiesService.use(req, res);
     }
 
