@@ -124,11 +124,11 @@ The IMS client uses credentials granted during `FLOW {user authenticates at grop
 1. `FLOW {user authenticates at gropius auth server}`
 1. `HTTP GET {gropius auth server}/auth/flow/register-additional`
 1. one of the following flows
-   1. `FLOW {user registers at gropius auth server via passport-local}`
-   1. `FLOW {user registers at gropius auth server via IMS auth server}`
+   1. `FLOW {user authenticates at gropius auth server via passport-local}`
+   1. `FLOW {user authenticates at gropius auth server via IMS auth server}`
 1. `REDIRECT GET {gropius auth server}/auth/flow/account`
 
-The registration flows shall not create a new gropius account, but link the new loginData to the existing gropius account.
+The authentication flows are implicit signups that do not create a new gropius account, but link the new loginData to the existing gropius account.
 
 ## Flow "User Unlinks IMS Account from Gropius Account"
 

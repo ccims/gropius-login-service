@@ -24,6 +24,7 @@ import { ActiveLoginAccessService } from "../model/services/active-login-access.
 import { FlowStateService } from "../backend-services/x-flow-state.service";
 import { FlowState } from "../util/Context";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
+import { LinkCallbackService } from "../backend-services/x-link-callback.service";
 
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
@@ -46,6 +47,7 @@ export class AuthEndpointsController {
         private readonly flowCSRFService: FlowCSRFService,
         private readonly activeLoginAccessService: ActiveLoginAccessService,
         private readonly flowStateService: FlowStateService,
+        private readonly linkCallbackService: LinkCallbackService,
     ) {}
 
     /**
@@ -162,9 +164,9 @@ export class AuthEndpointsController {
          */
         if (req.context.flow.isLinkFlow()) {
             /**
-             * Register Redirect
+             * Link Account to User
              */
-            return this.registerRedirectService.use(req, res);
+            return this.linkCallbackService.use(req, res);
         }
 
         throw new Error("Endpoint is called in a wrong context");
@@ -247,9 +249,9 @@ export class AuthEndpointsController {
          */
         if (req.context.flow.isLinkFlow()) {
             /**
-             * Register Redirect
+             * Link Account to User
              */
-            return this.registerRedirectService.use(req, res);
+            return this.linkCallbackService.use(req, res);
         }
 
         throw new Error("Endpoint is called in a wrong context");
@@ -378,14 +380,6 @@ export class AuthEndpointsController {
          * Registration Callback (also links account in Link Flow)
          */
         await this.registerCallbackService.use(req, res);
-
-        /**
-         * Link Flow
-         */
-        if (req.context.flow.isLinkFlow()) {
-            req.context.flow.end();
-            return res.redirect(`/auth/flow/account`);
-        }
 
         /**
          * Auth Flow with Registration

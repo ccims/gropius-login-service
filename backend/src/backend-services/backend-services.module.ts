@@ -21,6 +21,7 @@ import { RegisterCallbackService } from "./x-register-callback.service";
 import { FlowCSRFService } from "./x-flow-csrf.service";
 import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-token.service";
 import { FlowStateService } from "./x-flow-state.service";
+import { LinkCallbackService } from "./x-link-callback.service";
 
 @Module({
     imports: [
@@ -65,6 +66,7 @@ import { FlowStateService } from "./x-flow-state.service";
         FlowCSRFService,
         TokenExchangeRefreshTokenService,
         FlowStateService,
+        LinkCallbackService,
     ],
     exports: [
         TokenService,
@@ -87,6 +89,7 @@ import { FlowStateService } from "./x-flow-state.service";
         FlowCSRFService,
         TokenExchangeRefreshTokenService,
         FlowStateService,
+        LinkCallbackService,
     ],
 })
 export class BackendServicesModule {}
