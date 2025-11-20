@@ -77,5 +77,15 @@ export default defineConfig({
     },
     optimizeDeps: {
         exclude: ["vuetify"]
+    },
+    css: {
+        preprocessorOptions: {
+            sass: {
+                api: "modern-compiler"
+            },
+            scss: {
+                api: "modern-compiler"
+            }
+        }
     }
 });

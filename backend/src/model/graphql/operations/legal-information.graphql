@@ -1,0 +1,26 @@
+query getLegalInformation($id: ID!) {
+    node(id: $id) {
+        ...on LegalInformation {
+            ...DefaultLegalInformationInfo
+        }
+    }
+}
+
+query legalInformation {
+    legalInformation(orderBy: [{ field: PRIORITY, direction: ASC }]) {
+        nodes {
+            ...BaseLegalInformationInfo
+        }
+    }
+}
+
+fragment BaseLegalInformationInfo on LegalInformation {
+    id
+    label
+    priority
+}
+
+fragment DefaultLegalInformationInfo on LegalInformation {
+    ...BaseLegalInformationInfo
+    text
+}

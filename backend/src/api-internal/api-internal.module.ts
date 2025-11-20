@@ -6,9 +6,10 @@ import { AuthEndpointsController } from "./auth-endpoints.controller";
 import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
 import { ApiLoginModule } from "src/api-login/api-login.module";
 import { UpdateActionController } from "./update-action.controller";
+import { LegalinformationController } from "./legal-information.controller";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],
-    controllers: [AuthEndpointsController, UpdateActionController],
+    controllers: [AuthEndpointsController, UpdateActionController, LegalinformationController],
 })
 export class ApiInternalModule {}
