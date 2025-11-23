@@ -8,8 +8,11 @@ export class RedirectOnAuthErrorFilter implements ExceptionFilter {
     private readonly logger = new Logger(this.constructor.name);
 
     catch(error: AuthException, host: ArgumentsHost) {
-        this.logger.error(error);
-        console.log(error);
+        if (error instanceof Error) {
+            this.logger.error(error.stack);
+        } else {
+            this.logger.error(error);
+        }
 
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();

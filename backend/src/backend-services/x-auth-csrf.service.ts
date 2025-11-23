@@ -12,7 +12,8 @@ export class AuthCSRFService {
     async use(req: Request, res: Response) {
         const found = req.body?.csrf ?? req.header("x-csrf-token") ?? req.query?.csrf ?? req.params?.csrf;
         if (!found) throw new Error("No session-bound CSRF token provided");
-        if (!compareTimeSafe(found, req.context.auth.getCSRF()))
+        if (!compareTimeSafe(found, req.context.auth.getCSRF())) {
             throw new Error("Invalid session-bound CSRF token provided");
+        }
     }
 }

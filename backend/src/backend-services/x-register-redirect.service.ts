@@ -66,8 +66,9 @@ export class RegisterRedirectService {
         if (suggestions.email) url.searchParams.append("email", suggestions.email);
         if (suggestions.username) url.searchParams.append("username", suggestions.username);
         if (suggestions.displayName) url.searchParams.append("displayName", suggestions.displayName);
-        if (strategy.forceSuggestedUsername)
+        if (strategy.forceSuggestedUsername) {
             url.searchParams.append("forceSuggestedUsername", String(strategy.forceSuggestedUsername));
+        }
 
         req.context.flow.setState(FlowState.REGISTER);
         return res.redirect(url.toString());

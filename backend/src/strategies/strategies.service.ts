@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
@@ -8,12 +8,12 @@ import { StrategiesService as StrategiesRepository } from "../model/services/str
 import { Strategy } from "./Strategy";
 import { OAuthHttpException } from "src/errors/OAuthHttpException";
 import { AuthException } from "src/errors/AuthException";
-import { Context, FlowState } from "../util/Context";
+import { Context } from "../util/Context";
 import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
 import { compareTimeSafe } from "../util/utils";
 
 @Injectable()
-export class StrategiesService implements NestMiddleware {
+export class StrategiesService {
     private readonly logger = new Logger(this.constructor.name);
 
     constructor(
@@ -70,11 +70,13 @@ export class StrategiesService implements NestMiddleware {
         const result = await strategy.performAuth(instance, req.context, req, res);
 
         if (strategy.needsRedirectFlow) {
-            if (!compareTimeSafe(result.returnedState.csrf, req.context.auth.getCSRF()))
+            if (!compareTimeSafe(result.returnedState.csrf, req.context.auth.getCSRF())) {
                 throw new Error("Invalid session-bound CSRF token provided");
+            }
 
-            if (!compareTimeSafe(result.returnedState.flow, req.context.flow.getId()))
+            if (!compareTimeSafe(result.returnedState.flow, req.context.flow.getId())) {
                 throw new Error("Invalid flow-bound CSRF token provided");
+            }
         }
 
         const authResult = result.result;

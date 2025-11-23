@@ -7,9 +7,12 @@ import { combineURL } from "../util/utils";
 export class RedirectOnAnyErrorFilter implements ExceptionFilter {
     private readonly logger = new Logger(this.constructor.name);
 
-    catch(error: unknown, host: ArgumentsHost) {
-        this.logger.error(error);
-        console.log(error);
+    catch(error: any, host: ArgumentsHost) {
+        if (error instanceof Error) {
+            this.logger.error(error.stack);
+        } else {
+            this.logger.error(error);
+        }
 
         const context = host.switchToHttp();
         const req = context.getRequest<Request>();

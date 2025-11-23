@@ -80,8 +80,9 @@ export abstract class StrategyUsingPassport extends Strategy {
                                 this.encryptionService.decrypt(stateToken),
                             ) as PerformAuthState;
 
-                            if (statePayload.kind !== "passport_state")
+                            if (statePayload.kind !== "passport_state") {
                                 return reject("Invalid state returned by passport strategy");
+                            }
 
                             returnedState = statePayload;
                         }
