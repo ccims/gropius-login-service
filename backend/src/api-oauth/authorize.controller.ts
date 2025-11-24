@@ -9,6 +9,7 @@ import { RequestExtractService } from "../backend-services/x-request-extract.ser
 import { LoginRedirectService } from "../backend-services/x-login-redirect.service";
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
+import { FlowKind } from "../util/Context";
 
 @Controller()
 export class AuthorizeController {
@@ -77,7 +78,7 @@ export class AuthorizeController {
          * Start Auth Flow
          */
         const request = await this.requestExtractService.use(req, res);
-        req.context.flow.start();
+        req.context.flow.start(FlowKind.OAUTH);
         req.context.flow.setRequest(request);
 
         /**

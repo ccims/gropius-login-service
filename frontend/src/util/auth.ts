@@ -191,3 +191,7 @@ export async function loadCSRFToken() {
 export async function loadFlowToken() {
     return (await axios.get<{ id?: string }>(`/auth/api/internal/auth/flow`)).data.id;
 }
+
+export async function startLinkFlow() {
+    await axios.post("/auth/api/internal/auth/flow/start-link", {}, await loadCSRFHeader());
+}

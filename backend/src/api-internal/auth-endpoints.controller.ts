@@ -22,7 +22,7 @@ import { RegisterRedirectService } from "../backend-services/x-register-redirect
 import { FlowCSRFService } from "../backend-services/x-flow-csrf.service";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
 import { FlowStateService } from "../backend-services/x-flow-state.service";
-import { FlowState } from "../util/Context";
+import { FlowKind, FlowState } from "../util/Context";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 import { LinkCallbackService } from "../backend-services/x-link-callback.service";
 
@@ -72,23 +72,13 @@ export class AuthEndpointsController {
         @Param("mode") mode?: AuthFunctionInput,
     ) {
         /**
-         * Init Context and start Link Flow if required
+         * Init Context
          */
         await this.contextInitService.use(req, res);
         await this.authCSRFService.use(req, res);
-        if (req.context.flow.exists()) {
-            // Restart Link Flow
-            if (req.context.flow.isLinkFlow()) {
-                req.context.flow.start();
-            } else {
-                // Match existing Flow
-                await this.flowCSRFService.use(req, res);
-                await this.flowStateService.use(FlowState.LOGIN, req, res);
-            }
-        } else {
-            // Start Link Flow
-            req.context.flow.start();
-        }
+        await this.flowCSRFService.use(req, res);
+        if (req.context.flow.isOAuthFlow()) await this.flowStateService.use(FlowState.LOGIN, req, res);
+        if (req.context.flow.isLinkFlow()) await this.flowStateService.use(FlowState.START, req, res);
         await this.flowViaService.use(req, res);
 
         /**
@@ -190,19 +180,9 @@ export class AuthEndpointsController {
          */
         await this.contextInitService.use(req, res);
         await this.authCSRFService.use(req, res);
-        if (req.context.flow.exists()) {
-            // Restart Link Flow
-            if (req.context.flow.isLinkFlow()) {
-                req.context.flow.start();
-            } else {
-                // Match existing Flow
-                await this.flowCSRFService.use(req, res);
-                await this.flowStateService.use(FlowState.LOGIN, req, res);
-            }
-        } else {
-            // Create new Link Flow
-            req.context.flow.start();
-        }
+        await this.flowCSRFService.use(req, res);
+        if (req.context.flow.isOAuthFlow()) await this.flowStateService.use(FlowState.LOGIN, req, res);
+        if (req.context.flow.isLinkFlow()) await this.flowStateService.use(FlowState.START, req, res);
         await this.flowViaService.use(req, res);
 
         /**
@@ -272,6 +252,20 @@ export class AuthEndpointsController {
         return {
             csrf: req.context.auth.getCSRF(),
         };
+    }
+
+    @Post("flow/start-link")
+    @NoCors()
+    @ApiOperation({ summary: "Endpoint to start a link flow" })
+    async flowStartLink(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        await this.contextInitService.use(req, res);
+        if (!req.context.auth.isAuthenticated()) {
+            throw new Error(`Cannot start link flow when not authenticated`);
+        }
+
+        req.context.flow.start(FlowKind.LINK);
+
+        return new DefaultReturn("flow/start-link");
     }
 
     @Get("flow")

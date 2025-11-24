@@ -26,7 +26,7 @@
                     </v-list-item>
                 </v-sheet>
 
-                <DefaultButton class="w-100 mt-4" to="register-additional">Link Account</DefaultButton>
+                <DefaultButton class="w-100 mt-4" @click="registerAdditional">Link Account</DefaultButton>
 
                 <DefaultButton class="w-100 mt-4" @click="() => auth.logout('current')"> Logout Session</DefaultButton>
 
@@ -44,6 +44,12 @@ import axios from "axios";
 import { StrategyInstance } from "./model";
 import * as auth from "../util/auth";
 import { asyncComputed } from "@vueuse/core";
+import router from "@/router";
+
+async function registerAdditional() {
+    await auth.startLinkFlow();
+    await router.push("register-additional");
+}
 
 const accounts = asyncComputed(async () => {
     return (

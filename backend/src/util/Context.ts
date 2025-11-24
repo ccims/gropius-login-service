@@ -17,6 +17,11 @@ declare global {
 
 type RequestWithContext = Request & { session: ContextSession };
 
+export enum FlowKind {
+    OAUTH = "oauth",
+    LINK = "link",
+}
+
 export enum FlowState {
     // when starting a new flow
     START = "START",
@@ -63,6 +68,9 @@ export type ContextSession = {
     flow?: {
         // flow id
         flow_id: string;
+
+        // flow kind
+        flow_kind: FlowKind;
 
         // issued at
         issued_at: number;
@@ -194,7 +202,7 @@ class Flow {
         return this;
     }
 
-    start() {
+    start(kind: FlowKind) {
         const iat = now();
         const eat = iat + ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS));
 
@@ -207,6 +215,7 @@ class Flow {
             issued_at: iat,
             expires_at: eat,
             state: FlowState.START,
+            flow_kind: kind,
         };
         return this;
     }
@@ -261,11 +270,11 @@ class Flow {
     }
 
     isOAuthFlow() {
-        return !!this.tryRequest();
+        return this.req.session.flow.flow_kind === FlowKind.OAUTH;
     }
 
     isLinkFlow() {
-        return !this.isOAuthFlow();
+        return this.req.session.flow.flow_kind === FlowKind.LINK;
     }
 
     setVia(via: "login" | "register") {
