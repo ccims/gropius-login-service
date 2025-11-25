@@ -76,6 +76,7 @@ export class AuthEndpointsController {
          */
         await this.contextInitService.use(req, res);
         await this.authCSRFService.use(req, res);
+        req.context.flow.assert();
         await this.flowCSRFService.use(req, res);
         if (req.context.flow.isOAuthFlow()) await this.flowStateService.use(FlowState.LOGIN, req, res);
         if (req.context.flow.isLinkFlow()) await this.flowStateService.use(FlowState.START, req, res);
@@ -180,6 +181,7 @@ export class AuthEndpointsController {
          */
         await this.contextInitService.use(req, res);
         await this.authCSRFService.use(req, res);
+        req.context.flow.assert();
         await this.flowCSRFService.use(req, res);
         if (req.context.flow.isOAuthFlow()) await this.flowStateService.use(FlowState.LOGIN, req, res);
         if (req.context.flow.isLinkFlow()) await this.flowStateService.use(FlowState.START, req, res);
