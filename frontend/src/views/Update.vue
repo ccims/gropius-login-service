@@ -1,63 +1,64 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard v-if="strategy != undefined" class="update-container mt-5 pb-4">
-                <v-window v-model="actionTab">
-                    <v-window-item :value="0">
-                        <v-sheet v-if="showSuccessMessage" color="success" rounded="lger" class="pa-3 my-2">
-                            <v-icon icon="mdi-check" size="x-large" />
-                            Success
-                        </v-sheet>
-                        <p class="text-center text-h6 my-2">{{ strategy.typeName }}</p>
-                        <div class="d-flex flex-column ga-2">
-                            <DefaultButton
-                                v-for="(updateAction, idx) in strategy.updateActions"
-                                :key="idx"
-                                class="w-100"
-                                @click="chooseAction(updateAction)"
-                            >
-                                {{ updateAction.displayName }}
-                            </DefaultButton>
-
-                            <p v-if="!strategy.updateActions.length" class="text-center my-2">No actions ...</p>
-                        </div>
-                    </v-window-item>
-                    <v-window-item :value="1">
-                        <v-sheet
-                            v-if="errorMessage != undefined"
-                            color="error-container"
-                            rounded="lger"
-                            class="pa-3 my-2"
-                        >
-                            <v-icon icon="mdi-alert-circle-outline" size="x-large" />
-                            {{ errorMessage }}
-                        </v-sheet>
-                        <div class="d-flex align-center">
-                            <IconButton @click="goBack">
-                                <v-icon icon="mdi-arrow-left" />
-                                <v-tooltip bottom>Back</v-tooltip>
-                            </IconButton>
-                            <span class="text-h6 my-2">{{ chosenAction?.displayName }}</span>
-                        </div>
-                        <v-form @submit.prevent="onUpdate">
-                            <div class="d-flex flex-column ga-2 mt-2">
-                                <InputField
-                                    v-for="(field, idx) in chosenAction?.variables"
+            <GropiusCard class="update-container" :go-back="() => router.push('account')">
+                <template v-if="strategy != undefined && strategyInstance != undefined">
+                    <v-sheet v-if="errorMessage != undefined" color="error-container" rounded="lger" class="pa-3 my-2">
+                        <v-icon icon="mdi-alert-circle-outline" size="x-large" />
+                        {{ errorMessage }}
+                    </v-sheet>
+                    <v-window v-model="actionTab">
+                        <v-window-item :value="0">
+                            <v-sheet v-if="showSuccessMessage" color="success" rounded="lger" class="pa-3 my-2">
+                                <v-icon icon="mdi-check" size="x-large" />
+                                Success
+                            </v-sheet>
+                            <p class="text-center text-h6 my-2">{{ strategyInstance.name }}</p>
+                            <div class="d-flex flex-column ga-2">
+                                <DefaultButton
+                                    v-for="(updateAction, idx) in strategy.updateActions"
                                     :key="idx"
-                                    v-model="formData[field.name]"
-                                    :field="field"
-                                />
+                                    class="w-100"
+                                    @click="chooseAction(updateAction)"
+                                >
+                                    {{ updateAction.displayName }}
+                                </DefaultButton>
+
+                                <p v-if="!strategy.updateActions.length" class="text-center my-2">No actions ...</p>
                             </div>
-                            <DefaultButton type="submit" class="w-100"> Submit</DefaultButton>
-                        </v-form>
-                    </v-window-item>
-                </v-window>
+                        </v-window-item>
+                        <v-window-item :value="1">
+                            <div class="d-flex align-center">
+                                <IconButton @click="goBack">
+                                    <v-icon icon="mdi-arrow-left" />
+                                    <v-tooltip bottom>Back</v-tooltip>
+                                </IconButton>
+                                <span class="text-h6 my-2">{{ chosenAction?.displayName }}</span>
+                            </div>
+                            <v-form @submit.prevent="onUpdate">
+                                <div class="d-flex flex-column ga-2 mt-2">
+                                    <InputField
+                                        v-for="(field, idx) in chosenAction?.variables"
+                                        :key="idx"
+                                        v-model="formData[field.name]"
+                                        :field="field"
+                                    />
+                                </div>
+                                <DefaultButton type="submit" class="w-100"> Submit</DefaultButton>
+                            </v-form>
+                        </v-window-item>
+                    </v-window>
 
-                <DefaultButton class="w-100 mt-4" @click="onDelete">Delete</DefaultButton>
-
-                <DefaultButton class="w-100 mt-4" variant="outlined" @click="router.push('account')">
-                    Back
-                </DefaultButton>
+                    <DefaultButton class="w-100 mt-4" variant="outlined" color="error">
+                        Delete
+                        <ConfirmationDialog
+                            title="Delete Login Data"
+                            message="Delete this login data?"
+                            confirm-text="Delete"
+                            @confirm="onDeleteConfirmed"
+                        />
+                    </DefaultButton>
+                </template>
             </GropiusCard>
         </template>
     </BaseLayout>
@@ -65,14 +66,16 @@
 <script setup lang="ts">
 import BaseLayout from "@/components/BaseLayout.vue";
 import GropiusCard from "@/components/GropiusCard.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import axios from "axios";
-import { computed } from "vue";
+import { computed, shallowRef } from "vue";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { LoginStrategy, LoginStrategyInstance, LoginStrategyUpdateAction } from "./model";
 import { onMounted } from "vue";
 import InputField from "@/components/InputField.vue";
 import * as auth from "../util/auth";
+import { withErrorMessage } from "@/util/withErrorMessage";
 
 const route = useRoute();
 const router = useRouter();
@@ -83,7 +86,8 @@ const errorMessage = ref<string>();
 
 const id = computed(() => route.query.id as string | undefined);
 
-const strategy = ref<LoginStrategy>();
+const strategy = shallowRef<LoginStrategy>();
+const strategyInstance = shallowRef<LoginStrategyInstance>();
 
 const chosenAction = ref<LoginStrategyUpdateAction>();
 
@@ -93,6 +97,7 @@ function chooseAction(action: LoginStrategyUpdateAction) {
     chosenAction.value = action;
     actionTab.value = 1;
     formData.value = {};
+    errorMessage.value = undefined;
 }
 
 function goBack() {
@@ -116,21 +121,37 @@ async function onUpdate() {
     }
 }
 
-async function onDelete() {
-    if (!window.confirm("Delete this login data?")) return;
-    await axios.post(`/auth/api/internal/update-action/${id.value}/delete`, {}, await auth.loadAuthorizationHeader());
-    // DIRTY: reload page to handle problem that we might have deleted the current active login
-    window.location.href = "/auth/flow/account";
+async function onDeleteConfirmed() {
+    try {
+        await axios.post(
+            `/auth/api/internal/update-action/${id.value}/delete`,
+            {},
+            await auth.loadAuthorizationHeader()
+        );
+        // DIRTY: reload page to handle problem that we might have deleted the current active login
+        window.location.href = "/auth/flow/account";
+    } catch (e: any) {
+        console.error(e, "wtf");
+        errorMessage.value = e.response?.data?.message ?? "An error occurred";
+    }
 }
 
 onMounted(async () => {
-    const strategyInstance = (
-        await axios.get(`/auth/api/login/login-data/${id.value}`, await auth.loadAuthorizationHeader())
-    ).data.strategyInstance as LoginStrategyInstance;
+    strategyInstance.value = await withErrorMessage(
+        async () =>
+            (await axios.get(`/auth/api/login/login-data/${id.value}`, await auth.loadAuthorizationHeader())).data
+                .strategyInstance as LoginStrategyInstance
+    );
 
-    strategy.value = (
-        await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`, await auth.loadAuthorizationHeader())
-    ).data as LoginStrategy;
+    strategy.value = await withErrorMessage(
+        async () =>
+            (
+                await axios.get(
+                    `/auth/api/login/strategy/${strategyInstance.value!.type}`,
+                    await auth.loadAuthorizationHeader()
+                )
+            ).data as LoginStrategy
+    );
 });
 </script>
 <style scoped>

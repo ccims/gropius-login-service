@@ -1,7 +1,7 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="account-container mt-5 pb-4">
+            <GropiusCard class="account-container">
                 <v-card-title class="text-center mb-4">Debug</v-card-title>
 
                 <DefaultButton class="w-100" @click="testAccessToken">Test Access Token</DefaultButton>
