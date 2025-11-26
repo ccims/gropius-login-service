@@ -50,7 +50,7 @@ interface LegalInformation {
 }
 
 const theme = useTheme();
-const lightMode = useLocalStorage("lightMode", true);
+const lightMode = useLocalStorage("gropiusFrontend__lightMode", true);
 
 function toggleDarkMode() {
     lightMode.value = !lightMode.value;
@@ -58,7 +58,7 @@ function toggleDarkMode() {
 }
 
 function updateColorMode() {
-    theme.global.name.value = lightMode.value ? "light" : "dark";
+    theme.change(lightMode.value ? "light" : "dark");
 }
 
 updateColorMode();
@@ -67,8 +67,7 @@ const legalInformation = ref<LegalInformation[]>([]);
 
 onMounted(async () => {
     legalInformation.value = await withErrorMessage(
-        async () => (await axios.get(`/auth/api/internal/legal-information/`)).data.legalInformation,
-        "Could not fetch available legal information"
+        async () => (await axios.get(`/auth/api/internal/legal-information/`)).data.legalInformation
     );
 });
 </script>

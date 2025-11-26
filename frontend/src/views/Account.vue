@@ -1,7 +1,7 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="account-container mt-5 pb-4">
+            <GropiusCard class="account-container">
                 <v-card-title class="text-center mb-4">Account</v-card-title>
 
                 <v-sheet
@@ -28,7 +28,7 @@
 
                 <DefaultButton class="w-100 mt-4" @click="registerAdditional">Link Account</DefaultButton>
 
-                <DefaultButton class="w-100 mt-4" @click="() => auth.logout('current')"> Logout Session</DefaultButton>
+                <DefaultButton class="w-100 mt-4" @click="() => auth.logout('current')"> Logout</DefaultButton>
 
                 <DefaultButton class="w-100 mt-4" variant="outlined" @click="() => auth.logout('everywhere')">
                     Logout Everywhere

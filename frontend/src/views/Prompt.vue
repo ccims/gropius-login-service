@@ -1,7 +1,7 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="prompt-container mt-5 mb-4">
+            <GropiusCard class="prompt-container">
                 <v-card-title class="text-center mb-4">Permission Prompt</v-card-title>
 
                 <v-card-text v-if="data">
@@ -60,7 +60,7 @@ import BaseLayout from "@/components/BaseLayout.vue";
 import GropiusCard from "@/components/GropiusCard.vue";
 import * as auth from "../util/auth";
 import { nextTick, onMounted, ref } from "vue";
-import { asyncComputed } from "@vueuse/core/index";
+import { asyncComputed } from "@vueuse/core";
 
 const csrf = asyncComputed(auth.loadCSRFToken);
 

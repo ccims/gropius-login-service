@@ -1,66 +1,72 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard v-if="!loadingStrategies" class="login-container mt-5 pb-4">
-                <p class="text-center text-body-1 mt-2">{{ title }}</p>
-                <v-sheet v-if="errorMessage" color="error-container" rounded="lger" class="pa-3 mt-2">
-                    <v-icon icon="mdi-alert-circle-outline" size="x-large" />
-                    {{ errorMessage }}
-                </v-sheet>
-                <v-tabs v-model="credentialTab" align-tabs="center">
-                    <v-tab v-for="(strategy, index) in currentStrategies.credential" :key="index" :value="index">
-                        {{ strategy.name }}
-                    </v-tab>
-                </v-tabs>
-                <v-divider />
-                <v-window v-model="credentialTab">
-                    <v-window-item
-                        v-for="(strategy, index) in currentStrategies.credential"
-                        :key="index"
-                        :value="index"
-                        class="pt-4"
-                    >
-                        <v-form
-                            :ref="(el: any) => forms.set(index, el)"
-                            :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
-                            method="POST"
-                            @submit.prevent="submitForm"
+            <GropiusCard :go-back="() => router.push('account')" class="login-container">
+                <template v-if="!loadingStrategies">
+                    <p class="text-center text-body-1 mt-2">{{ title }}</p>
+                    <v-sheet v-if="errorMessage" color="error-container" rounded="lger" class="pa-3 mt-2">
+                        <v-icon icon="mdi-alert-circle-outline" size="x-large" />
+                        {{ errorMessage }}
+                    </v-sheet>
+                    <v-tabs v-model="credentialTab" align-tabs="center">
+                        <v-tab v-for="(strategy, index) in currentStrategies.credential" :key="index" :value="index">
+                            {{ strategy.name }}
+                        </v-tab>
+                    </v-tabs>
+                    <v-divider />
+                    <v-window v-model="credentialTab">
+                        <v-window-item
+                            v-for="(strategy, index) in currentStrategies.credential"
+                            :key="index"
+                            :value="index"
+                            class="pt-4"
                         >
-                            <InputField
-                                v-for="(field, idx) in isLogin ? strategy.loginFields : strategy.registerFields"
-                                :key="idx"
-                                v-model="formDataAt(strategy.id)[field.name]"
-                                :field="field"
-                            />
-                            <input type="submit" hidden />
-                            <input type="hidden" name="csrf" :value="csrf" hidden />
-                            <input type="hidden" name="flow" :value="flow" hidden />
-                        </v-form>
-                    </v-window-item>
-                </v-window>
-                <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
-                <div v-if="!isRegisterAdditional" class="mt-2">
-                    <p v-if="isLogin">
-                        <span class="text-middle">Don't have an account?</span>
-                        <v-btn variant="text" density="comfortable" class="px-0" @click="toggleIsLogin">Sign up</v-btn>
-                    </p>
-                    <p v-else>
-                        <span class="text-middle">Already have an account?</span>
-                        <v-btn variant="text" density="comfortable" class="px-0" @click="toggleIsLogin">Login</v-btn>
-                    </p>
-                </div>
-                <template v-if="currentStrategies.redirect.length > 0">
-                    <v-divider class="mt-4 mb-3" />
-                    <DefaultButton
-                        v-for="strategy in currentStrategies.redirect"
-                        :key="strategy.id"
-                        class="w-100 mt-2"
-                        variant="outlined"
-                        density="default"
-                        @click="redirect(strategy)"
-                    >
-                        {{ `${isLogin ? "Login" : "Sign up"} with ${strategy.name}` }}
-                    </DefaultButton>
+                            <v-form
+                                :ref="(el: any) => forms.set(index, el)"
+                                :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
+                                method="POST"
+                                @submit.prevent="submitForm"
+                            >
+                                <InputField
+                                    v-for="(field, idx) in isLogin ? strategy.loginFields : strategy.registerFields"
+                                    :key="idx"
+                                    v-model="formDataAt(strategy.id)[field.name]"
+                                    :field="field"
+                                />
+                                <input type="submit" hidden />
+                                <input type="hidden" name="csrf" :value="csrf" hidden />
+                                <input type="hidden" name="flow" :value="flow" hidden />
+                            </v-form>
+                        </v-window-item>
+                    </v-window>
+                    <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
+                    <div v-if="!isRegisterAdditional" class="mt-2">
+                        <p v-if="isLogin">
+                            <span class="text-middle">Don't have an account?</span>
+                            <v-btn variant="text" density="comfortable" class="px-0" @click="toggleIsLogin"
+                                >Sign up</v-btn
+                            >
+                        </p>
+                        <p v-else>
+                            <span class="text-middle">Already have an account?</span>
+                            <v-btn variant="text" density="comfortable" class="px-0" @click="toggleIsLogin"
+                                >Login</v-btn
+                            >
+                        </p>
+                    </div>
+                    <template v-if="currentStrategies.redirect.length > 0">
+                        <v-divider class="mt-4 mb-3" />
+                        <DefaultButton
+                            v-for="strategy in currentStrategies.redirect"
+                            :key="strategy.id"
+                            class="w-100 mt-2"
+                            variant="outlined"
+                            density="default"
+                            @click="redirect(strategy)"
+                        >
+                            {{ `${isLogin ? "Login" : "Sign up"} with ${strategy.name}` }}
+                        </DefaultButton>
+                    </template>
                 </template>
             </GropiusCard>
             <v-dialog v-model="showSyncDialog" width="auto">
@@ -87,7 +93,7 @@
 <script setup lang="ts">
 import BaseLayout from "@/components/BaseLayout.vue";
 import { ref, computed, nextTick } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
     CredentialStrategyInstance,
     GroupedStrategyInstances,
@@ -102,6 +108,7 @@ import axios from "axios";
 import InputField from "@/components/InputField.vue";
 import * as auth from "@/util/auth";
 
+const router = useRouter();
 const route = useRoute();
 
 const csrf = asyncComputed(auth.loadCSRFToken);

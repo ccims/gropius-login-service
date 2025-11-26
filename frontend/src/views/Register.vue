@@ -1,7 +1,7 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="register-container mt-5">
+            <GropiusCard class="register-container">
                 <v-card-title class="pl-0">Complete registration</v-card-title>
                 <v-form class="mt-2" method="POST" action="/auth/api/internal/auth/register/callback">
                     <v-text-field
@@ -49,7 +49,7 @@ import * as auth from "@/util/auth";
 
 const route = useRoute();
 const forceSuggestedUsername = computed(
-    () => route.query.forceSuggestedUsername && route.query.forceSuggestedUsername == "true"
+    () => route.query.forceSuggestedUsername != undefined && route.query.forceSuggestedUsername == "true"
 );
 
 const schema = toTypedSchema(
@@ -63,7 +63,7 @@ const schema = toTypedSchema(
 const csrf = asyncComputed(auth.loadCSRFToken);
 const flow = asyncComputed(auth.loadFlowToken);
 
-const { defineField, handleSubmit, setValues } = useForm({
+const { defineField, setValues } = useForm({
     validationSchema: schema
 });
 
