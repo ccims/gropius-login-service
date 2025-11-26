@@ -1,14 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { PerformAuthResult, Strategy, StrategyUpdateAction, StrategyVariable } from "../Strategy";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthStateServerData } from "../AuthResult";
 import { Schema } from "jtd";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { combineURL } from "src/util/combineURL";
+import { combineURL } from "../../util/utils";
+import { Context } from "../../util/Context";
 
 @Injectable()
 export class JiraTokenCloudStrategyService extends Strategy {
@@ -156,13 +155,13 @@ export class JiraTokenCloudStrategyService extends Strategy {
             username: "",
             displayName: userData.displayName,
             email,
-            token
+            token,
         };
     }
 
     override async performAuth(
         strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        context: Context | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult> {

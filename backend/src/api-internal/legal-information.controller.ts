@@ -2,7 +2,7 @@ import { Controller, Get, Param } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { BaseLegalInformationInfoFragment, DefaultLegalInformationInfoFragment } from "src/model/graphql/generated";
 import { GraphqlService } from "src/model/graphql/graphql.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 
 class LegalInformationListReturn {
     constructor(readonly legalInformation: BaseLegalInformationInfoFragment[]) {}

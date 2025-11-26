@@ -17,9 +17,6 @@ export class UserLoginDataService extends Repository<UserLoginData> {
             .where(`"strategyInstanceId" = :instanceId`, {
                 instanceId: strategyInstance.id,
             })
-            .andWhere(`(("expires" is null) or ("expires" >= :dateNow))`, {
-                dateNow: new Date(),
-            })
             .andWhere(`"data" @> :data`, { data })
             .getMany();
     }
@@ -34,9 +31,6 @@ export class UserLoginDataService extends Repository<UserLoginData> {
             .where(`user.username = :username`, { username })
             .andWhere(`"strategyInstanceId" = :instanceId`, {
                 instanceId: strategyInstance.id,
-            })
-            .andWhere(`(("expires" is null) or ("expires" >= :dateNow))`, {
-                dateNow: new Date(),
             })
             .andWhere(`"data" @> :data`, { data })
             .getMany();

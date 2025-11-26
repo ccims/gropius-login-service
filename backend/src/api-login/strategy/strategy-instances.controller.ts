@@ -12,7 +12,7 @@ import {
     UseGuards,
 } from "@nestjs/common";
 import { CheckLoginServiceAccessTokenGuard } from "src/api-login/auth/check-login-service-access-token.guard";
-import { DefaultReturn } from "src/default-return.dto";
+import { DefaultReturn } from "src/util/default-return.dto";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
 import { StrategiesService } from "src/model/services/strategies.service";
@@ -27,9 +27,9 @@ import {
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-detail.dto";
-import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 
 /**
  * Controller for providing crud access to login strategy instances.
@@ -167,7 +167,7 @@ export class StrategyInstancesController {
         }
         try {
             return strategy.createOrUpdateNewInstance(input);
-        } catch (err) {
+        } catch (err: any) {
             this.logger.warn("Error on strategy instance creation", err);
             throw new HttpException(err.message ?? err, HttpStatus.BAD_REQUEST);
         }
@@ -220,11 +220,11 @@ export class StrategyInstancesController {
         if (!instance) {
             throw new HttpException("id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
         }
-        const stragety = this.strategiesService.getStrategyByName(instance.type);
-        if (!stragety) {
+        const strategy = this.strategiesService.getStrategyByName(instance.type);
+        if (!strategy) {
             throw new Error(`Strategy ${instance.type} for instance ${instance.id} not found`);
         }
-        return stragety.createOrUpdateNewInstance(input, instance);
+        return strategy.createOrUpdateNewInstance(input, instance);
     }
 
     /**

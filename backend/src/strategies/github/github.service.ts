@@ -5,27 +5,28 @@ import * as passportGithub from "passport-github2";
 import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import * as passport from "passport";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthFunction, AuthResult, AuthStateServerData } from "../AuthResult";
+import { FlowType, AuthResult } from "../AuthResult";
 import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
 import { Schema } from "jtd";
+import { Context } from "../../util/Context";
+import { EncryptionService } from "../../backend-services/encryption.service";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
     private readonly loggerGithub = new Logger(GithubStrategyService.name);
+
     constructor(
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("StateJwtService")
-        stateJwtService: JwtService,
+        encryptionService: EncryptionService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
+        super("github", strategyInstanceService, strategiesService, encryptionService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {
@@ -105,7 +106,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-        } catch (err) {
+        } catch (err: any) {
             throw new Error("Instance config for github instance invalid: " + err.message);
         }
 
@@ -117,7 +118,7 @@ export class GithubStrategyService extends StrategyUsingPassport {
 
     override async getSyncDataForLoginData(
         loginData: UserLoginData,
-    ): Promise<{ token: string | null;[key: string]: any }> {
+    ): Promise<{ token: string | null; [key: string]: any }> {
         const syncLogins = (
             await this.activeLoginService.findValidForLoginDataSortedByExpiration(loginData, true)
         ).filter((login) => !!login.data["accessToken"]);
@@ -147,18 +148,22 @@ export class GithubStrategyService extends StrategyUsingPassport {
         email?: string;
     } {
         return {
-            username: loginData.data?.username || undefined,
-            displayName: loginData.data?.displayName || undefined,
-            email: loginData.data?.email || undefined,
+            username: loginData.data?.username?.trim(),
+            displayName: loginData.data?.displayName?.trim(),
+            email: loginData.data?.email?.trim(),
         };
     }
 
+    /**
+     * Scopes to use.
+     * Please note that "user:email" only returns an email if the user has a public verified email at his GitHub profile
+     */
     protected override getAdditionalPassportOptions(
         strategyInstance: StrategyInstance,
-        authStateData: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        context: Context | undefined,
     ): passport.AuthenticateOptions {
-        const mode = authStateData?.authState?.function ?? AuthFunction.LOGIN;
-        if (mode == AuthFunction.REGISTER_WITH_SYNC) {
+        const mode = context?.flow.tryType() ?? FlowType.LOGIN;
+        if (mode == FlowType.REGISTER_WITH_SYNC) {
             return {
                 scope: ["scope", "user:email", "repo"],
             };

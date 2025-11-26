@@ -83,7 +83,7 @@ export class UpdateAuthClientInput {
             }
             try {
                 new URL(url);
-            } catch (err) {
+            } catch (err: any) {
                 throw new HttpException("Invalid redirect url: " + err.message ?? err, HttpStatus.BAD_REQUEST);
             }
         }

@@ -1,29 +1,31 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="update-container mt-5 pb-4" v-if="strategy != undefined">
+            <GropiusCard v-if="strategy != undefined" class="update-container mt-5 pb-4">
                 <v-window v-model="actionTab">
                     <v-window-item :value="0">
-                        <v-sheet color="success" v-if="showSuccessMessage" rounded="lger" class="pa-3 my-2">
+                        <v-sheet v-if="showSuccessMessage" color="success" rounded="lger" class="pa-3 my-2">
                             <v-icon icon="mdi-check" size="x-large" />
                             Success
                         </v-sheet>
-                        <p class="text-center text-h6 my-2">Choose an action</p>
+                        <p class="text-center text-h6 my-2">{{ strategy.typeName }}</p>
                         <div class="d-flex flex-column ga-2">
                             <DefaultButton
                                 v-for="(updateAction, idx) in strategy.updateActions"
                                 :key="idx"
-                                @click="chooseAction(updateAction)"
                                 class="w-100"
+                                @click="chooseAction(updateAction)"
                             >
                                 {{ updateAction.displayName }}
                             </DefaultButton>
+
+                            <p v-if="!strategy.updateActions.length" class="text-center my-2">No actions ...</p>
                         </div>
                     </v-window-item>
                     <v-window-item :value="1">
                         <v-sheet
-                            color="error-container"
                             v-if="errorMessage != undefined"
+                            color="error-container"
                             rounded="lger"
                             class="pa-3 my-2"
                         >
@@ -37,19 +39,25 @@
                             </IconButton>
                             <span class="text-h6 my-2">{{ chosenAction?.displayName }}</span>
                         </div>
-                        <v-form @submit.prevent="submitForm">
+                        <v-form @submit.prevent="onUpdate">
                             <div class="d-flex flex-column ga-2 mt-2">
                                 <InputField
                                     v-for="(field, idx) in chosenAction?.variables"
                                     :key="idx"
-                                    :field="field"
                                     v-model="formData[field.name]"
+                                    :field="field"
                                 />
                             </div>
-                            <DefaultButton type="submit" class="w-100"> Submit </DefaultButton>
+                            <DefaultButton type="submit" class="w-100"> Submit</DefaultButton>
                         </v-form>
                     </v-window-item>
                 </v-window>
+
+                <DefaultButton class="w-100 mt-4" @click="onDelete">Delete</DefaultButton>
+
+                <DefaultButton class="w-100 mt-4" variant="outlined" @click="router.push('account')">
+                    Back
+                </DefaultButton>
             </GropiusCard>
         </template>
     </BaseLayout>
@@ -64,6 +72,7 @@ import { useRoute, useRouter } from "vue-router";
 import { LoginStrategy, LoginStrategyInstance, LoginStrategyUpdateAction } from "./model";
 import { onMounted } from "vue";
 import InputField from "@/components/InputField.vue";
+import * as auth from "../util/auth";
 
 const route = useRoute();
 const router = useRouter();
@@ -72,9 +81,7 @@ const actionTab = ref(0);
 const showSuccessMessage = ref(false);
 const errorMessage = ref<string>();
 
-const id = computed(() => (route.query.id as string | undefined) ?? JSON.parse(route.query.state as string).id);
-
-const refreshToken = ref<string>();
+const id = computed(() => route.query.id as string | undefined);
 
 const strategy = ref<LoginStrategy>();
 
@@ -94,23 +101,13 @@ function goBack() {
     errorMessage.value = undefined;
 }
 
-async function submitForm() {
-    const tokenResponse = (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "refresh_token",
-            client_id: "login-auth-client",
-            refresh_token: refreshToken.value
-        })
-    ).data;
-    const accessToken = tokenResponse.access_token;
-    refreshToken.value = tokenResponse.refresh_token;
-
+async function onUpdate() {
     try {
-        await axios.put(`/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`, formData.value, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        });
+        await axios.put(
+            `/auth/api/internal/update-action/${id.value}/${chosenAction.value?.name}`,
+            formData.value,
+            await auth.loadAuthorizationHeader()
+        );
         actionTab.value = 0;
         showSuccessMessage.value = true;
         errorMessage.value = undefined;
@@ -119,29 +116,21 @@ async function submitForm() {
     }
 }
 
-onMounted(async () => {
-    const code = route.query.code!.toString();
-    const codeVerifier = localStorage.getItem("loginServiceCodeVerifier");
-    router.replace({ query: { id: id.value } });
-    const tokenResponse = (
-        await axios.post("/auth/oauth/token", {
-            grant_type: "authorization_code",
-            client_id: "login-auth-client",
-            code,
-            code_verifier: codeVerifier
-        })
-    ).data;
-    const accessToken = tokenResponse.access_token;
-    refreshToken.value = tokenResponse.refresh_token;
+async function onDelete() {
+    if (!window.confirm("Delete this login data?")) return;
+    await axios.post(`/auth/api/internal/update-action/${id.value}/delete`, {}, await auth.loadAuthorizationHeader());
+    // DIRTY: reload page to handle problem that we might have deleted the current active login
+    window.location.href = "/auth/flow/account";
+}
 
+onMounted(async () => {
     const strategyInstance = (
-        await axios.get(`/auth/api/login/login-data/${id.value}`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        })
+        await axios.get(`/auth/api/login/login-data/${id.value}`, await auth.loadAuthorizationHeader())
     ).data.strategyInstance as LoginStrategyInstance;
-    strategy.value = (await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`)).data as LoginStrategy;
+
+    strategy.value = (
+        await axios.get(`/auth/api/login/strategy/${strategyInstance.type}`, await auth.loadAuthorizationHeader())
+    ).data as LoginStrategy;
 });
 </script>
 <style scoped>

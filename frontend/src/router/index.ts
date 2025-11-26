@@ -1,12 +1,17 @@
 // Composables
 import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
-import { checkAuth } from "./navigationGuards";
+import { requiresAuth } from "./navigationGuards";
 
 const routes: RouteRecordRaw[] = [
     {
         path: "/login",
         name: "login",
         component: () => import("../views/Login.vue")
+    },
+    {
+        path: "/prompt",
+        name: "prompt",
+        component: () => import("../views/Prompt.vue")
     },
     {
         path: "/register-additional",
@@ -19,10 +24,22 @@ const routes: RouteRecordRaw[] = [
         component: () => import("../views/Register.vue")
     },
     {
+        path: "/account",
+        name: "account",
+        beforeEnter: requiresAuth,
+        component: () => import("../views/Account.vue")
+    },
+    {
         path: "/update",
         name: "update",
-        beforeEnter: checkAuth,
+        beforeEnter: requiresAuth,
         component: () => import("../views/Update.vue")
+    },
+    {
+        path: "/debug",
+        name: "debug",
+        beforeEnter: requiresAuth,
+        component: () => import("../views/Debug.vue")
     },
     {
         path: "/legal-information/:legalInformation",

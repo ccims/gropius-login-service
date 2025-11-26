@@ -28,13 +28,13 @@ import { LoginUser } from "src/model/postgres/LoginUser.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { LoginUserService } from "src/model/services/login-user.service";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { ApiStateData } from "../../util/ApiStateData";
 import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
 import { UserLoginDataResponse } from "./dto/user-login-data.dto";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
-import { NeedsAdmin } from "src/util/NeedsAdmin";
+import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
 
 /**
  * Controller allowing access to the users in the system
@@ -47,7 +47,7 @@ export class UsersController {
     constructor(
         private readonly userService: LoginUserService,
         private readonly backendUserService: BackendUserService,
-        private readonly loginDataSerive: UserLoginDataService,
+        private readonly loginDataService: UserLoginDataService,
         private readonly strategiesService: StrategiesService,
     ) {}
 
@@ -147,11 +147,11 @@ export class UsersController {
      * Gets the list of all login data of a single user specified by id.
      *
      * Needs admin permission for any user other than the one sending the request
-     * (equivalen to self query).
+     * (equivalent to self query).
      *
      * @param id The uuid string of the existing user to get the loginData for or 'self'
      * @param res The response object containing the request state
-     * @returns If user exits, login data for the user with the specified id
+     * @returns If user exists, login data for the user with the specified id
      */
     @Get(":id/login-data")
     @ApiOperation({ summary: "List all loginData of one user" })
@@ -163,7 +163,7 @@ export class UsersController {
     })
     @ApiOkResponse({
         type: [UserLoginData],
-        description: "If user exixts, login data for the user with the specified id",
+        description: "If user exists, login data for the user with the specified id",
     })
     @ApiNotFoundResponse({ description: "If no user with the specified id could be found" })
     @ApiUnauthorizedResponse({ description: "If no requesting self and not admin or if login is invalid" })
@@ -171,24 +171,26 @@ export class UsersController {
         @Param("id") id: string,
         @Res({ passthrough: true }) res: Response,
     ): Promise<UserLoginDataResponse[]> {
-        if (!id) {
-            throw new HttpException("id must be given", HttpStatus.BAD_REQUEST);
-        }
+        if (!id) throw new HttpException("id must be given", HttpStatus.BAD_REQUEST);
+
         const loggedInUser = (res.locals.state as ApiStateData).loggedInUser;
+
         if (id == "self") {
             id = loggedInUser.id;
         }
+
         if (id != loggedInUser.id) {
-            if (!this.backendUserService.checkIsUserAdmin(loggedInUser)) {
+            if (!(await this.backendUserService.checkIsUserAdmin(loggedInUser))) {
                 throw new HttpException(
                     "No permission to access others login data if not admin",
                     HttpStatus.UNAUTHORIZED,
                 );
             }
         }
+
         return Promise.all(
             (
-                await this.loginDataSerive.find({
+                await this.loginDataService.find({
                     where: {
                         user: {
                             id,
@@ -202,7 +204,6 @@ export class UsersController {
                 return {
                     id: loginData.id,
                     state: loginData.state,
-                    expires: loginData.expires,
                     strategyInstance: instance,
                     description: await strategy.getLoginDataDescription(loginData),
                 } satisfies UserLoginDataResponse;

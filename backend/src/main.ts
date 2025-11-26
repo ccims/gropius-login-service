@@ -1,9 +1,13 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { OpenApiTag } from "./openapi-tag";
+import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
+import session = require("cookie-session");
+import { NextFunction, Request, Response } from "express";
+import { NestExpressApplication } from "@nestjs/platform-express";
+import { ConfigService } from "@nestjs/config";
 
 async function bootstrap() {
     const logLevels = ["log", "error", "warn"];
@@ -11,11 +15,12 @@ async function bootstrap() {
         logLevels.push("debug", "verbose");
     }
 
-    const app = await NestFactory.create(AppModule, {
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
         logger: logLevels as LogLevel[],
     });
 
     await ConfigModule.envVariablesLoaded;
+    const config = app.get(ConfigService);
 
     if (
         (process.env.GROPIUS_LOGIN_ENABLE_OPENAPI as unknown) != false &&
@@ -56,6 +61,36 @@ async function bootstrap() {
     const portNumber = parseInt(process.env.GROPIUS_LOGIN_LISTEN_PORT, 10) || 3000;
 
     app.enableCors();
+
+    app.set("trust proxy", config.get<string | number | boolean>("GROPIUS_LOGIN_TRUST_PROXY"));
+
+    app.use(
+        session({
+            name: "gropius-login-session",
+            secret: config.get<string>("GROPIUS_LOGIN_SESSION_SECRET"),
+            // "/auth/api/internal" and "/auth/oauth/authorize" need the cookie but "/auth/flow" not ...
+            path: "/auth",
+            httpOnly: true,
+            // "strict" would prohibit the cookie being sent along when redirecting back from an IMS auth server
+            sameSite: "lax",
+            // expects HTTPS and, hence, the proxy itself must forward the protocol etc correctly and the upstream must trust the proxy
+            secure: config.get<boolean>("GROPIUS_LOGIN_COOKIE_SECURE"),
+            // no need to set "domain" since the default is already the most restrictive (in fact more restrictive than setting "domain" to the current domain)
+        }),
+    );
+
+    app.use((req: Request, res: Response, next: NextFunction) => {
+        if (!res.locals) {
+            res.locals = {};
+        }
+        if (!res.locals.state) {
+            res.locals.state = {};
+        }
+
+        next();
+    });
+
     await app.listen(portNumber);
 }
+
 bootstrap().catch((err) => console.error("NestJS Application exited with error", err));

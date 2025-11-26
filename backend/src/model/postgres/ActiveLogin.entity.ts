@@ -13,14 +13,12 @@ import { UserLoginData } from "./UserLoginData.entity";
  */
 @Entity()
 export class ActiveLogin {
-    static LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED = -1;
-
-    constructor(usedStrategyInstance: StrategyInstance, expires?: Date) {
+    constructor(usedStrategyInstance: StrategyInstance) {
         this.usedStrategyInstance = Promise.resolve(usedStrategyInstance);
         this.created = new Date();
-        this.expires = expires || null;
+        this.expires = this.created;
+        this.extendExpiration();
         this.isValid = true;
-        this.nextExpectedRefreshTokenNumber = ActiveLogin.LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED;
     }
 
     /**
@@ -39,13 +37,11 @@ export class ActiveLogin {
     created: Date;
 
     /**
-     * If not `null`, this login should be considered *invalid* on any date+time AFTER this.
+     * This login should be considered *invalid* on any date+time AFTER this.
      * This is to ensure logout and time restrict registration etc.
-     *
-     * If `null`, the login should not expire by date.
      */
-    @Column({ nullable: true })
-    expires: Date | null;
+    @Column()
+    expires: Date;
 
     /**
      * Whether this login is valid to be used.
@@ -69,24 +65,6 @@ export class ActiveLogin {
      */
     @Column()
     supportsSync: boolean;
-
-    /**
-     * The numeric identifier of the last refresh token given out (the next one expected).
-     *
-     * **ONLY** the token with this id should be accepted as refresh token for this login event.
-     * If a **valid** token with an **older** id is used, this login event should be made invalid,
-     * as it is a reuse of the refresh token, which likely means it has been abused.
-     *
-     * For a new instance this starts at LOGGED_IN_BUT_TOKEN_NOT_YET_RETRIVED=-1 and
-     * gets incremented once the first refresh token is created.
-     *
-     * @example 0
-     */
-    @Column({
-        default: -1,
-    })
-    @ApiHideProperty()
-    nextExpectedRefreshTokenNumber: number;
 
     /**
      * Data which needs to be stored on a per-login basis (e.g. issued tokens from auth provider)
@@ -117,11 +95,25 @@ export class ActiveLogin {
     @ApiHideProperty()
     loginInstanceFor: Promise<UserLoginData | null>;
 
+    get isExpired() {
+        return this.expires <= new Date();
+    }
+
+    extendExpiration() {
+        const max = this.created.getTime() + parseInt(process.env.GROPIUS_ACTIVE_LOGIN_MAX_EXPIRATION_TIME_MS);
+        const goal = new Date().getTime() + parseInt(process.env.GROPIUS_ACTIVE_LOGIN_EXPIRATION_TIME_MS);
+        this.expires = goal > max ? new Date(max) : new Date(goal);
+    }
+
+    assert() {
+        if (!this.isValid) throw new Error(`Active login set invalid`);
+        if (this.isExpired) throw new Error(`Active login is expired`);
+    }
+
     toJSON() {
         return {
             id: this.id,
             created: this.created,
-            expores: this.expires,
             isValid: this.isValid,
             supportsSync: this.supportsSync,
         };

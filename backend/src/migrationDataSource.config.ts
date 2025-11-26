@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 async function getDataSource(): Promise<DataSource> {
     console.log(
         "NOTICE: Make sure to run migrations with NODE_ENV set to the value for which " +
-            "you want to initiaize your database and have configured your database settings.\n" +
+            "you want to initialize your database and have configured your database settings.\n" +
             "E.g. if you have your DB settings in .env.dev, set NODE_ENV=testing",
     );
 

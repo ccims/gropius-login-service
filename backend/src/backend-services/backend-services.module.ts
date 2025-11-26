@@ -4,6 +4,24 @@ import { ModelModule } from "src/model/model.module";
 import { TokenService } from "./token.service";
 import { BackendUserService } from "./backend-user.service";
 import { ImsUserFindingService } from "./ims-user-finding.service";
+import { EncryptionService } from "./encryption.service";
+import { CodeRedirectService } from "./x-code-redirect.service";
+import { ContextInitService } from "./x-context-init.service";
+import { PromptRedirectService } from "./x-prompt-redirect.service";
+import { RequestExtractService } from "./x-request-extract.service";
+import { TokenExchangeAuthorizationCodeService } from "./x-token-exchange-authorization-code.service";
+import { TokenExchangeClientCredentialsService } from "./x-token-exchange-client-credentials.service";
+import { AuthCSRFService } from "./x-auth-csrf.service";
+import { LoginRedirectService } from "./x-login-redirect.service";
+import { PromptCallbackService } from "./x-prompt-callback.service";
+import { FlowViaService } from "./x-flow-via.service";
+import { AuthUserService } from "./x-auth-user.service";
+import { RegisterRedirectService } from "./x-register-redirect.service";
+import { RegisterCallbackService } from "./x-register-callback.service";
+import { FlowCSRFService } from "./x-flow-csrf.service";
+import { TokenExchangeRefreshTokenService } from "./x-token-exchange-refresh-token.service";
+import { FlowStateService } from "./x-flow-state.service";
+import { LinkCallbackService } from "./x-link-callback.service";
 
 @Module({
     imports: [
@@ -31,7 +49,47 @@ import { ImsUserFindingService } from "./ims-user-finding.service";
         TokenService,
         BackendUserService,
         ImsUserFindingService,
+        EncryptionService,
+        CodeRedirectService,
+        ContextInitService,
+        PromptRedirectService,
+        RequestExtractService,
+        TokenExchangeAuthorizationCodeService,
+        TokenExchangeClientCredentialsService,
+        AuthCSRFService,
+        LoginRedirectService,
+        PromptCallbackService,
+        FlowViaService,
+        AuthUserService,
+        RegisterRedirectService,
+        RegisterCallbackService,
+        FlowCSRFService,
+        TokenExchangeRefreshTokenService,
+        FlowStateService,
+        LinkCallbackService,
     ],
-    exports: [TokenService, BackendUserService, ImsUserFindingService],
+    exports: [
+        TokenService,
+        BackendUserService,
+        ImsUserFindingService,
+        EncryptionService,
+        CodeRedirectService,
+        ContextInitService,
+        PromptRedirectService,
+        RequestExtractService,
+        TokenExchangeAuthorizationCodeService,
+        TokenExchangeClientCredentialsService,
+        AuthCSRFService,
+        LoginRedirectService,
+        PromptCallbackService,
+        FlowViaService,
+        AuthUserService,
+        RegisterRedirectService,
+        RegisterCallbackService,
+        FlowCSRFService,
+        TokenExchangeRefreshTokenService,
+        FlowStateService,
+        LinkCallbackService,
+    ],
 })
 export class BackendServicesModule {}

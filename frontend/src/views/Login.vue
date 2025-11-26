@@ -1,9 +1,9 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard class="login-container mt-5 pb-4" v-if="!loadingStrategies">
+            <GropiusCard v-if="!loadingStrategies" class="login-container mt-5 pb-4">
                 <p class="text-center text-body-1 mt-2">{{ title }}</p>
-                <v-sheet color="error-container" v-if="errorMessage" rounded="lger" class="pa-3 mt-2">
+                <v-sheet v-if="errorMessage" color="error-container" rounded="lger" class="pa-3 mt-2">
                     <v-icon icon="mdi-alert-circle-outline" size="x-large" />
                     {{ errorMessage }}
                 </v-sheet>
@@ -23,6 +23,7 @@
                         <v-form
                             :ref="(el: any) => forms.set(index, el)"
                             :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
+                            method="POST"
                             @submit.prevent="submitForm"
                         >
                             <InputField
@@ -31,12 +32,13 @@
                                 v-model="formDataAt(strategy.id)[field.name]"
                                 :field="field"
                             />
-                            <input type="hidden" name="state" :value="route.query.state" />
                             <input type="submit" hidden />
+                            <input type="hidden" name="csrf" :value="csrf" hidden />
+                            <input type="hidden" name="flow" :value="flow" hidden />
                         </v-form>
                     </v-window-item>
                 </v-window>
-                <DefaultButton class="w-100" @click="submitForm"> Continue </DefaultButton>
+                <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
                 <div v-if="!isRegisterAdditional" class="mt-2">
                     <p v-if="isLogin">
                         <span class="text-middle">Don't have an account?</span>
@@ -65,7 +67,7 @@
                 <v-card color="surface-elevated-3" rounded="lger" class="pa-3" elevation="0">
                     <v-card-title>Allow sync?</v-card-title>
                     <v-card-text>
-                        Shoule we sync issues with this account?<br />You can always agree to this later.
+                        Should we sync issues with this account?<br />You can always agree to this later.
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer />
@@ -74,6 +76,11 @@
                     </v-card-actions>
                 </v-card>
             </v-dialog>
+
+            <v-form ref="redirectForm" :action="redirectAction" method="POST" style="display: none">
+                <input type="hidden" name="csrf" :value="csrf" hidden />
+                <input type="hidden" name="flow" :value="flow" hidden />
+            </v-form>
         </template>
     </BaseLayout>
 </template>
@@ -93,8 +100,12 @@ import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
 import axios from "axios";
 import InputField from "@/components/InputField.vue";
+import * as auth from "@/util/auth";
 
 const route = useRoute();
+
+const csrf = asyncComputed(auth.loadCSRFToken);
+const flow = asyncComputed(auth.loadFlowToken);
 
 const forms = ref(new Map<number, any>());
 
@@ -221,6 +232,15 @@ function submitFormWithMode(formMode: "login" | "register" | "register-sync") {
     nextTick(() => forms.value.get(credentialTab.value).submit());
 }
 
+const redirectForm = ref<HTMLFormElement | null>(null);
+const redirectAction = ref<string>("");
+
+async function submitRedirectPost(action: string) {
+    redirectAction.value = action;
+    await nextTick();
+    redirectForm.value?.submit();
+}
+
 function redirect(strategy: RedirectStrategyInstance) {
     if (isLogin.value && !isRegisterAdditional.value) {
         redirectLogin(strategy);
@@ -238,14 +258,12 @@ function redirect(strategy: RedirectStrategyInstance) {
 }
 
 async function redirectLogin(strategyInstance: RedirectStrategyInstance) {
-    const state = encodeURIComponent(route.query.state as string);
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/login?state=${state}`;
+    await submitRedirectPost(`/auth/api/internal/auth/redirect/${strategyInstance.id}/login`);
 }
 
 async function redirectRegister(strategyInstance: RedirectStrategyInstance, sync: boolean) {
-    const state = encodeURIComponent(route.query.state as string);
     const mode = sync ? "register-sync" : "register";
-    window.location.href = `/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}?state=${state}`;
+    await submitRedirectPost(`/auth/api/internal/auth/redirect/${strategyInstance.id}/${mode}`);
 }
 </script>
 <style scoped>

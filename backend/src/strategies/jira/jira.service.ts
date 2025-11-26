@@ -12,6 +12,7 @@ import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { ActiveLoginService } from "src/model/services/active-login.service";
 import { checkType } from "../../util/checkType";
 import { Schema } from "jtd";
+import { EncryptionService } from "../../backend-services/encryption.service";
 
 @Injectable()
 export class JiraStrategyService extends StrategyUsingPassport {
@@ -20,11 +21,10 @@ export class JiraStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        @Inject("StateJwtService")
-        stateJwtService: JwtService,
+        encryptionService: EncryptionService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
+        super("jira", strategyInstanceService, strategiesService, encryptionService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {
@@ -108,7 +108,7 @@ export class JiraStrategyService extends StrategyUsingPassport {
                 true,
                 process.env.GROPIUS_OAUTH_CLIENT_SECRET,
             );
-        } catch (err) {
+        } catch (err: any) {
             throw new Error("Instance config for jira instance invalid: " + err.message);
         }
 
@@ -206,9 +206,9 @@ export class JiraStrategyService extends StrategyUsingPassport {
         email?: string;
     } {
         return {
-            username: loginData.data?.username || undefined,
-            displayName: loginData.data?.displayName || undefined,
-            email: loginData.data?.email || undefined,
+            username: loginData.data?.username?.trim(),
+            displayName: loginData.data?.displayName?.trim(),
+            email: loginData.data?.email?.trim(),
         };
     }
 

@@ -4,9 +4,9 @@ import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
 import { StrategiesService } from "src/model/services/strategies.service";
 import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthResult, AuthStateServerData } from "./AuthResult";
-import { OAuthAuthorizeServerState } from "src/api-oauth/OAuthAuthorizeServerState";
+import { AuthResult } from "./AuthResult";
 import { Schema } from "jtd";
+import { Context } from "../util/Context";
 
 export interface StrategyVariable {
     name: string;
@@ -21,9 +21,20 @@ export interface StrategyUpdateAction {
     variables: StrategyVariable[];
 }
 
+export interface PerformAuthState {
+    // token kind; must be "passport_state"
+    kind?: string;
+
+    // session-bound CSRF token
+    csrf?: string;
+
+    // flow-bound CSRF token
+    flow?: string;
+}
+
 export interface PerformAuthResult {
     result: AuthResult | null;
-    returnedState: Partial<Pick<AuthStateServerData, "authState"> & Pick<OAuthAuthorizeServerState, "request">>;
+    returnedState: PerformAuthState;
     info: any;
 }
 
@@ -301,7 +312,7 @@ export abstract class Strategy {
 
     abstract performAuth(
         strategyInstance: StrategyInstance,
-        state: (AuthStateServerData & OAuthAuthorizeServerState) | undefined,
+        context: Context | undefined,
         req: any,
         res: any,
     ): Promise<PerformAuthResult>;

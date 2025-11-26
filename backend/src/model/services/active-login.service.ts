@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
 import { ActiveLogin } from "../postgres/ActiveLogin.entity";
 import { UserLoginData } from "../postgres/UserLoginData.entity";
+import { LoginUser } from "../postgres/LoginUser.entity";
+import { ActiveLoginAccess } from "../postgres/ActiveLoginAccess.entity";
 
 @Injectable()
 export class ActiveLoginService extends Repository<ActiveLogin> {
@@ -9,13 +11,8 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
         super(ActiveLogin, dataSource.createEntityManager());
     }
 
-    async setActiveLoginExpiration(activeLogin: ActiveLogin): Promise<ActiveLogin> {
-        const loginExpiresIn = parseInt(process.env.GROPIUS_REGULAR_LOGINS_INACTIVE_EXPIRATION_TIME_MS, 10);
-        if (loginExpiresIn && loginExpiresIn > 0 && !activeLogin.supportsSync) {
-            activeLogin.expires = new Date(Date.now() + loginExpiresIn);
-        } else {
-            activeLogin.expires = null;
-        }
+    async extendExpiration(activeLogin: ActiveLogin): Promise<ActiveLogin> {
+        activeLogin.extendExpiration();
         return this.save(activeLogin);
     }
 
@@ -27,10 +24,7 @@ export class ActiveLoginService extends Repository<ActiveLogin> {
             .where(`"loginInstanceForId" = :loginDataId`, {
                 loginDataId: loginData.id,
             })
-            .andWhere(`"isValid" = true`, {})
-            .andWhere(`(("expires" is null) or ("expires" > :expires))`, {
-                expires: new Date(),
-            });
+            .andWhere(`"isValid" = true`, {});
         if (supportsSync !== null) {
             builder = builder.andWhere(`"supportsSync" = :supportsSync`, {
                 supportsSync,

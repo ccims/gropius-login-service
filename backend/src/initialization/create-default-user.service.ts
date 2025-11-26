@@ -172,7 +172,6 @@ export class CreateDefaultUserService {
             username,
         });
 
-        loginData.expires = null;
         loginData.state = LoginState.VALID;
 
         await this.createAndOrLinkUserAndLoginData(user, loginData, username, displayName);

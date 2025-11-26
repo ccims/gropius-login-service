@@ -15,7 +15,7 @@ import { ApiStateData } from "src/util/ApiStateData";
 import { UserLoginDataService } from "src/model/services/user-login-data.service";
 import { BackendUserService } from "src/backend-services/backend-user.service";
 import { StrategiesService } from "src/model/services/strategies.service";
-import { OpenApiTag } from "src/openapi-tag";
+import { OpenApiTag } from "src/util/openapi-tag";
 import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
 
 @Controller("login-data")
@@ -24,7 +24,7 @@ import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-
 @ApiBearerAuth()
 export class LoginDataController {
     constructor(
-        private readonly loginDataSerive: UserLoginDataService,
+        private readonly loginDataService: UserLoginDataService,
         private readonly backendUserService: BackendUserService,
         private readonly strategiesService: StrategiesService,
     ) {}
@@ -37,7 +37,7 @@ export class LoginDataController {
      *
      * @param id The uuid string of the existing user to get the loginData for or 'self'
      * @param res The response object containing the request state
-     * @returns If user exits, login data for the user with the specified id
+     * @returns If user exists, login data for the user with the specified id
      */
     @Get(":id")
     @ApiOperation({ summary: "Get a loginData by id" })
@@ -61,14 +61,16 @@ export class LoginDataController {
             throw new HttpException("id must be given", HttpStatus.BAD_REQUEST);
         }
         const loggedInUser = (res.locals.state as ApiStateData).loggedInUser;
-        const loginData = await this.loginDataSerive.findOne({
+        const loginData = await this.loginDataService.findOne({
             where: {
                 id,
             },
             relations: ["strategyInstance"],
         });
+        if (!loginData) throw new HttpException("Invalid loginData", HttpStatus.UNAUTHORIZED);
+
         if ((await loginData.user).id != loggedInUser.id) {
-            if (!this.backendUserService.checkIsUserAdmin(loggedInUser)) {
+            if (!(await this.backendUserService.checkIsUserAdmin(loggedInUser))) {
                 throw new HttpException(
                     "No permission to access others login data if not admin",
                     HttpStatus.UNAUTHORIZED,
@@ -81,7 +83,6 @@ export class LoginDataController {
         return {
             id: loginData.id,
             state: loginData.state,
-            expires: loginData.expires,
             strategyInstance: instance,
             description: await strategy.getLoginDataDescription(loginData),
         } satisfies UserLoginDataResponse;

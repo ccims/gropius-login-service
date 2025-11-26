@@ -1,0 +1,219 @@
+# Docs
+
+## Goal
+
+Give gropius client access to resources of user at gropius resource server and IMS resource server.
+
+## Parties
+
+| Party                    | Description                                                                | Example                                  |
+|--------------------------|----------------------------------------------------------------------------|------------------------------------------|
+| user                     | owner of resources at gropius resource server and IMS resource server      | gropius end-user                         |
+| (browser) gropius client | public oauth client for gropius auth server running in the browser         | gropius-frontend, gropius-login-frontend |
+| (machine) gropius client | private oauth client for gropius auth server running, e.g., as CLI command | gropius template importer                |
+| gropius auth server      | oauth auth server                                                          | gropius-login-backend                    |
+| gropius resource server  | oauth resource server of gropius auth server                               | gropius-backend, gropius-login-backend   |
+| IMS client               | private oauth client for IMS auth server                                   | gropius-login-backend                    |
+| IMS auth server          | oauth auth server                                                          | github, jira, gitlab                     |
+| IMS resource server      | oauth resource server of IMS auth server                                   | github, jira, gitlab                     |
+
+Thereby, "oauth" is relaxed to oauth, openid connect, and any provider-specific variations of a flow to grant access of resources to a third party and to authenticate a user.
+
+## Accounts
+
+| Resource        | Description                    | Owner |
+|-----------------|--------------------------------|-------|
+| gropius account | account at gropius auth server | user  |
+| IMS account     | account at IMS auth server     | user  |
+
+## Flow "Browser Gropius Client Accesses Gropius Resource Server"
+
+Authorization code flow with PKCE for browser gropius client.
+
+1. `REDIRECT GET {gropius auth server}/auth/oauth/authorize`
+1. `FLOW {user grants access at gropius auth server}`
+1. `REDIRECT GET {gropius client}/{redirect uri}`
+1. `API POST {gropius auth server}/auth/oauth/token`
+
+Resource server can then be accessed with access token.
+Further, refresh token can be used to get new access token.
+The browser gropius client shall not persist any tokens but issue new flow if needed, e.g., on a page reload.
+
+
+## Flow "Machine Gropius Client Accesses Gropius Resource Server"
+
+Client credentials flow for machine gropius client running.
+An access token for the resources of the user linked to the client is returned.
+
+1. `API POST {gropius auth server}/auth/oauth/token`
+
+
+## Flow "Gropius Client Refreshes Access Token"
+
+Refresh token flow.
+
+1. `API POST {gropius auth server}/auth/oauth/token`
+
+
+## Flow "User Grants Access at Gropius Auth Server"
+
+1. `FLOW {user authenticates at gropius auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/prompt`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/prompt/callback`
+
+The consent prompt is skipped if user already granted access to gropius client in an earlier flow or if gropius client is configured to not require prompt.
+
+
+## Flow "User authenticates at Gropius Auth Server"
+
+1. `REDIRECT GET {gropius auth server}/auth/flow/login`
+1. one of the following flows
+    1. `FLOW {user registers at gropius auth server via passport-local}`
+    1. `FLOW {user registers at gropius auth server via IMS auth server}`
+    1. `FLOW {user authenticates at gropius auth server via passport-local}`
+    1. `FLOW {user authenticates at gropius auth server via IMS auth server}`
+
+The user is authenticated after a registration.
+The authentication is persisted in a session cookie.
+Authentication is skipped if user is already authenticated.
+
+
+## Flow "User Registers at Gropius Auth Server via passport-local"
+
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/{register,register-sync}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/register`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/register/callback`
+
+
+## Flow "User Registers at Gropius Auth Server via IMS Auth Server"
+ 
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/{register,register-sync}`
+1. `REDIRECT GET {IMS auth server}/auth/oauth/authorize`
+1. `FLOW {user authenticates at IMS auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/register`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/register/callback`
+
+
+## Flow "User Authenticates at Gropius Auth Server via passport-local"
+
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
+
+
+## Flow "User Authenticates at Gropius Auth Server via IMS Auth Server"
+
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/redirect/{strategy instance id}/login`
+1. `FLOW {user authenticates at IMS auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/api/internal/callback/{strategy instance id}`
+
+Afterward, the gropius auth server has access to the resources of the user at the IMS resource server.
+
+
+## Flow "User Authenticates at IMS Auth Server"
+
+The IMS auth server authenticates the user using any IMS-specific flow and grants access to the IMS resource server to the gropius auth server.
+
+
+## Flow "IMS Client Accesses IMS Resource Server"
+
+The IMS client uses credentials granted during `FLOW {user authenticates at gropius auth server via IMS auth server}`.
+
+
+## Flow "User Links IMS Account to Gropius Account"
+
+1. `FLOW {user authenticates at gropius auth server}`
+1. `HTTP GET {gropius auth server}/auth/flow/register-additional`
+1. one of the following flows
+   1. `FLOW {user authenticates at gropius auth server via passport-local}`
+   1. `FLOW {user authenticates at gropius auth server via IMS auth server}`
+1. `REDIRECT GET {gropius auth server}/auth/flow/account`
+
+The authentication flows are implicit signups that do not create a new gropius account, but link the new loginData to the existing gropius account.
+
+## Flow "User Unlinks IMS Account from Gropius Account"
+
+1. `API POST {gropius auth server}/auth/api/internal/auth/update-action/{login data id}/delete`
+
+
+## Flow "User Logs Out at the Gropius Client"
+
+The gropius client deletes all tokens.
+The gropius client shall keep the state that the user manually logged out and shall not automatically start a new `FLOW {gropius client accesses gropius resource server}` without explicit user interaction.
+Otherwise, since the user might still be logged in at the gropius auth server, the user might be directly logged in again at the gropius client.
+
+Note, formally, the user never "logged into" the gropius client, but only authorized it to access their resources.
+
+
+## Flow "User Logs Out at Gropius Auth Server"
+
+1. `API POST {gropius auth server}/auth/api/internal/auth/logout/current`
+
+This will delete the current session cookie and all activeLoginAccesses of the current ActiveLogin.
+The activeLogin is still valid.
+
+
+## Flow "User Logs Out Everywhere at Gropius Auth Server"
+
+1. `API POST {gropius auth server}/auth/api/internal/auth/logout/everywhere`
+
+This will delete the current session cookie and all ActiveLoginAccesses of the user.
+This will also invalidate all issued tokens.
+
+
+## Data
+
+| Record               | Storage  | Description     |
+|----------------------|----------|-----------------|
+| LoginUser            | Postgres | gropius account |
+| UserLoginData        | Postgres |                 |
+| UserLoginDataIMSUser | Postgres |                 |
+| ActiveLogin          | Postgres |                 |
+| ActiveLoginAccess    | Postgres |                 |
+| StrategyInstance     | Postgres |                 |
+| Session              | Cookie   |                 |
+| SessionFlow          | Session  |                 |
+|                      | Neo4j    |                 |
+
+Please note that the cookie itself is not a JWT but a signed JSON object.
+
+
+## Expirations
+
+| Record            | Parent            | Expiration                                                                               | Comment                                                                                                                                                                           |
+|-------------------|-------------------|------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| UserLoginData     | LoginUser         | _never_                                                                                  | expiration is covered by Session (and by its state)                                                                                                                               |
+| ActiveLogin       | UserLoginData     | 1 month, extended up to 1 month if used, but at max 12 months                            | to limit any API flow by OAuth clients; "used" refers to "session is used", "auth code is used", and "refresh token is used"; ActiveLogin is still valid for Sync even if expired |
+| ActiveLoginAccess | ActiveLogin       | _none_                                                                                   | limited by ActiveLogin                                                                                                                                                            |
+| Session (Cookie)  | ActiveLogin       | in sync with flow while not authenticated, in sync with activeLogin while authenticated  | to limit browser session                                                                                                                                                          |
+| SessionFlow       | Session           | 10 min                                                                                   | to limit any browser flow                                                                                                                                                         |
+| AuthorizationCode | ActiveLogin       | 10 min                                                                                   | to limit self-contained auth code                                                                                                                                                 |
+| AccessToken       | _none_            | 10 min                                                                                   | to limit self-contained access token                                                                                                                                              |
+| RefreshToken      | ActiveLoginAccess | 2 hours                                                                                  | to expire self-contained refresh token                                                                                                                                            |
+
+Further, any record is only valid if itself and its parent are not expired.
+Also, "extended" refers to "NOW + EXPIRATION".
+
+## Attacker Model
+
+Given the [FAPI 2.0 Attacker Model](https://openid.net/specs/fapi-attacker-model-2_0-final.html), we have the security goals _Authorization_, _Authentication_, and _Session Integrity_ under the attackers _A1 - Web Attacker_ and _A2 - Network Attacker_.
+
+
+## CSRF
+
+All state-changing requests for which the cookie is sent requires CSRF protection.
+Therefore, such a request must submit the session-bound CSRF token stored in `cookie#csrf`.
+
+We require additional CSRF protection for flow-related state-changing requests to bind the requests to the correct flow. 
+Therefore, such a request must submit the flow-bound CSRF token stored in `cookie#flow#id`.
+Please note that while the flow-bound CSRF token already would provide sufficient protection in flow-related state-changing requests, we still require the session-bound CSRF token for flow-related state-changing requests to provide consistent protection for all state-changing requests.
+
+In addition to the session-binding and flow-binding, we also require flow steps are executed in the correct order.
+If a flow is interrupted by a user redirect, the called endpoint must check that the current step is correct.
+Therefore, the history is stored in `cookie#flow#history`.
+
+
+## Notes
+
+1. never manually visit `HTTP GET {gropius auth server}/auth/flow/login` but only via `HTTP GET {gropius auth server}/auth/flow/account`
+1. never manually visit `HTTP GET {gropius auth server}/auth/flow/register` but only via `HTTP GET {gropius auth server}/auth/flow/account`
+1. the gropius frontend, gropius login backend, and gropius login frontend must be deployed on the same origin due to used CSRF and CORS mechanisms

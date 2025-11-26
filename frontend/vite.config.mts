@@ -48,14 +48,31 @@ export default defineConfig({
                 target: "http://localhost:3001",
                 changeOrigin: true,
                 secure: false,
-                ws: true,
+                ws: true
             },
             "/auth/api": {
                 target: "http://localhost:3001",
                 changeOrigin: true,
                 secure: false,
-                ws: true,
+                ws: true
+            }
+        }
+    },
+    preview: {
+        port: 3000,
+        proxy: {
+            "/auth/oauth": {
+                target: "http://localhost:3001",
+                changeOrigin: true,
+                secure: false,
+                ws: true
             },
+            "/auth/api": {
+                target: "http://localhost:3001",
+                changeOrigin: true,
+                secure: false,
+                ws: true
+            }
         }
     },
     optimizeDeps: {

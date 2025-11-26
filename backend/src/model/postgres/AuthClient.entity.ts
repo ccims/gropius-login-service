@@ -11,7 +11,8 @@ import { LoginUser } from "./LoginUser.entity";
  * If a number smaller than this is set in the config,
  * this wil clamp it to at least 15
  */
-const MINUMUM_SECRET_LENGTH_BYTES = 15;
+const MINIMUM_SECRET_LENGTH_BYTES = 15;
+
 /**
  * The length of the censored prefix of the secret
  */
@@ -95,8 +96,7 @@ export class AuthClient {
     clientCredentialFlowUser: Promise<LoginUser | null>;
 
     /**
-     * If this client is editable.
-     * If not, the client can not be changed or deleted.
+     * Internal clients are immutable, i.e., cannot be changed or deleted.
      */
     isInternal: boolean = false;
 
@@ -113,7 +113,7 @@ export class AuthClient {
 
     /**
      * Generates a new secret and adds it to the list of this client.
-     * Does NOT save the entitiy!
+     * Does NOT save the entity!
      *
      * **Note**: The secret text is only returned here and will not be saved as plain text.
      * There is no way to retrieve it later.
@@ -127,7 +127,7 @@ export class AuthClient {
         fingerprint: string;
         censored: string;
     }> {
-        const length = Math.min(MINUMUM_SECRET_LENGTH_BYTES, parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10));
+        const length = Math.min(MINIMUM_SECRET_LENGTH_BYTES, parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10));
         const secretText = (await randomBytesAsync(length)).toString("hex");
         const hash = await bcrypt.hash(secretText, parseInt(process.env.GROPIUS_BCRYPT_HASH_ROUNDS, 10));
         const censored = secretText.substring(0, CENSORED_SECRET_LENGTH);
@@ -182,6 +182,14 @@ export class AuthClient {
             censored: entry.censored,
             fingerprint: entry.fingerprint,
         }));
+    }
+
+    async verifySecret(secret: string) {
+        for (const hash of this.clientSecrets) {
+            const verified = await bcrypt.compare(secret, hash.substring(hash.indexOf(";") + 1));
+            if (verified) return true;
+        }
+        return false;
     }
 
     toJSON() {

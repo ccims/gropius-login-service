@@ -94,16 +94,6 @@ export class UserLoginData {
     state: LoginState;
 
     /**
-     * If not `null`, this authentication should be considered *invalid* on any date+time AFTER this.
-     * This is to ensure created UserLoginData, that are not used for registration
-     * or linking in time, are not kept forever.
-     *
-     * If `null`, the authentication should not expire by date.
-     */
-    @Column({ nullable: true, default: null })
-    expires: Date | null;
-
-    /**
      * All IMSUser instances in the backend that are represented by this authentication.
      *
      * These are all users in an IMS that are represented by the strategy instance
@@ -131,6 +121,6 @@ export class UserLoginData {
     loginsUsingThis: Promise<ActiveLogin[]>;
 
     toJSON() {
-        return { id: this.id, state: this.state, expires: this.expires };
+        return { id: this.id, state: this.state };
     }
 }
