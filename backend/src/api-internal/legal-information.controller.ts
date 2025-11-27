@@ -1,15 +1,68 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { BaseLegalInformationInfoFragment, DefaultLegalInformationInfoFragment } from "src/model/graphql/generated";
 import { GraphqlService } from "src/model/graphql/graphql.service";
 import { OpenApiTag } from "src/util/openapi-tag";
 
-class LegalInformationListReturn {
-    constructor(readonly legalInformation: BaseLegalInformationInfoFragment[]) {}
+/**
+ * Represents basic legal information details
+ */
+class BaseLegalInformationDto {
+    /**
+     * The unique ID of the legal information
+     * @example "12345678-90ab-cdef-fedc-ab0987654321"
+     */
+    id: string;
+    
+    /**
+     * The label/title of the legal information
+     * @example "Terms of Service"
+     */
+    label: string;
+    
+    /**
+     * The priority/order of the legal information
+     * @example 1
+     */
+    priority: number;
 }
 
+/**
+ * Represents complete legal information including the full text
+ */
+class DefaultLegalInformationDto extends BaseLegalInformationDto {
+    /**
+     * The full text content of the legal information
+     * @example "By using this service, you agree to..."
+     */
+    text: string;
+}
+
+/**
+ * Response containing a list of legal information items
+ */
+class LegalInformationListReturn {
+    /**
+     * Array of legal information items
+     */
+    legalInformation: BaseLegalInformationDto[];
+    
+    constructor(legalInformation: any[]) {
+        this.legalInformation = legalInformation;
+    }
+}
+
+/**
+ * Response containing a single legal information item with full details
+ */
 class LegalInformationReturn {
-    constructor(readonly legalInformation: DefaultLegalInformationInfoFragment) {}
+    /**
+     * The legal information item
+     */
+    legalInformation: DefaultLegalInformationDto;
+    
+    constructor(legalInformation: any) {
+        this.legalInformation = legalInformation;
+    }
 }
 
 @Controller("legal-information")
@@ -36,6 +89,6 @@ export class LegalinformationController {
     })
     async getLegalInformationById(@Param("id") id: string) {
         const result = await this.graphqlService.sdk.getLegalInformation({ id });
-        return new LegalInformationReturn(result.node as DefaultLegalInformationInfoFragment);
+        return new LegalInformationReturn(result.node);
     }
 }
