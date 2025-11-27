@@ -270,11 +270,11 @@ class Flow {
     }
 
     isOAuthFlow() {
-        return this.req.session.flow.flow_kind === FlowKind.OAUTH;
+        return this.req.session.flow?.flow_kind === FlowKind.OAUTH;
     }
 
     isLinkFlow() {
-        return this.req.session.flow.flow_kind === FlowKind.LINK;
+        return this.req.session.flow?.flow_kind === FlowKind.LINK;
     }
 
     setVia(via: "login" | "register") {
