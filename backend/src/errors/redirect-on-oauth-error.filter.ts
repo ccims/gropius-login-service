@@ -17,14 +17,23 @@ export class RedirectOnOAuthErrorFilter implements ExceptionFilter {
         const req = context.getRequest<Request>();
         const res = context.getResponse<Response>();
 
-        if (!req.context.flow.tryRequest()) throw error;
+        try {
+            const url = new URL(req.context.flow.getRequest().redirect);
+            url.searchParams.append("error", error.error_type);
+            url.searchParams.append(
+                "error_description",
+                error.error_message.replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, ""),
+            );
+            return res.redirect(url.toString());
+        } catch (other) {
+            if (other instanceof Error) {
+                this.logger.error(other.stack);
+            } else {
+                this.logger.error(other);
+            }
 
-        const url = new URL(req.context.flow.getRequest().redirect);
-        url.searchParams.append("error", error.error_type);
-        url.searchParams.append(
-            "error_description",
-            error.error_message.replace(/[^\x20-\x21\x23-\x5B\x5D-\x7E]/g, ""),
-        );
-        return res.redirect(url.toString());
+            // TODO: HOTFIX: Find a better way to handle this
+            return res.json({ broken: true });
+        }
     }
 }
