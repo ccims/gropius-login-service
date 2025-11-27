@@ -1,7 +1,7 @@
 <template>
     <BaseLayout>
         <template #content>
-            <GropiusCard :go-back="() => router.push('account')" class="login-container">
+            <GropiusCard :go-back="isRegisterAdditional ? () => router.push('account') : undefined" class="login-container">
                 <template v-if="!loadingStrategies">
                     <p class="text-center text-body-1 mt-2">{{ title }}</p>
                     <v-sheet v-if="errorMessage" color="error-container" rounded="lger" class="pa-3 mt-2">
