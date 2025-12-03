@@ -70,9 +70,6 @@ export class AuthorizeController {
     async authorizeEndpoint(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         this.logger.log("Staring new authorize request");
 
-        const no = true;
-        if (no) throw new OAuthHttpException("asdf", "asdf");
-
         /**
          * Init flow
          */
