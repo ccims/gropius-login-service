@@ -18,7 +18,7 @@ export abstract class RedirectOnErrorFilter implements ExceptionFilter {
 
         try {
             this.use(error, req, res);
-        } catch (other) {
+        } catch (other: unknown) {
             if (other instanceof Error) {
                 this.logger.error(other.stack);
             } else {
