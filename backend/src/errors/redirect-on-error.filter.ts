@@ -1,11 +1,10 @@
 import { ArgumentsHost, ExceptionFilter, Logger } from "@nestjs/common";
-import { OAuthHttpException } from "./OAuthHttpException";
 import { Request, Response } from "express";
 
 export abstract class RedirectOnErrorFilter implements ExceptionFilter {
     private readonly logger = new Logger(this.constructor.name);
 
-    catch(error: OAuthHttpException, host: ArgumentsHost) {
+    catch(error: unknown, host: ArgumentsHost) {
         if (error instanceof Error) {
             this.logger.error(error.stack);
         } else {
