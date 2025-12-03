@@ -2,22 +2,11 @@ import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { OAuthHttpException } from "./OAuthHttpException";
 import { combineURL } from "../util/utils";
+import { RedirectOnErrorFilter } from "./redirect-on-error.filter";
 
 @Catch()
-export class RedirectOnAnyErrorFilter implements ExceptionFilter {
-    private readonly logger = new Logger(this.constructor.name);
-
-    catch(error: any, host: ArgumentsHost) {
-        if (error instanceof Error) {
-            this.logger.error(error.stack);
-        } else {
-            this.logger.error(error);
-        }
-
-        const context = host.switchToHttp();
-        const req = context.getRequest<Request>();
-        const res = context.getResponse<Response>();
-
+export class RedirectOnAnyErrorFilter extends RedirectOnErrorFilter {
+    use(error: unknown, req: Request, res: Response) {
         const url = combineURL(`auth/flow/login`, process.env.GROPIUS_ENDPOINT);
         url.searchParams.append("error", "server_error");
         url.searchParams.append("error_description", "An internal server error occurred");

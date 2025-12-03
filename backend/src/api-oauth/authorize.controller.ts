@@ -10,6 +10,7 @@ import { LoginRedirectService } from "../backend-services/x-login-redirect.servi
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 import { FlowKind } from "../util/Context";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 
 @Controller()
 export class AuthorizeController {
@@ -68,6 +69,9 @@ export class AuthorizeController {
     @ApiTags(OpenApiTag.OAUTH_API)
     async authorizeEndpoint(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         this.logger.log("Staring new authorize request");
+
+        const no = true;
+        if (no) throw new OAuthHttpException("asdf", "asdf");
 
         /**
          * Init flow
