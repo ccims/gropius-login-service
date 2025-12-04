@@ -1,27 +1,16 @@
-import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Catch } from "@nestjs/common";
 import { AuthException } from "./AuthException";
 import { combineURL } from "../util/utils";
+import { RedirectOnErrorFilter } from "./redirect-on-error.filter";
+import { Request, Response } from "express";
 
 @Catch(AuthException)
-export class RedirectOnAuthErrorFilter implements ExceptionFilter {
-    private readonly logger = new Logger(this.constructor.name);
-
-    catch(error: AuthException, host: ArgumentsHost) {
-        if (error instanceof Error) {
-            this.logger.error(error.stack);
-        } else {
-            this.logger.error(error);
-        }
-
-        const context = host.switchToHttp();
-        const req = context.getRequest<Request>();
-        const res = context.getResponse<Response>();
-
+export class RedirectOnAuthErrorFilter extends RedirectOnErrorFilter {
+    use(error: AuthException, req: Request, res: Response) {
         const target = req.context.flow.isLinkFlow() ? "register-additional" : "login";
         const url = combineURL(`auth/flow/${target}`, process.env.GROPIUS_ENDPOINT);
         url.searchParams.append("error", error.authErrorMessage);
         url.searchParams.append("strategy_instance", error.strategyInstanceId);
-        res.redirect(url.toString());
+        return res.redirect(url.toString());
     }
 }

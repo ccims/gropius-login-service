@@ -10,6 +10,7 @@ import { LoginRedirectService } from "../backend-services/x-login-redirect.servi
 import { ActiveLoginService } from "../model/services/active-login.service";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 import { FlowKind } from "../util/Context";
+import { OAuthHttpException } from "../errors/OAuthHttpException";
 
 @Controller()
 export class AuthorizeController {
