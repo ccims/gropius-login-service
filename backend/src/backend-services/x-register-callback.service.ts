@@ -8,7 +8,7 @@ import { ActiveLoginService } from "../model/services/active-login.service";
 const schema = Joi.object({
     username: Joi.string(),
     displayName: Joi.string(),
-    email: Joi.string().valid("").optional(),
+    email: Joi.string().allow("").optional(),
     csrf: Joi.string(),
     flow: Joi.string(),
 });
@@ -16,7 +16,7 @@ const schema = Joi.object({
 type Data = {
     username: string;
     displayName: string;
-    email: string;
+    email?: string;
 };
 
 @Injectable()
