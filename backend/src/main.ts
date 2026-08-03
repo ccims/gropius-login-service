@@ -63,7 +63,12 @@ async function bootstrap() {
 
     const portNumber = parseInt(process.env.GROPIUS_LOGIN_LISTEN_PORT, 10) || 3000;
 
-    app.enableCors();
+    // Scoped to the deployment's own origin instead of the default "*", which answered
+    // preflights for the token endpoint and every admin API from any site on the internet.
+    app.enableCors({
+        origin: config.get<string>("GROPIUS_ENDPOINT"),
+        credentials: true,
+    });
 
     app.set("trust proxy", config.get<string | number | boolean>("GROPIUS_LOGIN_TRUST_PROXY"));
 

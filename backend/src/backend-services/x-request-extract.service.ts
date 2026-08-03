@@ -57,6 +57,23 @@ export class RequestExtractService {
             throw new OAuthHttpException("invalid_scope", error.message);
         }
 
+        // An access token can never be issued for the register scope (signAccessToken rejects it),
+        // so accepting it here would only lead the user through consent to a failing token exchange.
+        if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
+            throw new OAuthHttpException(
+                "invalid_scope",
+                `Scope '${TokenScope.LOGIN_SERVICE_REGISTER}' cannot be requested`,
+            );
+        }
+
+        // Check the requested scope against the client here rather than only at token exchange,
+        // so the user is never asked to consent to a scope the client could not receive anyway.
+        for (const requestedScope of request.scope) {
+            if (!client.validScopes.includes(requestedScope)) {
+                throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
+            }
+        }
+
         if (request.codeChallengeMethod !== "S256") {
             throw new OAuthHttpException("invalid_request", "Only S256 code challenge method is supported");
         }

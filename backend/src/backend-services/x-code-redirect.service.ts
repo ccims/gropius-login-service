@@ -19,6 +19,7 @@ export class CodeRedirectService {
             request.clientId,
             request.scope,
             request.codeChallenge,
+            request.redirect,
         );
 
         const url = new URL(request.redirect);

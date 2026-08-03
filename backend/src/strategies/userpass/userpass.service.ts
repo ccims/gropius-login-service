@@ -11,7 +11,6 @@ import { StrategyUsingPassport } from "../StrategyUsingPassport";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { EncryptionService } from "../../backend-services/encryption.service";
 
 @Injectable()
 export class UserpassStrategyService extends StrategyUsingPassport {
@@ -19,19 +18,9 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        encryptionService: EncryptionService,
+        stateJwtService: JwtService,
     ) {
-        super(
-            "userpass",
-            strategyInstanceService,
-            strategiesService,
-            encryptionService,
-            true,
-            false,
-            false,
-            false,
-            true,
-        );
+        super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false, true);
     }
 
     override get acceptsVariables(): StrategyVariable[] {
@@ -95,7 +84,9 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         done: (err: any, user: AuthResult | false, info: any) => any,
     ) {
         if (!password || password.trim().length == 0) {
-            done("Password cannot be empty or blank!", false, undefined);
+            // Without the return, execution fell through into the lookup below and could
+            // call `done` a second time.
+            return done("Password cannot be empty or blank!", false, undefined);
         }
 
         const dataActiveLogin = {};

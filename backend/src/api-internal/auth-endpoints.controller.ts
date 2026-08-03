@@ -25,6 +25,7 @@ import { FlowStateService } from "../backend-services/x-flow-state.service";
 import { FlowKind, FlowState } from "../util/Context";
 import { RedirectOnError } from "../errors/redirect-on-error.decorator";
 import { LinkCallbackService } from "../backend-services/x-link-callback.service";
+import { AuthRateLimit } from "../util/AuthRateLimit.decorator";
 
 @Controller("auth")
 @ApiTags(OpenApiTag.INTERNAL_API)
@@ -55,6 +56,7 @@ export class AuthEndpointsController {
      * Functionality performed is determined by mode parameter.
      */
     @Post("redirect/:id/:mode")
+    @AuthRateLimit()
     @NoCors()
     @RedirectOnError()
     @ApiOperation({ summary: "Authorize endpoint for a strategy instance" })
@@ -165,6 +167,7 @@ export class AuthEndpointsController {
     }
 
     @Post("submit/:id/:mode")
+    @AuthRateLimit()
     @NoCors()
     @RedirectOnError()
     @ApiOperation({ summary: "Submit endpoint for a strategy instance" })

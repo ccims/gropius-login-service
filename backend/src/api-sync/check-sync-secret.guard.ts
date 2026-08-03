@@ -1,12 +1,16 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Request } from "express";
+import { compareTimeSafe } from "../util/utils";
 
 @Injectable()
 export class CheckSyncSecretGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const expectedToken = process.env.GROPIUS_LOGIN_SYNC_API_SECRET?.trim();
+        // Never fall back to "no secret configured means no secret required": this API hands out
+        // IMS access tokens, so a missing secret must lock the API down rather than open it up.
+        // The configuration validator additionally rejects an empty value at startup.
         if (!expectedToken || expectedToken.length == 0) {
-            return true;
+            throw new UnauthorizedException(undefined, "Sync API secret is not configured");
         }
 
         const authHead = context.switchToHttp().getRequest<Request>()?.headers?.authorization;
@@ -18,7 +22,7 @@ export class CheckSyncSecretGuard implements CanActivate {
         }
         const token = authHead.substring(7).trim();
 
-        if (token != expectedToken) {
+        if (!compareTimeSafe(token, expectedToken)) {
             throw new UnauthorizedException(undefined, "Invalid sync-api secret");
         }
         return true;

@@ -41,14 +41,23 @@ export class TokenExchangeRefreshTokenService {
         activeLoginAccess.assert();
 
         /**
-         * Check refresh token counter
+         * Rotate the refresh token
+         *
+         * Compare-and-increment happens in a single statement, so that two concurrent
+         * redemptions of the same refresh token cannot both pass the check. Losing the race
+         * means the token was already used, which is treated as replay: the access is revoked.
          */
-        if (parseInt(data.tokenUniqueId) !== activeLoginAccess.refreshTokenCounter) {
+        const presentedCounter = parseInt(data.tokenUniqueId, 10);
+        const rotated =
+            Number.isInteger(presentedCounter) &&
+            (await this.activeLoginAccessService.rotateRefreshToken(activeLoginAccess.id, presentedCounter));
+        if (!rotated) {
             this.logger.warn("Refresh token counter does not match", data.activeLoginAccessId);
             activeLoginAccess.isValid = false;
             await this.activeLoginAccessService.save(activeLoginAccess);
             throw new OAuthHttpException("invalid_grant", "Refresh token has been used already");
         }
+        activeLoginAccess.refreshTokenCounter = presentedCounter + 1;
 
         /**
          * Scope
@@ -88,9 +97,6 @@ export class TokenExchangeRefreshTokenService {
          */
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
         const accessToken = await this.tokenService.signAccessToken(await loginData.user, data.scope, tokenExpiresInMs);
-
-        activeLoginAccess.refreshTokenCounter++;
-        await this.activeLoginAccessService.save(activeLoginAccess);
 
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,

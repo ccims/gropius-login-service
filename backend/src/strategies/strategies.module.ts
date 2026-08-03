@@ -25,6 +25,7 @@ import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira
                     },
                     verifyOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,
+                        algorithms: ["RS256"],
                     },
                 };
             },

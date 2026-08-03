@@ -127,7 +127,10 @@ export class AuthClient {
         fingerprint: string;
         censored: string;
     }> {
-        const length = Math.min(MINIMUM_SECRET_LENGTH_BYTES, parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10));
+        const configuredLength = parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10);
+        // Clamps *up* to the minimum, as documented on MINIMUM_SECRET_LENGTH_BYTES.
+        // `Math.min` here silently capped every secret at 15 bytes and discarded the configured value.
+        const length = Math.max(MINIMUM_SECRET_LENGTH_BYTES, configuredLength || 0);
         const secretText = (await randomBytesAsync(length)).toString("hex");
         const hash = await bcrypt.hash(secretText, parseInt(process.env.GROPIUS_BCRYPT_HASH_ROUNDS, 10));
         const censored = secretText.substring(0, CENSORED_SECRET_LENGTH);
@@ -184,8 +187,12 @@ export class AuthClient {
         }));
     }
 
-    async verifySecret(secret: string) {
-        for (const hash of this.clientSecrets) {
+    async verifySecret(secret: string | undefined) {
+        // bcrypt.compare throws on a non-string, which would surface as a 500 instead of a 401.
+        if (typeof secret !== "string" || secret.length == 0) {
+            return false;
+        }
+        for (const hash of this.clientSecrets ?? []) {
             const verified = await bcrypt.compare(secret, hash.substring(hash.indexOf(";") + 1));
             if (verified) return true;
         }

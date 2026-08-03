@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { RouterModule } from "@nestjs/core";
+import { APP_GUARD, RouterModule } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { ApiLoginModule } from "./api-login/api-login.module";
 import { ApiSyncModule } from "./api-sync/api-sync.module";
@@ -21,6 +22,21 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
                 ? [".env.dev.local", ".env.dev"]
                 : [".env.prod.local", ".env.prod"],
             validationSchema,
+        }),
+        // Baseline throttle for every endpoint, so credential and token endpoints cannot be
+        // hammered. Per-route limits are tightened with @Throttle where it matters.
+        ThrottlerModule.forRootAsync({
+            async useFactory() {
+                await ConfigModule.envVariablesLoaded;
+                return {
+                    throttlers: [
+                        {
+                            ttl: parseInt(process.env.GROPIUS_RATE_LIMIT_TTL_MS, 10),
+                            limit: parseInt(process.env.GROPIUS_RATE_LIMIT_REQUESTS, 10),
+                        },
+                    ],
+                };
+            },
         }),
         TypeOrmModule.forRootAsync({
             async useFactory(...args): Promise<TypeOrmModuleOptions> {
@@ -70,6 +86,6 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
         InitializationModule,
     ],
     controllers: [],
-    providers: [],
+    providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -9,7 +9,6 @@ import { LoginState } from "src/model/postgres/UserLoginData.entity";
 import { OauthTokenResponse } from "../api-oauth/types";
 import { compareTimeSafe, hash, ms2s } from "../util/utils";
 import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
-import { ActiveLoginAccess } from "../model/postgres/ActiveLoginAccess.entity";
 
 @Injectable()
 export class TokenExchangeAuthorizationCodeService {
@@ -45,10 +44,42 @@ export class TokenExchangeAuthorizationCodeService {
         await this.activeLoginService.extendExpiration(activeLogin);
 
         /**
-         * Check if auth code has been already used
+         * Redirect URI
+         *
+         * The code carries the redirect uri of the authorize request it came from (RFC 6749
+         * section 4.1.3). Codes issued before this was introduced carry none, and the two
+         * bundled frontends do not send one yet, so it is only enforced when both sides
+         * supply it. Once every client sends `redirect_uri`, make a missing one a hard error.
          */
-        const existingAccess = await this.activeLoginAccessService.findOneBy({ authCodeFingerprint: hash(token) });
-        if (existingAccess) throw new Error("Authorization code has already been used");
+        const presentedRedirectUri = req.body.redirect_uri;
+        if (presentedRedirectUri !== undefined && data.redirectUri !== undefined) {
+            if (typeof presentedRedirectUri !== "string" || presentedRedirectUri !== data.redirectUri) {
+                this.logger.warn("Redirect uri does not match the one of the authorize request");
+                throw new OAuthHttpException("invalid_grant", "Redirect uri does not match");
+            }
+        } else if (data.redirectUri !== undefined) {
+            this.logger.warn(
+                `Client ${client.id} redeemed an authorization code without a redirect_uri; ` +
+                    "this will become an error in a future release",
+            );
+        }
+
+        /**
+         * Claim the authorization code
+         *
+         * Inserting the fingerprint under a unique constraint is what makes this single use:
+         * checking first and inserting later lets two concurrent requests both pass. A code
+         * presented twice means it may have leaked, so every token already issued for this
+         * login is revoked (RFC 6819 section 5.2.1.1).
+         */
+        const activeLoginAccess = await this.activeLoginAccessService.claimAuthorizationCode(activeLogin, hash(token));
+        if (!activeLoginAccess) {
+            this.logger.warn(`Authorization code replayed for active login ${activeLogin.id}; revoking its tokens`);
+            await this.activeLoginAccessService.invalidateByActiveLoginId(activeLogin.id);
+            activeLogin.isValid = false;
+            await this.activeLoginService.save(activeLogin);
+            throw new OAuthHttpException("invalid_grant", "Given code was invalid or expired");
+        }
 
         /**
          * Code Challenge
@@ -104,9 +135,6 @@ export class TokenExchangeAuthorizationCodeService {
         const tokenExpiresInMs: number = parseInt(process.env.GROPIUS_ACCESS_TOKEN_EXPIRATION_TIME_MS, 10);
         const accessToken = await this.tokenService.signAccessToken(user, data.scope, tokenExpiresInMs);
 
-        const activeLoginAccess = await this.activeLoginAccessService.save(
-            new ActiveLoginAccess(activeLogin, hash(token), 1),
-        );
         const refreshToken = await this.tokenService.signRefreshToken(
             activeLoginAccess.id,
             client.id,

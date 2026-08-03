@@ -13,6 +13,7 @@ export interface AuthorizationCodeResult {
     clientId: string;
     scope: TokenScope[];
     codeChallenge: string;
+    redirectUri?: string;
 }
 
 export interface RefreshTokenResult {
@@ -66,6 +67,7 @@ export class TokenService {
         clientId: string,
         scope: TokenScope[],
         codeChallenge: string,
+        redirectUri: string,
     ): Promise<string> {
         this.verifyScope(scope);
 
@@ -88,6 +90,9 @@ export class TokenService {
                 client_id: clientId,
                 scope,
                 code_challenge: codeChallenge,
+                // Binds the code to the redirect uri of the authorize request (RFC 6749 section 4.1.3),
+                // so a code delivered to one registered redirect uri cannot be redeemed as another.
+                redirect_uri: redirectUri,
                 kind: "authorization_code",
             },
             {
@@ -117,6 +122,7 @@ export class TokenService {
             clientId: payload.client_id,
             scope: payload.scope,
             codeChallenge: payload.code_challenge,
+            redirectUri: payload.redirect_uri,
         };
     }
 

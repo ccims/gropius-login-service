@@ -8,8 +8,7 @@ import { StrategiesService } from "src/model/services/strategies.service";
 import { Logger } from "@nestjs/common";
 import { Request } from "express";
 import { Context, FlowState } from "../util/Context";
-import { compareTimeSafe } from "../util/utils";
-import { EncryptionService } from "../backend-services/encryption.service";
+import { compareTimeSafe, ms2s } from "../util/utils";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -18,7 +17,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
         strategiesService: StrategiesService,
-        private readonly encryptionService: EncryptionService,
+        private readonly stateJwtService: JwtService,
         canLoginRegister = true,
         canSync = false,
         needsRedirectFlow = false,
@@ -58,12 +57,17 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: this.encryptionService.encrypt(
-                        JSON.stringify({
+                    // Signed rather than encrypted: what this value needs is integrity, and
+                    // encrypting under the *public* half of a keypair provides none - anyone
+                    // holding that key could mint a state blob. A signature cannot be forged
+                    // without the private key. Signing also gives the state an expiry.
+                    state: this.stateJwtService.sign(
+                        {
                             kind: "passport_state",
                             csrf: context?.auth.getCSRF(),
                             flow: context?.flow.getId(),
-                        }),
+                        },
+                        { expiresIn: ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS, 10)) },
                     ),
                     ...this.getAdditionalPassportOptions(strategyInstance, context),
                 },
@@ -76,9 +80,13 @@ export abstract class StrategyUsingPassport extends Strategy {
 
                         const stateToken = info.state || req.query?.state;
                         if (stateToken) {
-                            const statePayload = JSON.parse(
-                                this.encryptionService.decrypt(stateToken),
-                            ) as PerformAuthState;
+                            let statePayload: PerformAuthState;
+                            try {
+                                statePayload = this.stateJwtService.verify<PerformAuthState>(stateToken);
+                            } catch (stateError: unknown) {
+                                this.logger.warn("Invalid state returned by passport strategy", stateError);
+                                return reject("Invalid state returned by passport strategy");
+                            }
 
                             if (statePayload.kind !== "passport_state") {
                                 return reject("Invalid state returned by passport strategy");

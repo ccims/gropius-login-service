@@ -69,6 +69,8 @@ export class UpdateAuthClientInput {
         if (typeof input.name != "string" || input.name.trim().length == 0) {
             throw new HttpException("If given, name must be a non empty string", HttpStatus.BAD_REQUEST);
         }
+        // Both loops below used to run even when the field was absent, so a partial update
+        // crashed with a TypeError (500) instead of being accepted.
         if (input.redirectUrls != undefined) {
             if (!Array.isArray(input.redirectUrls)) {
                 throw new HttpException(
@@ -76,15 +78,32 @@ export class UpdateAuthClientInput {
                     HttpStatus.BAD_REQUEST,
                 );
             }
-        }
-        for (const url of input.redirectUrls) {
-            if (typeof url !== "string") {
-                throw new HttpException("All given redirect urls must be valid url strings", HttpStatus.BAD_REQUEST);
-            }
-            try {
-                new URL(url);
-            } catch (err: any) {
-                throw new HttpException("Invalid redirect url: " + (err.message ?? err), HttpStatus.BAD_REQUEST);
+            for (const url of input.redirectUrls) {
+                if (typeof url !== "string") {
+                    throw new HttpException(
+                        "All given redirect urls must be valid url strings",
+                        HttpStatus.BAD_REQUEST,
+                    );
+                }
+                let parsed: URL;
+                try {
+                    parsed = new URL(url);
+                } catch (err: any) {
+                    throw new HttpException("Invalid redirect url: " + (err.message ?? err), HttpStatus.BAD_REQUEST);
+                }
+                // `new URL` alone accepts "javascript:" and "data:" URLs. Redirect targets are
+                // handed to the browser, so restrict them to real web origins; plain http is
+                // allowed only for loopback, which is what native/dev clients need.
+                const isLoopback = ["localhost", "127.0.0.1", "[::1]", "::1"].includes(parsed.hostname);
+                if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && isLoopback)) {
+                    throw new HttpException(
+                        "Redirect urls must use https, or http on a loopback host",
+                        HttpStatus.BAD_REQUEST,
+                    );
+                }
+                if (parsed.hash.length > 0) {
+                    throw new HttpException("Redirect urls must not contain a fragment", HttpStatus.BAD_REQUEST);
+                }
             }
         }
         if (input.isValid != undefined && typeof input.isValid !== "boolean") {
@@ -97,10 +116,10 @@ export class UpdateAuthClientInput {
             if (!Array.isArray(input.validScopes)) {
                 throw new HttpException("validScopes must be an array of strings", HttpStatus.BAD_REQUEST);
             }
-        }
-        for (const scope of input.validScopes) {
-            if (scope !== TokenScope.BACKEND) {
-                throw new HttpException(`Only ${TokenScope.BACKEND} is a valid scopes`, HttpStatus.BAD_REQUEST);
+            for (const scope of input.validScopes) {
+                if (scope !== TokenScope.BACKEND) {
+                    throw new HttpException(`Only ${TokenScope.BACKEND} is a valid scopes`, HttpStatus.BAD_REQUEST);
+                }
             }
         }
         if (input.clientCredentialFlowUser != undefined) {
