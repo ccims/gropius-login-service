@@ -1,18 +1,68 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
-import { GraphqlService } from "src/model/graphql/graphql.service";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { UserLoginDataImsUser } from "src/model/postgres/UserLoginDataImsUser.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
+import { graphql } from "../model/graphql/generated/index.js";
+import { GraphqlService } from "../model/graphql/graphql.service.js";
+import { ActiveLogin } from "../model/postgres/ActiveLogin.entity.js";
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
+import { LoginState, UserLoginData } from "../model/postgres/UserLoginData.entity.js";
+import { UserLoginDataImsUser } from "../model/postgres/UserLoginDataImsUser.entity.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { UserLoginDataService } from "../model/services/user-login-data.service.js";
 
 export interface CreateUserInput {
     username: string;
     displayName: string;
     email?: string;
 }
+
+const checkUserIsAdminQuery = graphql(`
+    query checkUserIsAdmin($id: ID!) {
+        node(id: $id) {
+            __typename
+            ... on GropiusUser {
+                __typename
+                id
+                isAdmin
+            }
+        }
+    }
+`);
+
+const getBasicGropiusUserDataQuery = graphql(`
+    query getBasicGropiusUserData($id: ID!) {
+        node(id: $id) {
+            ...UserData
+        }
+    }
+`);
+
+const getAllGropiusUsersQuery = graphql(`
+    query getAllGropiusUsers {
+        gropiusUserIds
+    }
+`);
+
+const createNewUserMutation = graphql(`
+    mutation createNewUser($input: CreateGropiusUserInput!) {
+        createGropiusUser(input: $input) {
+            gropiusUser {
+                ...UserData
+            }
+        }
+    }
+`);
+
+const setImsUserLinkMutation = graphql(`
+    mutation setImsUserLink($gropiusUserId: ID!, $imsUserId: ID!) {
+        updateIMSUser(input: { id: $imsUserId, gropiusUser: $gropiusUserId }) {
+            __typename
+            imsUser {
+                __typename
+                id
+            }
+        }
+    }
+`);
 
 @Injectable()
 export class BackendUserService {
@@ -39,7 +89,7 @@ export class BackendUserService {
         if (!user.neo4jId) {
             throw new Error("User without neo4jId: " + user.id);
         }
-        const loadedUser = await this.graphqlService.sdk.checkUserIsAdmin({ id: user.neo4jId });
+        const loadedUser = await this.graphqlService.request(checkUserIsAdminQuery, { id: user.neo4jId });
         if (!loadedUser?.node) {
             throw new Error(`Backend did not know neo4jid ${user.neo4jId} that it previously returned`);
         }
@@ -63,7 +113,7 @@ export class BackendUserService {
         if (!user.neo4jId) {
             throw new Error("User without neo4jId: " + user.id);
         }
-        const loadedUser = await this.graphqlService.sdk.getBasicGropiusUserData({ id: user.neo4jId });
+        const loadedUser = await this.graphqlService.request(getBasicGropiusUserDataQuery, { id: user.neo4jId });
         if (loadedUser?.node?.__typename == "GropiusUser") {
             return true;
         }
@@ -74,7 +124,7 @@ export class BackendUserService {
      * Fetches all backend ids of all existing GropiusUsers in the backend
      */
     async getAllGropiusUsersInBackend(): Promise<string[]> {
-        const ids = (await this.graphqlService.sdk.getAllGrpiusUsers())?.gropiusUserIds;
+        const ids = (await this.graphqlService.request(getAllGropiusUsersQuery))?.gropiusUserIds;
         if (!ids) {
             throw new Error("Could not fetch gropius user ids from backend");
         }
@@ -87,7 +137,7 @@ export class BackendUserService {
         loginUser.revokeTokensBefore = new Date();
         loginUser = await this.loginUserService.save(loginUser);
         try {
-            const backendUser = await this.graphqlService.sdk.createNewUser({
+            const backendUser = await this.graphqlService.request(createNewUserMutation, {
                 input: {
                     username: input.username,
                     displayName: input.displayName,
@@ -118,7 +168,7 @@ export class BackendUserService {
      */
     async createLoginUserForExistingBackendUser(neo4jId: string): Promise<LoginUser> {
         try {
-            const backendUser = await this.graphqlService.sdk.getBasicGropiusUserData({ id: neo4jId });
+            const backendUser = await this.graphqlService.request(getBasicGropiusUserDataQuery, { id: neo4jId });
             if (backendUser?.node?.__typename !== "GropiusUser") {
                 throw new Error(
                     `When asking for GropiusUser ${neo4jId}, a ${backendUser?.node?.__typename} was returned`,
@@ -143,7 +193,7 @@ export class BackendUserService {
         if (!gropiusUserId) {
             throw new Error("Login user has no Gropius user associated");
         }
-        const linkResult = await this.graphqlService.sdk.setImsUserLink({
+        const linkResult = await this.graphqlService.request(setImsUserLinkMutation, {
             gropiusUserId,
             imsUserId: imsUser.neo4jId,
         });
@@ -160,7 +210,7 @@ export class BackendUserService {
         const imsUsers = await loginData.imsUsers;
         const linkResults = await Promise.allSettled(
             imsUsers.map((user) =>
-                this.graphqlService.sdk.setImsUserLink({
+                this.graphqlService.request(setImsUserLinkMutation, {
                     gropiusUserId,
                     imsUserId: user.neo4jId,
                 }),

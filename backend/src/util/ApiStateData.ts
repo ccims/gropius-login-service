@@ -1,4 +1,4 @@
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
 
 /**
  * Interface specifying the structure of the data in the response object,

@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
-import { OAuthAuthorizeRequest } from "../api-oauth/types";
-import { TokenScope, TokenService } from "./token.service";
-import { EncryptionService } from "./encryption.service";
-import { AuthClientService } from "../model/services/auth-client.service";
+import type { Request, Response } from "express";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import type { OAuthAuthorizeRequest } from "../api-oauth/types.js";
+import { TokenScope, TokenService } from "./token.service.js";
+import { EncryptionService } from "./encryption.service.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
 
 @Injectable()
 export class RequestExtractService {

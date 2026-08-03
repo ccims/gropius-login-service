@@ -1,15 +1,14 @@
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
+import { AppModule } from "./app.module.js";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { OpenApiTag } from "./util/openapi-tag";
+import { OpenApiTag } from "./util/openapi-tag.js";
 import { ConfigModule } from "@nestjs/config";
-import { LogLevel } from "@nestjs/common";
-// cookie-session is a CommonJS `export =` module; without `esModuleInterop` this is
-// the only import form that both type-checks and emits a callable value.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import session = require("cookie-session");
-import { NextFunction, Request, Response } from "express";
-import { NestExpressApplication } from "@nestjs/platform-express";
+import type { LogLevel } from "@nestjs/common";
+// cookie-session is a CommonJS `export =` module. Under ESM the default import is the
+// callable `module.exports`; `allowSyntheticDefaultImports` makes it type-check.
+import session from "cookie-session";
+import type { NextFunction, Request, Response } from "express";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
 
 async function bootstrap() {

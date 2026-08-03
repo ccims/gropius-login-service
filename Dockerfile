@@ -6,8 +6,7 @@ ADD backend .
 RUN npm ci
 RUN npm run build
 
-# TODO: still on EOL Node 21 — bump together with the frontend dependency update.
-FROM node:21 AS frontend-build
+FROM node:24 AS frontend-build
 WORKDIR /app
 COPY frontend /app
 RUN npm ci

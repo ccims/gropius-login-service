@@ -1,13 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
-import { LoginState } from "src/model/postgres/UserLoginData.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { UserLoginDataImsUserService } from "src/model/services/user-login-data-ims-user";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
+import { BackendUserService } from "../backend-services/backend-user.service.js";
+import { ImsUserFindingService } from "../backend-services/ims-user-finding.service.js";
+import { LoginState } from "../model/postgres/UserLoginData.entity.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { StrategyInstanceService } from "../model/services/strategy-instance.service.js";
+import { UserLoginDataImsUserService } from "../model/services/user-login-data-ims-user.js";
+import { UserLoginDataService } from "../model/services/user-login-data.service.js";
 import { IsNull, Not } from "typeorm";
 
 @Injectable()

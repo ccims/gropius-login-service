@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
-import { AuthClient } from "../postgres/AuthClient.entity";
-import { TokenScope } from "src/backend-services/token.service";
-import { combineURL } from "../../util/utils";
+import { AuthClient } from "../postgres/AuthClient.entity.js";
+import { TokenScope } from "../../backend-services/token.service.js";
+import { combineURL } from "../../util/utils.js";
 
 @Injectable()
 export class AuthClientService extends Repository<AuthClient> {

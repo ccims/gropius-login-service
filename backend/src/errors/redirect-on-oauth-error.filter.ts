@@ -1,7 +1,7 @@
 import { Catch, HttpStatus } from "@nestjs/common";
-import { Request, Response } from "express";
-import { OAuthHttpException } from "./OAuthHttpException";
-import { RedirectOnErrorFilter } from "./redirect-on-error.filter";
+import type { Request, Response } from "express";
+import { OAuthHttpException } from "./OAuthHttpException.js";
+import { RedirectOnErrorFilter } from "./redirect-on-error.filter.js";
 
 @Catch(OAuthHttpException)
 export class RedirectOnOAuthErrorFilter extends RedirectOnErrorFilter {

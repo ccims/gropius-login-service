@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { combineURL, compareTimeSafe } from "../util/utils";
-import { FlowState } from "../util/Context";
+import type { Request, Response } from "express";
+import { combineURL, compareTimeSafe } from "../util/utils.js";
+import { FlowState } from "../util/Context.js";
 
 @Injectable()
 export class FlowStateService {

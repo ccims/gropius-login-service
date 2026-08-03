@@ -1,0 +1,7 @@
+fragment UserData on GropiusUser {
+    __typename
+    id
+    username
+    displayName
+    email
+}

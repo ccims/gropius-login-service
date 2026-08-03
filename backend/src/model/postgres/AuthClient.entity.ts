@@ -3,8 +3,8 @@ import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import { promisify } from "util";
 import { ApiHideProperty } from "@nestjs/swagger";
-import { TokenScope } from "src/backend-services/token.service";
-import { LoginUser } from "./LoginUser.entity";
+import { TokenScope } from "../../backend-services/token.service.js";
+import { LoginUser } from "./LoginUser.entity.js";
 
 /**
  * The minimum length of the client secret in bytes.

@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource, QueryFailedError, Repository } from "typeorm";
-import { ActiveLoginAccess } from "../postgres/ActiveLoginAccess.entity";
-import { ActiveLogin } from "../postgres/ActiveLogin.entity";
+import { ActiveLoginAccess } from "../postgres/ActiveLoginAccess.entity.js";
+import { ActiveLogin } from "../postgres/ActiveLogin.entity.js";
 
 /**
  * Whether a query failure was caused by violating a unique constraint,

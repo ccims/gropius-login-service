@@ -41,7 +41,7 @@
 import BaseLayout from "@/components/BaseLayout.vue";
 import GropiusCard from "@/components/GropiusCard.vue";
 import axios from "axios";
-import { StrategyInstance } from "./model";
+import type { StrategyInstance } from "./model";
 import * as auth from "../util/auth";
 import { asyncComputed } from "@vueuse/core";
 import router from "@/router";

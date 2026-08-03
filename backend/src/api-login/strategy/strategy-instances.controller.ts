@@ -11,13 +11,13 @@ import {
     Put,
     UseGuards,
 } from "@nestjs/common";
-import { CheckLoginServiceAccessTokenGuard } from "src/api-login/auth/check-login-service-access-token.guard";
-import { DefaultReturn } from "src/util/default-return.dto";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { CreateStrategyInstanceInput } from "./dto/create-strategy-instance.dto";
-import { UpdateStrategyInstanceInput } from "./dto/update-strategy-instance.dto";
+import { CheckLoginServiceAccessTokenGuard } from "../auth/check-login-service-access-token.guard.js";
+import { DefaultReturn } from "../../util/default-return.dto.js";
+import { StrategyInstance } from "../../model/postgres/StrategyInstance.entity.js";
+import { StrategyInstanceService } from "../../model/services/strategy-instance.service.js";
+import { StrategiesService } from "../../model/services/strategies.service.js";
+import { CreateStrategyInstanceInput } from "./dto/create-strategy-instance.dto.js";
+import { UpdateStrategyInstanceInput } from "./dto/update-strategy-instance.dto.js";
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
@@ -27,9 +27,9 @@ import {
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-detail.dto";
-import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
+import { OpenApiTag } from "../../util/openapi-tag.js";
+import { StrategyInstanceDetailResponse } from "./dto/get-strategy-instance-detail.dto.js";
+import { NeedsAdmin } from "../../util/NeedsAdmin.decorator.js";
 
 /**
  * Controller for providing crud access to login strategy instances.

@@ -1,12 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { createHash } from "crypto";
-import { JsonWebTokenError } from "jsonwebtoken";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { ms2s } from "../util/utils";
+// jsonwebtoken is CommonJS and Node's ESM loader cannot detect its named exports,
+// so take the default export and destructure the value off it.
+import jsonwebtoken from "jsonwebtoken";
+const { JsonWebTokenError } = jsonwebtoken;
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
+import { ms2s } from "../util/utils.js";
 
 export interface AuthorizationCodeResult {
     activeLoginId: string;

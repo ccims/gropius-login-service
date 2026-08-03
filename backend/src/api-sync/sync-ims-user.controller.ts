@@ -1,14 +1,14 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Logger, Param, Put, UseGuards } from "@nestjs/common";
-import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
-import { DefaultReturn } from "src/util/default-return.dto";
-import { UserLoginDataImsUser } from "src/model/postgres/UserLoginDataImsUser.entity";
-import { UserLoginDataImsUserService } from "src/model/services/user-login-data-ims-user";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { CheckSyncSecretGuard } from "./check-sync-secret.guard";
-import { GetImsTokenResult } from "./dto/get-ims-token.dto";
+import { ImsUserFindingService } from "../backend-services/ims-user-finding.service.js";
+import { DefaultReturn } from "../util/default-return.dto.js";
+import { UserLoginDataImsUser } from "../model/postgres/UserLoginDataImsUser.entity.js";
+import { UserLoginDataImsUserService } from "../model/services/user-login-data-ims-user.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { CheckSyncSecretGuard } from "./check-sync-secret.guard.js";
+import { GetImsTokenResult } from "./dto/get-ims-token.dto.js";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { LinkImsUsersInputDto } from "./dto/link-ims-users-input.dto";
+import { OpenApiTag } from "../util/openapi-tag.js";
+import { LinkImsUsersInputDto } from "./dto/link-ims-users-input.dto.js";
 
 @Controller()
 @UseGuards(CheckSyncSecretGuard)

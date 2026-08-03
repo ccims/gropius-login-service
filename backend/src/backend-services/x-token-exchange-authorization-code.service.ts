@@ -1,14 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { AuthorizationCodeResult, TokenService } from "src/backend-services/token.service";
-import { AuthClient } from "src/model/postgres/AuthClient.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
-import { EncryptionService } from "./encryption.service";
-import { LoginState } from "src/model/postgres/UserLoginData.entity";
-import { OauthTokenResponse } from "../api-oauth/types";
-import { compareTimeSafe, hash, ms2s } from "../util/utils";
-import { ActiveLoginAccessService } from "../model/services/active-login-access.service";
+import type { Request, Response } from "express";
+import { type AuthorizationCodeResult, TokenService } from "./token.service.js";
+import { AuthClient } from "../model/postgres/AuthClient.entity.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import { EncryptionService } from "./encryption.service.js";
+import { LoginState } from "../model/postgres/UserLoginData.entity.js";
+import { OauthTokenResponse } from "../api-oauth/types.js";
+import { compareTimeSafe, hash, ms2s } from "../util/utils.js";
+import { ActiveLoginAccessService } from "../model/services/active-login-access.service.js";
 
 @Injectable()
 export class TokenExchangeAuthorizationCodeService {

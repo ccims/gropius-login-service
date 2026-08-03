@@ -1,4 +1,4 @@
-import { RouteLocationNormalized, RouteLocationRaw } from "vue-router";
+import type { RouteLocationNormalized, RouteLocationRaw } from "vue-router";
 import * as auth from "../util/auth";
 import router from "@/router/index";
 

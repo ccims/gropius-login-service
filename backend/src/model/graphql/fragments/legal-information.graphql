@@ -1,0 +1,10 @@
+fragment BaseLegalInformationInfo on LegalInformation {
+    id
+    label
+    priority
+}
+
+fragment DefaultLegalInformationInfo on LegalInformation {
+    ...BaseLegalInformationInfo
+    text
+}

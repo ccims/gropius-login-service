@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { AuthClient } from "src/model/postgres/AuthClient.entity";
-import { Request, Response } from "express";
-import { TokenService } from "src/backend-services/token.service";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
-import { OauthTokenResponse } from "../api-oauth/types";
-import { ms2s } from "../util/utils";
+import { AuthClient } from "../model/postgres/AuthClient.entity.js";
+import type { Request, Response } from "express";
+import { TokenService } from "./token.service.js";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import { OauthTokenResponse } from "../api-oauth/types.js";
+import { ms2s } from "../util/utils.js";
 
 @Injectable()
 export class TokenExchangeClientCredentialsService {

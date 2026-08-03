@@ -1,5 +1,5 @@
-import { ArgumentsHost, ExceptionFilter, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
+import { type ArgumentsHost, type ExceptionFilter, Logger } from "@nestjs/common";
+import type { Request, Response } from "express";
 
 export abstract class RedirectOnErrorFilter implements ExceptionFilter {
     private readonly logger = new Logger(this.constructor.name);

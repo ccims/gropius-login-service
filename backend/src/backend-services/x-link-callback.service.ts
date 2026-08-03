@@ -1,8 +1,8 @@
-import { Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { Request, Response } from "express";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { ActiveLoginService } from "../model/services/active-login.service";
+import { Injectable, Logger, type NestMiddleware } from "@nestjs/common";
+import type { Request, Response } from "express";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { BackendUserService } from "./backend-user.service.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
 
 @Injectable()
 export class LinkCallbackService implements NestMiddleware {

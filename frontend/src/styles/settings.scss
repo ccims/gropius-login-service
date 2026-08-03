@@ -4,19 +4,103 @@
  * Configures SASS variables and Vuetify overwrites
  */
 
+@use "fonts";
+
 // https://vuetifyjs.com/features/sass-variables/`
 @use "vuetify/settings" with (
     $color-pack: false,
     $rounded: (
         "lger": 16px
     ),
+    // Vuetify 4 replaced the Material 2 type scale with the Material 3 one, which dropped every
+    // .text-h*, .text-subtitle-*, .text-body-* and .text-caption class the app uses. They are
+    // restored here with their Vuetify 3 values, so those classes keep applying a size and weight
+    // instead of silently doing nothing. $button-text-transform already defaults to none in v4.
     $typography: (
-        'button': (
-            'text-transform': none
+        'h1': (
+            'size': 6rem,
+            'weight': 300,
+            'line-height': 1,
+            'letter-spacing': -0.015625em,
+            'font-family': fonts.$heading
+        ),
+        'h2': (
+            'size': 3.75rem,
+            'weight': 300,
+            'line-height': 1,
+            'letter-spacing': -0.0083333333em,
+            'font-family': fonts.$heading
+        ),
+        'h3': (
+            'size': 3rem,
+            'weight': 400,
+            'line-height': 1.05,
+            'letter-spacing': normal,
+            'font-family': fonts.$heading
+        ),
+        'h4': (
+            'size': 2.125rem,
+            'weight': 400,
+            'line-height': 1.175,
+            'letter-spacing': 0.0073529412em,
+            'font-family': fonts.$heading
+        ),
+        'h5': (
+            'size': 1.5rem,
+            'weight': 400,
+            'line-height': 1.333,
+            'letter-spacing': normal,
+            'font-family': fonts.$heading
+        ),
+        'h6': (
+            'size': 1.25rem,
+            'weight': 500,
+            'line-height': 1.6,
+            'letter-spacing': 0.0125em,
+            'font-family': fonts.$heading
         ),
         'subtitle-1': (
-            'weight': 500
+            'size': 1rem,
+            'weight': 500,
+            'line-height': 1.75,
+            'letter-spacing': 0.009375em,
+            'font-family': fonts.$body
         ),
+        'subtitle-2': (
+            'size': 0.875rem,
+            'weight': 500,
+            'line-height': 1.6,
+            'letter-spacing': 0.0071428571em,
+            'font-family': fonts.$body
+        ),
+        'body-1': (
+            'size': 1rem,
+            'weight': 400,
+            'line-height': 1.5,
+            'letter-spacing': 0.03125em,
+            'font-family': fonts.$body
+        ),
+        'body-2': (
+            'size': 0.875rem,
+            'weight': 400,
+            'line-height': 1.425,
+            'letter-spacing': 0.0178571429em,
+            'font-family': fonts.$body
+        ),
+        'caption': (
+            'size': 0.75rem,
+            'weight': 400,
+            'line-height': 1.667,
+            'letter-spacing': 0.0333333333em,
+            'font-family': fonts.$body
+        ),
+        'overline': (
+            'size': 0.75rem,
+            'weight': 500,
+            'line-height': 2.667,
+            'letter-spacing': 0.1666666667em,
+            'font-family': fonts.$body
+        )
     ),
     $icon-sizes: (
         "x-large": 2.5em

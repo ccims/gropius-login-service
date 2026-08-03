@@ -1,11 +1,11 @@
-import { Request } from "express";
+import type { Request } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { OAuthAuthorizeRequest } from "../api-oauth/types";
-import { hash, ms2s, now } from "./utils";
-import { FlowType } from "../strategies/AuthResult";
-import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
-import { Strategy } from "../strategies/Strategy";
-import { LoginUser } from "../model/postgres/LoginUser.entity";
+import type { OAuthAuthorizeRequest } from "../api-oauth/types.js";
+import { hash, ms2s, now } from "./utils.js";
+import { FlowType } from "../strategies/AuthResult.js";
+import { ActiveLogin } from "../model/postgres/ActiveLogin.entity.js";
+import { Strategy } from "../strategies/Strategy.js";
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
 
 declare global {
     namespace Express {

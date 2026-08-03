@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { UpdateStrategyInstanceInput } from "./update-strategy-instance.dto";
+import { UpdateStrategyInstanceInput } from "./update-strategy-instance.dto.js";
 
 /**
  * Input data type for the create query of a strategy instance

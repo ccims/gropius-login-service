@@ -1,4 +1,4 @@
-import * as Joi from "joi";
+import Joi from "joi";
 
 export const validationSchema = Joi.object({
     GROPIUS_INTERNAL_BACKEND_ENDPOINT: Joi.string().uri().default("http://localhost:8081/graphql"),

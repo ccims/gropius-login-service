@@ -1,6 +1,6 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { Request } from "express";
-import { compareTimeSafe } from "../util/utils";
+import { type CanActivate, type ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import type { Request } from "express";
+import { compareTimeSafe } from "../util/utils.js";
 
 @Injectable()
 export class CheckSyncSecretGuard implements CanActivate {

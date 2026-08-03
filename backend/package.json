@@ -1,19 +1,21 @@
 {
     "name": "gropius-login-service-backend",
     "version": "0.0.1",
+    "type": "module",
     "description": "",
     "author": "",
     "private": true,
     "license": "MIT",
     "scripts": {
         "build": "nest build",
+        "postinstall": "patch-package",
         "format": "prettier --write \"src/**/*.ts\"",
         "start": "nest start",
         "start:dev": "cross-env NODE_ENV=development nest start --watch",
         "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
         "start:prod": "node dist/main",
         "lint": "eslint \"src/**/*.ts\" --fix",
-        "generate-model": "graphql-codegen --config codegen.yml",
+        "generate-model": "graphql-codegen",
         "generate-migration": "npm run build && npx typeorm migration:generate -d ./dist/migrationDataSource.config.js ./src/database-migrations/migration",
         "init-database": "npm run build && npx typeorm migration:run -d ./dist/migrationDataSource.config.js"
     },
@@ -29,6 +31,7 @@
         "node": "^22.13.0 || >=24.11.0"
     },
     "dependencies": {
+        "@graphql-typed-document-node/core": "^3.2.0",
         "@nestjs/common": "^11.1.28",
         "@nestjs/config": "^4.0.4",
         "@nestjs/core": "^11.1.28",
@@ -62,10 +65,7 @@
     },
     "devDependencies": {
         "@graphql-codegen/cli": "^7.2.0",
-        "@graphql-codegen/typescript": "^6.1.0",
-        "@graphql-codegen/typescript-document-nodes": "^6.1.0",
-        "@graphql-codegen/typescript-graphql-request": "^7.1.0",
-        "@graphql-codegen/typescript-operations": "^6.1.2",
+        "@graphql-codegen/client-preset": "^6.1.0",
         "@nestjs/cli": "^11.0.24",
         "@nestjs/schematics": "^11.1.0",
         "@nestjs/testing": "^11.1.28",
@@ -82,12 +82,13 @@
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.6",
         "globals": "^17.9.0",
+        "patch-package": "^8.0.1",
         "prettier": "^3.9.6",
-        "typescript-eslint": "^8.65.0",
         "source-map-support": "^0.5.21",
         "ts-loader": "^9.6.2",
         "ts-node": "^10.9.2",
         "tsconfig-paths": "4.2.0",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.65.0"
     }
 }

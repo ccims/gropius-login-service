@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { UpdateAuthClientInput } from "./update-auth-client.dto";
+import { UpdateAuthClientInput } from "./update-auth-client.dto.js";
 
 export class CreateAuthClientInput extends UpdateAuthClientInput {
     /**

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { ApiProperty } from "@nestjs/swagger";
-import { TokenScope } from "src/backend-services/token.service";
+import { TokenScope } from "../../../backend-services/token.service.js";
 
 /**
  * Input to `POST /login/client` and PUT /login/client/:id`

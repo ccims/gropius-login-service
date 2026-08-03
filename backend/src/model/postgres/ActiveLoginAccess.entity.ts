@@ -1,6 +1,6 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { ActiveLogin } from "./ActiveLogin.entity";
+import { ActiveLogin } from "./ActiveLogin.entity.js";
 
 /**
  * Entity representing the access of an OAuth client to an ActiveLogin.

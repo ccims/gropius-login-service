@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { TokenService } from "src/backend-services/token.service";
+import type { Request, Response } from "express";
+import { TokenService } from "./token.service.js";
 
 @Injectable()
 export class CodeRedirectService {

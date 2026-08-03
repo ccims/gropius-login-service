@@ -1,9 +1,9 @@
-import { HttpException, HttpStatus, Injectable, Logger, NestMiddleware } from "@nestjs/common";
-import { Request, Response } from "express";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import * as Joi from "joi";
-import { ActiveLoginService } from "../model/services/active-login.service";
+import { HttpException, HttpStatus, Injectable, Logger, type NestMiddleware } from "@nestjs/common";
+import type { Request, Response } from "express";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { BackendUserService } from "./backend-user.service.js";
+import Joi from "joi";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
 
 const schema = Joi.object({
     username: Joi.string(),

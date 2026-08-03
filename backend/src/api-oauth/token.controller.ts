@@ -1,15 +1,15 @@
 import { Controller, Post, Req, Res } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { Request, Response } from "express";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
-import { AuthClient } from "../model/postgres/AuthClient.entity";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service";
-import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service";
-import { OauthTokenResponse } from "./types";
-import { TokenExchangeRefreshTokenService } from "../backend-services/x-token-exchange-refresh-token.service";
-import { AuthRateLimit } from "../util/AuthRateLimit.decorator";
+import { OpenApiTag } from "../util/openapi-tag.js";
+import type { Request, Response } from "express";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import { AuthClient } from "../model/postgres/AuthClient.entity.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
+import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service.js";
+import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service.js";
+import { OauthTokenResponse } from "./types.js";
+import { TokenExchangeRefreshTokenService } from "../backend-services/x-token-exchange-refresh-token.service.js";
+import { AuthRateLimit } from "../util/AuthRateLimit.decorator.js";
 
 @Controller()
 @ApiTags(OpenApiTag.OAUTH_API)

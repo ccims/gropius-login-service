@@ -1,12 +1,12 @@
 import { Module } from "@nestjs/common";
-import { BackendServicesModule } from "src/backend-services/backend-services.module";
-import { ModelModule } from "src/model/model.module";
-import { StrategiesModule } from "../strategies/strategies.module";
-import { AuthEndpointsController } from "./auth-endpoints.controller";
-import { ApiOauthModule } from "src/api-oauth/api-oauth.module";
-import { ApiLoginModule } from "src/api-login/api-login.module";
-import { UpdateActionController } from "./update-action.controller";
-import { LegalinformationController } from "./legal-information.controller";
+import { BackendServicesModule } from "../backend-services/backend-services.module.js";
+import { ModelModule } from "../model/model.module.js";
+import { StrategiesModule } from "../strategies/strategies.module.js";
+import { AuthEndpointsController } from "./auth-endpoints.controller.js";
+import { ApiOauthModule } from "../api-oauth/api-oauth.module.js";
+import { ApiLoginModule } from "../api-login/api-login.module.js";
+import { UpdateActionController } from "./update-action.controller.js";
+import { LegalinformationController } from "./legal-information.controller.js";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule, ApiOauthModule, ApiLoginModule],

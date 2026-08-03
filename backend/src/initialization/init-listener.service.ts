@@ -1,7 +1,7 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
-import { CreateDefaultStrategyInstanceService } from "./create-default-strategy-instance.service";
-import { CreateDefaultUserService } from "./create-default-user.service";
-import { CheckDatabaseConsistencyService } from "./check-database-consistency.service";
+import { Injectable, type OnModuleInit } from "@nestjs/common";
+import { CreateDefaultStrategyInstanceService } from "./create-default-strategy-instance.service.js";
+import { CreateDefaultUserService } from "./create-default-user.service.js";
+import { CheckDatabaseConsistencyService } from "./check-database-consistency.service.js";
 
 @Injectable()
 export class InitListenerService implements OnModuleInit {

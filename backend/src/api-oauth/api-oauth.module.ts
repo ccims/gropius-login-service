@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
-import { ModelModule } from "src/model/model.module";
-import { AuthorizeController as OAuthAuthorizeController } from "./authorize.controller";
-import { TokenController } from "./token.controller";
-import { BackendServicesModule } from "src/backend-services/backend-services.module";
-import { StrategiesModule } from "src/strategies/strategies.module";
-import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service";
-import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service";
+import { ModelModule } from "../model/model.module.js";
+import { AuthorizeController as OAuthAuthorizeController } from "./authorize.controller.js";
+import { TokenController } from "./token.controller.js";
+import { BackendServicesModule } from "../backend-services/backend-services.module.js";
+import { StrategiesModule } from "../strategies/strategies.module.js";
+import { TokenExchangeClientCredentialsService } from "../backend-services/x-token-exchange-client-credentials.service.js";
+import { TokenExchangeAuthorizationCodeService } from "../backend-services/x-token-exchange-authorization-code.service.js";
 
 @Module({
     imports: [ModelModule, BackendServicesModule, StrategiesModule],

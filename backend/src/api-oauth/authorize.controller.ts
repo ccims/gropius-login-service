@@ -1,16 +1,16 @@
 import { Controller, Get, Logger, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { Request, Response } from "express";
-import { ContextInitService } from "../backend-services/x-context-init.service";
-import { CodeRedirectService } from "../backend-services/x-code-redirect.service";
-import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service";
-import { RequestExtractService } from "../backend-services/x-request-extract.service";
-import { LoginRedirectService } from "../backend-services/x-login-redirect.service";
-import { ActiveLoginService } from "../model/services/active-login.service";
-import { RedirectOnError } from "../errors/redirect-on-error.decorator";
-import { FlowKind } from "../util/Context";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
+import { OpenApiTag } from "../util/openapi-tag.js";
+import type { Request, Response } from "express";
+import { ContextInitService } from "../backend-services/x-context-init.service.js";
+import { CodeRedirectService } from "../backend-services/x-code-redirect.service.js";
+import { PromptRedirectService } from "../backend-services/x-prompt-redirect.service.js";
+import { RequestExtractService } from "../backend-services/x-request-extract.service.js";
+import { LoginRedirectService } from "../backend-services/x-login-redirect.service.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { RedirectOnError } from "../errors/redirect-on-error.decorator.js";
+import { FlowKind } from "../util/Context.js";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
 
 @Controller()
 export class AuthorizeController {

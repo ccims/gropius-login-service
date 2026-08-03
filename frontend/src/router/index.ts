@@ -1,5 +1,5 @@
 // Composables
-import { RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
+import { type RouteRecordRaw, createRouter, createWebHistory } from "vue-router";
 import { requiresAuth } from "./navigationGuards";
 
 const routes: RouteRecordRaw[] = [

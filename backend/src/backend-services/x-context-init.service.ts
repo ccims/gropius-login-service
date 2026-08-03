@@ -1,11 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { Context } from "../util/Context";
-import { LoginUserService } from "../model/services/login-user.service";
-import { ms2s, now } from "../util/utils";
-import { ActiveLoginService } from "../model/services/active-login.service";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { LoginState } from "../model/postgres/UserLoginData.entity";
+import type { Request, Response } from "express";
+import { Context } from "../util/Context.js";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { ms2s, now } from "../util/utils.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
+import { LoginState } from "../model/postgres/UserLoginData.entity.js";
 
 @Injectable()
 export class ContextInitService {

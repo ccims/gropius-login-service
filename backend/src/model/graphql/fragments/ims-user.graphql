@@ -1,0 +1,23 @@
+fragment ImsUserWithDetail on IMSUser {
+    __typename
+    id
+    username
+    displayName
+    email
+    templatedFields {
+        __typename
+        name
+        value
+    }
+    ims {
+        __typename
+        id
+        name
+        description
+        templatedFields {
+            __typename
+            name
+            value
+        }
+    }
+}

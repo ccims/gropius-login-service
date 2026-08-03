@@ -11,10 +11,14 @@ $ npm install
 ```
 
 ### Graphql Model Generation
-To generate the needed model types from the graphql schema do the following
+Queries and mutations live next to the code that runs them, written as `graphql(...)` tagged templates.
+Fragments shared between several of them are in `src/model/graphql/fragments`. Both are collected into
+the typed client in `src/model/graphql/generated`, which is checked in and has to be regenerated
+whenever an operation or the backend schema changes:
 1. Make sure, the api-internal service is running on `http://localhost:8081/graphql` (or another url)
-2. Check that the value of the `schema` field in codegen.yml matches the API endpoint under which the api-internal is running
-3. Run `npm run generate-model` to generate all needed code
+2. Check that the value of the `schema` field in codegen.ts matches the API endpoint under which the api-internal is running
+3. Run `GROPIUS_INTERNAL_BACKEND_TOKEN=<the token of the api-internal> npm run generate-model`,
+   the api-internal rejects introspection without it
 
 ## Running the app
 

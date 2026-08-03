@@ -1,6 +1,6 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { UserLoginData } from "./UserLoginData.entity";
+import { UserLoginData } from "./UserLoginData.entity.js";
 
 /**
  * A user of the Gropius system.
