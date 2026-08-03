@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { RouterModule } from "@nestjs/core";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { ApiLoginModule } from "./api-login/api-login.module";
 import { ApiSyncModule } from "./api-sync/api-sync.module";
 import { ModelModule } from "./model/model.module";
@@ -23,7 +23,7 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
             validationSchema,
         }),
         TypeOrmModule.forRootAsync({
-            async useFactory(...args) {
+            async useFactory(...args): Promise<TypeOrmModuleOptions> {
                 await ConfigModule.envVariablesLoaded;
                 const driver = process.env.GROPIUS_LOGIN_DATABASE_DRIVER;
                 if (!driver || driver == "postgres") {
@@ -39,8 +39,10 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
                         migrations: [path.join(__dirname, "..", "dist", "database-migrations", "*.js")],
                     };
                 } else if (driver == "sqlite") {
+                    // TypeORM 1.x dropped the node-sqlite3 based "sqlite" driver.
+                    // The config value stays "sqlite"; it now maps to better-sqlite3.
                     return {
-                        type: "sqlite",
+                        type: "better-sqlite3",
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE + ".sqlite",
                     };
                 } else {

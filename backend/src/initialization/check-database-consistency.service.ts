@@ -62,7 +62,7 @@ export class CheckDatabaseConsistencyService {
 
         const nonExistentUser = (
             await Promise.all(
-                (await this.loginUserService.find({ select: ["neo4jId"] })).map(async (u) =>
+                (await this.loginUserService.find({ select: { neo4jId: true } })).map(async (u) =>
                     (await this.backendUserService.checkUserExists(u)) ? null : u,
                 ),
             )
@@ -75,7 +75,7 @@ export class CheckDatabaseConsistencyService {
         const allBackendGropiusUsers = await this.backendUserService.getAllGropiusUsersInBackend();
         const loginUserIds = (
             await this.loginUserService.find({
-                select: ["neo4jId"],
+                select: { neo4jId: true },
             })
         ).map((u) => u.neo4jId);
         const backendUsersNotInDb = allBackendGropiusUsers.filter((id) => !loginUserIds.includes(id));
@@ -146,7 +146,7 @@ export class CheckDatabaseConsistencyService {
     private async checkUserLoginDataImsUser(fixBroken: boolean): Promise<string | undefined> {
         const nonExistentImsUser = (
             await Promise.all(
-                (await this.userLoginDataImsUserService.find({ select: ["neo4jId"] })).map(async (u) =>
+                (await this.userLoginDataImsUserService.find({ select: { neo4jId: true } })).map(async (u) =>
                     (await this.imsUserFindingService.checkImsUserExists(u)) ? null : u,
                 ),
             )

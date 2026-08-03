@@ -84,7 +84,7 @@ export class UpdateAuthClientInput {
             try {
                 new URL(url);
             } catch (err: any) {
-                throw new HttpException("Invalid redirect url: " + err.message ?? err, HttpStatus.BAD_REQUEST);
+                throw new HttpException("Invalid redirect url: " + (err.message ?? err), HttpStatus.BAD_REQUEST);
             }
         }
         if (input.isValid != undefined && typeof input.isValid !== "boolean") {

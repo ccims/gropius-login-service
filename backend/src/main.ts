@@ -4,6 +4,9 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { OpenApiTag } from "./util/openapi-tag";
 import { ConfigModule } from "@nestjs/config";
 import { LogLevel } from "@nestjs/common";
+// cookie-session is a CommonJS `export =` module; without `esModuleInterop` this is
+// the only import form that both type-checks and emits a callable value.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import session = require("cookie-session");
 import { NextFunction, Request, Response } from "express";
 import { NestExpressApplication } from "@nestjs/platform-express";

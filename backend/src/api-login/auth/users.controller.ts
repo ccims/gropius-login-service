@@ -196,7 +196,7 @@ export class UsersController {
                             id,
                         },
                     },
-                    relations: ["strategyInstance"],
+                    relations: { strategyInstance: true },
                 })
             ).map(async (loginData) => {
                 const instance = await loginData.strategyInstance;

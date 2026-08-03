@@ -65,7 +65,7 @@ export class LoginDataController {
             where: {
                 id,
             },
-            relations: ["strategyInstance"],
+            relations: { strategyInstance: true },
         });
         if (!loginData) throw new HttpException("Invalid loginData", HttpStatus.UNAUTHORIZED);
 
