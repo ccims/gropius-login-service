@@ -23,8 +23,6 @@ export class StrategiesService {
         private readonly imsUserFindingService: ImsUserFindingService,
     ) {}
 
-    // Express 5 types route params as `string | string[]`, as wildcard segments can repeat.
-    // ":id" never does, so anything but a single string is a malformed request.
     private async idToStrategyInstance(id: string | string[]): Promise<StrategyInstance> {
         if (!id || typeof id !== "string") {
             throw new HttpException("No Id of strategy instance given", HttpStatus.BAD_REQUEST);

@@ -57,7 +57,8 @@ export class UpdateAuthClientInput {
      *
      * Valid, if:
      * - `name` is not given or a non empty string matching /^[a-zA-Z0-9+/\-_= ]+$/g
-     * - `redirectUrls` is not given or an array of at least one url
+     * - `redirectUrls` is not given or an array of at least one https url, without a fragment
+     *   (http is allowed on loopback hosts only)
      * - `isValid` is not given or a boolean
      * - `requiresSecret` is not given or a boolean
      * - `validScopes` is not given or an array of strings containing only `TokenScope.BACKEND` and `TokenScope.LOGIN_SERVICE`
@@ -69,8 +70,6 @@ export class UpdateAuthClientInput {
         if (typeof input.name != "string" || input.name.trim().length == 0) {
             throw new HttpException("If given, name must be a non empty string", HttpStatus.BAD_REQUEST);
         }
-        // Both loops below used to run even when the field was absent, so a partial update
-        // crashed with a TypeError (500) instead of being accepted.
         if (input.redirectUrls != undefined) {
             if (!Array.isArray(input.redirectUrls)) {
                 throw new HttpException(
@@ -91,9 +90,7 @@ export class UpdateAuthClientInput {
                 } catch (err: any) {
                     throw new HttpException("Invalid redirect url: " + (err.message ?? err), HttpStatus.BAD_REQUEST);
                 }
-                // `new URL` alone accepts "javascript:" and "data:" URLs. Redirect targets are
-                // handed to the browser, so restrict them to real web origins; plain http is
-                // allowed only for loopback, which is what native/dev clients need.
+                // `new URL` alone accepts "javascript:" and "data:" URLs, which are handed to the browser.
                 const isLoopback = ["localhost", "127.0.0.1", "[::1]", "::1"].includes(parsed.hostname);
                 if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && isLoopback)) {
                     throw new HttpException(

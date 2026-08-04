@@ -70,8 +70,6 @@ export class TokenController {
 
         if (req.body.client_id) {
             // RFC 6749 section 2.3 permits exactly one authentication method per request.
-            // Previously the body silently overrode the header, so a request authenticated via
-            // Basic could be downgraded to a body client_id carrying no secret at all.
             if (usesBasicAuth) {
                 throw new OAuthHttpException(
                     "invalid_request",

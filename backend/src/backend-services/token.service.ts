@@ -1,8 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { createHash } from "crypto";
-// jsonwebtoken is CommonJS and Node's ESM loader cannot detect its named exports,
-// so take the default export and destructure the value off it.
+// jsonwebtoken is CommonJS; its named exports are not detectable by the ESM loader.
 import jsonwebtoken from "jsonwebtoken";
 const { JsonWebTokenError } = jsonwebtoken;
 import { LoginUser } from "../model/postgres/LoginUser.entity.js";
@@ -93,8 +92,7 @@ export class TokenService {
                 client_id: clientId,
                 scope,
                 code_challenge: codeChallenge,
-                // Binds the code to the redirect uri of the authorize request (RFC 6749 section 4.1.3),
-                // so a code delivered to one registered redirect uri cannot be redeemed as another.
+                // Binds the code to the redirect uri it was delivered to (RFC 6749 section 4.1.3).
                 redirect_uri: redirectUri,
                 kind: "authorization_code",
             },

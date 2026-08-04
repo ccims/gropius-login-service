@@ -53,16 +53,12 @@ export const validationSchema = Joi.object({
 
     GROPIUS_ENDPOINT: Joi.string().uri().required(),
 
-    // Required: the sync API serves IMS access tokens, and its guard denies every request
-    // when this is unset. A missing value would take the whole sync API offline at runtime,
-    // so fail fast at startup instead.
     GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string().min(16).required(),
     GROPIUS_OAUTH_PUBLIC_KEY: Joi.string().required(),
     GROPIUS_OAUTH_PRIVATE_KEY: Joi.string().required(),
     GROPIUS_LOGIN_SPECIFIC_PUBLIC_KEY: Joi.string().required(),
     GROPIUS_LOGIN_SPECIFIC_PRIVATE_KEY: Joi.string().required(),
 
-    // Baseline rate limit applied to every endpoint (see ThrottlerModule in app.module.ts).
     GROPIUS_RATE_LIMIT_TTL_MS: Joi.number()
         .min(0)
         .default(60 * 1000),

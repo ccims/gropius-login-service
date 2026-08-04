@@ -128,8 +128,6 @@ export class AuthClient {
         censored: string;
     }> {
         const configuredLength = parseInt(process.env.GROPIUS_CLIENT_SECRET_LENGTH, 10);
-        // Clamps *up* to the minimum, as documented on MINIMUM_SECRET_LENGTH_BYTES.
-        // `Math.min` here silently capped every secret at 15 bytes and discarded the configured value.
         const length = Math.max(MINIMUM_SECRET_LENGTH_BYTES, configuredLength || 0);
         const secretText = (await randomBytesAsync(length)).toString("hex");
         const hash = await bcrypt.hash(secretText, parseInt(process.env.GROPIUS_BCRYPT_HASH_ROUNDS, 10));

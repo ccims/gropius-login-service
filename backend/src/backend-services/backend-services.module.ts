@@ -38,8 +38,7 @@ import { LinkCallbackService } from "./x-link-callback.service.js";
                     verifyOptions: {
                         issuer: process.env.GROPIUS_JWT_ISSUER,
                         audience: "login",
-                        // Pinned explicitly so verification can never be talked into a different
-                        // family of algorithms than the one these tokens are signed with.
+                        // Pinned so verification cannot be talked into another algorithm family.
                         algorithms: ["RS256"],
                     },
                 };

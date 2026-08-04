@@ -4,8 +4,7 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { OpenApiTag } from "./util/openapi-tag.js";
 import { ConfigModule } from "@nestjs/config";
 import type { LogLevel } from "@nestjs/common";
-// cookie-session is a CommonJS `export =` module. Under ESM the default import is the
-// callable `module.exports`; `allowSyntheticDefaultImports` makes it type-check.
+// cookie-session is a CommonJS `export =` module; under ESM the default import is the callable itself.
 import session from "cookie-session";
 import type { NextFunction, Request, Response } from "express";
 import type { NestExpressApplication } from "@nestjs/platform-express";
@@ -62,8 +61,6 @@ async function bootstrap() {
 
     const portNumber = parseInt(process.env.GROPIUS_LOGIN_LISTEN_PORT, 10) || 3000;
 
-    // Scoped to the deployment's own origin instead of the default "*", which answered
-    // preflights for the token endpoint and every admin API from any site on the internet.
     app.enableCors({
         origin: config.get<string>("GROPIUS_ENDPOINT"),
         credentials: true,

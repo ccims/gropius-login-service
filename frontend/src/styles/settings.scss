@@ -12,10 +12,8 @@
     $rounded: (
         "lger": 16px
     ),
-    // Vuetify 4 replaced the Material 2 type scale with the Material 3 one, which dropped every
-    // .text-h*, .text-subtitle-*, .text-body-* and .text-caption class the app uses. They are
-    // restored here with their Vuetify 3 values, so those classes keep applying a size and weight
-    // instead of silently doing nothing. $button-text-transform already defaults to none in v4.
+    // The Material 3 type scale dropped the .text-h*, .text-subtitle-*, .text-body-* and
+    // .text-caption classes the app uses; restored here with their previous values.
     $typography: (
         'h1': (
             'size': 6rem,

@@ -23,8 +23,6 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module.js";
                 : [".env.prod.local", ".env.prod"],
             validationSchema,
         }),
-        // Baseline throttle for every endpoint, so credential and token endpoints cannot be
-        // hammered. Per-route limits are tightened with @Throttle where it matters.
         ThrottlerModule.forRootAsync({
             async useFactory() {
                 await ConfigModule.envVariablesLoaded;
@@ -55,8 +53,6 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module.js";
                         migrations: [path.join(import.meta.dirname, "..", "dist", "database-migrations", "*.js")],
                     };
                 } else if (driver == "sqlite") {
-                    // TypeORM 1.x dropped the node-sqlite3 based "sqlite" driver.
-                    // The config value stays "sqlite"; it now maps to better-sqlite3.
                     return {
                         type: "better-sqlite3",
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE + ".sqlite",

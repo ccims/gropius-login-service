@@ -2,13 +2,16 @@ import { type CanActivate, type ExecutionContext, Injectable, UnauthorizedExcept
 import type { Request } from "express";
 import { compareTimeSafe } from "../util/utils.js";
 
+/**
+ * Guard requiring the sync API secret as bearer token.
+ *
+ * A missing secret must lock this API down rather than open it up: it hands out IMS access
+ * tokens, so an unconfigured secret can never mean "no secret required".
+ */
 @Injectable()
 export class CheckSyncSecretGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const expectedToken = process.env.GROPIUS_LOGIN_SYNC_API_SECRET?.trim();
-        // Never fall back to "no secret configured means no secret required": this API hands out
-        // IMS access tokens, so a missing secret must lock the API down rather than open it up.
-        // The configuration validator additionally rejects an empty value at startup.
         if (!expectedToken || expectedToken.length == 0) {
             throw new UnauthorizedException(undefined, "Sync API secret is not configured");
         }

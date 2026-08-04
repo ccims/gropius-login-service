@@ -57,10 +57,8 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    // Signed rather than encrypted: what this value needs is integrity, and
-                    // encrypting under the *public* half of a keypair provides none - anyone
-                    // holding that key could mint a state blob. A signature cannot be forged
-                    // without the private key. Signing also gives the state an expiry.
+                    // Signed, not encrypted: this needs integrity, and encrypting under the *public*
+                    // half of a keypair gives none - anyone with that key could mint a state blob.
                     state: this.stateJwtService.sign(
                         {
                             kind: "passport_state",

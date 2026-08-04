@@ -16,8 +16,6 @@ export default tseslint.config(
                 ...globals.jest,
             },
             parserOptions: {
-                // Replaces the old `project: "tsconfig.json"`; required by the
-                // type-aware `no-floating-promises` rule below.
                 projectService: true,
                 tsconfigRootDir: import.meta.dirname,
             },

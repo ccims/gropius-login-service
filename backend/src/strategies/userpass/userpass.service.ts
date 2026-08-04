@@ -84,8 +84,6 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         done: (err: any, user: AuthResult | false, info: any) => any,
     ) {
         if (!password || password.trim().length == 0) {
-            // Without the return, execution fell through into the lookup below and could
-            // call `done` a second time.
             return done("Password cannot be empty or blank!", false, undefined);
         }
 
