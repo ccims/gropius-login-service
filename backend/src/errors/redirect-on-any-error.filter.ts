@@ -1,8 +1,8 @@
-import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { OAuthHttpException } from "./OAuthHttpException";
-import { combineURL } from "../util/utils";
-import { RedirectOnErrorFilter } from "./redirect-on-error.filter";
+import { type ArgumentsHost, Catch, type ExceptionFilter, Logger } from "@nestjs/common";
+import type { Request, Response } from "express";
+import { OAuthHttpException } from "./OAuthHttpException.js";
+import { combineURL } from "../util/utils.js";
+import { RedirectOnErrorFilter } from "./redirect-on-error.filter.js";
 
 @Catch()
 export class RedirectOnAnyErrorFilter extends RedirectOnErrorFilter {

@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
-        "baseUrl": ".",
         "target": "esnext",
         "useDefineForClassFields": true,
         "allowSyntheticDefaultImports": true,
         "composite": true,
         "module": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "strict": true,
+        "verbatimModuleSyntax": true,
         "jsx": "preserve",
         "sourceMap": false,
         "resolveJsonModule": true,
@@ -17,7 +17,7 @@
         "emitDecoratorMetadata": true,
         "types": ["node", "vuetify"],
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": ["./src/*"]
         },
         "skipLibCheck": true
     },

@@ -1,5 +1,5 @@
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { LoginState } from "src/model/postgres/UserLoginData.entity";
+import { StrategyInstance } from "../../../model/postgres/StrategyInstance.entity.js";
+import { LoginState } from "../../../model/postgres/UserLoginData.entity.js";
 
 export class UserLoginDataResponse {
     /**

@@ -9,8 +9,8 @@
     ></v-text-field>
 </template>
 <script setup lang="ts">
-import { LoginStrategyVariable } from "@/views/model";
-import { PropType, ref } from "vue";
+import type { LoginStrategyVariable } from "@/views/model";
+import { type PropType, ref } from "vue";
 
 defineProps({
     field: {

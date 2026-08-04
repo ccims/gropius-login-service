@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { ApiProperty } from "@nestjs/swagger";
-import { TokenScope } from "src/backend-services/token.service";
+import { TokenScope } from "../../../backend-services/token.service.js";
 
 /**
  * Input to `POST /login/client` and PUT /login/client/:id`
@@ -57,7 +57,8 @@ export class UpdateAuthClientInput {
      *
      * Valid, if:
      * - `name` is not given or a non empty string matching /^[a-zA-Z0-9+/\-_= ]+$/g
-     * - `redirectUrls` is not given or an array of at least one url
+     * - `redirectUrls` is not given or an array of at least one https url, without a fragment
+     *   (http is allowed on loopback hosts only)
      * - `isValid` is not given or a boolean
      * - `requiresSecret` is not given or a boolean
      * - `validScopes` is not given or an array of strings containing only `TokenScope.BACKEND` and `TokenScope.LOGIN_SERVICE`
@@ -76,15 +77,30 @@ export class UpdateAuthClientInput {
                     HttpStatus.BAD_REQUEST,
                 );
             }
-        }
-        for (const url of input.redirectUrls) {
-            if (typeof url !== "string") {
-                throw new HttpException("All given redirect urls must be valid url strings", HttpStatus.BAD_REQUEST);
-            }
-            try {
-                new URL(url);
-            } catch (err: any) {
-                throw new HttpException("Invalid redirect url: " + err.message ?? err, HttpStatus.BAD_REQUEST);
+            for (const url of input.redirectUrls) {
+                if (typeof url !== "string") {
+                    throw new HttpException(
+                        "All given redirect urls must be valid url strings",
+                        HttpStatus.BAD_REQUEST,
+                    );
+                }
+                let parsed: URL;
+                try {
+                    parsed = new URL(url);
+                } catch (err: any) {
+                    throw new HttpException("Invalid redirect url: " + (err.message ?? err), HttpStatus.BAD_REQUEST);
+                }
+                // `new URL` alone accepts "javascript:" and "data:" URLs, which are handed to the browser.
+                const isLoopback = ["localhost", "127.0.0.1", "[::1]", "::1"].includes(parsed.hostname);
+                if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && isLoopback)) {
+                    throw new HttpException(
+                        "Redirect urls must use https, or http on a loopback host",
+                        HttpStatus.BAD_REQUEST,
+                    );
+                }
+                if (parsed.hash.length > 0) {
+                    throw new HttpException("Redirect urls must not contain a fragment", HttpStatus.BAD_REQUEST);
+                }
             }
         }
         if (input.isValid != undefined && typeof input.isValid !== "boolean") {
@@ -97,10 +113,10 @@ export class UpdateAuthClientInput {
             if (!Array.isArray(input.validScopes)) {
                 throw new HttpException("validScopes must be an array of strings", HttpStatus.BAD_REQUEST);
             }
-        }
-        for (const scope of input.validScopes) {
-            if (scope !== TokenScope.BACKEND) {
-                throw new HttpException(`Only ${TokenScope.BACKEND} is a valid scopes`, HttpStatus.BAD_REQUEST);
+            for (const scope of input.validScopes) {
+                if (scope !== TokenScope.BACKEND) {
+                    throw new HttpException(`Only ${TokenScope.BACKEND} is a valid scopes`, HttpStatus.BAD_REQUEST);
+                }
             }
         }
         if (input.clientCredentialFlowUser != undefined) {

@@ -1,15 +1,15 @@
 import { Module } from "@nestjs/common";
 import { JwtModule, JwtService } from "@nestjs/jwt";
-import { ModelModule } from "src/model/model.module";
-import { PerformAuthFunctionService } from "./perform-auth-function.service";
-import { StrategiesService } from "./strategies.service";
-import { UserpassStrategyService } from "./userpass/userpass.service";
-import { BackendServicesModule } from "src/backend-services/backend-services.module";
-import { GithubStrategyService } from "./github/github.service";
-import { JiraStrategyService } from "./jira/jira.service";
-import { GithubTokenStrategyService } from "./github-token/github-token.service";
-import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-cloud.service";
-import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira-token-datacenter.service";
+import { ModelModule } from "../model/model.module.js";
+import { PerformAuthFunctionService } from "./perform-auth-function.service.js";
+import { StrategiesService } from "./strategies.service.js";
+import { UserpassStrategyService } from "./userpass/userpass.service.js";
+import { BackendServicesModule } from "../backend-services/backend-services.module.js";
+import { GithubStrategyService } from "./github/github.service.js";
+import { JiraStrategyService } from "./jira/jira.service.js";
+import { GithubTokenStrategyService } from "./github-token/github-token.service.js";
+import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-cloud.service.js";
+import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira-token-datacenter.service.js";
 
 @Module({
     imports: [
@@ -25,6 +25,7 @@ import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira
                     },
                     verifyOptions: {
                         issuer: process.env.GROPIUS_PASSPORT_STATE_JWT_ISSUER,
+                        algorithms: ["RS256"],
                     },
                 };
             },

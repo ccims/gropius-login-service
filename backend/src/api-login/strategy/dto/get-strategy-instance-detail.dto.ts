@@ -1,4 +1,4 @@
-import { StrategyInstance } from "../../../model/postgres/StrategyInstance.entity";
+import { StrategyInstance } from "../../../model/postgres/StrategyInstance.entity.js";
 
 /**
  * Response object for a strategy instance including more detail that the entity type

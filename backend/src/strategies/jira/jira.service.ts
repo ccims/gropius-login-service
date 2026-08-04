@@ -1,18 +1,17 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { StrategiesService } from "../../model/services/strategies.service";
-import * as passportJira from "passport-atlassian-oauth2";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import * as passport from "passport";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthResult } from "../AuthResult";
-import { StrategyUsingPassport } from "../StrategyUsingPassport";
+import { StrategyInstanceService } from "../../model/services/strategy-instance.service.js";
+import { StrategiesService } from "../../model/services/strategies.service.js";
+import passportJira from "passport-atlassian-oauth2";
+import { StrategyInstance } from "../../model/postgres/StrategyInstance.entity.js";
+import passport from "passport";
+import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
+import type { AuthResult } from "../AuthResult.js";
+import { StrategyUsingPassport } from "../StrategyUsingPassport.js";
 import { JwtService } from "@nestjs/jwt";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { checkType } from "../../util/checkType";
-import { Schema } from "jtd";
-import { EncryptionService } from "../../backend-services/encryption.service";
+import { UserLoginData } from "../../model/postgres/UserLoginData.entity.js";
+import { ActiveLoginService } from "../../model/services/active-login.service.js";
+import { checkType } from "../../util/checkType.js";
+import type { Schema } from "jtd";
 
 @Injectable()
 export class JiraStrategyService extends StrategyUsingPassport {
@@ -21,10 +20,10 @@ export class JiraStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        encryptionService: EncryptionService,
+        stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("jira", strategyInstanceService, strategiesService, encryptionService, true, true, true, true, false);
+        super("jira", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {

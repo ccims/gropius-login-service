@@ -1,0 +1,10 @@
+/**
+ * src/styles/_fonts.scss
+ *
+ * The font stacks Vuetify builds its type scale on. They have to live in their own module because
+ * settings.scss needs them inside the `@use "vuetify/settings" with (...)` configuration, which is
+ * evaluated before any variable of that file itself exists.
+ */
+
+$body: var(--v-font-body, "Roboto", sans-serif);
+$heading: var(--v-font-heading, #{$body});

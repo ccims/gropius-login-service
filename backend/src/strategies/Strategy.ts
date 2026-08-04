@@ -1,12 +1,12 @@
-import { CreateStrategyInstanceInput } from "src/api-login/strategy/dto/create-strategy-instance.dto";
-import { UpdateStrategyInstanceInput } from "src/api-login/strategy/dto/update-strategy-instance.dto";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { AuthResult } from "./AuthResult";
-import { Schema } from "jtd";
-import { Context } from "../util/Context";
+import { CreateStrategyInstanceInput } from "../api-login/strategy/dto/create-strategy-instance.dto.js";
+import { UpdateStrategyInstanceInput } from "../api-login/strategy/dto/update-strategy-instance.dto.js";
+import { StrategyInstance } from "../model/postgres/StrategyInstance.entity.js";
+import { UserLoginData } from "../model/postgres/UserLoginData.entity.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { StrategyInstanceService } from "../model/services/strategy-instance.service.js";
+import type { AuthResult } from "./AuthResult.js";
+import type { Schema } from "jtd";
+import { Context } from "../util/Context.js";
 
 export interface StrategyVariable {
     name: string;

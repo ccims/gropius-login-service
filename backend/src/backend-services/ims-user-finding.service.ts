@@ -1,14 +1,15 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { GraphqlService } from "src/model/graphql/graphql.service";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { UserLoginDataImsUser } from "src/model/postgres/UserLoginDataImsUser.entity";
-import { UserLoginDataImsUserService } from "src/model/services/user-login-data-ims-user";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { Strategy } from "src/strategies/Strategy";
-import { jsonFieldArrayToObject, objectToJsonFieldArray } from "../util/JSONField";
-import { BackendUserService } from "./backend-user.service";
+import { graphql } from "../model/graphql/generated/index.js";
+import { GraphqlService } from "../model/graphql/graphql.service.js";
+import { StrategyInstance } from "../model/postgres/StrategyInstance.entity.js";
+import { UserLoginData } from "../model/postgres/UserLoginData.entity.js";
+import { UserLoginDataImsUser } from "../model/postgres/UserLoginDataImsUser.entity.js";
+import { UserLoginDataImsUserService } from "../model/services/user-login-data-ims-user.js";
+import { UserLoginDataService } from "../model/services/user-login-data.service.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { Strategy } from "../strategies/Strategy.js";
+import { jsonFieldArrayToObject, objectToJsonFieldArray } from "../util/JSONField.js";
+import { BackendUserService } from "./backend-user.service.js";
 import { deepEqual } from "fast-equals";
 
 /**
@@ -21,6 +22,55 @@ const imsTemplatedDirectFields = ["id", "name", "description"];
  * but instead on the fields of the IMSUser directly
  */
 const userTemplatedDirectFields = ["id", "username", "displayName", "email"];
+
+const getImsUserDetailsQuery = graphql(`
+    query getImsUserDetails($imsUserId: ID!) {
+        node(id: $imsUserId) {
+            __typename
+            ...ImsUserWithDetail
+        }
+    }
+`);
+
+const getImsUsersByTemplatedFieldValuesQuery = graphql(`
+    query getImsUsersByTemplatedFieldValues($imsFilterInput: IMSFilterInput!, $userFilterInput: IMSUserFilterInput!) {
+        imss(filter: $imsFilterInput) {
+            __typename
+            nodes {
+                __typename
+                id
+                users(filter: $userFilterInput) {
+                    __typename
+                    nodes {
+                        __typename
+                        id
+                    }
+                }
+            }
+        }
+    }
+`);
+
+const createNewImsUserInImsMutation = graphql(`
+    mutation createNewImsUserInIms($input: CreateIMSUserInput!) {
+        createIMSUser(input: $input) {
+            __typename
+            imsUser {
+                __typename
+                id
+            }
+        }
+    }
+`);
+
+const getBasicImsUserDataQuery = graphql(`
+    query getBasicImsUserData($imsUserId: ID!) {
+        node(id: $imsUserId) {
+            __typename
+            id
+        }
+    }
+`);
 
 @Injectable()
 export class ImsUserFindingService {
@@ -230,7 +280,7 @@ export class ImsUserFindingService {
     }
 
     async findLoginDataForImsUser(imsUserId: string): Promise<UserLoginData | null> {
-        const imsUserWithDetail = (await this.graphqlService.sdk.getImsUserDetails({ imsUserId })).node;
+        const imsUserWithDetail = (await this.graphqlService.request(getImsUserDetailsQuery, { imsUserId })).node;
         if (imsUserWithDetail.__typename != "IMSUser") {
             throw new Error("id is not a ims user id");
         }
@@ -315,7 +365,7 @@ export class ImsUserFindingService {
             this.extractFieldsFromObject(requiredUserTemplatedFields, userTemplatedDirectFields),
         );
 
-        const matchingImsUsers = await this.graphqlService.sdk.getImsUsersByTemplatedFieldValues({
+        const matchingImsUsers = await this.graphqlService.request(getImsUsersByTemplatedFieldValuesQuery, {
             imsFilterInput: {
                 ...directRequiredIms,
                 templatedFields: objectToJsonFieldArray(requiredImsTemplatedValues),
@@ -353,7 +403,7 @@ export class ImsUserFindingService {
                 }
             }
         }
-        const result = await this.graphqlService.sdk.createNewImsUserInIms({
+        const result = await this.graphqlService.request(createNewImsUserInImsMutation, {
             input: {
                 ims: imsId,
                 username: directValues["username"],
@@ -471,7 +521,9 @@ export class ImsUserFindingService {
      * @returns `true` iff the UserLoginDataImsUser has a valid associated IMSUser in the backend
      */
     async checkImsUserExists(imsUser: UserLoginDataImsUser): Promise<boolean> {
-        const loadedImsUser = await this.graphqlService.sdk.getBasicImsUserData({ imsUserId: imsUser.neo4jId });
+        const loadedImsUser = await this.graphqlService.request(getBasicImsUserDataQuery, {
+            imsUserId: imsUser.neo4jId,
+        });
         if (loadedImsUser?.node?.__typename == "IMSUser") {
             return true;
         }

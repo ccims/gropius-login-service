@@ -1,4 +1,4 @@
-import { TokenScope } from "src/backend-services/token.service";
+import { TokenScope } from "../backend-services/token.service.js";
 
 export interface OAuthAuthorizeRequest {
     state?: string;

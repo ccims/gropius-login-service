@@ -1,12 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { LoginState, UserLoginData } from "../model/postgres/UserLoginData.entity";
-import { combineURL } from "../util/utils";
-import { Strategy } from "src/strategies/Strategy";
-import { StrategiesService } from "../model/services/strategies.service";
-import { ActiveLoginService } from "../model/services/active-login.service";
-import { FlowState } from "../util/Context";
+import type { Request, Response } from "express";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { LoginState, UserLoginData } from "../model/postgres/UserLoginData.entity.js";
+import { combineURL } from "../util/utils.js";
+import { Strategy } from "../strategies/Strategy.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { FlowState } from "../util/Context.js";
 
 /**
  * Return data of the user data suggestion endpoint

@@ -1,18 +1,19 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { RouterModule } from "@nestjs/core";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ApiLoginModule } from "./api-login/api-login.module";
-import { ApiSyncModule } from "./api-sync/api-sync.module";
-import { ModelModule } from "./model/model.module";
-import { StrategiesModule } from "./strategies/strategies.module";
-import { BackendServicesModule } from "./backend-services/backend-services.module";
-import { validationSchema } from "./util/configuration-validator";
-import { ApiInternalModule } from "./api-internal/api-internal.module";
-import { InitializationModule } from "./initialization/initialization.module";
+import { APP_GUARD, RouterModule } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { TypeOrmModule, type TypeOrmModuleOptions } from "@nestjs/typeorm";
+import { ApiLoginModule } from "./api-login/api-login.module.js";
+import { ApiSyncModule } from "./api-sync/api-sync.module.js";
+import { ModelModule } from "./model/model.module.js";
+import { StrategiesModule } from "./strategies/strategies.module.js";
+import { BackendServicesModule } from "./backend-services/backend-services.module.js";
+import { validationSchema } from "./util/configuration-validator.js";
+import { ApiInternalModule } from "./api-internal/api-internal.module.js";
+import { InitializationModule } from "./initialization/initialization.module.js";
 import * as path from "path";
 import { ServeStaticModule } from "@nestjs/serve-static";
-import { ApiOauthModule } from "./api-oauth/api-oauth.module";
+import { ApiOauthModule } from "./api-oauth/api-oauth.module.js";
 
 @Module({
     imports: [
@@ -22,8 +23,21 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
                 : [".env.prod.local", ".env.prod"],
             validationSchema,
         }),
+        ThrottlerModule.forRootAsync({
+            async useFactory() {
+                await ConfigModule.envVariablesLoaded;
+                return {
+                    throttlers: [
+                        {
+                            ttl: parseInt(process.env.GROPIUS_RATE_LIMIT_TTL_MS, 10),
+                            limit: parseInt(process.env.GROPIUS_RATE_LIMIT_REQUESTS, 10),
+                        },
+                    ],
+                };
+            },
+        }),
         TypeOrmModule.forRootAsync({
-            async useFactory(...args) {
+            async useFactory(...args): Promise<TypeOrmModuleOptions> {
                 await ConfigModule.envVariablesLoaded;
                 const driver = process.env.GROPIUS_LOGIN_DATABASE_DRIVER;
                 if (!driver || driver == "postgres") {
@@ -36,11 +50,11 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE,
                         synchronize: process.env.NODE_ENV === "development",
                         autoLoadEntities: true,
-                        migrations: [path.join(__dirname, "..", "dist", "database-migrations", "*.js")],
+                        migrations: [path.join(import.meta.dirname, "..", "dist", "database-migrations", "*.js")],
                     };
                 } else if (driver == "sqlite") {
                     return {
-                        type: "sqlite",
+                        type: "better-sqlite3",
                         database: process.env.GROPIUS_LOGIN_DATABASE_DATABASE + ".sqlite",
                     };
                 } else {
@@ -49,7 +63,7 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
             },
         }),
         ServeStaticModule.forRoot({
-            rootPath: path.join(__dirname, "..", "static"),
+            rootPath: path.join(import.meta.dirname, "..", "static"),
             serveRoot: "/auth/flow",
         }),
         ModelModule,
@@ -68,6 +82,6 @@ import { ApiOauthModule } from "./api-oauth/api-oauth.module";
         InitializationModule,
     ],
     controllers: [],
-    providers: [],
+    providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

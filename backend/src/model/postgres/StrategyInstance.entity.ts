@@ -1,7 +1,7 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { Strategy } from "../../strategies/Strategy";
-import { combineURL } from "../../util/utils";
+import { Strategy } from "../../strategies/Strategy.js";
+import { combineURL } from "../../util/utils.js";
 
 /**
  * Entity representing an instance of a strategy including its config.

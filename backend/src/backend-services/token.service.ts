@@ -1,18 +1,21 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { createHash } from "crypto";
-import { JsonWebTokenError } from "jsonwebtoken";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { ms2s } from "../util/utils";
+// jsonwebtoken is CommonJS; its named exports are not detectable by the ESM loader.
+import jsonwebtoken from "jsonwebtoken";
+const { JsonWebTokenError } = jsonwebtoken;
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
+import { ms2s } from "../util/utils.js";
 
 export interface AuthorizationCodeResult {
     activeLoginId: string;
     clientId: string;
     scope: TokenScope[];
     codeChallenge: string;
+    redirectUri?: string;
 }
 
 export interface RefreshTokenResult {
@@ -66,6 +69,7 @@ export class TokenService {
         clientId: string,
         scope: TokenScope[],
         codeChallenge: string,
+        redirectUri: string,
     ): Promise<string> {
         this.verifyScope(scope);
 
@@ -88,6 +92,8 @@ export class TokenService {
                 client_id: clientId,
                 scope,
                 code_challenge: codeChallenge,
+                // Binds the code to the redirect uri it was delivered to (RFC 6749 section 4.1.3).
+                redirect_uri: redirectUri,
                 kind: "authorization_code",
             },
             {
@@ -117,6 +123,7 @@ export class TokenService {
             clientId: payload.client_id,
             scope: payload.scope,
             codeChallenge: payload.code_challenge,
+            redirectUri: payload.redirect_uri,
         };
     }
 

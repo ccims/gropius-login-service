@@ -22,19 +22,19 @@ import {
     ApiTags,
     ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { Response } from "express";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { ApiStateData } from "../../util/ApiStateData";
-import { CreateUserAsAdminInput } from "./dto/user-inputs.dto";
-import { UserLoginDataResponse } from "./dto/user-login-data.dto";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
-import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
+import type { Response } from "express";
+import { BackendUserService } from "../../backend-services/backend-user.service.js";
+import { LoginUser } from "../../model/postgres/LoginUser.entity.js";
+import { UserLoginData } from "../../model/postgres/UserLoginData.entity.js";
+import { LoginUserService } from "../../model/services/login-user.service.js";
+import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
+import { OpenApiTag } from "../../util/openapi-tag.js";
+import type { ApiStateData } from "../../util/ApiStateData.js";
+import { CreateUserAsAdminInput } from "./dto/user-inputs.dto.js";
+import { UserLoginDataResponse } from "./dto/user-login-data.dto.js";
+import { StrategiesService } from "../../model/services/strategies.service.js";
+import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard.js";
+import { NeedsAdmin } from "../../util/NeedsAdmin.decorator.js";
 
 /**
  * Controller allowing access to the users in the system
@@ -196,7 +196,7 @@ export class UsersController {
                             id,
                         },
                     },
-                    relations: ["strategyInstance"],
+                    relations: { strategyInstance: true },
                 })
             ).map(async (loginData) => {
                 const instance = await loginData.strategyInstance;

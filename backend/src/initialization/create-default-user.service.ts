@@ -1,13 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { UserLoginData, LoginState } from "src/model/postgres/UserLoginData.entity";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { Strategy } from "src/strategies/Strategy";
+import { BackendUserService } from "../backend-services/backend-user.service.js";
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
+import { StrategyInstance } from "../model/postgres/StrategyInstance.entity.js";
+import { UserLoginData, LoginState } from "../model/postgres/UserLoginData.entity.js";
+import { LoginUserService } from "../model/services/login-user.service.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { StrategyInstanceService } from "../model/services/strategy-instance.service.js";
+import { UserLoginDataService } from "../model/services/user-login-data.service.js";
+import { Strategy } from "../strategies/Strategy.js";
 
 /**
  * Service for creating a new default user according to the environment config

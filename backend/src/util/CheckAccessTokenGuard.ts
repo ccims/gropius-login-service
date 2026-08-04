@@ -1,10 +1,10 @@
-import { CanActivate, ExecutionContext, Logger, UnauthorizedException } from "@nestjs/common";
+import { type CanActivate, type ExecutionContext, Logger, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { Request, Response } from "express";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { TokenScope, TokenService } from "src/backend-services/token.service";
-import { LoginUser } from "src/model/postgres/LoginUser.entity";
-import { ApiStateData } from "./ApiStateData";
+import type { Request, Response } from "express";
+import { BackendUserService } from "../backend-services/backend-user.service.js";
+import { TokenScope, TokenService } from "../backend-services/token.service.js";
+import { LoginUser } from "../model/postgres/LoginUser.entity.js";
+import type { ApiStateData } from "./ApiStateData.js";
 
 /**
  * Base class for guards for checking the presence of an access token in the request.

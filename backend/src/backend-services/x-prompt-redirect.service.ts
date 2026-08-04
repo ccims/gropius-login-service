@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { combineURL } from "../util/utils";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { FlowState } from "../util/Context";
+import type { Request, Response } from "express";
+import { combineURL } from "../util/utils.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
+import { FlowState } from "../util/Context.js";
 
 @Injectable()
 export class PromptRedirectService {

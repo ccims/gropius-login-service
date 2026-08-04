@@ -1,17 +1,16 @@
 import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { StrategiesService } from "../../model/services/strategies.service";
-import { StrategyUpdateAction, StrategyVariable } from "../Strategy";
+import { StrategyInstanceService } from "../../model/services/strategy-instance.service.js";
+import { StrategiesService } from "../../model/services/strategies.service.js";
+import type { StrategyUpdateAction, StrategyVariable } from "../Strategy.js";
 import * as passportLocal from "passport-local";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import * as passport from "passport";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthResult } from "../AuthResult";
-import { StrategyUsingPassport } from "../StrategyUsingPassport";
+import { StrategyInstance } from "../../model/postgres/StrategyInstance.entity.js";
+import passport from "passport";
+import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
+import type { AuthResult } from "../AuthResult.js";
+import { StrategyUsingPassport } from "../StrategyUsingPassport.js";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { EncryptionService } from "../../backend-services/encryption.service";
+import { UserLoginData } from "../../model/postgres/UserLoginData.entity.js";
 
 @Injectable()
 export class UserpassStrategyService extends StrategyUsingPassport {
@@ -19,19 +18,9 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        encryptionService: EncryptionService,
+        stateJwtService: JwtService,
     ) {
-        super(
-            "userpass",
-            strategyInstanceService,
-            strategiesService,
-            encryptionService,
-            true,
-            false,
-            false,
-            false,
-            true,
-        );
+        super("userpass", strategyInstanceService, strategiesService, stateJwtService, true, false, false, false, true);
     }
 
     override get acceptsVariables(): StrategyVariable[] {
@@ -95,7 +84,7 @@ export class UserpassStrategyService extends StrategyUsingPassport {
         done: (err: any, user: AuthResult | false, info: any) => any,
     ) {
         if (!password || password.trim().length == 0) {
-            done("Password cannot be empty or blank!", false, undefined);
+            return done("Password cannot be empty or blank!", false, undefined);
         }
 
         const dataActiveLogin = {};

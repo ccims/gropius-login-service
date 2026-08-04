@@ -1,12 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { PerformAuthResult, Strategy, StrategyUpdateAction, StrategyVariable } from "../Strategy";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { Schema } from "jtd";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { Context } from "../../util/Context";
+import { type PerformAuthResult, Strategy, type StrategyUpdateAction, type StrategyVariable } from "../Strategy.js";
+import { StrategyInstance } from "../../model/postgres/StrategyInstance.entity.js";
+import type { Schema } from "jtd";
+import { StrategiesService } from "../../model/services/strategies.service.js";
+import { StrategyInstanceService } from "../../model/services/strategy-instance.service.js";
+import { UserLoginData } from "../../model/postgres/UserLoginData.entity.js";
+import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
+import { Context } from "../../util/Context.js";
 
 @Injectable()
 export class GithubTokenStrategyService extends Strategy {

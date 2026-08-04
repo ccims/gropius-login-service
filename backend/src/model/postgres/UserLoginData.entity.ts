@@ -1,9 +1,9 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { ActiveLogin } from "./ActiveLogin.entity";
-import { LoginUser } from "./LoginUser.entity";
-import { StrategyInstance } from "./StrategyInstance.entity";
-import { UserLoginDataImsUser } from "./UserLoginDataImsUser.entity";
+import { ActiveLogin } from "./ActiveLogin.entity.js";
+import { LoginUser } from "./LoginUser.entity.js";
+import { StrategyInstance } from "./StrategyInstance.entity.js";
+import { UserLoginDataImsUser } from "./UserLoginDataImsUser.entity.js";
 
 /**
  * The states a UserLoginData can be in

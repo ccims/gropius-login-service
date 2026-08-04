@@ -1,19 +1,18 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { StrategiesService } from "../../model/services/strategies.service";
+import { StrategyInstanceService } from "../../model/services/strategy-instance.service.js";
+import { StrategiesService } from "../../model/services/strategies.service.js";
 import * as passportGithub from "passport-github2";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import * as passport from "passport";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { FlowType, AuthResult } from "../AuthResult";
-import { StrategyUsingPassport } from "../StrategyUsingPassport";
+import { StrategyInstance } from "../../model/postgres/StrategyInstance.entity.js";
+import passport from "passport";
+import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
+import { FlowType, type AuthResult } from "../AuthResult.js";
+import { StrategyUsingPassport } from "../StrategyUsingPassport.js";
 import { JwtService } from "@nestjs/jwt";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { checkType } from "../../util/checkType";
-import { Schema } from "jtd";
-import { Context } from "../../util/Context";
-import { EncryptionService } from "../../backend-services/encryption.service";
+import { UserLoginData } from "../../model/postgres/UserLoginData.entity.js";
+import { ActiveLoginService } from "../../model/services/active-login.service.js";
+import { checkType } from "../../util/checkType.js";
+import type { Schema } from "jtd";
+import { Context } from "../../util/Context.js";
 
 @Injectable()
 export class GithubStrategyService extends StrategyUsingPassport {
@@ -23,10 +22,10 @@ export class GithubStrategyService extends StrategyUsingPassport {
         strategiesService: StrategiesService,
         strategyInstanceService: StrategyInstanceService,
         private readonly loginDataService: UserLoginDataService,
-        encryptionService: EncryptionService,
+        stateJwtService: JwtService,
         private readonly activeLoginService: ActiveLoginService,
     ) {
-        super("github", strategyInstanceService, strategiesService, encryptionService, true, true, true, true, false);
+        super("github", strategyInstanceService, strategiesService, stateJwtService, true, true, true, true, false);
     }
 
     override get instanceConfigSchema(): Record<string, Schema> {

@@ -19,15 +19,15 @@ import {
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { ApiStateData } from "src/util/ApiStateData";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { Response } from "express";
-import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { DefaultReturn } from "src/util/default-return.dto";
-import { ActiveLoginService } from "../model/services/active-login.service";
+import type { ApiStateData } from "../util/ApiStateData.js";
+import { BackendUserService } from "../backend-services/backend-user.service.js";
+import { UserLoginDataService } from "../model/services/user-login-data.service.js";
+import { OpenApiTag } from "../util/openapi-tag.js";
+import type { Response } from "express";
+import { CheckAuthAccessTokenGuard } from "./check-auth-access-token.guard.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { DefaultReturn } from "../util/default-return.dto.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
 
 @Controller("update-action")
 @ApiTags(OpenApiTag.INTERNAL_API)

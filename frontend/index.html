@@ -6,6 +6,18 @@
   <link rel="icon" href="/src/assets/logo.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gropius</title>
+  <!--
+    Pins Vuetify's cascade layer order. Vuetify establishes it in its own stylesheet, but the build
+    splits component styles into chunks that Vite links before the entry css, so whichever chunk
+    loads first would otherwise decide the order. Declaring it here, ahead of every stylesheet link,
+    keeps vuetify-core.reset from outranking the component styles.
+  -->
+  <style>
+    @layer vuetify-core, vuetify-components, vuetify-overrides, vuetify-utilities, vuetify-final;
+    @layer vuetify-core.reset, vuetify-core.base;
+    @layer vuetify-utilities.theme-base, vuetify-utilities.typography, vuetify-utilities.helpers, vuetify-utilities.theme-background, vuetify-utilities.theme-foreground;
+    @layer vuetify-final.transitions, vuetify-final.trumps;
+  </style>
 </head>
 
 <body>

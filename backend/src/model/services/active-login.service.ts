@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
-import { ActiveLogin } from "../postgres/ActiveLogin.entity";
-import { UserLoginData } from "../postgres/UserLoginData.entity";
-import { LoginUser } from "../postgres/LoginUser.entity";
-import { ActiveLoginAccess } from "../postgres/ActiveLoginAccess.entity";
+import { ActiveLogin } from "../postgres/ActiveLogin.entity.js";
+import { UserLoginData } from "../postgres/UserLoginData.entity.js";
+import { LoginUser } from "../postgres/LoginUser.entity.js";
+import { ActiveLoginAccess } from "../postgres/ActiveLoginAccess.entity.js";
 
 @Injectable()
 export class ActiveLoginService extends Repository<ActiveLogin> {

@@ -1,10 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { OAuthHttpException } from "../errors/OAuthHttpException";
-import { OAuthAuthorizeRequest } from "../api-oauth/types";
-import { TokenScope, TokenService } from "./token.service";
-import { EncryptionService } from "./encryption.service";
-import { AuthClientService } from "../model/services/auth-client.service";
+import type { Request, Response } from "express";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import type { OAuthAuthorizeRequest } from "../api-oauth/types.js";
+import { TokenScope, TokenService } from "./token.service.js";
+import { EncryptionService } from "./encryption.service.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
 
 @Injectable()
 export class RequestExtractService {
@@ -55,6 +55,20 @@ export class RequestExtractService {
             this.tokenService.verifyScope(request.scope);
         } catch (error: any) {
             throw new OAuthHttpException("invalid_scope", error.message);
+        }
+
+        // signAccessToken rejects the register scope, so consent could only be followed by a failure.
+        if (request.scope.includes(TokenScope.LOGIN_SERVICE_REGISTER)) {
+            throw new OAuthHttpException(
+                "invalid_scope",
+                `Scope '${TokenScope.LOGIN_SERVICE_REGISTER}' cannot be requested`,
+            );
+        }
+
+        for (const requestedScope of request.scope) {
+            if (!client.validScopes.includes(requestedScope)) {
+                throw new OAuthHttpException("invalid_scope", "Requested scope not valid for client");
+            }
         }
 
         if (request.codeChallengeMethod !== "S256") {

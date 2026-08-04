@@ -1,5 +1,5 @@
-import { Schema } from "jtd";
-import { StrategyUpdateAction, StrategyVariable } from "src/strategies/Strategy";
+import type { Schema } from "jtd";
+import type { StrategyUpdateAction, StrategyVariable } from "../../../strategies/Strategy.js";
 
 /**
  * Representation of a strategy in the API

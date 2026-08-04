@@ -8,15 +8,15 @@ import {
     ApiTags,
     ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { UserLoginDataResponse } from "./dto/user-login-data.dto";
-import { Response } from "express";
-import { ApiStateData } from "src/util/ApiStateData";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { BackendUserService } from "src/backend-services/backend-user.service";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
+import { UserLoginData } from "../../model/postgres/UserLoginData.entity.js";
+import { UserLoginDataResponse } from "./dto/user-login-data.dto.js";
+import type { Response } from "express";
+import type { ApiStateData } from "../../util/ApiStateData.js";
+import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
+import { BackendUserService } from "../../backend-services/backend-user.service.js";
+import { StrategiesService } from "../../model/services/strategies.service.js";
+import { OpenApiTag } from "../../util/openapi-tag.js";
+import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard.js";
 
 @Controller("login-data")
 @UseGuards(CheckLoginServiceAccessTokenGuard)
@@ -65,7 +65,7 @@ export class LoginDataController {
             where: {
                 id,
             },
-            relations: ["strategyInstance"],
+            relations: { strategyInstance: true },
         });
         if (!loginData) throw new HttpException("Invalid loginData", HttpStatus.UNAUTHORIZED);
 

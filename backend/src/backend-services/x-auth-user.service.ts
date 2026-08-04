@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { combineURL } from "../util/utils";
-import { AuthClientService } from "../model/services/auth-client.service";
-import { ActiveLoginService } from "../model/services/active-login.service";
+import type { Request, Response } from "express";
+import { combineURL } from "../util/utils.js";
+import { AuthClientService } from "../model/services/auth-client.service.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
 
 @Injectable()
 export class AuthUserService {

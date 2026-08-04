@@ -71,7 +71,7 @@ import axios from "axios";
 import { computed, shallowRef } from "vue";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { LoginStrategy, LoginStrategyInstance, LoginStrategyUpdateAction } from "./model";
+import type { LoginStrategy, LoginStrategyInstance, LoginStrategyUpdateAction } from "./model";
 import { onMounted } from "vue";
 import InputField from "@/components/InputField.vue";
 import * as auth from "../util/auth";

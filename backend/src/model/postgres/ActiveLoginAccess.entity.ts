@@ -1,6 +1,6 @@
 import { ApiHideProperty } from "@nestjs/swagger";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { ActiveLogin } from "./ActiveLogin.entity";
+import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { ActiveLogin } from "./ActiveLogin.entity.js";
 
 /**
  * Entity representing the access of an OAuth client to an ActiveLogin.
@@ -28,7 +28,12 @@ export class ActiveLoginAccess {
 
     /**
      * Track used auth code to prevent reuse.
+     *
+     * The unique constraint is what actually enforces single use: the redemption path inserts
+     * this row and lets the database reject the second concurrent insert, rather than reading
+     * first and writing later (which two parallel requests can both pass).
      */
+    @Index({ unique: true })
     @Column()
     authCodeFingerprint: string;
 

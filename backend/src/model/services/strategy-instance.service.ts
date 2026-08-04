@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DataSource, In, Not, Repository } from "typeorm";
-import { StrategyInstance } from "../postgres/StrategyInstance.entity";
+import { StrategyInstance } from "../postgres/StrategyInstance.entity.js";
 
 @Injectable()
 export class StrategyInstanceService extends Repository<StrategyInstance> {

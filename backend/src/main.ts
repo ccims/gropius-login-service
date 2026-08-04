@@ -1,12 +1,13 @@
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
+import { AppModule } from "./app.module.js";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { OpenApiTag } from "./util/openapi-tag";
+import { OpenApiTag } from "./util/openapi-tag.js";
 import { ConfigModule } from "@nestjs/config";
-import { LogLevel } from "@nestjs/common";
-import session = require("cookie-session");
-import { NextFunction, Request, Response } from "express";
-import { NestExpressApplication } from "@nestjs/platform-express";
+import type { LogLevel } from "@nestjs/common";
+// cookie-session is a CommonJS `export =` module; under ESM the default import is the callable itself.
+import session from "cookie-session";
+import type { NextFunction, Request, Response } from "express";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
 
 async function bootstrap() {
@@ -60,7 +61,10 @@ async function bootstrap() {
 
     const portNumber = parseInt(process.env.GROPIUS_LOGIN_LISTEN_PORT, 10) || 3000;
 
-    app.enableCors();
+    app.enableCors({
+        origin: config.get<string>("GROPIUS_ENDPOINT"),
+        credentials: true,
+    });
 
     app.set("trust proxy", config.get<string | number | boolean>("GROPIUS_LOGIN_TRUST_PROXY"));
 

@@ -1,6 +1,6 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Entity, ManyToOne, PrimaryColumn } from "typeorm";
-import { UserLoginData } from "./UserLoginData.entity";
+import { UserLoginData } from "./UserLoginData.entity.js";
 
 /**
  * Entity representing an IMSUser in the backend.

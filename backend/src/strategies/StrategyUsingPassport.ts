@@ -1,15 +1,14 @@
-import * as passport from "passport";
-import { PerformAuthResult, PerformAuthState, Strategy } from "./Strategy";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { AuthResult } from "./AuthResult";
+import passport from "passport";
+import { type PerformAuthResult, type PerformAuthState, Strategy } from "./Strategy.js";
+import { StrategyInstance } from "../model/postgres/StrategyInstance.entity.js";
+import type { AuthResult } from "./AuthResult.js";
 import { JwtService } from "@nestjs/jwt";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { StrategiesService } from "src/model/services/strategies.service";
+import { StrategyInstanceService } from "../model/services/strategy-instance.service.js";
+import { StrategiesService } from "../model/services/strategies.service.js";
 import { Logger } from "@nestjs/common";
-import { Request } from "express";
-import { Context, FlowState } from "../util/Context";
-import { compareTimeSafe } from "../util/utils";
-import { EncryptionService } from "../backend-services/encryption.service";
+import type { Request } from "express";
+import { Context, FlowState } from "../util/Context.js";
+import { compareTimeSafe, ms2s } from "../util/utils.js";
 
 export abstract class StrategyUsingPassport extends Strategy {
     private readonly logger = new Logger(StrategyUsingPassport.name);
@@ -18,7 +17,7 @@ export abstract class StrategyUsingPassport extends Strategy {
         typeName: string,
         strategyInstanceService: StrategyInstanceService,
         strategiesService: StrategiesService,
-        private readonly encryptionService: EncryptionService,
+        private readonly stateJwtService: JwtService,
         canLoginRegister = true,
         canSync = false,
         needsRedirectFlow = false,
@@ -58,12 +57,15 @@ export abstract class StrategyUsingPassport extends Strategy {
                 passportStrategy,
                 {
                     session: false,
-                    state: this.encryptionService.encrypt(
-                        JSON.stringify({
+                    // Signed, not encrypted: this needs integrity, and encrypting under the *public*
+                    // half of a keypair gives none - anyone with that key could mint a state blob.
+                    state: this.stateJwtService.sign(
+                        {
                             kind: "passport_state",
                             csrf: context?.auth.getCSRF(),
                             flow: context?.flow.getId(),
-                        }),
+                        },
+                        { expiresIn: ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS, 10)) },
                     ),
                     ...this.getAdditionalPassportOptions(strategyInstance, context),
                 },
@@ -76,9 +78,13 @@ export abstract class StrategyUsingPassport extends Strategy {
 
                         const stateToken = info.state || req.query?.state;
                         if (stateToken) {
-                            const statePayload = JSON.parse(
-                                this.encryptionService.decrypt(stateToken),
-                            ) as PerformAuthState;
+                            let statePayload: PerformAuthState;
+                            try {
+                                statePayload = this.stateJwtService.verify<PerformAuthState>(stateToken);
+                            } catch (stateError: unknown) {
+                                this.logger.warn("Invalid state returned by passport strategy", stateError);
+                                return reject("Invalid state returned by passport strategy");
+                            }
 
                             if (statePayload.kind !== "passport_state") {
                                 return reject("Invalid state returned by passport strategy");

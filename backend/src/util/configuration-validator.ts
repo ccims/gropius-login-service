@@ -1,4 +1,4 @@
-import * as Joi from "joi";
+import Joi from "joi";
 
 export const validationSchema = Joi.object({
     GROPIUS_INTERNAL_BACKEND_ENDPOINT: Joi.string().uri().default("http://localhost:8081/graphql"),
@@ -53,11 +53,16 @@ export const validationSchema = Joi.object({
 
     GROPIUS_ENDPOINT: Joi.string().uri().required(),
 
-    GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string(),
+    GROPIUS_LOGIN_SYNC_API_SECRET: Joi.string().min(16).required(),
     GROPIUS_OAUTH_PUBLIC_KEY: Joi.string().required(),
     GROPIUS_OAUTH_PRIVATE_KEY: Joi.string().required(),
     GROPIUS_LOGIN_SPECIFIC_PUBLIC_KEY: Joi.string().required(),
     GROPIUS_LOGIN_SPECIFIC_PRIVATE_KEY: Joi.string().required(),
+
+    GROPIUS_RATE_LIMIT_TTL_MS: Joi.number()
+        .min(0)
+        .default(60 * 1000),
+    GROPIUS_RATE_LIMIT_REQUESTS: Joi.number().min(1).default(120),
 
     GROPIUS_LOGIN_TRUST_PROXY: Joi.alternatives()
         .try(Joi.boolean().truthy("true").falsy("false"), Joi.number().integer().min(0), Joi.string())

@@ -1,16 +1,16 @@
 import { HttpException, HttpStatus, Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { ImsUserFindingService } from "src/backend-services/ims-user-finding.service";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
-import { PerformAuthFunctionService } from "./perform-auth-function.service";
-import { StrategiesService as StrategiesRepository } from "../model/services/strategies.service";
-import { Strategy } from "./Strategy";
-import { OAuthHttpException } from "src/errors/OAuthHttpException";
-import { AuthException } from "src/errors/AuthException";
-import { Context } from "../util/Context";
-import { ActiveLogin } from "../model/postgres/ActiveLogin.entity";
-import { compareTimeSafe } from "../util/utils";
+import type { Request, Response } from "express";
+import { ImsUserFindingService } from "../backend-services/ims-user-finding.service.js";
+import { StrategyInstance } from "../model/postgres/StrategyInstance.entity.js";
+import { StrategyInstanceService } from "../model/services/strategy-instance.service.js";
+import { PerformAuthFunctionService } from "./perform-auth-function.service.js";
+import { StrategiesService as StrategiesRepository } from "../model/services/strategies.service.js";
+import { Strategy } from "./Strategy.js";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import { AuthException } from "../errors/AuthException.js";
+import { Context } from "../util/Context.js";
+import { ActiveLogin } from "../model/postgres/ActiveLogin.entity.js";
+import { compareTimeSafe } from "../util/utils.js";
 
 @Injectable()
 export class StrategiesService {
@@ -23,8 +23,8 @@ export class StrategiesService {
         private readonly imsUserFindingService: ImsUserFindingService,
     ) {}
 
-    private async idToStrategyInstance(id: string): Promise<StrategyInstance> {
-        if (!id) {
+    private async idToStrategyInstance(id: string | string[]): Promise<StrategyInstance> {
+        if (!id || typeof id !== "string") {
             throw new HttpException("No Id of strategy instance given", HttpStatus.BAD_REQUEST);
         }
         const instance = await this.strategyInstanceService.findOneBy({ id });

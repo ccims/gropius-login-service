@@ -1,12 +1,12 @@
 import { Module } from "@nestjs/common";
-import { BackendServicesModule } from "src/backend-services/backend-services.module";
-import { ModelModule } from "src/model/model.module";
-import { StrategiesModule } from "src/strategies/strategies.module";
-import { AuthClientController } from "./auth/auth-clients.controller";
-import { StrategiesController } from "./strategy/strategies.controller";
-import { StrategyInstancesController } from "./strategy/strategy-instances.controller";
-import { UsersController } from "./auth/users.controller";
-import { LoginDataController } from "./auth/login-data.controller";
+import { BackendServicesModule } from "../backend-services/backend-services.module.js";
+import { ModelModule } from "../model/model.module.js";
+import { StrategiesModule } from "../strategies/strategies.module.js";
+import { AuthClientController } from "./auth/auth-clients.controller.js";
+import { StrategiesController } from "./strategy/strategies.controller.js";
+import { StrategyInstancesController } from "./strategy/strategy-instances.controller.js";
+import { UsersController } from "./auth/users.controller.js";
+import { LoginDataController } from "./auth/login-data.controller.js";
 
 /**
  * Module that contains all controllers for the regular login-service API

@@ -1,14 +1,14 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ActiveLogin } from "src/model/postgres/ActiveLogin.entity";
-import { StrategyInstance } from "src/model/postgres/StrategyInstance.entity";
-import { LoginState, UserLoginData } from "src/model/postgres/UserLoginData.entity";
-import { ActiveLoginService } from "src/model/services/active-login.service";
-import { UserLoginDataService } from "src/model/services/user-login-data.service";
-import { AuthResult, FlowType } from "./AuthResult";
-import { Strategy } from "./Strategy";
-import { OAuthHttpException } from "src/errors/OAuthHttpException";
-import { AuthException } from "src/errors/AuthException";
-import { Context } from "../util/Context";
+import { ActiveLogin } from "../model/postgres/ActiveLogin.entity.js";
+import { StrategyInstance } from "../model/postgres/StrategyInstance.entity.js";
+import { LoginState, UserLoginData } from "../model/postgres/UserLoginData.entity.js";
+import { ActiveLoginService } from "../model/services/active-login.service.js";
+import { UserLoginDataService } from "../model/services/user-login-data.service.js";
+import { type AuthResult, FlowType } from "./AuthResult.js";
+import { Strategy } from "./Strategy.js";
+import { OAuthHttpException } from "../errors/OAuthHttpException.js";
+import { AuthException } from "../errors/AuthException.js";
+import { Context } from "../util/Context.js";
 
 /**
  * Contains the logic how the system is supposed to create and link

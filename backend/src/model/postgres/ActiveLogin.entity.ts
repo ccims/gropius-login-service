@@ -1,7 +1,7 @@
 import { ApiHideProperty } from "@nestjs/swagger";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { StrategyInstance } from "./StrategyInstance.entity";
-import { UserLoginData } from "./UserLoginData.entity";
+import { StrategyInstance } from "./StrategyInstance.entity.js";
+import { UserLoginData } from "./UserLoginData.entity.js";
 
 /**
  * Entity representing a single login event by one user using a specific strategy.

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { StrategiesService } from "src/model/services/strategies.service";
-import { StrategyInstanceService } from "src/model/services/strategy-instance.service";
+import { StrategiesService } from "../model/services/strategies.service.js";
+import { StrategyInstanceService } from "../model/services/strategy-instance.service.js";
 
 /**
  * Service that creates a new strategy instance as specified in the config variables

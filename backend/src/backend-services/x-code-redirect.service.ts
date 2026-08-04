@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { TokenService } from "src/backend-services/token.service";
+import type { Request, Response } from "express";
+import { TokenService } from "./token.service.js";
 
 @Injectable()
 export class CodeRedirectService {
@@ -19,6 +19,7 @@ export class CodeRedirectService {
             request.clientId,
             request.scope,
             request.codeChallenge,
+            request.redirect,
         );
 
         const url = new URL(request.redirect);

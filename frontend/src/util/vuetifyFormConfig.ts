@@ -1,4 +1,4 @@
-import { InputBindsConfig } from "vee-validate";
+import type { InputBindsConfig } from "vee-validate";
 
 export const fieldConfig: any = {
     props: (state: any) => {

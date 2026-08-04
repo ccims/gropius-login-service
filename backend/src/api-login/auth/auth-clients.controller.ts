@@ -9,17 +9,17 @@ import {
     ApiParam,
     ApiTags,
 } from "@nestjs/swagger";
-import { DefaultReturn } from "src/util/default-return.dto";
-import { AuthClient } from "src/model/postgres/AuthClient.entity";
-import { AuthClientService } from "src/model/services/auth-client.service";
-import { OpenApiTag } from "src/util/openapi-tag";
-import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard";
-import { CreateAuthClientSecretResponse } from "./dto/create-auth-client-secret.dto";
-import { UpdateAuthClientInput } from "./dto/update-auth-client.dto";
-import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-client.dto";
-import { NeedsAdmin } from "src/util/NeedsAdmin.decorator";
-import { LoginUserService } from "src/model/services/login-user.service";
-import { CreateAuthClientInput } from "./dto/create-auth-client.dto";
+import { DefaultReturn } from "../../util/default-return.dto.js";
+import { AuthClient } from "../../model/postgres/AuthClient.entity.js";
+import { AuthClientService } from "../../model/services/auth-client.service.js";
+import { OpenApiTag } from "../../util/openapi-tag.js";
+import { CheckLoginServiceAccessTokenGuard } from "./check-login-service-access-token.guard.js";
+import { CreateAuthClientSecretResponse } from "./dto/create-auth-client-secret.dto.js";
+import { UpdateAuthClientInput } from "./dto/update-auth-client.dto.js";
+import { CensoredClientSecret, GetAuthClientResponse } from "./dto/get-auth-client.dto.js";
+import { NeedsAdmin } from "../../util/NeedsAdmin.decorator.js";
+import { LoginUserService } from "../../model/services/login-user.service.js";
+import { CreateAuthClientInput } from "./dto/create-auth-client.dto.js";
 
 /**
  * Controller for all queries related to auth clients and their client secrets

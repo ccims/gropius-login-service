@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { combineURL, compareTimeSafe } from "../util/utils";
+import type { Request, Response } from "express";
+import { combineURL, compareTimeSafe } from "../util/utils.js";
 
 @Injectable()
 export class FlowCSRFService {

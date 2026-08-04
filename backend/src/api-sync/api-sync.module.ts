@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { BackendServicesModule } from "src/backend-services/backend-services.module";
-import { ModelModule } from "src/model/model.module";
-import { StrategiesModule } from "src/strategies/strategies.module";
-import { SyncImsUserController } from "./sync-ims-user.controller";
+import { BackendServicesModule } from "../backend-services/backend-services.module.js";
+import { ModelModule } from "../model/model.module.js";
+import { StrategiesModule } from "../strategies/strategies.module.js";
+import { SyncImsUserController } from "./sync-ims-user.controller.js";
 
 @Module({
     imports: [ModelModule, StrategiesModule, BackendServicesModule],

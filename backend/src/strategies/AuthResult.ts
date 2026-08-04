@@ -1,4 +1,4 @@
-import { UserLoginData } from "src/model/postgres/UserLoginData.entity";
+import { UserLoginData } from "../model/postgres/UserLoginData.entity.js";
 
 export enum FlowType {
     LOGIN = "LOGIN",

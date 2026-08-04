@@ -1,8 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Request, Response } from "express";
-import { combineURL } from "../util/utils";
-import { FlowType } from "../strategies/AuthResult";
-import { AuthFunctionInput } from "../api-internal/types";
+import type { Request, Response } from "express";
+import { combineURL } from "../util/utils.js";
+import { FlowType } from "../strategies/AuthResult.js";
+import { AuthFunctionInput } from "../api-internal/types.js";
 
 @Injectable()
 export class FlowViaService {
