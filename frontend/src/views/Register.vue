@@ -83,6 +83,6 @@ onMounted(async () => {
 <style scoped>
 .register-container {
     max-width: 500px;
-    margin: 0 auto;
+    margin-inline: auto;
 }
 </style>

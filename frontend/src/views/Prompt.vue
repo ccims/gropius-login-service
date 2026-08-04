@@ -85,6 +85,6 @@ onMounted(async () => {
 <style scoped>
 .prompt-container {
     max-width: 500px;
-    margin: 0 auto;
+    margin-inline: auto;
 }
 </style>

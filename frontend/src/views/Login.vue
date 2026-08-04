@@ -279,7 +279,7 @@ async function redirectRegister(strategyInstance: RedirectStrategyInstance, sync
 <style scoped>
 .login-container {
     max-width: 500px;
-    margin: 0 auto;
+    margin-inline: auto;
 }
 
 .text-middle {

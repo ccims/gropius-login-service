@@ -157,6 +157,6 @@ onMounted(async () => {
 <style scoped>
 .update-container {
     max-width: 500px;
-    margin: 0 auto;
+    margin-inline: auto;
 }
 </style>

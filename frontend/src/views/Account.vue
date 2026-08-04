@@ -63,6 +63,6 @@ const accounts = asyncComputed(async () => {
 <style scoped>
 .account-container {
     max-width: 500px;
-    margin: 0 auto;
+    margin-inline: auto;
 }
 </style>
