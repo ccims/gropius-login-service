@@ -49,6 +49,7 @@ export interface PerformAuthResult {
  * @param needsRedirectFlow Whether the strategy needs a redirect flow for login
  * @param allowsImplicitSignup Whether the strategy allows implicit signup
  * @param forceSuggestedUsername Whether the strategy forces the use of a suggested username
+ * @param needsPasskeyFlow Whether the strategy authenticates with a passkey (WebAuthn) ceremony
  */
 export abstract class Strategy {
     constructor(
@@ -60,6 +61,7 @@ export abstract class Strategy {
         public readonly needsRedirectFlow = false,
         public readonly allowsImplicitSignup = false,
         public readonly forceSuggestedUsername = false,
+        public readonly needsPasskeyFlow = false,
     ) {
         strategiesService.addStrategy(typeName, this);
     }
@@ -323,6 +325,7 @@ export abstract class Strategy {
             canLoginRegister: this.canLoginRegister,
             canSync: this.canSync,
             needsRedirectFlow: this.needsRedirectFlow,
+            needsPasskeyFlow: this.needsPasskeyFlow,
             allowsImplicitSignup: this.allowsImplicitSignup,
             acceptsVariables: this.acceptsVariables,
             instanceConfigSchema: this.instanceConfigSchema,

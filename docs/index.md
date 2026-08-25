@@ -70,8 +70,10 @@ The consent prompt is skipped if user already granted access to gropius client i
 1. one of the following flows
     1. `FLOW {user registers at gropius auth server via passport-local}`
     1. `FLOW {user registers at gropius auth server via IMS auth server}`
+    1. `FLOW {user registers at gropius auth server via passkey}`
     1. `FLOW {user authenticates at gropius auth server via passport-local}`
     1. `FLOW {user authenticates at gropius auth server via IMS auth server}`
+    1. `FLOW {user authenticates at gropius auth server via passkey}`
 
 The user is authenticated after a registration.
 The authentication is persisted in a session cookie.
@@ -83,6 +85,19 @@ Authentication is skipped if user is already authenticated.
 1. `REDIRECT GET {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/{register,register-sync}`
 1. `REDIRECT GET {gropius auth server}/auth/flow/register`
 1. `REDIRECT POST {gropius auth server}/auth/api/internal/register/callback`
+
+
+## Flow "User Registers at Gropius Auth Server via Passkey"
+
+1. `API POST {gropius auth server}/auth/api/internal/auth/passkey/{strategy instance id}/registration-options`
+1. `FLOW {user creates a passkey in their browser}`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/register`
+1. `REDIRECT GET {gropius auth server}/auth/flow/register`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/register/callback`
+
+The options endpoint hands out a challenge that is stored in `cookie#passkey` and is bound to the
+session, the flow and the strategy instance. It is removed from the session when it is answered,
+so every challenge can be answered exactly once.
 
 
 ## Flow "User Registers at Gropius Auth Server via IMS Auth Server"
@@ -98,6 +113,16 @@ Authentication is skipped if user is already authenticated.
 ## Flow "User Authenticates at Gropius Auth Server via passport-local"
 
 1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
+
+
+## Flow "User Authenticates at Gropius Auth Server via Passkey"
+
+1. `API POST {gropius auth server}/auth/api/internal/auth/passkey/{strategy instance id}/authentication-options`
+1. `FLOW {user unlocks their passkey in their browser}`
+1. `REDIRECT POST {gropius auth server}/auth/api/internal/auth/submit/{strategy instance id}/login`
+
+Passkeys are registered as discoverable credentials, so no username is submitted: the browser
+returns which credential was used and the login service looks the account up by its credential id.
 
 
 ## Flow "User Authenticates at Gropius Auth Server via IMS Auth Server"
@@ -126,6 +151,7 @@ The IMS client uses credentials granted during `FLOW {user authenticates at grop
 1. one of the following flows
    1. `FLOW {user authenticates at gropius auth server via passport-local}`
    1. `FLOW {user authenticates at gropius auth server via IMS auth server}`
+   1. `FLOW {user registers at gropius auth server via passkey}`
 1. `REDIRECT GET {gropius auth server}/auth/flow/account`
 
 The authentication flows are implicit signups that do not create a new gropius account, but link the new loginData to the existing gropius account.
@@ -172,6 +198,7 @@ This will also invalidate all issued tokens.
 | StrategyInstance     | Postgres |                 |
 | Session              | Cookie   |                 |
 | SessionFlow          | Session  |                 |
+| PasskeyChallenge     | Session  | pending WebAuthn challenge, single use |
 |                      | Neo4j    |                 |
 
 Please note that the cookie itself is not a JWT but a signed JSON object.

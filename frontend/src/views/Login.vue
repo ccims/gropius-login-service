@@ -11,38 +11,44 @@
                         <v-icon icon="mdi-alert-circle-outline" size="x-large" />
                         {{ errorMessage }}
                     </v-sheet>
-                    <v-tabs v-model="credentialTab" align-tabs="center">
-                        <v-tab v-for="(strategy, index) in currentStrategies.credential" :key="index" :value="index">
-                            {{ strategy.name }}
-                        </v-tab>
-                    </v-tabs>
-                    <v-divider />
-                    <v-window v-model="credentialTab">
-                        <v-window-item
-                            v-for="(strategy, index) in currentStrategies.credential"
-                            :key="index"
-                            :value="index"
-                            class="pt-4"
-                        >
-                            <v-form
-                                :ref="(el: any) => forms.set(index, el)"
-                                :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
-                                method="POST"
-                                @submit.prevent="submitForm"
+                    <template v-if="currentStrategies.credential.length > 0">
+                        <v-tabs v-model="credentialTab" align-tabs="center">
+                            <v-tab
+                                v-for="(strategy, index) in currentStrategies.credential"
+                                :key="index"
+                                :value="index"
                             >
-                                <InputField
-                                    v-for="(field, idx) in isLogin ? strategy.loginFields : strategy.registerFields"
-                                    :key="idx"
-                                    v-model="formDataAt(strategy.id)[field.name]"
-                                    :field="field"
-                                />
-                                <input type="submit" hidden />
-                                <input type="hidden" name="csrf" :value="csrf" hidden />
-                                <input type="hidden" name="flow" :value="flow" hidden />
-                            </v-form>
-                        </v-window-item>
-                    </v-window>
-                    <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
+                                {{ strategy.name }}
+                            </v-tab>
+                        </v-tabs>
+                        <v-divider />
+                        <v-window v-model="credentialTab">
+                            <v-window-item
+                                v-for="(strategy, index) in currentStrategies.credential"
+                                :key="index"
+                                :value="index"
+                                class="pt-4"
+                            >
+                                <v-form
+                                    :ref="(el: any) => forms.set(index, el)"
+                                    :action="`/auth/api/internal/auth/submit/${strategy.id}/${mode}`"
+                                    method="POST"
+                                    @submit.prevent="submitForm"
+                                >
+                                    <InputField
+                                        v-for="(field, idx) in isLogin ? strategy.loginFields : strategy.registerFields"
+                                        :key="idx"
+                                        v-model="formDataAt(strategy.id)[field.name]"
+                                        :field="field"
+                                    />
+                                    <input type="submit" hidden />
+                                    <input type="hidden" name="csrf" :value="csrf" hidden />
+                                    <input type="hidden" name="flow" :value="flow" hidden />
+                                </v-form>
+                            </v-window-item>
+                        </v-window>
+                        <DefaultButton class="w-100" @click="submitForm"> Continue</DefaultButton>
+                    </template>
                     <div v-if="!isRegisterAdditional" class="mt-2">
                         <p v-if="isLogin">
                             <span class="text-middle">Don't have an account?</span>
@@ -57,6 +63,30 @@
                             >
                         </p>
                     </div>
+                    <template v-if="currentStrategies.passkey.length > 0">
+                        <v-divider class="mt-4 mb-3" />
+                        <v-text-field
+                            v-if="!isLogin"
+                            v-model="passkeyUsername"
+                            class="passkey-username"
+                            name="username"
+                            autocomplete="username"
+                            label="Username"
+                            hint="The name your passkey is saved under"
+                        />
+                        <DefaultButton
+                            v-for="strategy in currentStrategies.passkey"
+                            :key="strategy.id"
+                            class="w-100 mt-2"
+                            variant="outlined"
+                            density="default"
+                            :loading="passkeyPending"
+                            @click="passkey(strategy)"
+                        >
+                            <v-icon icon="mdi-key-variant" start />
+                            {{ `${passkeyVerb} ${strategy.name}` }}
+                        </DefaultButton>
+                    </template>
                     <template v-if="currentStrategies.redirect.length > 0">
                         <v-divider class="mt-4 mb-3" />
                         <DefaultButton
@@ -90,6 +120,12 @@
                 <input type="hidden" name="csrf" :value="csrf" hidden />
                 <input type="hidden" name="flow" :value="flow" hidden />
             </v-form>
+
+            <v-form ref="passkeyForm" :action="passkeyAction" method="POST" style="display: none">
+                <input type="hidden" name="credential" :value="passkeyCredential" hidden />
+                <input type="hidden" name="csrf" :value="csrf" hidden />
+                <input type="hidden" name="flow" :value="flow" hidden />
+            </v-form>
         </template>
     </BaseLayout>
 </template>
@@ -100,10 +136,12 @@ import { useRoute, useRouter } from "vue-router";
 import type {
     CredentialStrategyInstance,
     GroupedStrategyInstances,
+    PasskeyStrategyInstance,
     RedirectStrategyInstance,
     LoginStrategy,
     LoginStrategyInstance
 } from "./model";
+import { browserSupportsWebAuthn, startAuthentication, startRegistration } from "@simplewebauthn/browser";
 import GropiusCard from "@/components/GropiusCard.vue";
 import { withErrorMessage } from "@/util/withErrorMessage";
 import { asyncComputed } from "@vueuse/core";
@@ -133,7 +171,21 @@ const title = computed(() => {
     }
 });
 
+const localErrorMessage = ref<string>();
+
+// a passkey button either logs in with an existing passkey, creates one for a new account
+// or adds one to the account the user is already logged in with
+const passkeyVerb = computed(() => {
+    if (isRegisterAdditional.value) {
+        return "Add";
+    }
+    return isLogin.value ? "Login with" : "Sign up with";
+});
+
 const errorMessage = computed(() => {
+    if (localErrorMessage.value) {
+        return localErrorMessage.value;
+    }
     if (route.query.error) {
         return route.query.error as string;
     }
@@ -152,6 +204,19 @@ const strategies = asyncComputed(
             "Could not fetch available strategy instances"
         );
         const strategiesByName = new Map(strategies.map((s) => [s.typeName, s]));
+        // passkeys can only be used if the browser knows about WebAuthn at all
+        const passkeyInstances = browserSupportsWebAuthn()
+            ? instances
+                  .filter((instance) => strategiesByName.get(instance.type)?.needsPasskeyFlow)
+                  .map(
+                      (instance) =>
+                          ({
+                              ...instance,
+                              type: "passkey"
+                          }) satisfies PasskeyStrategyInstance
+                  )
+            : [];
+
         const redirectInstances = instances
             .filter((instance) => strategiesByName.get(instance.type)?.needsRedirectFlow)
             .map(
@@ -163,6 +228,7 @@ const strategies = asyncComputed(
             );
 
         const credentialInstances = instances
+            .filter((instance) => !strategiesByName.get(instance.type)?.needsPasskeyFlow)
             .filter((instance) => Object.keys(strategiesByName.get(instance.type)?.acceptsVariables ?? {}).length > 0)
             .map((instance) => {
                 const strategy = strategiesByName.get(instance.type);
@@ -181,7 +247,7 @@ const strategies = asyncComputed(
                 credentialTab.value = index;
             }
         }
-        return [...redirectInstances, ...credentialInstances];
+        return [...redirectInstances, ...passkeyInstances, ...credentialInstances];
     },
     [],
     { shallow: false, evaluating: loadingStrategies }
@@ -199,7 +265,8 @@ const currentStrategies = computed<GroupedStrategyInstances>(() => {
     });
     return {
         credential: loginInstances.filter((strategy) => strategy.type === "credential") as CredentialStrategyInstance[],
-        redirect: loginInstances.filter((strategy) => strategy.type === "redirect") as RedirectStrategyInstance[]
+        redirect: loginInstances.filter((strategy) => strategy.type === "redirect") as RedirectStrategyInstance[],
+        passkey: loginInstances.filter((strategy) => strategy.type === "passkey") as PasskeyStrategyInstance[]
     };
 });
 const credentialTab = ref(0);
@@ -218,6 +285,8 @@ function toggleIsLogin() {
     isLogin.value = !isLogin.value;
     credentialTab.value = 0;
     formData.value = {};
+    passkeyUsername.value = "";
+    localErrorMessage.value = undefined;
 }
 
 function submitForm() {
@@ -240,6 +309,69 @@ function submitForm() {
 function submitFormWithMode(formMode: "login" | "register" | "register-sync") {
     mode.value = formMode;
     nextTick(() => forms.value.get(credentialTab.value).submit());
+}
+
+const passkeyForm = ref<HTMLFormElement | null>(null);
+const passkeyAction = ref<string>("");
+const passkeyCredential = ref<string>("");
+const passkeyUsername = ref("");
+const passkeyPending = ref(false);
+
+/**
+ * Runs a passkey ceremony and submits its result to the regular submit endpoint.
+ *
+ * The passkey itself never leaves the authenticator, what is submitted is only the
+ * signed answer to the challenge the login service handed out.
+ */
+async function passkey(strategy: PasskeyStrategyInstance) {
+    if (passkeyPending.value) {
+        return;
+    }
+    passkeyPending.value = true;
+    localErrorMessage.value = undefined;
+
+    try {
+        const isPasskeyLogin = isLogin.value && !isRegisterAdditional.value;
+        const credential = isPasskeyLogin
+            ? await startAuthentication({
+                  optionsJSON: await requestPasskeyOptions(strategy, "authentication-options")
+              })
+            : await startRegistration({
+                  optionsJSON: await requestPasskeyOptions(strategy, "registration-options", passkeyUsername.value)
+              });
+
+        passkeyCredential.value = JSON.stringify(credential);
+        passkeyAction.value = `/auth/api/internal/auth/submit/${strategy.id}/${isPasskeyLogin ? "login" : "register"}`;
+        await nextTick();
+        // the page navigates away with the response, so the pending state is never reset here
+        passkeyForm.value?.submit();
+    } catch (error: any) {
+        passkeyPending.value = false;
+        localErrorMessage.value = passkeyErrorMessage(error);
+    }
+}
+
+async function requestPasskeyOptions(
+    strategy: PasskeyStrategyInstance,
+    endpoint: "authentication-options" | "registration-options",
+    username?: string
+) {
+    const { data } = await axios.post(`/auth/api/internal/auth/passkey/${strategy.id}/${endpoint}`, {
+        csrf: csrf.value,
+        flow: flow.value,
+        ...(username?.trim() ? { username: username.trim() } : {})
+    });
+    return data;
+}
+
+function passkeyErrorMessage(error: any): string {
+    if (error?.code == "ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED") {
+        return "This device already has a passkey for this account.";
+    }
+    if (error?.name == "NotAllowedError" || error?.cause?.name == "NotAllowedError") {
+        return "The passkey request was cancelled or timed out.";
+    }
+    return error?.response?.data?.message ?? error?.message ?? "Could not use a passkey";
 }
 
 const redirectForm = ref<HTMLFormElement | null>(null);

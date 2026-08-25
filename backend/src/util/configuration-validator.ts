@@ -31,6 +31,15 @@ export const validationSchema = Joi.object({
     GROPIUS_LOGIN_ENABLE_OPENAPI: Joi.bool().default(true),
 
     GROPIUS_PASSPORT_STATE_JWT_ISSUER: Joi.string().default("gropius-login-state"),
+
+    GROPIUS_PASSKEY_RP_ID: Joi.string().optional(),
+    GROPIUS_PASSKEY_RP_NAME: Joi.string().default("Gropius"),
+    GROPIUS_PASSKEY_ORIGIN: Joi.string().optional(),
+    GROPIUS_PASSKEY_USER_VERIFICATION: Joi.string().valid("required", "preferred", "discouraged").default("required"),
+    GROPIUS_PASSKEY_TIMEOUT_MS: Joi.number()
+        .min(0)
+        .default(2 * 60 * 1000),
+
     GROPIUS_BCRYPT_HASH_ROUNDS: Joi.number().min(8).default(10),
     GROPIUS_AUTHORIZATION_CODE_EXPIRATION_TIME_MS: Joi.number()
         .min(0)
