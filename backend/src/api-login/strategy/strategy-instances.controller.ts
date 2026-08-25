@@ -46,6 +46,21 @@ export class StrategyInstancesController {
     ) {}
 
     /**
+     * Finds the strategy instance with the given id, restricted to the given type if one was given.
+     *
+     * The type comes from the optional `:type` url parameter and is therefore undefined on the
+     * routes that don't have it. It has to be left out of the where condition entirely in that
+     * case, as an undefined value in a where condition is rejected.
+     *
+     * @param id The uuid string of the strategy instance to find
+     * @param type The strategy type name to restrict the search to. Optional
+     * @returns The strategy instance if one with that id (and type) exists, else null
+     */
+    private findInstanceOfType(id: string, type?: string): Promise<StrategyInstance | null> {
+        return this.strategyInstanceService.findOneBy(type ? { id, type } : { id });
+    }
+
+    /**
      * Gets the list of all Strategy instances.
      * If a type is specified, only the instances of that type will be retrieved.
      *
@@ -103,10 +118,7 @@ export class StrategyInstancesController {
         @Param("id") id: string,
         @Param("type") type?: string,
     ): Promise<StrategyInstanceDetailResponse> {
-        const instance = await this.strategyInstanceService.findOneBy({
-            id,
-            type,
-        });
+        const instance = await this.findInstanceOfType(id, type);
         if (!instance) {
             throw new HttpException(
                 "Id is not a valid strategy instance id (of that strategy type)",
@@ -213,10 +225,7 @@ export class StrategyInstancesController {
     ): Promise<StrategyInstance> {
         UpdateStrategyInstanceInput.check(input);
 
-        const instance = await this.strategyInstanceService.findOneBy({
-            id,
-            type,
-        });
+        const instance = await this.findInstanceOfType(id, type);
         if (!instance) {
             throw new HttpException("id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
         }
@@ -256,10 +265,7 @@ export class StrategyInstancesController {
     @ApiNotFoundResponse({ description: "If no strategy with the given id (and type) are found" })
     @ApiBearerAuth()
     async deleteStrategyInstance(@Param("id") id: string, @Param("type") type?: string): Promise<DefaultReturn> {
-        const instance = await this.strategyInstanceService.findOneBy({
-            id,
-            type,
-        });
+        const instance = await this.findInstanceOfType(id, type);
         if (!instance) {
             throw new HttpException("id is not a valid strategy instance id", HttpStatus.NOT_FOUND);
         }
