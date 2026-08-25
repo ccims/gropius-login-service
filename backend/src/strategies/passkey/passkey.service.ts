@@ -36,6 +36,15 @@ const USER_VERIFICATION_REQUIREMENTS = ["required", "preferred", "discouraged"] 
 type UserVerificationRequirement = (typeof USER_VERIFICATION_REQUIREMENTS)[number];
 
 /**
+ * The maximum length of the username a client may suggest when registering a passkey.
+ *
+ * The suggestion is only what the authenticator displays and what the registration form is
+ * prefilled with, but it is kept on the session, i.e. in the cookie, until the passkey is
+ * submitted, so it must not be allowed to grow the cookie beyond what a browser accepts.
+ */
+const MAX_SUGGESTED_USERNAME_LENGTH = 100;
+
+/**
  * The relying party a ceremony of one strategy instance runs for.
  */
 interface RelyingParty {
@@ -291,15 +300,20 @@ export class PasskeyStrategyService extends Strategy {
         requestedUsername?: string,
     ): Promise<PublicKeyCredentialCreationOptionsJSON> {
         const relyingParty = this.getRelyingParty(instance);
-        const username = user?.username ?? requestedUsername?.trim();
-        const existingLoginData = user ? await this.findLoginDataOfUser(instance, user) : [];
+        const username = user?.username ?? this.checkSuggestedUsername(requestedUsername);
+        // the passkey belongs to the account only if it is added to it, i.e. in a link flow.
+        // an authenticated user registering a *new* account must not reuse their user handle:
+        // authenticators key discoverable credentials by (relying party, user handle) and would
+        // replace the passkey of the existing account with the one of the new account
+        const forUser = user && context.flow.isLinkFlow() ? user : undefined;
+        const existingLoginData = forUser ? await this.findLoginDataOfUser(instance, forUser) : [];
 
         const options = await generateRegistrationOptions({
             rpID: relyingParty.id,
             rpName: relyingParty.name,
             // the user handle must not contain personal information, so it is either the
             // (opaque) id of the existing account or a fresh random value for a new one
-            userID: user ? isoUint8Array.fromUTF8String(user.id) : await generateUserID(),
+            userID: forUser ? isoUint8Array.fromUTF8String(forUser.id) : await generateUserID(),
             userName: username || `${relyingParty.name} user`,
             userDisplayName: username ?? "",
             attestationType: "none",
@@ -540,6 +554,32 @@ export class PasskeyStrategyService extends Strategy {
         } catch (err: any) {
             throw new AuthException("The submitted passkey is malformed", instance.id);
         }
+    }
+
+    /**
+     * Checks the username a client suggested for a new passkey.
+     *
+     * @param requestedUsername The username as it was submitted, of unchecked type
+     * @returns The trimmed username, or undefined if none was given
+     */
+    private checkSuggestedUsername(requestedUsername?: string): string | undefined {
+        if (requestedUsername == undefined) {
+            return undefined;
+        }
+        if (typeof requestedUsername !== "string") {
+            throw new HttpException("The suggested username must be a string", HttpStatus.BAD_REQUEST);
+        }
+        const username = requestedUsername.trim();
+        if (username.length == 0) {
+            return undefined;
+        }
+        if (username.length > MAX_SUGGESTED_USERNAME_LENGTH) {
+            throw new HttpException(
+                `The suggested username cannot be longer than ${MAX_SUGGESTED_USERNAME_LENGTH} characters!`,
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+        return username;
     }
 
     /**

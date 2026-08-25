@@ -234,6 +234,9 @@ class Flow {
     }
 
     start(kind: FlowKind) {
+        // a challenge is only ever valid within the flow it was handed out in
+        this.context.passkey.clear();
+
         const iat = now();
         const eat = iat + ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS));
 
@@ -252,6 +255,7 @@ class Flow {
     }
 
     end() {
+        this.context.passkey.clear();
         this.req.session.flow = undefined;
         return this;
     }
@@ -412,7 +416,15 @@ class Passkey {
      */
     take(): PasskeyChallenge | undefined {
         const challenge = this.req.session.passkey;
-        this.req.session.passkey = undefined;
+        this.clear();
         return challenge;
+    }
+
+    /**
+     * Drop a pending challenge without answering it
+     */
+    clear() {
+        this.req.session.passkey = undefined;
+        return this;
     }
 }
