@@ -3,6 +3,8 @@
 # compiled output
 /dist
 /node_modules
+# the login frontend is built into here (see Dockerfile) when serving it from the backend
+/static
 
 # Logs
 logs
