@@ -24,6 +24,14 @@ export class PerformAuthFunctionService {
         private readonly userLoginDataService: UserLoginDataService,
     ) {}
 
+    /**
+     * Checks whether the strategy instance may be used for what the flow is asking for.
+     *
+     * @param context The context of the request, its flow determines what is asked for
+     * @param instance The strategy instance the user authenticated with
+     * @param strategy The strategy of that instance
+     * @returns The reason it is not allowed, or null if it is
+     */
     public checkFunctionIsAllowed(context: Context, instance: StrategyInstance, strategy: Strategy): string | null {
         const type = context.flow.getType();
 
@@ -38,6 +46,12 @@ export class PerformAuthFunctionService {
         }
         if (!instance.isLoginActive) {
             return "Login using this strategy instance not enabled";
+        }
+        // the flow type may have been changed above, so it has to be read again
+        const requestedType = context.flow.getType();
+        const isSelfRegister = requestedType == FlowType.REGISTER || requestedType == FlowType.REGISTER_WITH_SYNC;
+        if (isSelfRegister && !instance.isSelfRegisterActive) {
+            return "Registration using this strategy instance not enabled";
         }
         return null;
     }

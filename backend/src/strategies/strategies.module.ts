@@ -10,6 +10,7 @@ import { JiraStrategyService } from "./jira/jira.service.js";
 import { GithubTokenStrategyService } from "./github-token/github-token.service.js";
 import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-cloud.service.js";
 import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira-token-datacenter.service.js";
+import { PasskeyStrategyService } from "./passkey/passkey.service.js";
 
 @Module({
     imports: [
@@ -36,6 +37,7 @@ import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira
     providers: [
         PerformAuthFunctionService,
         UserpassStrategyService,
+        PasskeyStrategyService,
         GithubStrategyService,
         JiraStrategyService,
         GithubTokenStrategyService,
@@ -44,6 +46,11 @@ import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira
         { provide: "StateJwtService", useExisting: JwtService },
         StrategiesService,
     ],
-    exports: [StrategiesService, { provide: "StateJwtService", useExisting: JwtService }, PerformAuthFunctionService],
+    exports: [
+        StrategiesService,
+        PasskeyStrategyService,
+        { provide: "StateJwtService", useExisting: JwtService },
+        PerformAuthFunctionService,
+    ],
 })
 export class StrategiesModule {}

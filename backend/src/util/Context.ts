@@ -40,6 +40,32 @@ export enum FlowState {
 }
 
 /**
+ * A passkey (WebAuthn) challenge that was handed out to the client.
+ *
+ * The challenge is not a secret, it only has to be unpredictable, bound to this session
+ * and usable exactly once, all of which holds for the signed session cookie.
+ */
+export type PasskeyChallenge = {
+    // the ceremony the challenge was handed out for
+    kind: "registration" | "authentication";
+
+    // base64url encoded challenge
+    challenge: string;
+
+    // id of the strategy instance the challenge was handed out for
+    strategy_instance_id: string;
+
+    // expires at (in seconds)
+    expires_at: number;
+
+    // base64url encoded user handle the credential is created for (registration only)
+    user_handle?: string;
+
+    // username the user asked for while registering (registration only)
+    username?: string;
+};
+
+/**
  * This data is stored in the session, i.e., in the cookie.
  */
 export type ContextSession = {
@@ -63,6 +89,9 @@ export type ContextSession = {
 
     // csrf token
     csrf: string;
+
+    // the passkey challenge that was handed out and is waiting to be answered
+    passkey?: PasskeyChallenge;
 
     // flow
     flow?: {
@@ -108,11 +137,13 @@ export class Context {
 
     auth: Auth;
     flow: Flow;
+    passkey: Passkey;
 
     constructor(req: Request) {
         this.req = req as RequestWithContext;
         this.auth = new Auth(this, this.req);
         this.flow = new Flow(this, this.req);
+        this.passkey = new Passkey(this, this.req);
         this.auth.init();
     }
 
@@ -203,6 +234,9 @@ class Flow {
     }
 
     start(kind: FlowKind) {
+        // a challenge is only ever valid within the flow it was handed out in
+        this.context.passkey.clear();
+
         const iat = now();
         const eat = iat + ms2s(parseInt(process.env.GROPIUS_FLOW_EXPIRATION_TIME_MS));
 
@@ -221,6 +255,7 @@ class Flow {
     }
 
     end() {
+        this.context.passkey.clear();
         this.req.session.flow = undefined;
         return this;
     }
@@ -352,6 +387,44 @@ class Flow {
 
     setState(state: FlowState) {
         this.req.session.flow.state = state;
+        return this;
+    }
+}
+
+class Passkey {
+    constructor(
+        private readonly context: Context,
+        private readonly req: RequestWithContext,
+    ) {}
+
+    /**
+     * Store the challenge of a started passkey ceremony, replacing any previous one
+     */
+    set(challenge: Omit<PasskeyChallenge, "expires_at">) {
+        this.req.session.passkey = {
+            ...challenge,
+            expires_at: now() + ms2s(parseInt(process.env.GROPIUS_PASSKEY_TIMEOUT_MS, 10)),
+        };
+        return this;
+    }
+
+    /**
+     * Read the pending challenge and remove it from the session.
+     *
+     * A challenge may only be answered once, so it is always taken, never just read.
+     * The caller has to check {@link PasskeyChallenge.expires_at}.
+     */
+    take(): PasskeyChallenge | undefined {
+        const challenge = this.req.session.passkey;
+        this.clear();
+        return challenge;
+    }
+
+    /**
+     * Drop a pending challenge without answering it
+     */
+    clear() {
+        this.req.session.passkey = undefined;
         return this;
     }
 }

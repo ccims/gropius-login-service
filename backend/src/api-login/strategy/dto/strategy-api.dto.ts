@@ -37,6 +37,14 @@ export class GetStrategyResponse {
     needsRedirectFlow: boolean;
 
     /**
+     * `true` if to authenticate using this strategy, a passkey (WebAuthn) ceremony
+     * has to be performed in the browser before the credentials can be submitted
+     *
+     * @example false
+     */
+    needsPasskeyFlow: boolean;
+
+    /**
      * `true` iff this strategy allows instances to use implicit signup
      * to register users automatically if they don't have an account but tried to login
      *

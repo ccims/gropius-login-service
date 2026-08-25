@@ -1,5 +1,5 @@
 export interface StrategyInstanceBase {
-    type: "credential" | "redirect";
+    type: "credential" | "redirect" | "passkey";
     id: string;
     name: string;
     isLoginActive: boolean;
@@ -18,11 +18,16 @@ export interface RedirectStrategyInstance extends StrategyInstanceBase {
     type: "redirect";
 }
 
-export type StrategyInstance = CredentialStrategyInstance | RedirectStrategyInstance;
+export interface PasskeyStrategyInstance extends StrategyInstanceBase {
+    type: "passkey";
+}
+
+export type StrategyInstance = CredentialStrategyInstance | RedirectStrategyInstance | PasskeyStrategyInstance;
 
 export interface GroupedStrategyInstances {
     credential: CredentialStrategyInstance[];
     redirect: RedirectStrategyInstance[];
+    passkey: PasskeyStrategyInstance[];
 }
 
 export interface LoginStrategyVariable {
@@ -43,6 +48,7 @@ export interface LoginStrategy {
     canLoginRegister: boolean;
     canSync: boolean;
     needsRedirectFlow: boolean;
+    needsPasskeyFlow: boolean;
     allowsImplicitSignup: boolean;
     acceptsVariables: LoginStrategyVariable[];
     updateActions: LoginStrategyUpdateAction[];
