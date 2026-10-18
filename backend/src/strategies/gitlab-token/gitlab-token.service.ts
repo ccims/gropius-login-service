@@ -7,6 +7,7 @@ import { StrategyInstanceService } from "../../model/services/strategy-instance.
 import { UserLoginDataService } from "../../model/services/user-login-data.service.js";
 import type { Context } from "../../util/Context.js";
 import type { Schema } from "jtd";
+import type { Request, Response } from "express";
 import { openToken, sealToken } from "./token-vault.js";
 
 @Injectable()
@@ -58,34 +59,44 @@ export class GitlabTokenStrategyService extends Strategy {
     private async verify(token: unknown, instance: StrategyInstance) {
         if (typeof token !== "string" || !token.length) return null;
         const root = instance.instanceConfig["imsTemplatedFieldsFilter"]["gitlab-url"];
-        const response = await fetch(`${root}/api/v4/user`, {
-            headers: { "PRIVATE-TOKEN": token },
-            redirect: "error",
-            signal: AbortSignal.timeout(15000),
-        });
-        if (!response.ok) return null;
-        const user = await response.json();
-        if (!Number.isSafeInteger(user.id) || user.id <= 0 || typeof user.username !== "string") return null;
+        let user: { id?: unknown; username?: unknown };
+        try {
+            const response = await fetch(`${root}/api/v4/user`, {
+                headers: { "PRIVATE-TOKEN": token },
+                redirect: "error",
+                signal: AbortSignal.timeout(15000),
+            });
+            if (!response.ok) return null;
+            const value: unknown = await response.json();
+            if (value === null || typeof value !== "object") return null;
+            user = value;
+        } catch {
+            // An unreachable instance or malformed response must not create or replace a credential.
+            return null;
+        }
+        if (typeof user.id !== "number" || !Number.isSafeInteger(user.id) || user.id <= 0) return null;
+        if (typeof user.username !== "string") return null;
         return { gitlabUserId: user.id as number, username: user.username as string, encryptedToken: sealToken(token) };
     }
 
     override async performAuth(
         instance: StrategyInstance,
         _context: Context | undefined,
-        req: any,
-        _res: any,
+        req: Request,
+        _res: Response,
     ): Promise<PerformAuthResult> {
         const value = await this.verify(req.query["token"], instance);
-        return value
-            ? {
-                  result: { dataActiveLogin: {}, dataUserLoginData: value, mayRegister: true },
-                  returnedState: {},
-                  info: {},
-              }
-            : { result: null, returnedState: {}, info: { message: "GitLab token invalid or unavailable" } };
+        if (!value) {
+            return { result: null, returnedState: {}, info: { message: "GitLab token invalid or unavailable" } };
+        }
+        return {
+            result: { dataActiveLogin: {}, dataUserLoginData: value, mayRegister: true },
+            returnedState: {},
+            info: {},
+        };
     }
 
-    override async handleAction(data: UserLoginData, name: string, input: Record<string, any>): Promise<void> {
+    override async handleAction(data: UserLoginData, name: string, input: Record<string, unknown>): Promise<void> {
         if (name !== "update-token") throw new HttpException("Unknown action", HttpStatus.BAD_REQUEST);
         const value = await this.verify(input.token, await data.strategyInstance);
         if (!value || value.gitlabUserId !== data.data.gitlabUserId)

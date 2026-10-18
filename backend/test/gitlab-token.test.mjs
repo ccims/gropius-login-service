@@ -54,3 +54,43 @@ test("GitLab credential linking and token rotation use numeric identity", async 
         globalThis.fetch = previous;
     }
 });
+
+test("GitLab validation fails safely without replacing credentials when the instance is unavailable", async () => {
+    let saves = 0;
+    const strategy = new GitlabTokenStrategyService(
+        { addStrategy() {} },
+        {},
+        {
+            async save() {
+                saves++;
+            },
+        },
+    );
+    const instance = { instanceConfig: { imsTemplatedFieldsFilter: { "gitlab-url": "https://gitlab.example.test" } } };
+    const original = { gitlabUserId: 42, encryptedToken: "existing-credential" };
+    const data = { data: original, strategyInstance: Promise.resolve(instance) };
+    const previous = globalThis.fetch;
+    try {
+        for (const response of [
+            async () => {
+                throw new TypeError("Network unavailable");
+            },
+            async () => new Response("not JSON"),
+            async () => Response.json(null),
+            async () => Response.json({ id: "42", username: "student" }),
+            async () => new Response(null, { status: 401 }),
+        ]) {
+            globalThis.fetch = response;
+            const auth = await strategy.performAuth(instance, undefined, { query: { token: "fixture-token" } }, {});
+            assert.equal(auth.result, null);
+            await assert.rejects(
+                strategy.handleAction(data, "update-token", { token: "fixture-token" }),
+                /Token invalid/,
+            );
+            assert.equal(data.data, original);
+        }
+        assert.equal(saves, 0);
+    } finally {
+        globalThis.fetch = previous;
+    }
+});
