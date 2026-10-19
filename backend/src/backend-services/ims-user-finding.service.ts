@@ -397,7 +397,7 @@ export class ImsUserFindingService {
                 if (Object.prototype.hasOwnProperty.call(templatedFieldValuesForImsUser, key)) {
                     const value = templatedFieldValuesForImsUser[key];
                     if (value) {
-                        findPossibleDisplayName = value;
+                        findPossibleDisplayName = String(value);
                         break;
                     }
                 }
