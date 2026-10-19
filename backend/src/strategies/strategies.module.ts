@@ -11,6 +11,7 @@ import { GithubTokenStrategyService } from "./github-token/github-token.service.
 import { JiraTokenCloudStrategyService } from "./jira-token-cloud/jira-token-cloud.service.js";
 import { JiraTokenDatacenterStrategyService } from "./jira-token-datacenter/jira-token-datacenter.service.js";
 import { PasskeyStrategyService } from "./passkey/passkey.service.js";
+import { GitlabTokenStrategyService } from "./gitlab-token/gitlab-token.service.js";
 
 @Module({
     imports: [
@@ -38,6 +39,7 @@ import { PasskeyStrategyService } from "./passkey/passkey.service.js";
         PerformAuthFunctionService,
         UserpassStrategyService,
         PasskeyStrategyService,
+        GitlabTokenStrategyService,
         GithubStrategyService,
         JiraStrategyService,
         GithubTokenStrategyService,
