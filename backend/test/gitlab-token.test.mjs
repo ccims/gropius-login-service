@@ -9,8 +9,8 @@ test("numeric GitLab identities produce a string display name when creating an I
     const service = new ImsUserFindingService(
         {
             async request(_query, { input }) {
-                assert.equal(input.displayName, "91999");
-                assert.deepEqual(input.templatedFields, [{ name: "gitlab-user-id", value: 91999 }]);
+                assert.equal(input.displayName, "42");
+                assert.deepEqual(input.templatedFields, [{ name: "gitlab-user-id", value: 42 }]);
                 return { createIMSUser: { imsUser: { id: "created-user" } } };
             },
         },
@@ -18,7 +18,7 @@ test("numeric GitLab identities produce a string display name when creating an I
             getStrategyByName() {
                 return {
                     getImsUserTemplatedValuesForLoginData() {
-                        return { "gitlab-user-id": 91999 };
+                        return { "gitlab-user-id": 42 };
                     },
                 };
             },
