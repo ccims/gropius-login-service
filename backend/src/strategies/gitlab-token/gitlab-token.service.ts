@@ -85,7 +85,7 @@ export class GitlabTokenStrategyService extends Strategy {
         req: Request,
         _res: Response,
     ): Promise<PerformAuthResult> {
-        const value = await this.verify(req.query["token"], instance);
+        const value = await this.verify(req.body?.token, instance);
         if (!value) {
             return { result: null, returnedState: {}, info: { message: "GitLab token invalid or unavailable" } };
         }
